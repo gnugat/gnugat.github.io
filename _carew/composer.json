@@ -1,0 +1,18 @@
+{
+    "license"     : "MIT",
+    "homepage"    : "http://gnugat.github.io/",
+    "authors"     : [
+        {
+            "name"  : "Loïc Chardonnet",
+            "email" : "loic.chardonnet@gmail.com"
+        }
+    ],
+    "require": {
+        "carew/carew": "~2.0@dev",
+        "carew/theme-bootstrap": "~2.0@dev",
+        "twig/twig": "~1.14"
+    },
+    "config": {
+        "bin-dir": "bin"
+    }
+}
