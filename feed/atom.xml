@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title>Loïc Chardonnet&#039;s blog</title>
+    <subtitle>Talks about Symfony2, git and other developer stuff</subtitle>
+    <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
+    <link href="http://gnugat.github.io/" />
+        <id>http://gnugat.github.io/</id>
+            </feed>
