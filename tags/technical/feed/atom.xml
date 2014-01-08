@@ -5,7 +5,7 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-01-01T00:00:00+01:00</updated>
+            <updated>2014-01-08T00:00:00+01:00</updated>
             <entry>
         <title>Carew, the static site generator</title>
                 <id>http://gnugat.github.io/2014/01/01/carew-static-site-generator.html</id>
@@ -80,5 +80,69 @@ should know to create pages, blog posts and tags.</p>
 <p>I hope you enjoyed this article and that it helped you a little.</p>
 <p>If you want to learn more, for example to customize its behaviour or its theme,
 please refer to <a href="http://carew.github.io/documentation.html">the official documentation</a>.</p>]]></content>
+    </entry>
+        <entry>
+        <title>Technology scouting</title>
+                <id>http://gnugat.github.io/2014/01/08/technology-scouting.html</id>
+                <updated>2014-01-08T00:00:00+01:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/08/technology-scouting.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>As a curious person I'm constantly trying to learn new practices and to discover
+tools which might help me, by collecting information via technology scouting and
+then reading it.</p>
+<p>In this article, I will present how to do so effectively.</p>
+<h2 id="collecting-information">Collecting information<a href="#collecting-information" class="anchor">#</a></h2>
+<p>Whenever you find an interesting link, send it to <a href="http://getpocket.com/">Pocket</a>
+so you can read it later.</p>
+<h3 id="blogs">Blogs<a href="#blogs" class="anchor">#</a></h3>
+<p>To find interesting links subscribe to blog RSS feeds using
+<a href="https://ifttt.com/">If This Then That</a>: it will send new entries directly to
+pocket.</p>
+<p>Here are some blogs I personnally follow (caution, they're not really sorted):</p>
+<ul><li><a href="http://williamdurand.fr/">William Durand's blog</a></li>
+<li><a href="http://www.mountaingoatsoftware.com/blog">Mountain Goat Software</a></li>
+<li><a href="http://blog.karolsojko.com/">Karol S&oacute;jko's blog</a></li>
+<li><a href="http://blog.8thlight.com/">8th light</a></li>
+<li><a href="http://richardmiller.co.uk/">Richard Miller's blog</a></li>
+<li><a href="http://verraes.net/#blog">Mathias Verraes's blog</a></li>
+<li><a href="http://www.whitewashing.de/">Benjamin Eberlei's blog</a></li>
+<li><a href="http://nedroid.com/">Nedroid</a></li>
+<li><a href="https://igor.io/">Igor Wiedler's blog</a></li>
+</ul><h3 id="twitter">Twitter<a href="#twitter" class="anchor">#</a></h3>
+<p>You can also use <a href="https://twitter.com/">Twitter</a>:</p>
+<ol><li>create a private list which will serve as a pool</li>
+<li>add any author which might post interresting messages</li>
+<li>after a week or so, add the author to a public list</li>
+</ol><p>The lists only show messages (not retweets) and conversations between people
+you follow. They also allow you to create categories.</p>
+<p>If you want, you can have a look at
+<a href="https://twitter.com/epiloic/lists/">my own public lists</a>.</p>
+<h3 id="github">Github<a href="#github" class="anchor">#</a></h3>
+<p>Last but not least, <a href="https://github.com/">Github</a> can also be a great source of
+discoveries: by following someone which stars or watch a lot of projects you
+will have them listed on your homepage.</p>
+<p>Here's my advice: <a href="https://github.com/pborreli">Pascal Borreli</a> contributes to
+many repositories, you should start to follow him.</p>
+<h2 id="reading-it">Reading it<a href="#reading-it" class="anchor">#</a></h2>
+<p>Collecting resources is a thing, getting it read is another one. Just like
+<a href="http://verraes.net/2012/12/how-to-read-more-books/">Mathias Verraes advised it</a>,
+you should get an e-reader: you can send the pages you gathered on Pocket and
+then read them everywhere.</p>
+<p>Pocket allows you to remove the articles you found not so interresting after
+all, it also allows you to archive the good ones and to favorite the great ones.</p>
+<p>Speaking of reading and e-readers, books are another good way of discovering new
+things. Do not underestimate them. Here's a list of books I'd recommend:</p>
+<ul><li><a href="http://git-scm.com/book">Pro Git</a></li>
+<li>Clean Code, by Robert C. Martin</li>
+<li>Agile Software Development, Principles, Patterns, and Practices, by Robert C. Martin</li>
+</ul><h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>The point is: current tools won't last and there's a lot of practices you're
+not aware of. If you want to improve yourself and keep up with other developers,
+you have to try your best to discover new practices (which might be rather old
+actually) and new trending tools.</p>
+<p>I hope you found this article enjoyable and helpful.</p>]]></content>
     </entry>
     </feed>
