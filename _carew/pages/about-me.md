@@ -15,6 +15,8 @@ Hint: this blog will be about these tools.
 
 ## Projects
 
+* [fossil](https://github.com/gnugat/fossil):
+  Bootstraps the markdown files of your projects
 * [GnugatWizardBundle](https://github.com/gnugat/GnugatWizardBundle):
   Shrinks bundle installation steps to Composer's `require` command
 * [Symfony Empty Edition](https://github.com/gnugat/symfony-empty):
