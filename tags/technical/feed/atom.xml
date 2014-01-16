@@ -172,6 +172,7 @@ create an installer for you!</p>
 <p>It generates the following files out of skeletons:</p>
 <ul><li><code>CHANGELOG.md</code></li>
 <li><code>CONTRIBUTING.md</code></li>
+<li><code>LICENSE</code></li>
 <li><code>README.md</code></li>
 <li><code>VERSIONING.md</code></li>
 <li><code>bin/installer.sh</code></li>

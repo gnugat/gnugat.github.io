@@ -30,6 +30,7 @@ It generates the following files out of skeletons:
 
 * `CHANGELOG.md`
 * `CONTRIBUTING.md`
+* `LICENSE`
 * `README.md`
 * `VERSIONING.md`
 * `bin/installer.sh`
