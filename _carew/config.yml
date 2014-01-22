@@ -3,7 +3,7 @@ site:
     description: "Talks about Symfony2, git and other developer stuff"
     author_name:  Loïc Chardonnet
     author_email: loic.chardonnet@gmail.com
-    author_url:   gnugat.github.io
+    author_url:   http://gnugat.github.io
     url_absolute: http://gnugat.github.io
 
 engine:
