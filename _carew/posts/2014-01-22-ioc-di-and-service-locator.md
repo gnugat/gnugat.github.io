@@ -482,4 +482,7 @@ if this article made your day, feel free to do the same ;) .
 ### More resources
 
 If you want to read more about DI and DIC, here's good series by
-Fabien Potencier's series on [what is Dependency Injection](http://fabien.potencier.org/article/11/what-is-dependency-injection)
+Fabien Potencier's series on [what is Dependency Injection](http://fabien.potencier.org/article/11/what-is-dependency-injection).
+
+There's also William Durand's slides on [Writing Better Code](http://edu.williamdurand.fr/php-slides/index.html#slide152)
+(actually the slides are about PHP and contain good resources. I encourage you to read it entirely!).
