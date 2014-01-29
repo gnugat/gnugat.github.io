@@ -60,7 +60,7 @@ in the code sample from the previous article:
     // * arguments
     // * parameters which have been declared previously
     // * setter dependencies
-    container
+    $container
         ->register('console_handler', 'Symfony\Bridge\Monolog\Handler\ConsoleHandler')
         ->addArgument(new Reference('console_output'))
         ->addArgument(true)
@@ -68,15 +68,15 @@ in the code sample from the previous article:
         ->addMethodCall('setFormatter', array(new Reference('output_formatter')));
     ;
 
-    container
+    $container
         ->register('logger', 'Monolog\Logger')
         ->addArgument('default.logger')
         ->addMethodCall('pushHandler', array(new Reference('console_handler')));
     ;
 
-    container->register('filesystem', 'Symfony\Component\Filesystem\Filesystem');
+    $container->register('filesystem', 'Symfony\Component\Filesystem\Filesystem');
 
-    container
+    $container
         ->register('documentation_writer', 'Gnugat\Fossil\MarkdownFile\DocumentationWriter')
         ->addArgument(new Reference('filesystem'))
         ->addArgument(new Reference('logger'))
