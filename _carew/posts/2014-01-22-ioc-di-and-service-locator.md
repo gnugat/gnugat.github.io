@@ -249,6 +249,7 @@ Let's add a dependency on [Monolog](https://github.com/Seldaek/monolog) to our
     <?php
 
     use Gnugat\Fossil\ApplicationLayer\OutputFormatter;
+    use Gnugat\Fossil\MarkdownFile\DocumentationWriter;
     use Monolog\Logger;
     use Symfony\Bridge\Monolog\Handler\ConsoleHandler;
     use Symfony\Component\Console\Output\ConsoleOutput;
@@ -305,7 +306,10 @@ Here's the code sample:
 
     <?php
 
+    // File: dic.php
+
     use Gnugat\Fossil\ApplicationLayer\OutputFormatter;
+    use Gnugat\Fossil\MarkdownFile\DocumentationWriter;
     use Monolog\Logger;
     use Symfony\Bridge\Monolog\Handler\ConsoleHandler;
     use Symfony\Component\Console\Output\ConsoleOutput;
@@ -342,7 +346,7 @@ Here's the code sample:
         return $consoleHandler
     });
 
-    $dic['console_handler'] = $dic->share(function($dic) {
+    $dic['logger'] = $dic->share(function($dic) {
         $logger = new Logger('default.logger');
         $logger->pushHandler($dic['console_handler']);
 
@@ -355,8 +359,8 @@ Here's the code sample:
 
     $dic['documentation_writer'] = $dic->share(function($dic) {
         return new DocumentationWriter(
-            $dic['console_output'],
-            $dic['verbosity_level_map']
+            $dic['filesystem'],
+            $dic['logger']
         );
     });
 
@@ -370,6 +374,8 @@ you created them they won't be created a second time.
 In your application, you just need to pass the DIC and use it:
 
     <?php
+
+    // File: front_controller.php
 
     require_once __DIR__.'/dic.php';
 
