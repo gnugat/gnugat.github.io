@@ -107,11 +107,11 @@ allows you to put all those definition inside a configuration file:
             </service>
 
             <service id="output_formatter"
-                class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"
+                class="Gnugat\Fossil\ApplicationLayer\OutputFormatter">
             </service>
 
             <service id="console_handler"
-                class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"
+                class="Symfony\Bridge\Monolog\Handler\ConsoleHandler">
                 <argument type="service" id="console.output" />
                 <argument key="bubble">true</argument>
                 <argument>%verbosity_Level_map%</argument>
@@ -128,11 +128,11 @@ allows you to put all those definition inside a configuration file:
             </service>
 
             <service id="filesystem"
-                class="Symfony\Component\Filesystem\Filesystem"
+                class="Symfony\Component\Filesystem\Filesystem">
             </service>
 
             <service id="documentation_writer"
-                class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"
+                class="Gnugat\Fossil\MarkdownFile\DocumentationWriter">
                 <argument type="service" id="filesystem" />
                 <argument type="service" id="logger" />
             </service>
