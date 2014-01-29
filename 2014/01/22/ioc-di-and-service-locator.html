@@ -268,6 +268,7 @@ constructing you might accidently construct it again.</p>
 <pre><code>&lt;?php
 
 use Gnugat\Fossil\ApplicationLayer\OutputFormatter;
+use Gnugat\Fossil\MarkdownFile\DocumentationWriter;
 use Monolog\Logger;
 use Symfony\Bridge\Monolog\Handler\ConsoleHandler;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -316,7 +317,10 @@ a small DIC for PHP using a javascript-like syntax.</p>
 <p>Here's the code sample:</p>
 <pre><code>&lt;?php
 
+// File: dic.php
+
 use Gnugat\Fossil\ApplicationLayer\OutputFormatter;
+use Gnugat\Fossil\MarkdownFile\DocumentationWriter;
 use Monolog\Logger;
 use Symfony\Bridge\Monolog\Handler\ConsoleHandler;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -353,7 +357,7 @@ $dic['console_handler'] = $dic-&gt;share(function($dic) {
     return $consoleHandler
 });
 
-$dic['console_handler'] = $dic-&gt;share(function($dic) {
+$dic['logger'] = $dic-&gt;share(function($dic) {
     $logger = new Logger('default.logger');
     $logger-&gt;pushHandler($dic['console_handler']);
 
@@ -366,8 +370,8 @@ $dic['filesystem'] = $dic-&gt;share(function($dic) {
 
 $dic['documentation_writer'] = $dic-&gt;share(function($dic) {
     return new DocumentationWriter(
-        $dic['console_output'],
-        $dic['verbosity_level_map']
+        $dic['filesystem'],
+        $dic['logger']
     );
 });</code></pre>
 <p>So, what's the big difference between this and the previous code sample? Well
@@ -378,6 +382,8 @@ which means as long as you don't aks for them they won't be created, and once
 you created them they won't be created a second time.</p>
 <p>In your application, you just need to pass the DIC and use it:</p>
 <pre><code>&lt;?php
+
+// File: front_controller.php
 
 require_once __DIR__.'/dic.php';
 
@@ -464,12 +470,10 @@ but rather in objects which serve as intermediate between two layers.</p>
 if this article made your day, feel free to do the same ;) .</p>
 <h3 id="more-resources">More resources<a href="#more-resources" class="anchor">#</a></h3>
 <p>If you want to read more about DI and DIC, here's good series by
-Fabien Potencier's series on <a href="http://fabien.potencier.org/article/11/what-is-dependency-injection">what is Dependency Injection</a></p>
-
-<p></p>There's also William Durand's slides on <a href="http://edu.williamdurand.fr/php-slides/index.html#slide152">Writing Better Code</a>
+Fabien Potencier's series on <a href="http://fabien.potencier.org/article/11/what-is-dependency-injection">what is Dependency Injection</a>.</p>
+<p>There's also William Durand's slides on <a href="http://edu.williamdurand.fr/php-slides/index.html#slide152">Writing Better Code</a>
 (actually the slides are about PHP and contain good resources. I encourage you to read it entirely!).</p>
     </div>
-  
 
           <hr>
       <h4>Tags:</h4>
@@ -485,7 +489,7 @@ Fabien Potencier's series on <a href="http://fabien.potencier.org/article/11/wha
                           <footer>
             <p>
               &copy;
-                              <a href="gnugat.github.io">
+                              <a href="http://gnugat.github.io">
                   Loïc Chardonnet
                 </a>
                             2014
