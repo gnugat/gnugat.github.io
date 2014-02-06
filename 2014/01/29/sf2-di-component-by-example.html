@@ -17,7 +17,7 @@
     <link rel="canonical" href="http://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html"/>
               <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Chardonnet&#039;s blog"/>
       
-        <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/bootstrap-responsive.min.css"><link rel="stylesheet" href="../../../css/main.css"><link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/pojoaque.min.css">    
+    <link href='http://fonts.googleapis.com/css?family=Bitter' rel='stylesheet' type='text/css'><link href='http://fonts.googleapis.com/css?family=Varela+Round' rel='stylesheet' type='text/css'><link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/bootstrap-responsive.min.css"><link rel="stylesheet" href="../../../css/main.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/xcode.min.css">
     <script src="../../../js/vendor/modernizr-2.6.1-respond-1.1.0.min.js"></script>
   </head>
 
@@ -27,7 +27,7 @@
     <![endif]-->
 
     
-          <div class="navbar navbar-fixed-top">
+          <div class="navbar">
           <div class="navbar-inner">
               <div class="container">
                   <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -37,7 +37,7 @@
                   </a>
                   <a class="brand" href="../../..">Loïc Chardonnet&#039;s blog</a>
                   <div class="nav-collapse collapse">
-                    <ul class="nav">
+                    <ul class="nav pull-right">
                                                                                                             <li><a href="../../../about-me.html">About me</a></li>
                                                                                                 </ul>
                                       </div>
@@ -56,10 +56,12 @@
                   </div>
                               
                 <article>
-    <div class="pull-right date">
+    <div class="date">
       <i class="icon-calendar"></i>
       Jan 29th, 2014
     </div>
+
+    <hr />
 
     <div class="body">
       <p>In <a href="http://gnugat.github.io/2014/01/22/ioc-di-and-service-locator.html">the previous article</a>
@@ -109,7 +111,7 @@ $container-&gt;register(
 // * arguments
 // * parameters which have been declared previously
 // * setter dependencies
-container
+$container
     -&gt;register('console_handler', 'Symfony\Bridge\Monolog\Handler\ConsoleHandler')
     -&gt;addArgument(new Reference('console_output'))
     -&gt;addArgument(true)
@@ -117,15 +119,15 @@ container
     -&gt;addMethodCall('setFormatter', array(new Reference('output_formatter')));
 ;
 
-container
+$container
     -&gt;register('logger', 'Monolog\Logger')
     -&gt;addArgument('default.logger')
     -&gt;addMethodCall('pushHandler', array(new Reference('console_handler')));
 ;
 
-container-&gt;register('filesystem', 'Symfony\Component\Filesystem\Filesystem');
+$container-&gt;register('filesystem', 'Symfony\Component\Filesystem\Filesystem');
 
-container
+$container
     -&gt;register('documentation_writer', 'Gnugat\Fossil\MarkdownFile\DocumentationWriter')
     -&gt;addArgument(new Reference('filesystem'))
     -&gt;addArgument(new Reference('logger'))
@@ -154,11 +156,11 @@ allows you to put all those definition inside a configuration file:</p>
         &lt;/service&gt;
 
         &lt;service id="output_formatter"
-            class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"
+            class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"&gt;
         &lt;/service&gt;
 
         &lt;service id="console_handler"
-            class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"
+            class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"&gt;
             &lt;argument type="service" id="console.output" /&gt;
             &lt;argument key="bubble"&gt;true&lt;/argument&gt;
             &lt;argument&gt;%verbosity_Level_map%&lt;/argument&gt;
@@ -175,11 +177,11 @@ allows you to put all those definition inside a configuration file:</p>
         &lt;/service&gt;
 
         &lt;service id="filesystem"
-            class="Symfony\Component\Filesystem\Filesystem"
+            class="Symfony\Component\Filesystem\Filesystem"&gt;
         &lt;/service&gt;
 
         &lt;service id="documentation_writer"
-            class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"
+            class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"&gt;
             &lt;argument type="service" id="filesystem" /&gt;
             &lt;argument type="service" id="logger" /&gt;
         &lt;/service&gt;
@@ -456,11 +458,24 @@ Locator is a unjustified decision ;) .</p>
       </div>
     
     
-              <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+                  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
       <script>window.jQuery || document.write('<script src="../../../js/vendor/jquery-1.9.0.min.js"><\/script>')</script>
       <script src="../../../js/vendor/bootstrap.min.js"></script>
       <script src="http://yandex.st/highlightjs/7.3/highlight.min.js"></script>
       <script>hljs.initHighlightingOnLoad();</script>
     
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-47822314-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+
       </body>
 </html>

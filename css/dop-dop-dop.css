@@ -1,0 +1,84 @@
+/**
+ * Ne pique pas les yeux,
+ * Dop, dop, dop,
+ * Évite les noeuds,
+ * DOP !
+ *
+ * @author Loïc Chardonnet <loic.chardonnet@gmail.com>
+ */
+
+html, body {
+    font-size: 18px;
+    line-height: 1.61111em;
+}
+
+body {
+    font-family: "Varela Round",sans-serif;
+    color: #333;
+    background-color: #fafafa;
+    padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    font-family: "Bitter",serif;
+}
+
+h1 {
+    font-weight: normal;
+    font-size: 2em;
+    line-height: 1.61111em;
+    margin-bottom: 0.80556em;
+}
+
+h2 {
+    font-size: 1.66667em;
+    line-height: 1.93333em;
+    margin-bottom: 0.48333em;
+}
+
+h3 {
+    font-size: 1.33333em;
+    line-height: 1.20833em;
+    margin-bottom: 0.60417em;
+    color: #4d4d4d;
+}
+
+h4 {
+    font-size: 1.11111em;
+    line-height: 1.45em;
+    margin-bottom: 0.725em;
+}
+
+h5 {
+    font-size: 0.88889em;
+    line-height: 1.8125em;
+    margin-bottom: 0.90625em;
+}
+
+ol, ul {
+    padding: 0 0 0 40px;
+}
+
+p code, li code {
+    background-color: #e7e7e7;
+    padding: 0.1em 0.3em;
+    border-radius: 5px;
+    white-space: nowrap;
+}
+
+code, pre {
+    font-family: monospace, serif;
+    font-size: 1em;
+    color: #333;
+}
+
+a, a:link {
+    color: #5191d0;
+    text-decoration: underline;
+    cursor: auto;
+}
+
+a:visited {
+    color: #1d446b;
+}

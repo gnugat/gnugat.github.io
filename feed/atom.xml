@@ -786,7 +786,7 @@ $container-&gt;register(
 // * arguments
 // * parameters which have been declared previously
 // * setter dependencies
-container
+$container
     -&gt;register('console_handler', 'Symfony\Bridge\Monolog\Handler\ConsoleHandler')
     -&gt;addArgument(new Reference('console_output'))
     -&gt;addArgument(true)
@@ -794,15 +794,15 @@ container
     -&gt;addMethodCall('setFormatter', array(new Reference('output_formatter')));
 ;
 
-container
+$container
     -&gt;register('logger', 'Monolog\Logger')
     -&gt;addArgument('default.logger')
     -&gt;addMethodCall('pushHandler', array(new Reference('console_handler')));
 ;
 
-container-&gt;register('filesystem', 'Symfony\Component\Filesystem\Filesystem');
+$container-&gt;register('filesystem', 'Symfony\Component\Filesystem\Filesystem');
 
-container
+$container
     -&gt;register('documentation_writer', 'Gnugat\Fossil\MarkdownFile\DocumentationWriter')
     -&gt;addArgument(new Reference('filesystem'))
     -&gt;addArgument(new Reference('logger'))
@@ -831,11 +831,11 @@ allows you to put all those definition inside a configuration file:</p>
         &lt;/service&gt;
 
         &lt;service id="output_formatter"
-            class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"
+            class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"&gt;
         &lt;/service&gt;
 
         &lt;service id="console_handler"
-            class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"
+            class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"&gt;
             &lt;argument type="service" id="console.output" /&gt;
             &lt;argument key="bubble"&gt;true&lt;/argument&gt;
             &lt;argument&gt;%verbosity_Level_map%&lt;/argument&gt;
@@ -852,11 +852,11 @@ allows you to put all those definition inside a configuration file:</p>
         &lt;/service&gt;
 
         &lt;service id="filesystem"
-            class="Symfony\Component\Filesystem\Filesystem"
+            class="Symfony\Component\Filesystem\Filesystem"&gt;
         &lt;/service&gt;
 
         &lt;service id="documentation_writer"
-            class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"
+            class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"&gt;
             &lt;argument type="service" id="filesystem" /&gt;
             &lt;argument type="service" id="logger" /&gt;
         &lt;/service&gt;
