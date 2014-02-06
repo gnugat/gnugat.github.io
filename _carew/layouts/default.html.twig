@@ -1,0 +1,57 @@
+{% extends 'vendor/carew/theme-bootstrap/layouts/default.html.twig' %}
+
+{% block stylesheets %}
+{% spaceless %}
+    <link href='http://fonts.googleapis.com/css?family=Bitter' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Varela+Round' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" href="{{ carew.relativeRoot }}/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ carew.relativeRoot }}/css/bootstrap-responsive.min.css">
+    <link rel="stylesheet" href="{{ carew.relativeRoot }}/css/main.css">
+    <link rel="stylesheet" href="{{ carew.relativeRoot }}/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/xcode.min.css">
+{% endspaceless %}
+{% endblock %}
+
+{% block header %}
+      <div class="navbar">
+          <div class="navbar-inner">
+              <div class="container">
+                  <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                  </a>
+                  <a class="brand" href="{{ carew.relativeRoot }}">{{ carew.site.title|default('') }}</a>
+                  <div class="nav-collapse collapse">
+                    <ul class="nav pull-right">
+                      {% block nav_left %}
+                          {% if carew.navigations.main is defined %}
+                            {% for document in carew.navigations.main %}
+                                <li{% if document.path == carew.currentPath %} class="active"{% endif %}><a href="{{ render_document_path(document) }}">{{ render_document_title(document) }}</a></li>
+                            {% endfor %}
+                          {% endif %}
+                      {% endblock %}
+                    </ul>
+                    {% block nav_right '' %}
+                  </div>
+              </div>
+          </div>
+      </div>
+    {% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-47822314-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+{% endblock %}
