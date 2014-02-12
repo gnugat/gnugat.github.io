@@ -6,7 +6,7 @@ tags:
     - Symfony2
 ---
 
-In [the previous article](http://gnugat.github.io/2014/01/22/ioc-di-and-service-locator.html)
+In {{ link('posts/2014-01-22-ioc-di-and-service-locator.md', 'the previous article') }}
 we've seen among other things the definition of Dependency Injection (DI) and of
 the Dependency Injection Container (DIC).
 
@@ -215,7 +215,7 @@ Let's explore the impact of wiring your application using Symfony2's DI
 component. You might not have noticed it, but the code samples used in the
 previous article as well as in this one all come from [fossil](https://github.com/gnugat/fossil),
 a command which allows you to bootstrap markdown files of your projects
-([cf this article](http://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html)).
+({{ link('posts/2014-01-15-bootstrap-markdown-files-of-your-FOSS-project.md', 'cf this article') }}).
 It uses Symfony2's Console component which requires some boilerplate code in
 order to create the application:
 
@@ -406,7 +406,7 @@ which means:
 
 ### Service locator
 
-[The previous article](http://gnugat.github.io/2014/01/22/ioc-di-and-service-locator.html)
+{{ link('posts/2014-01-22-ioc-di-and-service-locator.md', 'The previous article') }}
 spoke about service locator, which is all about using DIC as a dependency. If
 you still don't see what it means, take a look at [Symfony2 ContainerAware classes](https://github.com/symfony/symfony/blob/master/src/Symfony/Component/DependencyInjection/ContainerAware.php).
 
