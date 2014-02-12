@@ -7,7 +7,10 @@ tags:
 ---
 
 This article is part of a series on Tests in general and on how to practice
-them.
+them:
+
+1. {{ link('posts/2014-02-05-tests-introduction.md', 'Introduction') }}
+2. {{ link('posts/2014-02-12-tests-tools-overview.md', 'Tools overview') }}
 
 This introduction can be read by anyone (no special level required) and it
 targets those who've never heard about tests, or those you've never really
@@ -224,7 +227,8 @@ to your class, allowing you to decide what should be injected: the real
 dependency, or one of its stub (or mock).
 
 This is why Dependency Injection is a big deal. If you don't clearly know what
-is this design pattern about, I advise you to [read this article](http://gnugat.github.io/2014/01/22/ioc-di-and-service-locator.html).
+is this design pattern about, I advise you to
+{{ link('posts/2014-01-22-ioc-di-and-service-locator.md', 'read this article') }}
 
 ## Conclusion
 
@@ -239,7 +243,7 @@ doubles to isolate the part you want to check.
 
 This article had much theory in it, so the next one will be more practical with
 code samples, case studies and tools which will allow you to test your
-applications.
+applications: {{ link('posts/2014-02-12-tests-tools-overview.md', 'Tools overview') }}.
 
 ### A word about test coverage
 
