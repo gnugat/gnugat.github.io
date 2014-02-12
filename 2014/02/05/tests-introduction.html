@@ -65,8 +65,10 @@
 
     <div class="body">
       <p>This article is part of a series on Tests in general and on how to practice
-them.</p>
-<p>This introduction can be read by anyone (no special level required) and it
+them:</p>
+<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+</ol><p>This introduction can be read by anyone (no special level required) and it
 targets those who've never heard about tests, or those you've never really
 practice them. Here's what we'll cover:</p>
 <ol><li><a href="#what-is-a-test">what is a test</a></li>
@@ -238,7 +240,8 @@ you want to test. The simplest way is to inject them (pass them as arguments)
 to your class, allowing you to decide what should be injected: the real
 dependency, or one of its stub (or mock).</p>
 <p>This is why Dependency Injection is a big deal. If you don't clearly know what
-is this design pattern about, I advise you to <a href="http://gnugat.github.io/2014/01/22/ioc-di-and-service-locator.html">read this article</a>.</p>
+is this design pattern about, I advise you to
+<a href="../../../2014/01/22/ioc-di-and-service-locator.html">read this article</a></p>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>Tests allow you to make sure parts of your system work as expected, and they can
 be automated so you can run them regurarly in order to detect any regressions.</p>
@@ -248,7 +251,7 @@ best for you (the wrong answer being "no tests for me, thank you very much").</p
 doubles to isolate the part you want to check.</p>
 <p>This article had much theory in it, so the next one will be more practical with
 code samples, case studies and tools which will allow you to test your
-applications.</p>
+applications: <a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a>.</p>
 <h3 id="a-word-about-test-coverage">A word about test coverage<a href="#a-word-about-test-coverage" class="anchor">#</a></h3>
 <p>I might not have stressed this out enough: <strong>tests won't magically prevent your
 system from failing</strong>. This is all because your test will only cover the part
