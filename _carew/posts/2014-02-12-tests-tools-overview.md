@@ -458,7 +458,8 @@ HTML's reponse.
 
 I hope this article helped you to see how each kinds of tests are written. The
 next one will be on Test Driven Development, a practice where tests are written
-before the code.
+before the code: {{ link('posts/2014-02-19-test-driven-development.md', 'TDD') }}.
+
 
 If there's something bothering you in this post, or if you have a question, or
 if you want to give me your opinion, be sure to do so on
