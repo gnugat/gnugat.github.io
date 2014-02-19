@@ -5,309 +5,1082 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-02-12T00:00:00+01:00</updated>
+            <updated>2014-02-19T00:00:00+01:00</updated>
             <entry>
-        <title>Carew, the static site generator</title>
-                <id>http://gnugat.github.io/2014/01/01/carew-static-site-generator.html</id>
-                <updated>2014-01-01T00:00:00+01:00</updated>
+        <title>Test Driven Development</title>
+                <id>http://gnugat.github.io/2014/02/19/test-driven-development.html</id>
+                <updated>2014-02-19T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
         </author>
-        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/01/carew-static-site-generator.html"/>
-        <content type="html" xml:lang="en"><![CDATA[<p>Frameworks are a real help when building web applications which serve business
-logic. But what about static websites?</p>
-<p>Those only contain pages which could be directly written in HTML. The only
-problem with this approach is that HTML isn't writter friendly compared to
-Markdown.</p>
-<p>Also, we could say that static websites like blogs do have some logic behind the
-scenes:</p>
-<ul><li>posts can have a state (is it published yet?)</li>
-<li>posts can be tagged, in order to make them easier to find</li>
-</ul><p>But still, a framework might be too much for this task.</p>
-<p>Static site generators are a way to solve this problem:</p>
-<ol><li>simply write your pages in markdown</li>
-<li>launch a command to generate HTML from it</li>
-</ol><p><a href="http://carew.github.io/">Carew</a> is one of them (among
-  <a href="http://jekyllrb.com/">Jekyll</a>,
-  <a href="http://hyde.github.io/">Hyde</a>,
-  <a href="https://github.com/obensonne/poole">Poole</a>
-  and <a href="https://github.com/spjwebster/lanyon">Lanyon</a>):
-it is written in PHP, allows you to use the template engine
-<a href="http://twig.sensiolabs.org/">Twig</a> in your markdown and it provides a theme
-using <a href="http://getbootstrap.com/2.3.2/">Bootstrap</a>.</p>
-<p>This blog post will focus on Carew, as
-<a href="https://github.com/gnugat/gnugat.github.io">this very blog is written with it</a>.</p>
-<h2 id="carew-and-github">Carew and Github<a href="#carew-and-github" class="anchor">#</a></h2>
-<p>A common way to quickly publish static sites is to use
-<a href="http://pages.github.com/">Github Pages</a> which works as follow:</p>
-<ol><li>create a repository, the name should follow this format: <code>&lt;username&gt;.github.io</code></li>
-<li>add, commit and push the content of the <code>web</code> directory directly at the
-root of your repo</li>
-<li>the site is now available at this address: <code>http://&lt;username&gt;.github.io</code></li>
-</ol><p><a href="http://carew.github.io/cookbook/hosting.html">Learn more about hosting a website built with Carew on the official website</a>.</p>
-<h2 id="creation">Creation<a href="#creation" class="anchor">#</a></h2>
-<p>Creating your site using Carew is very simple, just follow these steps:</p>
-<pre><code>$ php composer.phar create-project carew/boilerplate &lt;project&gt; -s dev
-$ cd &lt;project&gt;
-$ bin/carew build</code></pre>
-<p>Examples pages (which sources are located in <code>pages</code> and <code>posts</code>) are converted
-from markdown to HTML in the <code>web</code> directory.</p>
-<h2 id="customization">Customization<a href="#customization" class="anchor">#</a></h2>
-<p>Before writing any page or post, edit the configuration wich is located inside
-the <code>config.yml</code> file.</p>
-<p>Then edit the <code>pages/index.md</code> and <code>pages/about.md</code> pages with your own content.</p>
-<p>Finally, remove the content of the <code>posts</code> folder and create your first blog
-post using this command:</p>
-<pre><code>$ bin/carew generate:post [--date='YYYY-MM-DD'] title</code></pre>
-<p><a href="http://carew.github.io/cookbook/configuration.html">See the configuration documentation on the official website</a>.</p>
-<h2 id="front-matters">Front matters<a href="#front-matters" class="anchor">#</a></h2>
-<p>Each markdown file starts with a header:</p>
-<pre><code>---
-layout: post # no need for this line when writing a regular page
-title: Will be used by `&lt;title&gt;&lt;/title&gt;` and `&lt;h1&gt;&lt;/h1&gt;`
-tags:
-    - first tag
-    - carew
----</code></pre>
-<p>Carew generates a page listing all existing tags. You can create a link to this
-page with the following snippet:</p>
-<pre><code>{{ link('tags', 'The page with all the tags') }}.</code></pre>
-<p><a href="http://carew.github.io/documentation.html#front-matter">Learn more about Front matters on the official website</a>.</p>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/02/19/test-driven-development.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>This article is part of a series on Tests in general and on how to practice
+them:</p>
+<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+<li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+</ol><p>Unlike the two previous articles, this one requires some experience in testing.
+While Test Driven Development (TDD) oficionados would tell you that on the
+contrary this is the way to learn tests, I'd rather advise you to practice them
+a little bit before hand, so you can fully grasp the interest of this principle.</p>
+<p>In this article, we'll cover:</p>
+<ol><li><a href="#introduction">an introduction to TDD</a></li>
+<li><a href="#writing-the-test-first">why we should write tests first</a></li>
+<li><a href="#writing-the-code-afterward">how to write the code afterward</a></li>
+<li><a href="#refactoring-in-the-end">the importance of refactoring in the end</a></li>
+</ol><p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<h2 id="introduction">Introduction<a href="#introduction" class="anchor">#</a></h2>
+<p>Test Driven Development (TDD) is a simple principle stating that we should:</p>
+<ol><li>write the test first</li>
+<li>then write the code to make it pass</li>
+<li>then refactor to clean the mess</li>
+</ol><p>It is also described as <code>red, green, refactor</code> to reflect the state of the tests
+after being run in the end of each step. Well the last step should still be
+green, but it wouldn't be self explicit if we said <code>red, green, green</code> wouldn't
+it?</p>
+<p>Kent Beck is considered to be the father of TDD, even though this practice must
+have been used before, especially because he wrote the
+<a href="http://en.wikipedia.org/wiki/Test-Driven_Development_by_Example">'bible' Test Driven Development by Example</a>
+and also because he created the <a href="http://en.wikipedia.org/wiki/Extreme_Programming">eXtreme Programming methodology</a>
+(which integrates TDD into its practices).</p>
+<p>TDD mostly applies to <strong>unit</strong> tests, but it could be used for any kind of test.</p>
+<p>Each step has a purpose, which we'll discover.</p>
+<h2 id="writing-the-test-first">Writing the test first<a href="#writing-the-test-first" class="anchor">#</a></h2>
+<p>So, why would we write the test before the code? The idea behind this is to
+write a piece of software which will describe how to use the future code: when
+writing the test, you're not bothered with implementation details and will
+naturally create the API (the public methods).</p>
+<p>The first consequence to this step is having a meaningful code coverage: no need
+for tools to inspect which lines of code are executed when running the test in
+order to make sure the code is properly tested
+(<a href="http://codemanship.co.uk/parlezuml/blog/?postid=1202">those tools aren't effective anyway</a>).</p>
+<p>The second one is better design: to write tests you need the code to be
+decoupled. Writing tests firts forces you to make those decoupling decision
+early. Decoupled code should be easier to re-use, read and maintain.</p>
+<h2 id="writing-the-code-afterward">Writing the code afterward<a href="#writing-the-code-afterward" class="anchor">#</a></h2>
+<p><a href="http://vimeo.com/68375232">As depicted by Ian Cooper</a>, this step is the
+<a href="http://www.joelonsoftware.com/items/2009/09/23.html">duct tape progammer</a>'s
+one: in order to make the freshly written test pass, every sin should be
+commited. Every design, clean code and best practice concerns should be put
+aside so the test passes as quickly as possible.</p>
+<p>Why so much fuss about all
+<a href="http://redotheweb.com/2013/06/04/you-should-write-ugly-code.html">this ugly code</a>?
+The main reason is speed, to answer all criticism about how long tests take to
+be written.</p>
+<p>With this, the school of pragmatic programmers and scholar ones can finally be
+reunited: as a matter of fact, while this step is all about the first "clan",
+the refactoring step is all about the second one.</p>
+<p>To illustrate the fact that sometimes the clean solution comes to mind once the
+dirty has been written, here's a quote from <a href="http://eloquentjavascript.net/chapter6.html">the Eloquent Javascript book</a>:</p>
+<blockquote>
+<p>A student had been sitting motionless behind his computer for hours,
+frowning darkly. He was trying to write a beautiful solution to a
+difficult problem, but could not find the right approach. Fu-Tzu hit
+him on the back of his head and shouted '<em>Type something!</em>' The student
+started writing an ugly solution. After he had finished, he suddenly
+understood the beautiful solution.</p>
+</blockquote>
+<h2 id="refactoring-in-the-end">Refactoring in the end<a href="#refactoring-in-the-end" class="anchor">#</a></h2>
+<p>Now that we have sin, we have created a technical debt. The third and last step
+of TDD, refactoring, is all about managing this debt.</p>
+<p>The rules here is to step back a little bit, consider how we can improve the
+structure of the code to make it simpler, more readable and if there's anything
+which can be extracted to be reused.</p>
+<p>Once this consideration is done, then we can start moving the code at the only
+condition that we don't break the tests. It also means that the tests shouldn't
+be modified.</p>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>Carew is really simple to use, in this article we've covered the minimum you
-should know to create pages, blog posts and tags.</p>
-<p>I hope you enjoyed this article and that it helped you a little.</p>
-<p>If you want to learn more, for example to customize its behaviour or its theme,
-please refer to <a href="http://carew.github.io/documentation.html">the official documentation</a>.</p>]]></content>
+<p>Writing first the test allows a complete and meaningful code coverage, a more
+decoupled code and a more natural API (public methods).</p>
+<p>Then allowing every sins to write as quickly as possible the code to make the
+test pass allows to speed up development through pragmatic decisions.</p>
+<p>Finally refactoring without touching the tests allows to get rid of the
+technical debt created in the previous step, depending on the estimated time
+left for the task.</p>
+<p>Unfortunately TDD comes with a quite steep learning curve, but hey! You don't
+get something for nothing!</p>
+<p>I hope you enjoyed this article, if you'd like to make any comments about it
+(either good or bad), please feel free to do so <a href="https://twitter.com/epiloic">on Twitter</a>.</p>
+<p>There's been many criticism about TDD, and most of those are simply
+misconceptions. If you're part of the sceptics,
+<a href="http://codemanship.co.uk/parlezuml/blog/?postid=1170">check if your argument is listed in Jason Gorman's article</a>.</p>]]></content>
     </entry>
         <entry>
-        <title>Technology scouting</title>
-                <id>http://gnugat.github.io/2014/01/08/technology-scouting.html</id>
-                <updated>2014-01-08T00:00:00+01:00</updated>
+        <title>Tests: Tools overview</title>
+                <id>http://gnugat.github.io/2014/02/12/tests-tools-overview.html</id>
+                <updated>2014-02-12T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
         </author>
-        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/08/technology-scouting.html"/>
-        <content type="html" xml:lang="en"><![CDATA[<p>As a curious person I'm constantly trying to learn new practices and to discover
-tools which might help me, by collecting information via technology scouting and
-then reading it.</p>
-<p>In this article, I will present how to do so effectively.</p>
-<h2 id="collecting-information">Collecting information<a href="#collecting-information" class="anchor">#</a></h2>
-<p>Whenever you find an interesting link, send it to <a href="http://getpocket.com/">Pocket</a>
-so you can read it later.</p>
-<h3 id="blogs">Blogs<a href="#blogs" class="anchor">#</a></h3>
-<p>To find interesting links subscribe to blog RSS feeds using
-<a href="https://ifttt.com/">If This Then That</a>: it will send new entries directly to
-pocket.</p>
-<p>Here are some blogs I personnally follow (caution, they're not really sorted):</p>
-<ul><li><a href="http://williamdurand.fr/">William Durand's blog</a></li>
-<li><a href="http://www.mountaingoatsoftware.com/blog">Mountain Goat Software</a></li>
-<li><a href="http://blog.karolsojko.com/">Karol S&oacute;jko's blog</a></li>
-<li><a href="http://blog.8thlight.com/">8th light</a></li>
-<li><a href="http://richardmiller.co.uk/">Richard Miller's blog</a></li>
-<li><a href="http://verraes.net/#blog">Mathias Verraes's blog</a></li>
-<li><a href="http://www.whitewashing.de/">Benjamin Eberlei's blog</a></li>
-<li><a href="http://nedroid.com/">Nedroid</a></li>
-<li><a href="https://igor.io/">Igor Wiedler's blog</a></li>
-</ul><h3 id="twitter">Twitter<a href="#twitter" class="anchor">#</a></h3>
-<p>You can also use <a href="https://twitter.com/">Twitter</a>:</p>
-<ol><li>create a private list which will serve as a pool</li>
-<li>add any author which might post interresting messages</li>
-<li>after a week or so, add the author to a public list</li>
-</ol><p>The lists only show messages (not retweets) and conversations between people
-you follow. They also allow you to create categories.</p>
-<p>If you want, you can have a look at
-<a href="https://twitter.com/epiloic/lists/">my own public lists</a>.</p>
-<h3 id="github">Github<a href="#github" class="anchor">#</a></h3>
-<p>Last but not least, <a href="https://github.com/">Github</a> can also be a great source of
-discoveries: by following someone which stars or watch a lot of projects you
-will have them listed on your homepage.</p>
-<p>Here's my advice: <a href="https://github.com/pborreli">Pascal Borreli</a> contributes to
-many repositories, you should start to follow him.</p>
-<h2 id="reading-it">Reading it<a href="#reading-it" class="anchor">#</a></h2>
-<p>Collecting resources is a thing, getting it read is another one. Just like
-<a href="http://verraes.net/2012/12/how-to-read-more-books/">Mathias Verraes advised it</a>,
-you should get an e-reader: you can send the pages you gathered on Pocket and
-then read them everywhere.</p>
-<p>Pocket allows you to remove the articles you found not so interresting after
-all, it also allows you to archive the good ones and to favorite the great ones.</p>
-<p>Speaking of reading and e-readers, books are another good way of discovering new
-things. Do not underestimate them. Here's a list of books I'd recommend:</p>
-<ul><li><a href="http://git-scm.com/book">Pro Git</a></li>
-<li>Clean Code, by Robert C. Martin</li>
-<li>Agile Software Development, Principles, Patterns, and Practices, by Robert C. Martin</li>
-</ul><h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>The point is: current tools won't last and there's a lot of practices you're
-not aware of. If you want to improve yourself and keep up with other developers,
-you have to try your best to discover new practices (which might be rather old
-actually) and new trending tools.</p>
-<p>I hope you found this article enjoyable and helpful.</p>]]></content>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/02/12/tests-tools-overview.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>This article is part of a series on Tests in general and on how to practice
+them:</p>
+<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+</ol><p>This article can be read by any regular developer (no special level required),
+we'll put some code on the principles we've previously seen and we'll have a
+quick look on existing tools. Here's what we'll cover:</p>
+<ol><li><a href="#test-frameworks">test frameworks</a></li>
+<li><a href="#phpunit">PHPUnit</a></li>
+<li><a href="#unit-tests">unit tests</a> with test doubles (mocks and stubs)</li>
+<li><a href="#functional-tests">functional tests</a></li>
+<li><a href="#user-interface-tests">user interface tests</a></li>
+</ol><p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<h2 id="test-frameworks">Test frameworks<a href="#test-frameworks" class="anchor">#</a></h2>
+<p>In order to automate your tests (whether they're unitary, functionnal or anything
+else), you'll need to use some tools. These would be libraries helping you
+doing assertions, or libraries helping you creating test doubles without writing
+any new classes, or even frameworks which group those libraries together.</p>
+<p>Most of the test frameworks follow the
+<a href="http://www.xprogramming.com/testfram.htm"><strong>xUnit</strong> convention, which have been (accidently?) created by Kent Beck</a>.
+Those are composed of:</p>
+<ul><li>a test runner which gather the <strong>test suites</strong>, execute their tests and then
+prints the result using a <strong>test result formatter</strong></li>
+<li>a test case, a class which you extend to write your tests</li>
+<li>test fixtures to provide data as context for the tests</li>
+<li>test suites, a bunch of tests which share commonalities (in practice this would
+be the class which extends the test case and where you'll write your tests)</li>
+<li>test execution: you can execute a bunch of code before every test with a
+<strong>setUp</strong> method, and afterward in a <strong>tearDown</strong> function</li>
+<li>test result formatter taking responsibility for outputing how test failed,
+or if it should be written on the output or in a XML file</li>
+<li>assertions which check if the given expected value matches the given actual
+value</li>
+</ul><p>Those are, among a ton of others:</p>
+<ul><li><a href="http://phpunit.de/">PHPUnit</a> in PHP</li>
+<li><a href="https://github.com/atoum/">Atoum</a> in PHP</li>
+<li><a href="http://junit.org/">jUnit</a> in Java</li>
+<li><a href="http://docs.python.org/2/library/unittest.html">unittest</a> in Python</li>
+</ul><p>You could aslo find Behavior Driven Development (BDD) style test frameworks:</p>
+<ul><li><a href="http://codeception.com/">Codeception</a> in PHP</li>
+<li><a href="http://www.phpspec.net/">phpspec</a> alongside with <a href="http://behat.org/">Behat</a>
+in PHP</li>
+<li><a href="http://pivotal.github.io/jasmine/">jasmine</a> in javascript</li>
+<li><a href="http://rspec.info/">RSpec</a> in ruby</li>
+</ul><p>I won't talk about these, as it will be the subject of a future article
+(there's so much to say about them).</p>
+<p>Full stack frameworks isn't the only thing around here to help you write tests,
+there also are some libraries:</p>
+<ul><li><a href="http://visionmedia.github.io/mocha/">Mocha</a>, a base layer for tests,
+in javascript</li>
+<li><a href="http://chaijs.com/">Chai</a>, an assertion library in javascript</li>
+<li><a href="http://sinonjs.org/">Sinon.js</a>, a test double library in javascript</li>
+<li><a href="https://github.com/padraic/mockery">Mockery</a>, a mock framework in PHP</li>
+<li><a href="https://github.com/phpspec/prophecy">Prophecy</a>, another mock framework in PHP</li>
+</ul><p>Choose your weapon wisely!</p>
+<h2 id="phpunit">PHPUnit<a href="#phpunit" class="anchor">#</a></h2>
+<p>I mainly code in PHP, and in this language PHPUnit is the most popular test
+framework. It's been there for so long (version 1.0.0 released in July 2006)
+that almost any libraries and frameworks are tested with it. So it'll be our tool
+for the next examples.</p>
+<p>You can install it using <a href="https://getcomposer.org/">Composer</a>:</p>
+<pre><code>curl -sS https://getcomposer.org/installer | php # Download composer
+composer install "phpunit/phpunit:~3.7"
+php vendor/bin/phpunit -h</code></pre>
+<p><strong>Note</strong>: if you don't know Composer, let's just say that it makes your life easier
+by downloading for you the libraries you told him to (it takes care of selecting
+the good versions and can update them to get bug fixes). It also autoloads your
+classes so you don't have to require them.</p>
+<p>Now that you have the latest stable version, you'll need to configure it:</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- File: phpunit.xml --&gt;
+&lt;phpunit
+    backupGlobals="false"
+    colors="true"
+    syntaxCheck="false"
+    bootstrap="test/bootstrap.php"
+&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="Fossil Test Suite"&gt;
+            &lt;directory suffix="Test.php"&gt;./test/&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;</code></pre>
+<p>This configuration tells PHPUnit to look (recursively) in the <code>test</code> directory
+for files ending in <code>Test.php</code>. Those will be your test suites.</p>
+<p>You'll need a bootstrap file in order to use composer's autoloader:</p>
+<pre><code>&lt;?php
+
+$loader = require __DIR__.'/../vendor/autoload.php';
+$loader-&gt;add('Gnugat\\Fossil\\Test', __DIR__);</code></pre>
+<p>And voil&agrave;! You can now write your tests in <code>test</code>.</p>
+<h2 id="unit-tests">Unit tests<a href="#unit-tests" class="anchor">#</a></h2>
+<p>The common understanding of unit test is a symmetry between classes and tests:
+when you have a class with 2 methods, you need to have a test class for it
+which will test these two methods.</p>
+<p>It looks like this wasn't the real meaning of the term unit, which should have
+meant making tests which can be run in any order without ruinning them, and as
+many times as wanted. Fortunately a new kind of test was created to fix this
+misunderstanding, so let's stick with the common one.</p>
+<p>Imagine you have the following class, which creates a file if it doesn't already
+exist:</p>
+<pre><code>&lt;?php
+// File: src/MarkdownFile/DocumentationWriter.php
+
+namespace Gnugat\Fossil\MarkdownFile;
+
+use Symfony\Component\Filesystem\Filesystem;
+
+class DocumentationWriter
+{
+    private $filesystem;
+
+    public function __construct(Filesystem $filesystem)
+    {
+        $this-&gt;filesystem = $filesystem;
+    }
+
+    public function write($absolutePathname, $content)
+    {
+        if (!$this-&gt;filesystem-&gt;exists($absolutePathname)) {
+            $this-&gt;filesystem-&gt;dumpFile($absolutePathname, $content);
+        }
+    }
+}</code></pre>
+<p><strong>Note</strong>: once again the code samples are taken from
+<a href="https://github.com/gnugat/fossil">fossil</a>, have a look at
+<a href="../../../2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html">this article</a>
+to discover what it is.</p>
+<p>In order for it to be autoloaded, you'll need to edit your <code>composer.json</code> file:</p>
+<pre><code>{
+    "require": {
+        "phpunit/phpunit": "~3.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Gnugat\\Fossil": "src/"
+        }
+    }
+}</code></pre>
+<p>To test it, we could run it and check if the file has been created with the
+given content, but that would be testing Symfony2's <code>Filesystem</code> which
+<a href="https://github.com/symfony/symfony/blob/fe86efd3f256c5bda845cf23bf8a5400ae6a295e/src/Symfony/Component/Filesystem/Tests/FilesystemTest.php">happens to be already tested</a>.</p>
+<p>So what does our class adds to it? Well it calls <code>Filesystem</code> to check if the
+file exists, and if not it calls again the <code>Filesystem</code> to create it. We could
+check if those calls are made using stubs and mocks.</p>
+<p><strong>Reminder</strong>: stubs are a substitute of an object which forces it to return
+a given value. When a System Under Test (SUT, the class you're testing) has
+collaborators (classes used by the SUT, also called dependencies), we can stub
+them so their behavior is completly controlled.</p>
+<p><strong>Reminder</strong>: mocks are a substitute of an object which checks if its methods
+have been called. When a System Under Test (SUT, the class you're testing) has
+collaborators (classes used by the SUT, also called dependencies), we can mock
+them to monitor their use.</p>
+<p>PHPUnit allows us to create stubs and mocks without having to write a class
+which extends the colaborator and overwrites its methods:</p>
+<pre><code>&lt;?php
+// File: test/MarkdownFile/DocumentationWriterTest.php
+
+namespace Gnugat\Fossil\Test\MarkdownFile;
+
+use Gnugat\Fossil\MarkdownFile\DocumentationWriter;
+
+class DocumentationWriterTest extends \PHPUnit_Framework_TestCase
+{
+    const FIXTURE_ABSOLUTE_PATHNAME = '/tmp/example.txt';
+    const FIXTURE_CONTENT = "Hello world\n";
+
+    public function setUp()
+    {
+        $this-&gt;filesystem = $this-&gt;getMock('Symfony\\Component\\Filesystem\\Filesystem');
+        $this-&gt;documentationWriter = new DocumentationWriter($this-&gt;filesystem);
+    }
+
+    public function testWriteNewFile()
+    {
+        // Stub
+        $this-&gt;filesystem-&gt;expects($this-&gt;any())
+            -&gt;method('exists')
+            -&gt;with(self::FIXTURE_ABSOLUTE_PATHNAME)
+            -&gt;will($this-&gt;returnValue(true))
+        ;
+
+        // Mock
+        $this-&gt;filesystem-&gt;expects($this-&gt;once())
+            -&gt;method('dumpFile')
+            -&gt;with(
+                $this-&gt;equalTo(self::FIXTURE_ABSOLUTE_PATHNAME),
+                $this-&gt;equalTo(self::FIXTURE_CONTENT)
+            )
+        ;
+
+        // Call
+        $this-&gt;documentationWriter-&gt;write(
+            self::FIXTURE_ABSOLUTE_PATHNAME,
+            self::FIXTURE_CONTENT
+        );
+    }
+}</code></pre>
+<p>In the stub: for every call (<code>expects($this-&gt;any())</code>) of the method <code>exists</code>
+with the parameter <code>self::FIXTURE_ABSOLUTE_PATHNAME</code>, force the colaborator to
+return <code>true</code>.</p>
+<p>In the mock: a unique call must be made (<code>expects($this-&gt;once())</code>) of the method
+<code>dumpFile</code> with the two parameters <code>self::FIXTURE_ABSOLUTE_PATHNAME</code> and
+<code>self::FIXTURE_CONTENT</code>.</p>
+<p>You can run the test using <code>php vendor/bin/phpunit</code> and see that they pass. As
+an exercise, write a second method in this test suite
+<code>testDoesNotWriteExistingFile</code>, with a stub returning false and a mock checking
+that <code>dumpFile</code> is never called (<a href="http://phpunit.de/manual/3.7/en/test-doubles.html#test-doubles.mock-objects.tables.matchers">hint</a>).</p>
+<p>I advise you to watch <a href="http://verraes.net/2013/09/extract-till-you-drop/">extract till you drop</a>,
+a nice refactoring session by Mathias Verraes: in order to improve his code, he
+writes tests which give him enough confidence to proceed. He uses PHPUnit with
+assertions, mocks and stubs, so you can really see their use.</p>
+<h2 id="functional-tests">Functional tests<a href="#functional-tests" class="anchor">#</a></h2>
+<p>Unit tests are used in order to make sure each unit of <code>code</code> works as expected.
+But applications aren't just about code, they're also about interactions
+between these units. This is what functional tests are for: they use the entry
+point of the system and check the final status code.</p>
+<p>To illustrate this, we'll still use PHPUnit: even though there's the word <code>unit</code>
+in its name, this test framework allows us to write many types of tests.</p>
+<p>The Symfony2 web framework is all about the HTTP protocol: it takes a HTTP
+Request and returns a HTTP Response. It also provides a convenient client which
+simulates HTTP Requests, allowing us to write easily functional tests:</p>
+<pre><code>&lt;?php
+// File: src/Acme/DemoBundle/Tests/Controller/DemoControllerTest.php
+
+namespace Acme\DemoBundle\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
+
+class DemoControllerTest extends WebTestCase
+{
+    public function testIndex()
+    {
+        $client = static::createClient();
+
+        $client-&gt;request('GET', '/demo/hello/Fabien');
+
+        $this-&gt;assertSame(
+            Response::HTTP_OK,
+            $client-&gt;getResponse()-&gt;getStatusCode()
+        );
+    }
+}</code></pre>
+<p>The <code>assertSame</code> line is an assertion: it compares the expected value (first
+argument) with the actual one (second one). PHPUnit provides many assertions:</p>
+<ul><li><code>assertSame</code> is equivalent to <code>===</code> (type and value comparison)</li>
+<li><code>assertEquals</code> is equivalent to <code>==</code> (loose value comparison)</li>
+<li><code>assertFileExists</code> checks if the given filename corresponds to an exisitng file</li>
+<li><a href="http://phpunit.de/manual/3.7/en/appendixes.assertions.html">and many more</a></li>
+</ul><p>Different approaches exist with assertions, for example jasmine uses the
+<code>expect</code> method to set the actual value, chained with a matcher like <code>toBe</code>
+which takes the expected value:</p>
+<pre><code>describe("A suite", function() {
+  it("contains spec with an expectation", function() {
+    var expectedValue = true;
+    var actualValue = true;
+
+    expect(actualValue).toBe(expectedValue);
+  });
+});</code></pre>
+<p>In this case, assertions are splitted into expectations and matchers.</p>
+<p>Back to our sheeps. Here's an example of functional test for a Symfony2 command:</p>
+<pre><code>&lt;?php
+// File: src/Acme/DemoBundle/Tests/Command/GreetCommandTest.php
+
+namespace Acme/DemoBundle/Tests/Command;
+
+use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Acme\DemoBundle\Command\GreetCommand;
+
+class ListCommandTest extends WebTestCase
+{
+    public function testExecute()
+    {
+        $kernel = $this-&gt;createKernel();
+        $kernel-&gt;boot();
+
+        $application = new Application($kernel);
+        $application-&gt;add(new GreetCommand());
+
+        $command = $application-&gt;find('demo:greet');
+        $commandTester = new CommandTester($command);
+        $commandTester-&gt;execute(
+            array(
+                'name' =&gt; 'Fabien',
+                '--yell'  =&gt; true,
+            )
+        );
+
+        $exitSuccess = 0;
+
+        $this-&gt;assertSame($exitSuccess, $commandTester-&gt;getStatusCode());
+    }
+}</code></pre>
+<p>Just like with a controller where we check the HTTP Response's status code, in
+a command we check the exit status code.</p>
+<h2 id="user-interfact-tests">User Interfact tests<a href="#user-interfact-tests" class="anchor">#</a></h2>
+<p>Up until now, we've been testing that the code worked and that interractions
+between all those units go well. But what about the thing the user actually
+sees and interacts with?</p>
+<p>The User Interface (UI) turns out to be tricky to test, but not impossible. You
+can click on buttons, or load pages, or run CLI tasks programmatically and you
+can inspect the standard output or the HTTP Response's content.</p>
+<p>The main problem with this is that you'll tie your tests to the UI, which
+changes a lot.</p>
+<p>We'll see briefly the tools available and then better explain the flaws of such
+a technique.</p>
+<h3 id="selenium">Selenium<a href="#selenium" class="anchor">#</a></h3>
+<p><a href="http://docs.seleniumhq.org/">Selenium</a> allows you to open a browser and
+simulates interractions with the page. Technically it means having a Selenium
+server running in the background, and using a webdriver library in your test to
+send messages to it. In PHP, you can find those webdrivers:</p>
+<ul><li><a href="https://github.com/alexandresalome/php-webdriver">One by Alexandre Salom&eacute;</a></li>
+<li><a href="https://github.com/facebook/php-webdriver">another one by Facebook</a></li>
+</ul><p>You can find code samples in the respective documentation of each library, for
+example here's the doc describing <a href="https://github.com/alexandresalome/php-webdriver/blob/master/doc/elements.rst#element-api">how to click on a button with Alexandre's one</a>.</p>
+<p>If you're curious, <a href="http://codeception.com/11-20-2013/webdriver-tests-with-codeception.html">here's how to use Selenium with another test framework</a>:
+<a href="http://codeception.com/">Codeception</a>.</p>
+<h3 id="casperjs">CasperJs<a href="#casperjs" class="anchor">#</a></h3>
+<p>You don't like the idea of running a server in order to run your tests? You
+don't want a browser to be openned and you <a href="http://stackoverflow.com/questions/2354590/why-is-selenium-rc-so-slow">find it too slow</a>?</p>
+<p>Then you might want to try a <strong>headless website testing</strong> solution like
+<a href="http://casperjs.org/">CasperJs</a>. It's headless because it won't open a
+browser to make the tests.</p>
+<p>Here's the <a href="http://docs.casperjs.org/en/latest/quickstart.html">get started documentation</a>,
+so you can have a quick look on how to use it.</p>
+<h3 id="goutte">Goutte<a href="#goutte" class="anchor">#</a></h3>
+<p>Simulating a browser is too much for you? Making a curl request and parsing its
+response would be sufficient for your needs? Then have a look at the
+<a href="https://github.com/fabpot/goutte">Goutte web scrapper</a>.</p>
+<p>This one also allows you to click on links.</p>
+<h3 id="mink">Mink<a href="#mink" class="anchor">#</a></h3>
+<blockquote>
+<p>One Tool to rule them all, One Tool to find them,
+One Tool to bring them all and in the webness bind them</p>
+</blockquote>
+<p><a href="http://mink.behat.org/">Mink</a> can use either Goutte or Selenium as a driver to
+interract with the UI. It's goal is to provide a unified API.</p>
+<h3 id="what-s-the-point">What's the point?<a href="#what-s-the-point" class="anchor">#</a></h3>
+<p>The thing in common with all these tools is that they rely on the HTML rendered
+in the HTTP Response. In order to check if a message appears, you'll have to
+crawl the page, find the <code>div</code> using its class or id in a CSS selector, or even
+worse using its xpath.</p>
+<p>When the page will change (and it will) your tests will be broken. There's some
+best practices out there, mainly making your tests rely on ID's on one hand and
+making your code and stylesheets rely on classes on the other hand, but in the
+end it still is a risky business.</p>
+<p>Well that's my opinion and this section might be more a rant than an objective
+description. To counter balance this, here's a nice article on
+<a href="http://blog.mozilla.org/webqa/2013/09/26/writing-reliable-locators-for-selenium-and-webdriver-tests/">writing reliable locators for Selenium and WebDriver tests</a>.</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>In PHP, <a href="http://phpunit.de/">PHPUnit</a> is the most popular test framework and it
+allows you to write unit, functional and every other kinds of tests.</p>
+<p>Unit tests allow you to make sure each functions return the expected output when
+given a set of fixtures, and functional tests are used to check the status code
+(think HTTP response, or a command's exit status).</p>
+<p>Stubs are used to force a colaborator's method to return a wanted value, and
+mocks are used to check if a colaborator's method have been called.</p>
+<p><a href="http://docs.seleniumhq.org/">Selenium</a> is the most popular tool to test the
+User Interface, which is done by interracting with the HTML rendered in the
+HTML's reponse.</p>
+<p>I hope this article helped you to see how each kinds of tests are written. The
+next one will be on Test Driven Development, a practice where tests are written
+before the code: <a href="../../../2014/02/19/test-driven-development.html">TDD</a>.</p>
+<p>If there's something bothering you in this post, or if you have a question, or
+if you want to give me your opinion, be sure to do so on
+<a href="https://twitter.com/epiloic">Twitter</a> ;) .</p>]]></content>
     </entry>
         <entry>
-        <title>Bootstrap the markdown files of your FOSS project</title>
-                <id>http://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html</id>
-                <updated>2014-01-15T00:00:00+01:00</updated>
+        <title>Tests: Introduction</title>
+                <id>http://gnugat.github.io/2014/02/05/tests-introduction.html</id>
+                <updated>2014-02-05T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
         </author>
-        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html"/>
-        <content type="html" xml:lang="en"><![CDATA[<p>The one thing that will make developers use your Free or Open Source Software
-(FOSS) project is its documentation. Without it, how can they know what it does,
-or how to install it?</p>
-<p>Last summer <a href="http://williamdurand.fr/2013/07/04/on-open-sourcing-libraries/">William Durand wrote an article about it</a>,
-describing the minimum files your FOSS project should have, and what they should
-contain.</p>
-<p>After reading his article, maybe you did the same thing as me: you took your
-courage with both hands and wrote thoroughly a decent documentation for the
-project you were working on at the time.</p>
-<p>Because it was tedious, you decided to copy those markdown files into your new
-projects and adapt them.</p>
-<p>But this too was tedious...</p>
-<p>To solve this problem once for all I created <strong><a href="https://github.com/gnugat/fossil">fossil</a></strong>:
-it will bootstrap the markdown files of your FOSS projects, and it will even
-create an installer for you!</p>
-<p>It generates the following files out of skeletons:</p>
-<ul><li><code>CHANGELOG.md</code></li>
-<li><code>CONTRIBUTING.md</code></li>
-<li><code>LICENSE</code></li>
-<li><code>README.md</code></li>
-<li><code>VERSIONING.md</code></li>
-<li><code>bin/installer.sh</code></li>
-<li><code>doc</code> (or <code>Resources/doc</code> if the project is a bundle) directory:<ul><li><code>01-introduction.md</code></li>
-<li><code>02-installation.md</code></li>
-<li><code>03-usage.md</code></li>
-<li><code>04-tests.md</code></li>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/02/05/tests-introduction.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>This article is part of a series on Tests in general and on how to practice
+them:</p>
+<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+<li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+</ol><p>This introduction can be read by anyone (no special level required) and it
+targets those who've never heard about tests, or those you've never really
+practice them. Here's what we'll cover:</p>
+<ol><li><a href="#what-is-a-test">what is a test</a></li>
+<li><a href="#what-are-the-different-kinds-of-tests">which kinds of tests are around there</a></li>
+<li><a href="#how-to-do-an-isolated-test">how to do an isolated test</a></li>
+</ol><p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<h2 id="what-is-a-test">What is a test?<a href="#what-is-a-test" class="anchor">#</a></h2>
+<p>A test is a way to check if part of the system is working. Let's say you just
+wrote the <code>strlen</code> function: it takes a string as argument and returns its
+length. To make sure it works correctly, you might have created a script file
+which looked like this:</p>
+<pre><code>&lt;?php
+
+echo strlen('We'); // Should print 2
+echo strlen('are'); // Sould print 3
+echo strlen('the knights'); // Should print 11
+echo strlen('who say "Ni"!'); // Should print 13</code></pre>
+<p>This script (which you might have thrown away once satisfied with the printed
+result) is a test. It makes sure your function works correctly by providing it
+with different inputs and comparing its output with the expected one.</p>
+<p>This test is not really efficient, but it does the work. Let's see how to
+improve it in the following sections.</p>
+<h2 id="what-are-the-different-kinds-of-tests">What are the different kinds of tests<a href="#what-are-the-different-kinds-of-tests" class="anchor">#</a></h2>
+<p>Tests can be grouped under 3 categories:</p>
+<ol><li>random manual tests</li>
+<li>scenarized manual tests</li>
+<li>automated tests</li>
+</ol><h3 id="random-manual-tests">Random manual tests<a href="#random-manual-tests" class="anchor">#</a></h3>
+<p>The first one is when you use your software to see if it works correctly. This
+is the worst kind of test because systems can be so complex that some part will
+enventually be forgoten, and therefore not checked.</p>
+<p>Incidentally, this is what happens everyday when users use your product, except
+you're not sure if they'll report the bugs they see (and for each bug discovery
+you can potentially lose them).</p>
+<p>Why do I mention it, if it's so bad? Because it's still usefull to discover bugs
+on parts which haven't been correctly covered by the other kinds of tests.
+Actually this is the kind of tests which are done during beta-tests: you get a
+restricted set of (volunteer) users to use your product and see if everything
+is fine.</p>
+<h3 id="scenarized-manual-tests">Scenarized manual tests<a href="#scenarized-manual-tests" class="anchor">#</a></h3>
+<p>Let's take a scientific approach to the first kind of tests by writing test
+plans which describe use cases with their expected outcome.</p>
+<p>Everytime someone tests the system, they follow the scenario given to them.
+This is an improvement of the previous approach as there's less risk of
+forgoting a step which is written.</p>
+<p>Those tests are generally followed (more or less rigorously) during
+<strong>acceptance testing</strong> at the end of developments by the customer or product
+owner or even better by Quality Assurance (QA).</p>
+<h3 id="automated-tests">Automated tests<a href="#automated-tests" class="anchor">#</a></h3>
+<p>The problem with the two previous categories is that they require humans, and
+<em>to err is human</em>. The software industry was partly created to automate
+repititive tasks, so how about we automate those tests?</p>
+<p>The simplest way of automating test is to use assertions:</p>
+<pre><code>&lt;?php
+
+$input = 'We are no longer the knights who say "Ni"!';
+$expectedOutput = 42;
+
+$output = strlen($input);
+
+echo ($expectedOutput === $output ? 'Test pass' : 'Test fails');</code></pre>
+<p>If you keep this script, you can run it regurarly, which means the risk of
+forgoting a step is almost near zero! I say almost because the test doesn't
+magically cover every use case: human still have to write them, which lets a
+small room for errors to happen, but this is the best we can do.</p>
+<p>As you can see, automated tests are constructed very simply:</p>
+<ol><li>define the input and the expected output</li>
+<li>execute the part of the system which needs to be tested</li>
+<li>compare its output with the expected one</li>
+</ol><h2 id="further-kinds-of-tests">Further kinds of tests<a href="#further-kinds-of-tests" class="anchor">#</a></h2>
+<p>We've seen the 3 big categories of tests. But that's not quite it: whether it's
+automated or not, your tests can target many levels/layers in your application:</p>
+<ul><li>View layer:
+<ul><li>User Interface (UI) tests: HTML and DOM</li>
 </ul></li>
-</ul><p>The best thing about it: you can run it on your new FOSS projects as well as
-with your existing ones! By default it does not replace existing files (if you
-want to, simply use the <code>-f</code> option).</p>
-<p><strong>Fossil</strong> supports different kind of projects: applications, libraries and
-Symfony2 bundles. Here's a quick usage guide.</p>
-<h2 id="applications">Applications<a href="#applications" class="anchor">#</a></h2>
-<p>The <code>doc</code> command allows you to generate the markdown files of your
-applications, which can be a web application or a CLI tool just like <strong>fossil</strong>.</p>
-<p>As you can see in the following example, it only requires 2 arguments:</p>
-<pre><code>fossil doc 'acme/application' 'The ACME company'</code></pre>
-<h3 id="the-github-repository-argument">The <a href="https://github.com/">Github</a> repository argument<a href="#the-github-repository-argument" class="anchor">#</a></h3>
-<p>Applications are installed by cloning the github repository, which makes it as
-easy to update as to run <code>git pull</code>.</p>
-<p>This argument is used in the installer script as well as in the installation
-instructions.</p>
-<p>You don't need to write the whole github URL, simply give the username and the
-project name in the following format: <code>username/project-name</code></p>
-<h3 id="the-license-author-argument">The license author argument<a href="#the-license-author-argument" class="anchor">#</a></h3>
-<p>While the copyright's date can be computed, you need to provide the author's
-name to generate the <code>LICENSE</code> file.</p>
-<p>For now it only generates MIT licenses, but pull requests are welcomed :) .</p>
-<h3 id="the-path-option">The path option<a href="#the-path-option" class="anchor">#</a></h3>
-<p>By default the files are created in the current directory, but you can target a
-specific path:</p>
-<pre><code>fossil doc 'acme/application' 'The ACME company' -p '/tmp/application'</code></pre>
-<h3 id="the-force-overwrite-option">The force overwrite option<a href="#the-force-overwrite-option" class="anchor">#</a></h3>
-<p>As mentioned earlier, <strong>fossil</strong> won't replace existing files by default: for
-instance if your project already has a <code>README.md</code> and a <code>LICENSE</code> file it will
-only generate the other ones.</p>
-<p>But if you want to throw them away, you can use this option:</p>
-<pre><code>fossil doc 'acme/project' 'The ACME company' -f</code></pre>
-<h2 id="libraries">Libraries<a href="#libraries" class="anchor">#</a></h2>
-<p>The <code>doc:library</code> command has the exact same arguments and options as the <code>doc</code>
-one:</p>
-<pre><code>fossil doc:library 'acme/library' 'The ACME company'</code></pre>
-<p>You can use the shortcut <code>d:l</code>:</p>
-<pre><code>fossil d:l 'acme/library' 'The ACME company'</code></pre>
-<p>The difference between an application and a library lies in its installation:
-the library is installed using <a href="http://getcomposer.org/">composer</a>.</p>
-<h3 id="the-composer-package-option">The composer package option<a href="#the-composer-package-option" class="anchor">#</a></h3>
-<p>By default <strong>fossil</strong> assumes the composer package's name is the same as the
-Github repository name (in the example it would be <code>acme/library</code>).
-If it's not your case, use the following option:</p>
-<pre><code>fossil d:l 'acme/library' 'The ACME company' -c 'acme/composer-package'</code></pre>
-<h2 id="symfony2-bundles">Symfony2 Bundles<a href="#symfony2-bundles" class="anchor">#</a></h2>
-<p>The <code>doc:bundle</code> command has almost the same arguments and options as the
-<code>doc:library</code> one. It has an additional argument:</p>
-<pre><code>fossil doc:bundle 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle'</code></pre>
-<p>You can use the shortcut <code>d:b</code>:</p>
-<pre><code>fossil d:b 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle'</code></pre>
-<p>The difference between a library and a bundle is the documentation directory,
-which is in <code>Resources/doc</code> instead of <code>doc</code>.</p>
-<h3 id="the-fully-qualified-classname-argument">The fully qualified classname argument<a href="#the-fully-qualified-classname-argument" class="anchor">#</a></h3>
-<p>Another difference is the installation: the bundle needs to be added in the
-application's kernel.</p>
-<p>This will be detailed in the documentation, but it will also be taken care of
-by the installer.</p>
-<p>That's right, you read it right: when developers will run the installer, not
-only will it download the bundle using composer, but it will also add its fully
-qualified classname in the <code>app/AppKernel.php</code> file! Hooray!</p>
-<p>The application's kernel will look like this afterwards:</p>
+<li>Application layer:
+<ul><li>functional tests: controllers, HTTP status code, command exit status</li>
+</ul></li>
+<li>Domain layer (the code which solves business needs):
+<ul><li>behavior tests: interaction between classes</li>
+<li>unit tests: services, interfaces, functions</li>
+</ul></li>
+</ul><p><strong>Note</strong>: this classification has been taken from
+<a href="https://speakerdeck.com/halleck/symfony2-un-framework-oriente-domain-driven-design?slide=20">Jean Fran&ccedil;ois L&eacute;pine's slides</a></p>
+<p>Each of those tests can be executed manually, or can be automated.</p>
+<p>There's so many types of tests out there, and so little of us to write them!
+Depending on your team, competences, project and planning, you won't be able to
+write every possible tests.</p>
+<p>I'm afraid you'll have somehow to chose which kind of test is more suitable for
+you project. As a matter of fact, testing everything isn't wise:</p>
 <pre><code>&lt;?php
-// File: app/AppKernel.php
 
-use Symfony\Component\HttpKernel\Kernel;
-
-class AppKernel extends Kernel
+class User
 {
-    public function registerBundles()
+    private $name;
+
+    public function __construct($name)
     {
-        $bundles = array(
-            // Other bundles...
-            new Acme\DemoBundle\AcmeDemoBundle(),
-        );
-
-        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
-            // Other bundles...
-        }
-
-        return $bundles;
+        $this-&gt;name = $name;
     }
-}</code></pre>
-<p><em>Note</em>: because of the backslashes you should escape this argument using
-quotes, just like in the example.</p>
-<h3 id="the-development-tool-option">The development tool option<a href="#the-development-tool-option" class="anchor">#</a></h3>
-<p>By using this option, the bundle will be registered in the application only if
-it runs in development or test environment:</p>
-<pre><code>fossil d:b 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle' -d</code></pre>
-<p>The application's kernel will look like this afterwards:</p>
-<pre><code>&lt;?php
-// File: app/AppKernel.php
 
-use Symfony\Component\HttpKernel\Kernel;
-
-class AppKernel extends Kernel
-{
-    public function registerBundles()
+    public function getName()
     {
-        $bundles = array(
-            // Other bundles...
-        );
-
-        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
-            // Other bundles...
-            $bundles[] = new Acme\DemoBundle\AcmeDemoBundle();
-        }
-
-        return $bundles;
+        return $this-&gt;name;
     }
-}</code></pre>
-<h2 id="you-still-need-to-write-the-documentation">You still need to write the documentation<a href="#you-still-need-to-write-the-documentation" class="anchor">#</a></h2>
-<p>After running <strong>fossil</strong> you still need to provide some information (for
-instance the elevator pitch in <code>README.md</code>) by editing those files:</p>
-<ul><li><code>README.md</code></li>
-<li><code>doc/01-introduction.md</code></li>
-<li><code>doc/03-usage.md</code></li>
-<li><code>doc/04-tests.md</code></li>
-</ul><p>But is that enough? While I think <strong>fossil</strong> automates as much things as
-possible, there's still some part of your project that needs specific
-documentation.</p>
-<p>For example you could add recipes which describe common tasks, or a glossary
-defining technical or business terms used in your project.</p>
+}
+
+// Is this test really usefull? I think not!
+$input = 'Johann Gambolputty de von Ausfern -schplenden -schlitter -crasscrenbon -fried -digger -dangle -dungle -burstein -von -knacker -thrasher -apple -banger -horowitz -ticolensic -grander -knotty -spelltinkle -grandlich -grumblemeyer -spelterwasser -k&uuml;rstlich -himbleeisen -bahnwagen -gutenabend -bitte -eine -n&uuml;rnburger -bratwustle -gerspurten -mit -zweimache -luber -hundsfut -gumberaber -sh&ouml;nendanker -kalbsfleisch -mittler -raucher von Hautkopft of Ulm.';
+$expectedOutput = $input;
+
+$user = new User($input);
+$output = $user-&gt;getName();
+
+echo ($expectedOutput === $output ? 'Test pass' : 'Test fails');</code></pre>
+<p>In the upper code sample, we're testing if the getter returns a value which
+haven't been modified. Sure you could introduce a typo while sketching the
+class, but once you've manually tested it a first time there's no need to check
+regularly if it still works in the future.</p>
+<p>You may not be able to write every possible tests, but still writing some tests
+will save you time in the future as it will prevent regression: the software
+industry is an industry of changing requirements, which means your code will
+eventually be changed, adapted and sometime completly re-written.</p>
+<p>Tests will allow you to change the code lighthearted, because if your change
+breaks something, you'll know it simply by running your tests.</p>
+<h2 id="how-to-do-an-isolated-test">How to do an isolated test?<a href="#how-to-do-an-isolated-test" class="anchor">#</a></h2>
+<p>Chances are your system is composed of parts which interact with each other:
+your functions call other functions, your classes depend on other classes and
+use external functions, etc.</p>
+<p>What if the part of the system you want to test interracts with a database, the
+filesystem and also use a randomizer? Yep that's right, a randomizer: how can
+you even write the expected output if it's supposed to be unpredictable?</p>
+<p>The solution is quite simple: you should isolate the part you want to test.
+In order to do so, you should use <strong>test doubles</strong> which is the practice of
+replacing the dependencies of this part with objects which will behave the way
+you tell them to.</p>
+<p>There's many kinds of test doubles, fortunately <a href="http://martinfowler.com/articles/mocksArentStubs.html">Martin Fowler has summed it up
+for you</a> as follow:</p>
+<blockquote>
+<ul><li>
+<p>Dummy objects are passed around but never actually used.
+Usually they are just used to fill parameter lists.</p>
+</li>
+<li>
+<p>Fake objects actually have working implementations, but usually take some
+shortcut which makes them not suitable for production (an in memory
+database is a good example).</p>
+</li>
+<li>
+<p>Stubs provide canned answers to calls made during the test, usually not
+responding at all to anything outside what's programmed in for the test.
+Stubs may also record information about calls, such as an email gateway
+stub that remembers the messages it 'sent', or maybe only how many messages
+it 'sent'.</p>
+</li>
+<li>Mocks are what we are talking about here: objects pre-programmed with
+expectations which form a specification of the calls they are expected to
+receive.</li>
+</ul></blockquote>
+<p>In practice you'll use stubs to specify the return value of the dependency, and
+you'll use mocks to check if the dependency's method has been called. The best
+way to create stubs and mocks is to write a class which inherits the targeted
+dependency, and overwrites its public methods.</p>
+<p><strong>Note</strong>: the part you want to test is called the System Under Test (SUT), and
+its dependencies are called collaborators.</p>
+<h3 id="dependency-injection-s-back">Dependency Injection's back!<a href="#dependency-injection-s-back" class="anchor">#</a></h3>
+<p>Did you notice I've used the word dependency in this section? That's because in
+order to make a class <em>testable</em>, you need it to be as decoupled as possible
+from its dependencies.</p>
+<p>You won't be able to easily replace dependencies which are created by the part
+you want to test. The simplest way is to inject them (pass them as arguments)
+to your class, allowing you to decide what should be injected: the real
+dependency, or one of its stub (or mock).</p>
+<p>This is why Dependency Injection is a big deal. If you don't clearly know what
+is this design pattern about, I advise you to
+<a href="../../../2014/01/22/ioc-di-and-service-locator.html">read this article</a></p>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>Bootstrap the markdown files of your new and your old FOSS projects using
-<strong><a href="https://github.com/gnugat/fossil">fossil</a></strong>, and then complete the
-documentation so everyone can see how awesome your work is!</p>
-<p>Happy hacking!</p>]]></content>
+<p>Tests allow you to make sure parts of your system work as expected, and they can
+be automated so you can run them regurarly in order to detect any regressions.</p>
+<p>There's a lot of layers which can be tested and you might have to choose what is
+best for you (the wrong answer being "no tests for me, thank you very much").</p>
+<p>Dependency Injection is the right way to go, as it will allow you to use test
+doubles to isolate the part you want to check.</p>
+<p>This article had much theory in it, so the next one will be more practical with
+code samples, case studies and tools which will allow you to test your
+applications: <a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a>.</p>
+<h3 id="a-word-about-test-coverage">A word about test coverage<a href="#a-word-about-test-coverage" class="anchor">#</a></h3>
+<p>I might not have stressed this out enough: <strong>tests won't magically prevent your
+system from failing</strong>. This is all because your test will only cover the part
+you targeted, for the use case you could think of at the time.</p>
+<p>So, how to make sure your tests are enough? At first glance, test coverage might
+be a solution: it's a tool which will mark any line of code executed while the
+test is run and which will produce a report telling you which parts haven't been
+visited.</p>
+<p>The biggest flaw of such a tool is that just because you called a line doesn't
+mean you tested it. The other important weakness is that not every code needs
+to be tested (for example getters of values which are not altered): the report
+will tell you a percentage of code covered, but it won't be able to tell you
+if the covered part is the essential one.</p>
+<p>In order to know if your tests cover the critical parts, mutation testing have
+been invented: a tool will alter random parts of your code and run the tests. If
+your tests fail, then they play well their role of guarding your application
+against regressions.</p>
+<p>However this is not very precise, they're slow and they can't know what are the
+critical parts of your system...</p>
+<p>I guess the best you can do is TDD, which we'll see in a future article ;) .</p>
+<p>If you're interested in this subject, I advise you to read
+<a href="http://codemanship.co.uk/parlezuml/blog/?postid=1202">Jason Gorman's article on code coverage</a>.</p>]]></content>
+    </entry>
+        <entry>
+        <title>Symfony2 Dependency Injection component, by example</title>
+                <id>http://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html</id>
+                <updated>2014-01-29T00:00:00+01:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>In <a href="../../../2014/01/22/ioc-di-and-service-locator.html">the previous article</a>
+we've seen among other things the definition of Dependency Injection (DI) and of
+the Dependency Injection Container (DIC).</p>
+<p>In this article we'll see the Symfony2's DI component which provides a powerful
+DIC. Here's the summary:</p>
+<ul><li>putting the construction of your services into configuration</li>
+<li>how to use it to wire your application</li>
+</ul><p>You don't use Symfony2? Don't worry, this article is all about using this
+component as a standalone library (you can use it in your
+CakePHP/Zend/Home-made-framework application).</p>
+<h2 id="construction-configuration">Construction configuration<a href="#construction-configuration" class="anchor">#</a></h2>
+<p>DI is all about passing arguments to the constructor of an object. Because
+constructing all those object might become a burden, the DIC is here to
+take this responsibility and centralize it.</p>
+<p>Let's replace <a href="http://pimple.sensiolabs.org/">Pimple</a> by
+<a href="http://symfony.com/doc/current/components/dependency_injection/index.html">Symfony2 DI component</a>
+in the code sample from the previous article:</p>
+<pre><code>&lt;?php
+
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+
+$container = new ContainerBuilder();
+
+// This is a parameter definition
+$container-&gt;setParameter('verbosity_level_map', array(
+    OutputInterface::VERBOSITY_NORMAL =&gt; Logger::NOTICE,
+    OutputInterface::VERBOSITY_VERBOSE =&gt; Logger::INFO,
+    OutputInterface::VERBOSITY_VERY_VERBOSE =&gt; Logger::DEBUG,
+    OutputInterface::VERBOSITY_DEBUG =&gt; Logger::DEBUG,
+);
+
+// register takes the service name, and then its fully qualified classname as a string
+$container-&gt;register(
+    'console_output',
+    'Symfony\Component\Console\Output\ConsoleOutput'
+);
+$container-&gt;register(
+    'output_formatter',
+    'Gnugat\Fossil\ApplicationLayer\OutputFormatter'
+);
+
+// You can inject:
+// * dependencies which have been declared previously
+// * arguments
+// * parameters which have been declared previously
+// * setter dependencies
+$container
+    -&gt;register('console_handler', 'Symfony\Bridge\Monolog\Handler\ConsoleHandler')
+    -&gt;addArgument(new Reference('console_output'))
+    -&gt;addArgument(true)
+    -&gt;addArgument('%verbosity_level_map%')
+    -&gt;addMethodCall('setFormatter', array(new Reference('output_formatter')));
+;
+
+$container
+    -&gt;register('logger', 'Monolog\Logger')
+    -&gt;addArgument('default.logger')
+    -&gt;addMethodCall('pushHandler', array(new Reference('console_handler')));
+;
+
+$container-&gt;register('filesystem', 'Symfony\Component\Filesystem\Filesystem');
+
+$container
+    -&gt;register('documentation_writer', 'Gnugat\Fossil\MarkdownFile\DocumentationWriter')
+    -&gt;addArgument(new Reference('filesystem'))
+    -&gt;addArgument(new Reference('logger'))
+;</code></pre>
+<p>If you think about it, the construction of objects is a configuration thing:
+you need to define for each object their dependencies. Symfony2's DI component
+allows you to put all those definition inside a configuration file:</p>
+<pre><code>&lt;?xml version="1.0" ?&gt;
+&lt;!-- File: dic_config.xml --&gt;
+
+&lt;container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
+    &lt;parameters&gt;
+        &lt;parameter key="verbosity_Level_map" type="collection"&gt;
+            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_NORMAL"&gt;Monolog\Logger::NOTICE&lt;/parameter&gt;
+            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERBOSE"&gt;Monolog\Logger::INFO&lt;/parameter&gt;
+            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERY_VERBOSE"&gt;Monolog\Logger::DEBUG&lt;/parameter&gt;
+            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_DEBUG"&gt;Monolog\Logger::DEBUG&lt;/parameter&gt;
+        &lt;/parameter&gt;
+    &lt;/parameters&gt;
+
+    &lt;services&gt;
+        &lt;service id="console_output"
+            class="Symfony\Component\Console\Output\ConsoleOutput"&gt;
+        &lt;/service&gt;
+
+        &lt;service id="output_formatter"
+            class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"&gt;
+        &lt;/service&gt;
+
+        &lt;service id="console_handler"
+            class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"&gt;
+            &lt;argument type="service" id="console.output" /&gt;
+            &lt;argument key="bubble"&gt;true&lt;/argument&gt;
+            &lt;argument&gt;%verbosity_Level_map%&lt;/argument&gt;
+            &lt;call method="setFormatter"&gt;
+                 &lt;argument type="service" id="output_formatter" /&gt;
+            &lt;/call&gt;
+        &lt;/service&gt;
+
+        &lt;service id="logger" class="Monolog\Logger"&gt;
+            &lt;argument&gt;default.logger&lt;/argument&gt;
+            &lt;call method="pushHandler"&gt;
+                 &lt;argument type="service" id="console_handler" /&gt;
+            &lt;/call&gt;
+        &lt;/service&gt;
+
+        &lt;service id="filesystem"
+            class="Symfony\Component\Filesystem\Filesystem"&gt;
+        &lt;/service&gt;
+
+        &lt;service id="documentation_writer"
+            class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"&gt;
+            &lt;argument type="service" id="filesystem" /&gt;
+            &lt;argument type="service" id="logger" /&gt;
+        &lt;/service&gt;
+    &lt;/services&gt;
+&lt;/container&gt;</code></pre>
+<p>And here's the code sample allowing you to feed the DIC with this configuration:</p>
+<pre><code>&lt;?php
+
+// File: front_controller.php
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+
+$container = new ContainerBuilder();
+$configurationDirectory = new FileLocator(__DIR__);
+
+$loader = new XmlFileLoader($container, $configurationDirectory);
+$loader-&gt;load('dic_config.xml');
+
+$documentationWriter = $container-&gt;get('documentation_writer');
+$documentationWriter-&gt;write('/tmp/example.txt', 'Hello world');</code></pre>
+<p>The construction of our objects has been completely removed from the code and
+has been put into a configuration file. Actually, we've replaced object
+constructions by container initialization, which is way more concise.</p>
+<h3 id="configuration-format">Configuration format<a href="#configuration-format" class="anchor">#</a></h3>
+<p>The Symfony2's DI component <a href="http://symfony.com/doc/current/components/dependency_injection/configurators.html">allows many configuration formats</a>:</p>
+<ul><li>plain PHP (like in our first code sample)</li>
+<li>XML (like in our second code sample)</li>
+<li><a href="http://www.yaml.org/">YAML</a></li>
+</ul><p>I wouldn't advise you to use YAML format, as it needs to introduce
+<a href="http://symfony.com/doc/current/components/dependency_injection/parameters.html#yaml">special formating in order to support advanced options</a>
+like:</p>
+<ul><li>prefixing services ID's with <code>@</code></li>
+<li>prefixing services ID's which aren't mandatory with <code>@?</code></li>
+<li>prefixing <code>@</code> with <code>@</code> in order to escape them</li>
+<li><a href="http://symfony.com/doc/current/book/service_container.html#using-the-expression-language">prefixing expressions with <code>@=</code></a></li>
+</ul><p>Not to mention the fact that it doesn't support every options (for instance
+<a href="http://symfony.com/doc/current/components/dependency_injection/parameters.html#constants-as-parameters">you cannot declare constants as parameters</a>)</p>
+<p>On the other hand, the only thing XML doesn't support is concatenation:</p>
+<pre><code>&lt;?php
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+
+$container = new ContainerBuilder();
+// Needs to be done in plain PHP
+$container-&gt;setParameter('skeletons_path', __DIR__.'/skeletons');</code></pre>
+<p>XML can be easily validated and it also can be read by many software like IDE's
+which can use it in order to provide you with blissful autocompletion.</p>
+<p>If you're concerned about performances (reading XML might be slower than
+requiring directly plain PHP), Symfony2's DI component allows you to convert it
+into plain PHP and dump it into a cache file which you can then include in
+your application: <a href="http://symfony.com/doc/current/components/dependency_injection/compilation.html#dumping-the-configuration-for-performance">take a look at the documentation</a>.</p>
+<h2 id="wiring-your-application">Wiring your application<a href="#wiring-your-application" class="anchor">#</a></h2>
+<p>There's a fantastic conclusion we can deduce from the above section: we can
+reduce the lines of codes of our porjects simply by extracting object
+construction and putting it into configuration files.</p>
+<p>Object construction is part of the "wiring layer" of your application: it
+doesn't solve your "business problem", nor does it solve your
+"application problem". It simply is the boilerplate code necessary to write
+those.</p>
+<p>Let's explore the impact of wiring your application using Symfony2's DI
+component. You might not have noticed it, but the code samples used in the
+previous article as well as in this one all come from <a href="https://github.com/gnugat/fossil">fossil</a>,
+a command which allows you to bootstrap markdown files of your projects
+(<a href="../../../2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html">cf this article</a>).
+It uses Symfony2's Console component which requires some boilerplate code in
+order to create the application:</p>
+<pre><code>&lt;?php
+
+// This is the front controller of the application
+// File: fossil
+
+use Gnugat\Fossil\DocCommand;
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Console\Application;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+
+$container = new ContainerBuilder();
+$configurationDirectory = new FileLocator(__DIR__);
+
+$loader = new XmlFileLoader($container, $configurationDirectory);
+$loader-&gt;load('dic_config.xml');
+
+$documentationWriter = $container-&gt;get('documentation_writer');
+
+$docCommand = new DocCommand($documentationWriter);
+
+$application = new Application('Fossil', '2.0.0');
+$application-&gt;add($docCommand);
+
+$output = $container-&gt;get('console_output');
+
+$application-&gt;run(null, $output);</code></pre>
+<p>Can you imagine what this front controller can become if we were to add more
+commands? You'd rather not? Me neither, that's why I advise you to put all this
+boilerplate code into a configuration file:</p>
+<pre><code>&lt;?xml version="1.0" ?&gt;
+
+&lt;!-- File: dic_config.xml --&gt;
+
+&lt;container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
+    &lt;services&gt;
+        &lt;service id="console_output"
+            class="Symfony\Component\Console\Output\ConsoleOutput"&gt;
+        &lt;/service&gt;
+
+        &lt;service id="output_formatter"
+            class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"
+        &lt;/service&gt;
+
+        &lt;service id="console_handler"
+            class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"
+            &lt;argument type="service" id="console.output" /&gt;
+            &lt;argument key="bubble"&gt;true&lt;/argument&gt;
+            &lt;argument&gt;%verbosity_Level_map%&lt;/argument&gt;
+            &lt;call method="setFormatter"&gt;
+                 &lt;argument type="service" id="output_formatter" /&gt;
+            &lt;/call&gt;
+        &lt;/service&gt;
+
+        &lt;service id="logger" class="Monolog\Logger"&gt;
+            &lt;argument&gt;default.logger&lt;/argument&gt;
+            &lt;call method="pushHandler"&gt;
+                 &lt;argument type="service" id="console_handler" /&gt;
+            &lt;/call&gt;
+        &lt;/service&gt;
+
+        &lt;service id="filesystem"
+            class="Symfony\Component\Filesystem\Filesystem"
+        &lt;/service&gt;
+
+        &lt;service id="documentation_writer"
+            class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"
+            &lt;argument type="service" id="filesystem" /&gt;
+            &lt;argument type="service" id="logger" /&gt;
+        &lt;/service&gt;
+
+        &lt;service id="doc_command" class="Gnugat\Fossil\DocCommand"&gt;
+            &lt;argument type="service" id="documentation_writer" /&gt;
+        &lt;/service&gt;
+
+        &lt;service id="application"
+            class="Symfony\Component\Console\Application"&gt;
+            &lt;argument key="name"&gt;Fossil&lt;/argument&gt;
+            &lt;argument key="version"&gt;2.0.0&lt;/argument&gt;
+            &lt;call method="add"&gt;
+                 &lt;argument type="service" id="doc_command" /&gt;
+            &lt;/call&gt;
+        &lt;/service&gt;
+    &lt;/services&gt;
+&lt;/container&gt;</code></pre>
+<p>Which allows us to reduce our front controller:</p>
+<pre><code>&lt;?php
+
+// This is the front controller of the application
+// File: fossil
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+
+$container = new ContainerBuilder();
+$configurationDirectory = new FileLocator(__DIR__);
+
+$loader = new XmlFileLoader($container, $configurationDirectory);
+$loader-&gt;load('dic_config.xml');
+
+$application = $container-&gt;get('application');
+
+$output = $container-&gt;get('console_output');
+
+$application-&gt;run(null, $output);</code></pre>
+<p>Now our concern is the size of the <code>dic_config.xml</code> file which will keep growing
+each time we create new services. Don't panic! You can split it into many files
+using the <code>imports</code> tag:</p>
+<pre><code>&lt;?xml version="1.0" ?&gt;
+
+&lt;!-- File: config/dic.xml --&gt;
+
+&lt;container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
+    &lt;imports&gt;
+        &lt;import resource="01-application.xml" /&gt;
+        &lt;import resource="02-documentation_writer.xml" /&gt;
+    &lt;/imports&gt;
+&lt;/container&gt;</code></pre>
+<p>We created a <code>config</code> directory to put all those XML files, which means we
+should change our front controller to:</p>
+<pre><code>&lt;?php
+
+// This is the front controller of the application
+// File: fossil
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+
+$container = new ContainerBuilder();
+$configurationDirectory = new FileLocator(__DIR__.'/config');
+
+$loader = new XmlFileLoader($container, $configurationDirectory);
+$loader-&gt;load('dic.xml');
+
+$application = $container-&gt;get('application');
+
+$output = $container-&gt;get('console_output');
+
+$application-&gt;run(null, $output);</code></pre>
+<p>The creation of the <code>config/01-application.xml</code> and
+<code>config/02-documentation_writer.xml</code> files is left as an exercise for the
+reader.</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>The Symfony2's Dependency Injection component can be used outside of a Symfony2
+application. It provides a powerful DIC which can be initialized using
+configuration files. This means that boilerplate code (also called "wiring
+layer") can be removed from your code and put in configuration files, hooray!</p>
+<p>I hope you enjoyed this article, be sure to
+<a href="https://twitter.com/epiloic">tweet me what you think about it</a> ;) .</p>
+<h3 id="nota-bene">Nota bene<a href="#nota-bene" class="anchor">#</a></h3>
+<p>We've used the componant as a standalone library, but everything we've done
+here is possible inside a Symfony2 fullstack application.</p>
+<p>There's also some tips I'd like to share with you:</p>
+<h3 id="doctrine-repositories-as-services">Doctrine repositories as services<a href="#doctrine-repositories-as-services" class="anchor">#</a></h3>
+<p>The construction of Doctrine repositories is fully handled by the EntityManager,
+which means:</p>
+<ol><li>you cannot inject them as dependencies in your own services</li>
+<li>you cannot inject dependencies into them</li>
+</ol><p><a href="https://gist.github.com/gnugat/8314217">Or can you?</a></p>
+<h3 id="service-locator">Service locator<a href="#service-locator" class="anchor">#</a></h3>
+<p><a href="../../../2014/01/22/ioc-di-and-service-locator.html">The previous article</a>
+spoke about service locator, which is all about using DIC as a dependency. If
+you still don't see what it means, take a look at <a href="https://github.com/symfony/symfony/blob/master/src/Symfony/Component/DependencyInjection/ContainerAware.php">Symfony2 ContainerAware classes</a>.</p>
+<p>For example, a <a href="https://github.com/symfony/symfony/blob/master/src/Symfony/Bundle/FrameworkBundle/Controller/Controller.php">Symfony2 controller</a>
+uses the DIC as a Service Locator. In this specific case it might be justified,
+as the controller shouldn't contain any logic: its purpose is to pass the
+request's parameters to some services, and to feed their return values as the
+response's parameters.</p>
+<p>Keep in mind that in your own code, there's a 99.99% chance that using Service
+Locator is a unjustified decision ;) .</p>]]></content>
     </entry>
         <entry>
         <title>Inversion of Control, Dependency Injection, Dependency Injection Container and Service Locator</title>
@@ -731,975 +1504,307 @@ Fabien Potencier's series on <a href="http://fabien.potencier.org/article/11/wha
 (actually the slides are about PHP and contain good resources. I encourage you to read it entirely!).</p>]]></content>
     </entry>
         <entry>
-        <title>Symfony2 Dependency Injection component, by example</title>
-                <id>http://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html</id>
-                <updated>2014-01-29T00:00:00+01:00</updated>
+        <title>Bootstrap the markdown files of your FOSS project</title>
+                <id>http://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html</id>
+                <updated>2014-01-15T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
         </author>
-        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html"/>
-        <content type="html" xml:lang="en"><![CDATA[<p>In <a href="../../../2014/01/22/ioc-di-and-service-locator.html">the previous article</a>
-we've seen among other things the definition of Dependency Injection (DI) and of
-the Dependency Injection Container (DIC).</p>
-<p>In this article we'll see the Symfony2's DI component which provides a powerful
-DIC. Here's the summary:</p>
-<ul><li>putting the construction of your services into configuration</li>
-<li>how to use it to wire your application</li>
-</ul><p>You don't use Symfony2? Don't worry, this article is all about using this
-component as a standalone library (you can use it in your
-CakePHP/Zend/Home-made-framework application).</p>
-<h2 id="construction-configuration">Construction configuration<a href="#construction-configuration" class="anchor">#</a></h2>
-<p>DI is all about passing arguments to the constructor of an object. Because
-constructing all those object might become a burden, the DIC is here to
-take this responsibility and centralize it.</p>
-<p>Let's replace <a href="http://pimple.sensiolabs.org/">Pimple</a> by
-<a href="http://symfony.com/doc/current/components/dependency_injection/index.html">Symfony2 DI component</a>
-in the code sample from the previous article:</p>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>The one thing that will make developers use your Free or Open Source Software
+(FOSS) project is its documentation. Without it, how can they know what it does,
+or how to install it?</p>
+<p>Last summer <a href="http://williamdurand.fr/2013/07/04/on-open-sourcing-libraries/">William Durand wrote an article about it</a>,
+describing the minimum files your FOSS project should have, and what they should
+contain.</p>
+<p>After reading his article, maybe you did the same thing as me: you took your
+courage with both hands and wrote thoroughly a decent documentation for the
+project you were working on at the time.</p>
+<p>Because it was tedious, you decided to copy those markdown files into your new
+projects and adapt them.</p>
+<p>But this too was tedious...</p>
+<p>To solve this problem once for all I created <strong><a href="https://github.com/gnugat/fossil">fossil</a></strong>:
+it will bootstrap the markdown files of your FOSS projects, and it will even
+create an installer for you!</p>
+<p>It generates the following files out of skeletons:</p>
+<ul><li><code>CHANGELOG.md</code></li>
+<li><code>CONTRIBUTING.md</code></li>
+<li><code>LICENSE</code></li>
+<li><code>README.md</code></li>
+<li><code>VERSIONING.md</code></li>
+<li><code>bin/installer.sh</code></li>
+<li><code>doc</code> (or <code>Resources/doc</code> if the project is a bundle) directory:
+<ul><li><code>01-introduction.md</code></li>
+<li><code>02-installation.md</code></li>
+<li><code>03-usage.md</code></li>
+<li><code>04-tests.md</code></li>
+</ul></li>
+</ul><p>The best thing about it: you can run it on your new FOSS projects as well as
+with your existing ones! By default it does not replace existing files (if you
+want to, simply use the <code>-f</code> option).</p>
+<p><strong>Fossil</strong> supports different kind of projects: applications, libraries and
+Symfony2 bundles. Here's a quick usage guide.</p>
+<h2 id="applications">Applications<a href="#applications" class="anchor">#</a></h2>
+<p>The <code>doc</code> command allows you to generate the markdown files of your
+applications, which can be a web application or a CLI tool just like <strong>fossil</strong>.</p>
+<p>As you can see in the following example, it only requires 2 arguments:</p>
+<pre><code>fossil doc 'acme/application' 'The ACME company'</code></pre>
+<h3 id="the-github-repository-argument">The <a href="https://github.com/">Github</a> repository argument<a href="#the-github-repository-argument" class="anchor">#</a></h3>
+<p>Applications are installed by cloning the github repository, which makes it as
+easy to update as to run <code>git pull</code>.</p>
+<p>This argument is used in the installer script as well as in the installation
+instructions.</p>
+<p>You don't need to write the whole github URL, simply give the username and the
+project name in the following format: <code>username/project-name</code></p>
+<h3 id="the-license-author-argument">The license author argument<a href="#the-license-author-argument" class="anchor">#</a></h3>
+<p>While the copyright's date can be computed, you need to provide the author's
+name to generate the <code>LICENSE</code> file.</p>
+<p>For now it only generates MIT licenses, but pull requests are welcomed :) .</p>
+<h3 id="the-path-option">The path option<a href="#the-path-option" class="anchor">#</a></h3>
+<p>By default the files are created in the current directory, but you can target a
+specific path:</p>
+<pre><code>fossil doc 'acme/application' 'The ACME company' -p '/tmp/application'</code></pre>
+<h3 id="the-force-overwrite-option">The force overwrite option<a href="#the-force-overwrite-option" class="anchor">#</a></h3>
+<p>As mentioned earlier, <strong>fossil</strong> won't replace existing files by default: for
+instance if your project already has a <code>README.md</code> and a <code>LICENSE</code> file it will
+only generate the other ones.</p>
+<p>But if you want to throw them away, you can use this option:</p>
+<pre><code>fossil doc 'acme/project' 'The ACME company' -f</code></pre>
+<h2 id="libraries">Libraries<a href="#libraries" class="anchor">#</a></h2>
+<p>The <code>doc:library</code> command has the exact same arguments and options as the <code>doc</code>
+one:</p>
+<pre><code>fossil doc:library 'acme/library' 'The ACME company'</code></pre>
+<p>You can use the shortcut <code>d:l</code>:</p>
+<pre><code>fossil d:l 'acme/library' 'The ACME company'</code></pre>
+<p>The difference between an application and a library lies in its installation:
+the library is installed using <a href="http://getcomposer.org/">composer</a>.</p>
+<h3 id="the-composer-package-option">The composer package option<a href="#the-composer-package-option" class="anchor">#</a></h3>
+<p>By default <strong>fossil</strong> assumes the composer package's name is the same as the
+Github repository name (in the example it would be <code>acme/library</code>).
+If it's not your case, use the following option:</p>
+<pre><code>fossil d:l 'acme/library' 'The ACME company' -c 'acme/composer-package'</code></pre>
+<h2 id="symfony2-bundles">Symfony2 Bundles<a href="#symfony2-bundles" class="anchor">#</a></h2>
+<p>The <code>doc:bundle</code> command has almost the same arguments and options as the
+<code>doc:library</code> one. It has an additional argument:</p>
+<pre><code>fossil doc:bundle 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle'</code></pre>
+<p>You can use the shortcut <code>d:b</code>:</p>
+<pre><code>fossil d:b 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle'</code></pre>
+<p>The difference between a library and a bundle is the documentation directory,
+which is in <code>Resources/doc</code> instead of <code>doc</code>.</p>
+<h3 id="the-fully-qualified-classname-argument">The fully qualified classname argument<a href="#the-fully-qualified-classname-argument" class="anchor">#</a></h3>
+<p>Another difference is the installation: the bundle needs to be added in the
+application's kernel.</p>
+<p>This will be detailed in the documentation, but it will also be taken care of
+by the installer.</p>
+<p>That's right, you read it right: when developers will run the installer, not
+only will it download the bundle using composer, but it will also add its fully
+qualified classname in the <code>app/AppKernel.php</code> file! Hooray!</p>
+<p>The application's kernel will look like this afterwards:</p>
 <pre><code>&lt;?php
+// File: app/AppKernel.php
 
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpKernel\Kernel;
 
-$container = new ContainerBuilder();
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        $bundles = array(
+            // Other bundles...
+            new Acme\DemoBundle\AcmeDemoBundle(),
+        );
 
-// This is a parameter definition
-$container-&gt;setParameter('verbosity_level_map', array(
-    OutputInterface::VERBOSITY_NORMAL =&gt; Logger::NOTICE,
-    OutputInterface::VERBOSITY_VERBOSE =&gt; Logger::INFO,
-    OutputInterface::VERBOSITY_VERY_VERBOSE =&gt; Logger::DEBUG,
-    OutputInterface::VERBOSITY_DEBUG =&gt; Logger::DEBUG,
-);
+        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
+            // Other bundles...
+        }
 
-// register takes the service name, and then its fully qualified classname as a string
-$container-&gt;register(
-    'console_output',
-    'Symfony\Component\Console\Output\ConsoleOutput'
-);
-$container-&gt;register(
-    'output_formatter',
-    'Gnugat\Fossil\ApplicationLayer\OutputFormatter'
-);
-
-// You can inject:
-// * dependencies which have been declared previously
-// * arguments
-// * parameters which have been declared previously
-// * setter dependencies
-$container
-    -&gt;register('console_handler', 'Symfony\Bridge\Monolog\Handler\ConsoleHandler')
-    -&gt;addArgument(new Reference('console_output'))
-    -&gt;addArgument(true)
-    -&gt;addArgument('%verbosity_level_map%')
-    -&gt;addMethodCall('setFormatter', array(new Reference('output_formatter')));
-;
-
-$container
-    -&gt;register('logger', 'Monolog\Logger')
-    -&gt;addArgument('default.logger')
-    -&gt;addMethodCall('pushHandler', array(new Reference('console_handler')));
-;
-
-$container-&gt;register('filesystem', 'Symfony\Component\Filesystem\Filesystem');
-
-$container
-    -&gt;register('documentation_writer', 'Gnugat\Fossil\MarkdownFile\DocumentationWriter')
-    -&gt;addArgument(new Reference('filesystem'))
-    -&gt;addArgument(new Reference('logger'))
-;</code></pre>
-<p>If you think about it, the construction of objects is a configuration thing:
-you need to define for each object their dependencies. Symfony2's DI component
-allows you to put all those definition inside a configuration file:</p>
-<pre><code>&lt;?xml version="1.0" ?&gt;
-&lt;!-- File: dic_config.xml --&gt;
-
-&lt;container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
-    &lt;parameters&gt;
-        &lt;parameter key="verbosity_Level_map" type="collection"&gt;
-            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_NORMAL"&gt;Monolog\Logger::NOTICE&lt;/parameter&gt;
-            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERBOSE"&gt;Monolog\Logger::INFO&lt;/parameter&gt;
-            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERY_VERBOSE"&gt;Monolog\Logger::DEBUG&lt;/parameter&gt;
-            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_DEBUG"&gt;Monolog\Logger::DEBUG&lt;/parameter&gt;
-        &lt;/parameter&gt;
-    &lt;/parameters&gt;
-
-    &lt;services&gt;
-        &lt;service id="console_output"
-            class="Symfony\Component\Console\Output\ConsoleOutput"&gt;
-        &lt;/service&gt;
-
-        &lt;service id="output_formatter"
-            class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"&gt;
-        &lt;/service&gt;
-
-        &lt;service id="console_handler"
-            class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"&gt;
-            &lt;argument type="service" id="console.output" /&gt;
-            &lt;argument key="bubble"&gt;true&lt;/argument&gt;
-            &lt;argument&gt;%verbosity_Level_map%&lt;/argument&gt;
-            &lt;call method="setFormatter"&gt;
-                 &lt;argument type="service" id="output_formatter" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
-
-        &lt;service id="logger" class="Monolog\Logger"&gt;
-            &lt;argument&gt;default.logger&lt;/argument&gt;
-            &lt;call method="pushHandler"&gt;
-                 &lt;argument type="service" id="console_handler" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
-
-        &lt;service id="filesystem"
-            class="Symfony\Component\Filesystem\Filesystem"&gt;
-        &lt;/service&gt;
-
-        &lt;service id="documentation_writer"
-            class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"&gt;
-            &lt;argument type="service" id="filesystem" /&gt;
-            &lt;argument type="service" id="logger" /&gt;
-        &lt;/service&gt;
-    &lt;/services&gt;
-&lt;/container&gt;</code></pre>
-<p>And here's the code sample allowing you to feed the DIC with this configuration:</p>
+        return $bundles;
+    }
+}</code></pre>
+<p><em>Note</em>: because of the backslashes you should escape this argument using
+quotes, just like in the example.</p>
+<h3 id="the-development-tool-option">The development tool option<a href="#the-development-tool-option" class="anchor">#</a></h3>
+<p>By using this option, the bundle will be registered in the application only if
+it runs in development or test environment:</p>
+<pre><code>fossil d:b 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle' -d</code></pre>
+<p>The application's kernel will look like this afterwards:</p>
 <pre><code>&lt;?php
+// File: app/AppKernel.php
 
-// File: front_controller.php
+use Symfony\Component\HttpKernel\Kernel;
 
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        $bundles = array(
+            // Other bundles...
+        );
 
-$container = new ContainerBuilder();
-$configurationDirectory = new FileLocator(__DIR__);
+        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
+            // Other bundles...
+            $bundles[] = new Acme\DemoBundle\AcmeDemoBundle();
+        }
 
-$loader = new XmlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('dic_config.xml');
-
-$documentationWriter = $container-&gt;get('documentation_writer');
-$documentationWriter-&gt;write('/tmp/example.txt', 'Hello world');</code></pre>
-<p>The construction of our objects has been completely removed from the code and
-has been put into a configuration file. Actually, we've replaced object
-constructions by container initialization, which is way more concise.</p>
-<h3 id="configuration-format">Configuration format<a href="#configuration-format" class="anchor">#</a></h3>
-<p>The Symfony2's DI component <a href="http://symfony.com/doc/current/components/dependency_injection/configurators.html">allows many configuration formats</a>:</p>
-<ul><li>plain PHP (like in our first code sample)</li>
-<li>XML (like in our second code sample)</li>
-<li><a href="http://www.yaml.org/">YAML</a></li>
-</ul><p>I wouldn't advise you to use YAML format, as it needs to introduce
-<a href="http://symfony.com/doc/current/components/dependency_injection/parameters.html#yaml">special formating in order to support advanced options</a>
-like:</p>
-<ul><li>prefixing services ID's with <code>@</code></li>
-<li>prefixing services ID's which aren't mandatory with <code>@?</code></li>
-<li>prefixing <code>@</code> with <code>@</code> in order to escape them</li>
-<li><a href="http://symfony.com/doc/current/book/service_container.html#using-the-expression-language">prefixing expressions with <code>@=</code></a></li>
-</ul><p>Not to mention the fact that it doesn't support every options (for instance
-<a href="http://symfony.com/doc/current/components/dependency_injection/parameters.html#constants-as-parameters">you cannot declare constants as parameters</a>)</p>
-<p>On the other hand, the only thing XML doesn't support is concatenation:</p>
-<pre><code>&lt;?php
-
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-
-$container = new ContainerBuilder();
-// Needs to be done in plain PHP
-$container-&gt;setParameter('skeletons_path', __DIR__.'/skeletons');</code></pre>
-<p>XML can be easily validated and it also can be read by many software like IDE's
-which can use it in order to provide you with blissful autocompletion.</p>
-<p>If you're concerned about performances (reading XML might be slower than
-requiring directly plain PHP), Symfony2's DI component allows you to convert it
-into plain PHP and dump it into a cache file which you can then include in
-your application: <a href="http://symfony.com/doc/current/components/dependency_injection/compilation.html#dumping-the-configuration-for-performance">take a look at the documentation</a>.</p>
-<h2 id="wiring-your-application">Wiring your application<a href="#wiring-your-application" class="anchor">#</a></h2>
-<p>There's a fantastic conclusion we can deduce from the above section: we can
-reduce the lines of codes of our porjects simply by extracting object
-construction and putting it into configuration files.</p>
-<p>Object construction is part of the "wiring layer" of your application: it
-doesn't solve your "business problem", nor does it solve your
-"application problem". It simply is the boilerplate code necessary to write
-those.</p>
-<p>Let's explore the impact of wiring your application using Symfony2's DI
-component. You might not have noticed it, but the code samples used in the
-previous article as well as in this one all come from <a href="https://github.com/gnugat/fossil">fossil</a>,
-a command which allows you to bootstrap markdown files of your projects
-(<a href="../../../2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html">cf this article</a>).
-It uses Symfony2's Console component which requires some boilerplate code in
-order to create the application:</p>
-<pre><code>&lt;?php
-
-// This is the front controller of the application
-// File: fossil
-
-use Gnugat\Fossil\DocCommand;
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\Console\Application;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
-
-$container = new ContainerBuilder();
-$configurationDirectory = new FileLocator(__DIR__);
-
-$loader = new XmlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('dic_config.xml');
-
-$documentationWriter = $container-&gt;get('documentation_writer');
-
-$docCommand = new DocCommand($documentationWriter);
-
-$application = new Application('Fossil', '2.0.0');
-$application-&gt;add($docCommand);
-
-$output = $container-&gt;get('console_output');
-
-$application-&gt;run(null, $output);</code></pre>
-<p>Can you imagine what this front controller can become if we were to add more
-commands? You'd rather not? Me neither, that's why I advise you to put all this
-boilerplate code into a configuration file:</p>
-<pre><code>&lt;?xml version="1.0" ?&gt;
-
-&lt;!-- File: dic_config.xml --&gt;
-
-&lt;container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
-    &lt;services&gt;
-        &lt;service id="console_output"
-            class="Symfony\Component\Console\Output\ConsoleOutput"&gt;
-        &lt;/service&gt;
-
-        &lt;service id="output_formatter"
-            class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"
-        &lt;/service&gt;
-
-        &lt;service id="console_handler"
-            class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"
-            &lt;argument type="service" id="console.output" /&gt;
-            &lt;argument key="bubble"&gt;true&lt;/argument&gt;
-            &lt;argument&gt;%verbosity_Level_map%&lt;/argument&gt;
-            &lt;call method="setFormatter"&gt;
-                 &lt;argument type="service" id="output_formatter" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
-
-        &lt;service id="logger" class="Monolog\Logger"&gt;
-            &lt;argument&gt;default.logger&lt;/argument&gt;
-            &lt;call method="pushHandler"&gt;
-                 &lt;argument type="service" id="console_handler" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
-
-        &lt;service id="filesystem"
-            class="Symfony\Component\Filesystem\Filesystem"
-        &lt;/service&gt;
-
-        &lt;service id="documentation_writer"
-            class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"
-            &lt;argument type="service" id="filesystem" /&gt;
-            &lt;argument type="service" id="logger" /&gt;
-        &lt;/service&gt;
-
-        &lt;service id="doc_command" class="Gnugat\Fossil\DocCommand"&gt;
-            &lt;argument type="service" id="documentation_writer" /&gt;
-        &lt;/service&gt;
-
-        &lt;service id="application"
-            class="Symfony\Component\Console\Application"&gt;
-            &lt;argument key="name"&gt;Fossil&lt;/argument&gt;
-            &lt;argument key="version"&gt;2.0.0&lt;/argument&gt;
-            &lt;call method="add"&gt;
-                 &lt;argument type="service" id="doc_command" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
-    &lt;/services&gt;
-&lt;/container&gt;</code></pre>
-<p>Which allows us to reduce our front controller:</p>
-<pre><code>&lt;?php
-
-// This is the front controller of the application
-// File: fossil
-
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
-
-$container = new ContainerBuilder();
-$configurationDirectory = new FileLocator(__DIR__);
-
-$loader = new XmlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('dic_config.xml');
-
-$application = $container-&gt;get('application');
-
-$output = $container-&gt;get('console_output');
-
-$application-&gt;run(null, $output);</code></pre>
-<p>Now our concern is the size of the <code>dic_config.xml</code> file which will keep growing
-each time we create new services. Don't panic! You can split it into many files
-using the <code>imports</code> tag:</p>
-<pre><code>&lt;?xml version="1.0" ?&gt;
-
-&lt;!-- File: config/dic.xml --&gt;
-
-&lt;container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
-    &lt;imports&gt;
-        &lt;import resource="01-application.xml" /&gt;
-        &lt;import resource="02-documentation_writer.xml" /&gt;
-    &lt;/imports&gt;
-&lt;/container&gt;</code></pre>
-<p>We created a <code>config</code> directory to put all those XML files, which means we
-should change our front controller to:</p>
-<pre><code>&lt;?php
-
-// This is the front controller of the application
-// File: fossil
-
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
-
-$container = new ContainerBuilder();
-$configurationDirectory = new FileLocator(__DIR__.'/config');
-
-$loader = new XmlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('dic.xml');
-
-$application = $container-&gt;get('application');
-
-$output = $container-&gt;get('console_output');
-
-$application-&gt;run(null, $output);</code></pre>
-<p>The creation of the <code>config/01-application.xml</code> and
-<code>config/02-documentation_writer.xml</code> files is left as an exercise for the
-reader.</p>
+        return $bundles;
+    }
+}</code></pre>
+<h2 id="you-still-need-to-write-the-documentation">You still need to write the documentation<a href="#you-still-need-to-write-the-documentation" class="anchor">#</a></h2>
+<p>After running <strong>fossil</strong> you still need to provide some information (for
+instance the elevator pitch in <code>README.md</code>) by editing those files:</p>
+<ul><li><code>README.md</code></li>
+<li><code>doc/01-introduction.md</code></li>
+<li><code>doc/03-usage.md</code></li>
+<li><code>doc/04-tests.md</code></li>
+</ul><p>But is that enough? While I think <strong>fossil</strong> automates as much things as
+possible, there's still some part of your project that needs specific
+documentation.</p>
+<p>For example you could add recipes which describe common tasks, or a glossary
+defining technical or business terms used in your project.</p>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>The Symfony2's Dependency Injection component can be used outside of a Symfony2
-application. It provides a powerful DIC which can be initialized using
-configuration files. This means that boilerplate code (also called "wiring
-layer") can be removed from your code and put in configuration files, hooray!</p>
-<p>I hope you enjoyed this article, be sure to
-<a href="https://twitter.com/epiloic">tweet me what you think about it</a> ;) .</p>
-<h3 id="nota-bene">Nota bene<a href="#nota-bene" class="anchor">#</a></h3>
-<p>We've used the componant as a standalone library, but everything we've done
-here is possible inside a Symfony2 fullstack application.</p>
-<p>There's also some tips I'd like to share with you:</p>
-<h3 id="doctrine-repositories-as-services">Doctrine repositories as services<a href="#doctrine-repositories-as-services" class="anchor">#</a></h3>
-<p>The construction of Doctrine repositories is fully handled by the EntityManager,
-which means:</p>
-<ol><li>you cannot inject them as dependencies in your own services</li>
-<li>you cannot inject dependencies into them</li>
-</ol><p><a href="https://gist.github.com/gnugat/8314217">Or can you?</a></p>
-<h3 id="service-locator">Service locator<a href="#service-locator" class="anchor">#</a></h3>
-<p><a href="../../../2014/01/22/ioc-di-and-service-locator.html">The previous article</a>
-spoke about service locator, which is all about using DIC as a dependency. If
-you still don't see what it means, take a look at <a href="https://github.com/symfony/symfony/blob/master/src/Symfony/Component/DependencyInjection/ContainerAware.php">Symfony2 ContainerAware classes</a>.</p>
-<p>For example, a <a href="https://github.com/symfony/symfony/blob/master/src/Symfony/Bundle/FrameworkBundle/Controller/Controller.php">Symfony2 controller</a>
-uses the DIC as a Service Locator. In this specific case it might be justified,
-as the controller shouldn't contain any logic: its purpose is to pass the
-request's parameters to some services, and to feed their return values as the
-response's parameters.</p>
-<p>Keep in mind that in your own code, there's a 99.99% chance that using Service
-Locator is a unjustified decision ;) .</p>]]></content>
+<p>Bootstrap the markdown files of your new and your old FOSS projects using
+<strong><a href="https://github.com/gnugat/fossil">fossil</a></strong>, and then complete the
+documentation so everyone can see how awesome your work is!</p>
+<p>Happy hacking!</p>]]></content>
     </entry>
         <entry>
-        <title>Tests: Introduction</title>
-                <id>http://gnugat.github.io/2014/02/05/tests-introduction.html</id>
-                <updated>2014-02-05T00:00:00+01:00</updated>
+        <title>Technology scouting</title>
+                <id>http://gnugat.github.io/2014/01/08/technology-scouting.html</id>
+                <updated>2014-01-08T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
         </author>
-        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/02/05/tests-introduction.html"/>
-        <content type="html" xml:lang="en"><![CDATA[<p>This article is part of a series on Tests in general and on how to practice
-them:</p>
-<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
-<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
-</ol><p>This introduction can be read by anyone (no special level required) and it
-targets those who've never heard about tests, or those you've never really
-practice them. Here's what we'll cover:</p>
-<ol><li><a href="#what-is-a-test">what is a test</a></li>
-<li><a href="#what-are-the-different-kinds-of-tests">which kinds of tests are around there</a></li>
-<li><a href="#how-to-do-an-isolated-test">how to do an isolated test</a></li>
-</ol><p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
-<h2 id="what-is-a-test">What is a test?<a href="#what-is-a-test" class="anchor">#</a></h2>
-<p>A test is a way to check if part of the system is working. Let's say you just
-wrote the <code>strlen</code> function: it takes a string as argument and returns its
-length. To make sure it works correctly, you might have created a script file
-which looked like this:</p>
-<pre><code>&lt;?php
-
-echo strlen('We'); // Should print 2
-echo strlen('are'); // Sould print 3
-echo strlen('the knights'); // Should print 11
-echo strlen('who say "Ni"!'); // Should print 13</code></pre>
-<p>This script (which you might have thrown away once satisfied with the printed
-result) is a test. It makes sure your function works correctly by providing it
-with different inputs and comparing its output with the expected one.</p>
-<p>This test is not really efficient, but it does the work. Let's see how to
-improve it in the following sections.</p>
-<h2 id="what-are-the-different-kinds-of-tests">What are the different kinds of tests<a href="#what-are-the-different-kinds-of-tests" class="anchor">#</a></h2>
-<p>Tests can be grouped under 3 categories:</p>
-<ol><li>random manual tests</li>
-<li>scenarized manual tests</li>
-<li>automated tests</li>
-</ol><h3 id="random-manual-tests">Random manual tests<a href="#random-manual-tests" class="anchor">#</a></h3>
-<p>The first one is when you use your software to see if it works correctly. This
-is the worst kind of test because systems can be so complex that some part will
-enventually be forgoten, and therefore not checked.</p>
-<p>Incidentally, this is what happens everyday when users use your product, except
-you're not sure if they'll report the bugs they see (and for each bug discovery
-you can potentially lose them).</p>
-<p>Why do I mention it, if it's so bad? Because it's still usefull to discover bugs
-on parts which haven't been correctly covered by the other kinds of tests.
-Actually this is the kind of tests which are done during beta-tests: you get a
-restricted set of (volunteer) users to use your product and see if everything
-is fine.</p>
-<h3 id="scenarized-manual-tests">Scenarized manual tests<a href="#scenarized-manual-tests" class="anchor">#</a></h3>
-<p>Let's take a scientific approach to the first kind of tests by writing test
-plans which describe use cases with their expected outcome.</p>
-<p>Everytime someone tests the system, they follow the scenario given to them.
-This is an improvement of the previous approach as there's less risk of
-forgoting a step which is written.</p>
-<p>Those tests are generally followed (more or less rigorously) during
-<strong>acceptance testing</strong> at the end of developments by the customer or product
-owner or even better by Quality Assurance (QA).</p>
-<h3 id="automated-tests">Automated tests<a href="#automated-tests" class="anchor">#</a></h3>
-<p>The problem with the two previous categories is that they require humans, and
-<em>to err is human</em>. The software industry was partly created to automate
-repititive tasks, so how about we automate those tests?</p>
-<p>The simplest way of automating test is to use assertions:</p>
-<pre><code>&lt;?php
-
-$input = 'We are no longer the knights who say "Ni"!';
-$expectedOutput = 42;
-
-$output = strlen($input);
-
-echo ($expectedOutput === $output ? 'Test pass' : 'Test fails');</code></pre>
-<p>If you keep this script, you can run it regurarly, which means the risk of
-forgoting a step is almost near zero! I say almost because the test doesn't
-magically cover every use case: human still have to write them, which lets a
-small room for errors to happen, but this is the best we can do.</p>
-<p>As you can see, automated tests are constructed very simply:</p>
-<ol><li>define the input and the expected output</li>
-<li>execute the part of the system which needs to be tested</li>
-<li>compare its output with the expected one</li>
-</ol><h2 id="further-kinds-of-tests">Further kinds of tests<a href="#further-kinds-of-tests" class="anchor">#</a></h2>
-<p>We've seen the 3 big categories of tests. But that's not quite it: whether it's
-automated or not, your tests can target many levels/layers in your application:</p>
-<ul><li>View layer:<ul><li>User Interface (UI) tests: HTML and DOM</li>
-</ul></li>
-<li>Application layer:<ul><li>functional tests: controllers, HTTP status code, command exit status</li>
-</ul></li>
-<li>Domain layer (the code which solves business needs):<ul><li>behavior tests: interaction between classes</li>
-<li>unit tests: services, interfaces, functions</li>
-</ul></li>
-</ul><p><strong>Note</strong>: this classification has been taken from
-<a href="https://speakerdeck.com/halleck/symfony2-un-framework-oriente-domain-driven-design?slide=20">Jean Fran&ccedil;ois L&eacute;pine's slides</a></p>
-<p>Each of those tests can be executed manually, or can be automated.</p>
-<p>There's so many types of tests out there, and so little of us to write them!
-Depending on your team, competences, project and planning, you won't be able to
-write every possible tests.</p>
-<p>I'm afraid you'll have somehow to chose which kind of test is more suitable for
-you project. As a matter of fact, testing everything isn't wise:</p>
-<pre><code>&lt;?php
-
-class User
-{
-    private $name;
-
-    public function __construct($name)
-    {
-        $this-&gt;name = $name;
-    }
-
-    public function getName()
-    {
-        return $this-&gt;name;
-    }
-}
-
-// Is this test really usefull? I think not!
-$input = 'Johann Gambolputty de von Ausfern -schplenden -schlitter -crasscrenbon -fried -digger -dangle -dungle -burstein -von -knacker -thrasher -apple -banger -horowitz -ticolensic -grander -knotty -spelltinkle -grandlich -grumblemeyer -spelterwasser -k&uuml;rstlich -himbleeisen -bahnwagen -gutenabend -bitte -eine -n&uuml;rnburger -bratwustle -gerspurten -mit -zweimache -luber -hundsfut -gumberaber -sh&ouml;nendanker -kalbsfleisch -mittler -raucher von Hautkopft of Ulm.';
-$expectedOutput = $input;
-
-$user = new User($input);
-$output = $user-&gt;getName();
-
-echo ($expectedOutput === $output ? 'Test pass' : 'Test fails');</code></pre>
-<p>In the upper code sample, we're testing if the getter returns a value which
-haven't been modified. Sure you could introduce a typo while sketching the
-class, but once you've manually tested it a first time there's no need to check
-regularly if it still works in the future.</p>
-<p>You may not be able to write every possible tests, but still writing some tests
-will save you time in the future as it will prevent regression: the software
-industry is an industry of changing requirements, which means your code will
-eventually be changed, adapted and sometime completly re-written.</p>
-<p>Tests will allow you to change the code lighthearted, because if your change
-breaks something, you'll know it simply by running your tests.</p>
-<h2 id="how-to-do-an-isolated-test">How to do an isolated test?<a href="#how-to-do-an-isolated-test" class="anchor">#</a></h2>
-<p>Chances are your system is composed of parts which interact with each other:
-your functions call other functions, your classes depend on other classes and
-use external functions, etc.</p>
-<p>What if the part of the system you want to test interracts with a database, the
-filesystem and also use a randomizer? Yep that's right, a randomizer: how can
-you even write the expected output if it's supposed to be unpredictable?</p>
-<p>The solution is quite simple: you should isolate the part you want to test.
-In order to do so, you should use <strong>test doubles</strong> which is the practice of
-replacing the dependencies of this part with objects which will behave the way
-you tell them to.</p>
-<p>There's many kinds of test doubles, fortunately <a href="http://martinfowler.com/articles/mocksArentStubs.html">Martin Fowler has summed it up
-for you</a> as follow:</p>
-<blockquote>
-<ul><li>
-<p>Dummy objects are passed around but never actually used.
-Usually they are just used to fill parameter lists.</p>
-</li>
-<li>
-<p>Fake objects actually have working implementations, but usually take some
-shortcut which makes them not suitable for production (an in memory
-database is a good example).</p>
-</li>
-<li>
-<p>Stubs provide canned answers to calls made during the test, usually not
-responding at all to anything outside what's programmed in for the test.
-Stubs may also record information about calls, such as an email gateway
-stub that remembers the messages it 'sent', or maybe only how many messages
-it 'sent'.</p>
-</li>
-<li>Mocks are what we are talking about here: objects pre-programmed with
-expectations which form a specification of the calls they are expected to
-receive.</li>
-</ul></blockquote>
-<p>In practice you'll use stubs to specify the return value of the dependency, and
-you'll use mocks to check if the dependency's method has been called. The best
-way to create stubs and mocks is to write a class which inherits the targeted
-dependency, and overwrites its public methods.</p>
-<p><strong>Note</strong>: the part you want to test is called the System Under Test (SUT), and
-its dependencies are called collaborators.</p>
-<h3 id="dependency-injection-s-back">Dependency Injection's back!<a href="#dependency-injection-s-back" class="anchor">#</a></h3>
-<p>Did you notice I've used the word dependency in this section? That's because in
-order to make a class <em>testable</em>, you need it to be as decoupled as possible
-from its dependencies.</p>
-<p>You won't be able to easily replace dependencies which are created by the part
-you want to test. The simplest way is to inject them (pass them as arguments)
-to your class, allowing you to decide what should be injected: the real
-dependency, or one of its stub (or mock).</p>
-<p>This is why Dependency Injection is a big deal. If you don't clearly know what
-is this design pattern about, I advise you to
-<a href="../../../2014/01/22/ioc-di-and-service-locator.html">read this article</a></p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>Tests allow you to make sure parts of your system work as expected, and they can
-be automated so you can run them regurarly in order to detect any regressions.</p>
-<p>There's a lot of layers which can be tested and you might have to choose what is
-best for you (the wrong answer being "no tests for me, thank you very much").</p>
-<p>Dependency Injection is the right way to go, as it will allow you to use test
-doubles to isolate the part you want to check.</p>
-<p>This article had much theory in it, so the next one will be more practical with
-code samples, case studies and tools which will allow you to test your
-applications: <a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a>.</p>
-<h3 id="a-word-about-test-coverage">A word about test coverage<a href="#a-word-about-test-coverage" class="anchor">#</a></h3>
-<p>I might not have stressed this out enough: <strong>tests won't magically prevent your
-system from failing</strong>. This is all because your test will only cover the part
-you targeted, for the use case you could think of at the time.</p>
-<p>So, how to make sure your tests are enough? At first glance, test coverage might
-be a solution: it's a tool which will mark any line of code executed while the
-test is run and which will produce a report telling you which parts haven't been
-visited.</p>
-<p>The biggest flaw of such a tool is that just because you called a line doesn't
-mean you tested it. The other important weakness is that not every code needs
-to be tested (for example getters of values which are not altered): the report
-will tell you a percentage of code covered, but it won't be able to tell you
-if the covered part is the essential one.</p>
-<p>In order to know if your tests cover the critical parts, mutation testing have
-been invented: a tool will alter random parts of your code and run the tests. If
-your tests fail, then they play well their role of guarding your application
-against regressions.</p>
-<p>However this is not very precise, they're slow and they can't know what are the
-critical parts of your system...</p>
-<p>I guess the best you can do is TDD, which we'll see in a future article ;) .</p>
-<p>If you're interested in this subject, I advise you to read
-<a href="http://codemanship.co.uk/parlezuml/blog/?postid=1202">Jason Gorman's article on code coverage</a>.</p>]]></content>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/08/technology-scouting.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>As a curious person I'm constantly trying to learn new practices and to discover
+tools which might help me, by collecting information via technology scouting and
+then reading it.</p>
+<p>In this article, I will present how to do so effectively.</p>
+<h2 id="collecting-information">Collecting information<a href="#collecting-information" class="anchor">#</a></h2>
+<p>Whenever you find an interesting link, send it to <a href="http://getpocket.com/">Pocket</a>
+so you can read it later.</p>
+<h3 id="blogs">Blogs<a href="#blogs" class="anchor">#</a></h3>
+<p>To find interesting links subscribe to blog RSS feeds using
+<a href="https://ifttt.com/">If This Then That</a>: it will send new entries directly to
+pocket.</p>
+<p>Here are some blogs I personnally follow (caution, they're not really sorted):</p>
+<ul><li><a href="http://williamdurand.fr/">William Durand's blog</a></li>
+<li><a href="http://www.mountaingoatsoftware.com/blog">Mountain Goat Software</a></li>
+<li><a href="http://blog.karolsojko.com/">Karol S&oacute;jko's blog</a></li>
+<li><a href="http://blog.8thlight.com/">8th light</a></li>
+<li><a href="http://richardmiller.co.uk/">Richard Miller's blog</a></li>
+<li><a href="http://verraes.net/#blog">Mathias Verraes's blog</a></li>
+<li><a href="http://www.whitewashing.de/">Benjamin Eberlei's blog</a></li>
+<li><a href="http://nedroid.com/">Nedroid</a></li>
+<li><a href="https://igor.io/">Igor Wiedler's blog</a></li>
+</ul><h3 id="twitter">Twitter<a href="#twitter" class="anchor">#</a></h3>
+<p>You can also use <a href="https://twitter.com/">Twitter</a>:</p>
+<ol><li>create a private list which will serve as a pool</li>
+<li>add any author which might post interresting messages</li>
+<li>after a week or so, add the author to a public list</li>
+</ol><p>The lists only show messages (not retweets) and conversations between people
+you follow. They also allow you to create categories.</p>
+<p>If you want, you can have a look at
+<a href="https://twitter.com/epiloic/lists/">my own public lists</a>.</p>
+<h3 id="github">Github<a href="#github" class="anchor">#</a></h3>
+<p>Last but not least, <a href="https://github.com/">Github</a> can also be a great source of
+discoveries: by following someone which stars or watch a lot of projects you
+will have them listed on your homepage.</p>
+<p>Here's my advice: <a href="https://github.com/pborreli">Pascal Borreli</a> contributes to
+many repositories, you should start to follow him.</p>
+<h2 id="reading-it">Reading it<a href="#reading-it" class="anchor">#</a></h2>
+<p>Collecting resources is a thing, getting it read is another one. Just like
+<a href="http://verraes.net/2012/12/how-to-read-more-books/">Mathias Verraes advised it</a>,
+you should get an e-reader: you can send the pages you gathered on Pocket and
+then read them everywhere.</p>
+<p>Pocket allows you to remove the articles you found not so interresting after
+all, it also allows you to archive the good ones and to favorite the great ones.</p>
+<p>Speaking of reading and e-readers, books are another good way of discovering new
+things. Do not underestimate them. Here's a list of books I'd recommend:</p>
+<ul><li><a href="http://git-scm.com/book">Pro Git</a></li>
+<li>Clean Code, by Robert C. Martin</li>
+<li>Agile Software Development, Principles, Patterns, and Practices, by Robert C. Martin</li>
+</ul><h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>The point is: current tools won't last and there's a lot of practices you're
+not aware of. If you want to improve yourself and keep up with other developers,
+you have to try your best to discover new practices (which might be rather old
+actually) and new trending tools.</p>
+<p>I hope you found this article enjoyable and helpful.</p>]]></content>
     </entry>
         <entry>
-        <title>Tests: Tools overview</title>
-                <id>http://gnugat.github.io/2014/02/12/tests-tools-overview.html</id>
-                <updated>2014-02-12T00:00:00+01:00</updated>
+        <title>Carew, the static site generator</title>
+                <id>http://gnugat.github.io/2014/01/01/carew-static-site-generator.html</id>
+                <updated>2014-01-01T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
         </author>
-        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/02/12/tests-tools-overview.html"/>
-        <content type="html" xml:lang="en"><![CDATA[<p>This article is part of a series on Tests in general and on how to practice
-them:</p>
-<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
-<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
-</ol><p>This article can be read by any regular developer (no special level required),
-we'll put some code on the principles we've previously seen and we'll have a
-quick look on existing tools. Here's what we'll cover:</p>
-<ol><li><a href="#test-frameworks">test frameworks</a></li>
-<li><a href="#phpunit">PHPUnit</a></li>
-<li><a href="#unit-tests">unit tests</a> with test doubles (mocks and stubs)</li>
-<li><a href="#functional-tests">functional tests</a></li>
-<li><a href="#user-interface-tests">user interface tests</a></li>
-</ol><p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
-<h2 id="test-frameworks">Test frameworks<a href="#test-frameworks" class="anchor">#</a></h2>
-<p>In order to automate your tests (whether they're unitary, functionnal or anything
-else), you'll need to use some tools. These would be libraries helping you
-doing assertions, or libraries helping you creating test doubles without writing
-any new classes, or even frameworks which group those libraries together.</p>
-<p>Most of the test frameworks follow the
-<a href="http://www.xprogramming.com/testfram.htm"><strong>xUnit</strong> convention, which have been (accidently?) created by Kent Beck</a>.
-Those are composed of:</p>
-<ul><li>a test runner which gather the <strong>test suites</strong>, execute their tests and then
-prints the result using a <strong>test result formatter</strong></li>
-<li>a test case, a class which you extend to write your tests</li>
-<li>test fixtures to provide data as context for the tests</li>
-<li>test suites, a bunch of tests which share commonalities (in practice this would
-be the class which extends the test case and where you'll write your tests)</li>
-<li>test execution: you can execute a bunch of code before every test with a
-<strong>setUp</strong> method, and afterward in a <strong>tearDown</strong> function</li>
-<li>test result formatter taking responsibility for outputing how test failed,
-or if it should be written on the output or in a XML file</li>
-<li>assertions which check if the given expected value matches the given actual
-value</li>
-</ul><p>Those are, among a ton of others:</p>
-<ul><li><a href="http://phpunit.de/">PHPUnit</a> in PHP</li>
-<li><a href="https://github.com/atoum/">Atoum</a> in PHP</li>
-<li><a href="http://junit.org/">jUnit</a> in Java</li>
-<li><a href="http://docs.python.org/2/library/unittest.html">unittest</a> in Python</li>
-</ul><p>You could aslo find Behavior Driven Development (BDD) style test frameworks:</p>
-<ul><li><a href="http://codeception.com/">Codeception</a> in PHP</li>
-<li><a href="http://www.phpspec.net/">phpspec</a> alongside with <a href="http://behat.org/">Behat</a>
-in PHP</li>
-<li><a href="http://pivotal.github.io/jasmine/">jasmine</a> in javascript</li>
-<li><a href="http://rspec.info/">RSpec</a> in ruby</li>
-</ul><p>I won't talk about these, as it will be the subject of a future article
-(there's so much to say about them).</p>
-<p>Full stack frameworks isn't the only thing around here to help you write tests,
-there also are some libraries:</p>
-<ul><li><a href="http://visionmedia.github.io/mocha/">Mocha</a>, a base layer for tests,
-in javascript</li>
-<li><a href="http://chaijs.com/">Chai</a>, an assertion library in javascript</li>
-<li><a href="http://sinonjs.org/">Sinon.js</a>, a test double library in javascript</li>
-<li><a href="https://github.com/padraic/mockery">Mockery</a>, a mock framework in PHP</li>
-<li><a href="https://github.com/phpspec/prophecy">Prophecy</a>, another mock framework in PHP</li>
-</ul><p>Choose your weapon wisely!</p>
-<h2 id="phpunit">PHPUnit<a href="#phpunit" class="anchor">#</a></h2>
-<p>I mainly code in PHP, and in this language PHPUnit is the most popular test
-framework. It's been there for so long (version 1.0.0 released in July 2006)
-that almost any libraries and frameworks are tested with it. So it'll be our tool
-for the next examples.</p>
-<p>You can install it using <a href="https://getcomposer.org/">Composer</a>:</p>
-<pre><code>curl -sS https://getcomposer.org/installer | php # Download composer
-composer install "phpunit/phpunit:~3.7"
-php vendor/bin/phpunit -h</code></pre>
-<p><strong>Note</strong>: if you don't know Composer, let's just say that it makes your life easier
-by downloading for you the libraries you told him to (it takes care of selecting
-the good versions and can update them to get bug fixes). It also autoloads your
-classes so you don't have to require them.</p>
-<p>Now that you have the latest stable version, you'll need to configure it:</p>
-<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;!-- File: phpunit.xml --&gt;
-&lt;phpunit
-    backupGlobals="false"
-    colors="true"
-    syntaxCheck="false"
-    bootstrap="test/bootstrap.php"
-&gt;
-    &lt;testsuites&gt;
-        &lt;testsuite name="Fossil Test Suite"&gt;
-            &lt;directory suffix="Test.php"&gt;./test/&lt;/directory&gt;
-        &lt;/testsuite&gt;
-    &lt;/testsuites&gt;
-&lt;/phpunit&gt;</code></pre>
-<p>This configuration tells PHPUnit to look (recursively) in the <code>test</code> directory
-for files ending in <code>Test.php</code>. Those will be your test suites.</p>
-<p>You'll need a bootstrap file in order to use composer's autoloader:</p>
-<pre><code>&lt;?php
-
-$loader = require __DIR__.'/../vendor/autoload.php';
-$loader-&gt;add('Gnugat\\Fossil\\Test', __DIR__);</code></pre>
-<p>And voil&agrave;! You can now write your tests in <code>test</code>.</p>
-<h2 id="unit-tests">Unit tests<a href="#unit-tests" class="anchor">#</a></h2>
-<p>The common understanding of unit test is a symmetry between classes and tests:
-when you have a class with 2 methods, you need to have a test class for it
-which will test these two methods.</p>
-<p>It looks like this wasn't the real meaning of the term unit, which should have
-meant making tests which can be run in any order without ruinning them, and as
-many times as wanted. Fortunately a new kind of test was created to fix this
-misunderstanding, so let's stick with the common one.</p>
-<p>Imagine you have the following class, which creates a file if it doesn't already
-exist:</p>
-<pre><code>&lt;?php
-// File: src/MarkdownFile/DocumentationWriter.php
-
-namespace Gnugat\Fossil\MarkdownFile;
-
-use Symfony\Component\Filesystem\Filesystem;
-
-class DocumentationWriter
-{
-    private $filesystem;
-
-    public function __construct(Filesystem $filesystem)
-    {
-        $this-&gt;filesystem = $filesystem;
-    }
-
-    public function write($absolutePathname, $content)
-    {
-        if (!$this-&gt;filesystem-&gt;exists($absolutePathname)) {
-            $this-&gt;filesystem-&gt;dumpFile($absolutePathname, $content);
-        }
-    }
-}</code></pre>
-<p><strong>Note</strong>: once again the code samples are taken from
-<a href="https://github.com/gnugat/fossil">fossil</a>, have a look at
-<a href="../../../2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html">this article</a>
-to discover what it is.</p>
-<p>In order for it to be autoloaded, you'll need to edit your <code>composer.json</code> file:</p>
-<pre><code>{
-    "require": {
-        "phpunit/phpunit": "~3.7"
-    },
-    "autoload": {
-        "psr-4": {
-            "Gnugat\\Fossil": "src/"
-        }
-    }
-}</code></pre>
-<p>To test it, we could run it and check if the file has been created with the
-given content, but that would be testing Symfony2's <code>Filesystem</code> which
-<a href="https://github.com/symfony/symfony/blob/fe86efd3f256c5bda845cf23bf8a5400ae6a295e/src/Symfony/Component/Filesystem/Tests/FilesystemTest.php">happens to be already tested</a>.</p>
-<p>So what does our class adds to it? Well it calls <code>Filesystem</code> to check if the
-file exists, and if not it calls again the <code>Filesystem</code> to create it. We could
-check if those calls are made using stubs and mocks.</p>
-<p><strong>Reminder</strong>: stubs are a substitute of an object which forces it to return
-a given value. When a System Under Test (SUT, the class you're testing) has
-collaborators (classes used by the SUT, also called dependencies), we can stub
-them so their behavior is completly controlled.</p>
-<p><strong>Reminder</strong>: mocks are a substitute of an object which checks if its methods
-have been called. When a System Under Test (SUT, the class you're testing) has
-collaborators (classes used by the SUT, also called dependencies), we can mock
-them to monitor their use.</p>
-<p>PHPUnit allows us to create stubs and mocks without having to write a class
-which extends the colaborator and overwrites its methods:</p>
-<pre><code>&lt;?php
-// File: test/MarkdownFile/DocumentationWriterTest.php
-
-namespace Gnugat\Fossil\Test\MarkdownFile;
-
-use Gnugat\Fossil\MarkdownFile\DocumentationWriter;
-
-class DocumentationWriterTest extends \PHPUnit_Framework_TestCase
-{
-    const FIXTURE_ABSOLUTE_PATHNAME = '/tmp/example.txt';
-    const FIXTURE_CONTENT = "Hello world\n";
-
-    public function setUp()
-    {
-        $this-&gt;filesystem = $this-&gt;getMock('Symfony\\Component\\Filesystem\\Filesystem');
-        $this-&gt;documentationWriter = new DocumentationWriter($this-&gt;filesystem);
-    }
-
-    public function testWriteNewFile()
-    {
-        // Stub
-        $this-&gt;filesystem-&gt;expects($this-&gt;any())
-            -&gt;method('exists')
-            -&gt;with(self::FIXTURE_ABSOLUTE_PATHNAME)
-            -&gt;will($this-&gt;returnValue(true))
-        ;
-
-        // Mock
-        $this-&gt;filesystem-&gt;expects($this-&gt;once())
-            -&gt;method('dumpFile')
-            -&gt;with(
-                $this-&gt;equalTo(self::FIXTURE_ABSOLUTE_PATHNAME),
-                $this-&gt;equalTo(self::FIXTURE_CONTENT)
-            )
-        ;
-
-        // Call
-        $this-&gt;documentationWriter-&gt;write(
-            self::FIXTURE_ABSOLUTE_PATHNAME,
-            self::FIXTURE_CONTENT
-        );
-    }
-}</code></pre>
-<p>In the stub: for every call (<code>expects($this-&gt;any())</code>) of the method <code>exists</code>
-with the parameter <code>self::FIXTURE_ABSOLUTE_PATHNAME</code>, force the colaborator to
-return <code>true</code>.</p>
-<p>In the mock: a unique call must be made (<code>expects($this-&gt;once())</code>) of the method
-<code>dumpFile</code> with the two parameters <code>self::FIXTURE_ABSOLUTE_PATHNAME</code> and
-<code>self::FIXTURE_CONTENT</code>.</p>
-<p>You can run the test using <code>php vendor/bin/phpunit</code> and see that they pass. As
-an exercise, write a second method in this test suite
-<code>testDoesNotWriteExistingFile</code>, with a stub returning false and a mock checking
-that <code>dumpFile</code> is never called (<a href="http://phpunit.de/manual/3.7/en/test-doubles.html#test-doubles.mock-objects.tables.matchers">hint</a>).</p>
-<p>I advise you to watch <a href="http://verraes.net/2013/09/extract-till-you-drop/">extract till you drop</a>,
-a nice refactoring session by Mathias Verraes: in order to improve his code, he
-writes tests which give him enough confidence to proceed. He uses PHPUnit with
-assertions, mocks and stubs, so you can really see their use.</p>
-<h2 id="functional-tests">Functional tests<a href="#functional-tests" class="anchor">#</a></h2>
-<p>Unit tests are used in order to make sure each unit of <code>code</code> works as expected.
-But applications aren't just about code, they're also about interactions
-between these units. This is what functional tests are for: they use the entry
-point of the system and check the final status code.</p>
-<p>To illustrate this, we'll still use PHPUnit: even though there's the word <code>unit</code>
-in its name, this test framework allows us to write many types of tests.</p>
-<p>The Symfony2 web framework is all about the HTTP protocol: it takes a HTTP
-Request and returns a HTTP Response. It also provides a convenient client which
-simulates HTTP Requests, allowing us to write easily functional tests:</p>
-<pre><code>&lt;?php
-// File: src/Acme/DemoBundle/Tests/Controller/DemoControllerTest.php
-
-namespace Acme\DemoBundle\Tests\Controller;
-
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpFoundation\Response;
-
-class DemoControllerTest extends WebTestCase
-{
-    public function testIndex()
-    {
-        $client = static::createClient();
-
-        $client-&gt;request('GET', '/demo/hello/Fabien');
-
-        $this-&gt;assertSame(
-            Response::HTTP_OK,
-            $client-&gt;getResponse()-&gt;getStatusCode()
-        );
-    }
-}</code></pre>
-<p>The <code>assertSame</code> line is an assertion: it compares the expected value (first
-argument) with the actual one (second one). PHPUnit provides many assertions:</p>
-<ul><li><code>assertSame</code> is equivalent to <code>===</code> (type and value comparison)</li>
-<li><code>assertEquals</code> is equivalent to <code>==</code> (loose value comparison)</li>
-<li><code>assertFileExists</code> checks if the given filename corresponds to an exisitng file</li>
-<li><a href="http://phpunit.de/manual/3.7/en/appendixes.assertions.html">and many more</a></li>
-</ul><p>Different approaches exist with assertions, for example jasmine uses the
-<code>expect</code> method to set the actual value, chained with a matcher like <code>toBe</code>
-which takes the expected value:</p>
-<pre><code>describe("A suite", function() {
-  it("contains spec with an expectation", function() {
-    var expectedValue = true;
-    var actualValue = true;
-
-    expect(actualValue).toBe(expectedValue);
-  });
-});</code></pre>
-<p>In this case, assertions are splitted into expectations and matchers.</p>
-<p>Back to our sheeps. Here's an example of functional test for a Symfony2 command:</p>
-<pre><code>&lt;?php
-// File: src/Acme/DemoBundle/Tests/Command/GreetCommandTest.php
-
-namespace Acme/DemoBundle/Tests/Command;
-
-use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Bundle\FrameworkBundle\Console\Application;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Acme\DemoBundle\Command\GreetCommand;
-
-class ListCommandTest extends WebTestCase
-{
-    public function testExecute()
-    {
-        $kernel = $this-&gt;createKernel();
-        $kernel-&gt;boot();
-
-        $application = new Application($kernel);
-        $application-&gt;add(new GreetCommand());
-
-        $command = $application-&gt;find('demo:greet');
-        $commandTester = new CommandTester($command);
-        $commandTester-&gt;execute(
-            array(
-                'name' =&gt; 'Fabien',
-                '--yell'  =&gt; true,
-            )
-        );
-
-        $exitSuccess = 0;
-
-        $this-&gt;assertSame($exitSuccess, $commandTester-&gt;getStatusCode());
-    }
-}</code></pre>
-<p>Just like with a controller where we check the HTTP Response's status code, in
-a command we check the exit status code.</p>
-<h2 id="user-interfact-tests">User Interfact tests<a href="#user-interfact-tests" class="anchor">#</a></h2>
-<p>Up until now, we've been testing that the code worked and that interractions
-between all those units go well. But what about the thing the user actually
-sees and interacts with?</p>
-<p>The User Interface (UI) turns out to be tricky to test, but not impossible. You
-can click on buttons, or load pages, or run CLI tasks programmatically and you
-can inspect the standard output or the HTTP Response's content.</p>
-<p>The main problem with this is that you'll tie your tests to the UI, which
-changes a lot.</p>
-<p>We'll see briefly the tools available and then better explain the flaws of such
-a technique.</p>
-<h3 id="selenium">Selenium<a href="#selenium" class="anchor">#</a></h3>
-<p><a href="http://docs.seleniumhq.org/">Selenium</a> allows you to open a browser and
-simulates interractions with the page. Technically it means having a Selenium
-server running in the background, and using a webdriver library in your test to
-send messages to it. In PHP, you can find those webdrivers:</p>
-<ul><li><a href="https://github.com/alexandresalome/php-webdriver">One by Alexandre Salom&eacute;</a></li>
-<li><a href="https://github.com/facebook/php-webdriver">another one by Facebook</a></li>
-</ul><p>You can find code samples in the respective documentation of each library, for
-example here's the doc describing <a href="https://github.com/alexandresalome/php-webdriver/blob/master/doc/elements.rst#element-api">how to click on a button with Alexandre's one</a>.</p>
-<p>If you're curious, <a href="http://codeception.com/11-20-2013/webdriver-tests-with-codeception.html">here's how to use Selenium with another test framework</a>:
-<a href="http://codeception.com/">Codeception</a>.</p>
-<h3 id="casperjs">CasperJs<a href="#casperjs" class="anchor">#</a></h3>
-<p>You don't like the idea of running a server in order to run your tests? You
-don't want a browser to be openned and you <a href="http://stackoverflow.com/questions/2354590/why-is-selenium-rc-so-slow">find it too slow</a>?</p>
-<p>Then you might want to try a <strong>headless website testing</strong> solution like
-<a href="http://casperjs.org/">CasperJs</a>. It's headless because it won't open a
-browser to make the tests.</p>
-<p>Here's the <a href="http://docs.casperjs.org/en/latest/quickstart.html">get started documentation</a>,
-so you can have a quick look on how to use it.</p>
-<h3 id="goutte">Goutte<a href="#goutte" class="anchor">#</a></h3>
-<p>Simulating a browser is too much for you? Making a curl request and parsing its
-response would be sufficient for your needs? Then have a look at the
-<a href="https://github.com/fabpot/goutte">Goutte web scrapper</a>.</p>
-<p>This one also allows you to click on links.</p>
-<h3 id="mink">Mink<a href="#mink" class="anchor">#</a></h3>
-<blockquote>
-<p>One Tool to rule them all, One Tool to find them,
-One Tool to bring them all and in the webness bind them</p>
-</blockquote>
-<p><a href="http://mink.behat.org/">Mink</a> can use either Goutte or Selenium as a driver to
-interract with the UI. It's goal is to provide a unified API.</p>
-<h3 id="what-s-the-point">What's the point?<a href="#what-s-the-point" class="anchor">#</a></h3>
-<p>The thing in common with all these tools is that they rely on the HTML rendered
-in the HTTP Response. In order to check if a message appears, you'll have to
-crawl the page, find the <code>div</code> using its class or id in a CSS selector, or even
-worse using its xpath.</p>
-<p>When the page will change (and it will) your tests will be broken. There's some
-best practices out there, mainly making your tests rely on ID's on one hand and
-making your code and stylesheets rely on classes on the other hand, but in the
-end it still is a risky business.</p>
-<p>Well that's my opinion and this section might be more a rant than an objective
-description. To counter balance this, here's a nice article on
-<a href="http://blog.mozilla.org/webqa/2013/09/26/writing-reliable-locators-for-selenium-and-webdriver-tests/">writing reliable locators for Selenium and WebDriver tests</a>.</p>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/01/carew-static-site-generator.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>Frameworks are a real help when building web applications which serve business
+logic. But what about static websites?</p>
+<p>Those only contain pages which could be directly written in HTML. The only
+problem with this approach is that HTML isn't writter friendly compared to
+Markdown.</p>
+<p>Also, we could say that static websites like blogs do have some logic behind the
+scenes:</p>
+<ul><li>posts can have a state (is it published yet?)</li>
+<li>posts can be tagged, in order to make them easier to find</li>
+</ul><p>But still, a framework might be too much for this task.</p>
+<p>Static site generators are a way to solve this problem:</p>
+<ol><li>simply write your pages in markdown</li>
+<li>launch a command to generate HTML from it</li>
+</ol><p><a href="http://carew.github.io/">Carew</a> is one of them (among
+  <a href="http://jekyllrb.com/">Jekyll</a>,
+  <a href="http://hyde.github.io/">Hyde</a>,
+  <a href="https://github.com/obensonne/poole">Poole</a>
+  and <a href="https://github.com/spjwebster/lanyon">Lanyon</a>):
+it is written in PHP, allows you to use the template engine
+<a href="http://twig.sensiolabs.org/">Twig</a> in your markdown and it provides a theme
+using <a href="http://getbootstrap.com/2.3.2/">Bootstrap</a>.</p>
+<p>This blog post will focus on Carew, as
+<a href="https://github.com/gnugat/gnugat.github.io">this very blog is written with it</a>.</p>
+<h2 id="carew-and-github">Carew and Github<a href="#carew-and-github" class="anchor">#</a></h2>
+<p>A common way to quickly publish static sites is to use
+<a href="http://pages.github.com/">Github Pages</a> which works as follow:</p>
+<ol><li>create a repository, the name should follow this format: <code>&lt;username&gt;.github.io</code></li>
+<li>add, commit and push the content of the <code>web</code> directory directly at the
+root of your repo</li>
+<li>the site is now available at this address: <code>http://&lt;username&gt;.github.io</code></li>
+</ol><p><a href="http://carew.github.io/cookbook/hosting.html">Learn more about hosting a website built with Carew on the official website</a>.</p>
+<h2 id="creation">Creation<a href="#creation" class="anchor">#</a></h2>
+<p>Creating your site using Carew is very simple, just follow these steps:</p>
+<pre><code>$ php composer.phar create-project carew/boilerplate &lt;project&gt; -s dev
+$ cd &lt;project&gt;
+$ bin/carew build</code></pre>
+<p>Examples pages (which sources are located in <code>pages</code> and <code>posts</code>) are converted
+from markdown to HTML in the <code>web</code> directory.</p>
+<h2 id="customization">Customization<a href="#customization" class="anchor">#</a></h2>
+<p>Before writing any page or post, edit the configuration wich is located inside
+the <code>config.yml</code> file.</p>
+<p>Then edit the <code>pages/index.md</code> and <code>pages/about.md</code> pages with your own content.</p>
+<p>Finally, remove the content of the <code>posts</code> folder and create your first blog
+post using this command:</p>
+<pre><code>$ bin/carew generate:post [--date='YYYY-MM-DD'] title</code></pre>
+<p><a href="http://carew.github.io/cookbook/configuration.html">See the configuration documentation on the official website</a>.</p>
+<h2 id="front-matters">Front matters<a href="#front-matters" class="anchor">#</a></h2>
+<p>Each markdown file starts with a header:</p>
+<pre><code>---
+layout: post # no need for this line when writing a regular page
+title: Will be used by `&lt;title&gt;&lt;/title&gt;` and `&lt;h1&gt;&lt;/h1&gt;`
+tags:
+    - first tag
+    - carew
+---</code></pre>
+<p>Carew generates a page listing all existing tags. You can create a link to this
+page with the following snippet:</p>
+<pre><code>{{ link('tags', 'The page with all the tags') }}.</code></pre>
+<p><a href="http://carew.github.io/documentation.html#front-matter">Learn more about Front matters on the official website</a>.</p>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>In PHP, <a href="http://phpunit.de/">PHPUnit</a> is the most popular test framework and it
-allows you to write unit, functional and every other kinds of tests.</p>
-<p>Unit tests allow you to make sure each functions return the expected output when
-given a set of fixtures, and functional tests are used to check the status code
-(think HTTP response, or a command's exit status).</p>
-<p>Stubs are used to force a colaborator's method to return a wanted value, and
-mocks are used to check if a colaborator's method have been called.</p>
-<p><a href="http://docs.seleniumhq.org/">Selenium</a> is the most popular tool to test the
-User Interface, which is done by interracting with the HTML rendered in the
-HTML's reponse.</p>
-<p>I hope this article helped you to see how each kinds of tests are written. The
-next one will be on Test Driven Development, a practice where tests are written
-before the code.</p>
-<p>If there's something bothering you in this post, or if you have a question, or
-if you want to give me your opinion, be sure to do so on
-<a href="https://twitter.com/epiloic">Twitter</a> ;) .</p>]]></content>
+<p>Carew is really simple to use, in this article we've covered the minimum you
+should know to create pages, blog posts and tags.</p>
+<p>I hope you enjoyed this article and that it helped you a little.</p>
+<p>If you want to learn more, for example to customize its behaviour or its theme,
+please refer to <a href="http://carew.github.io/documentation.html">the official documentation</a>.</p>]]></content>
     </entry>
     </feed>
