@@ -12,6 +12,7 @@ them:
 1. {{ link('posts/2014-02-05-tests-introduction.md', 'Introduction') }}
 2. {{ link('posts/2014-02-12-tests-tools-overview.md', 'Tools overview') }}
 3. {{ link('posts/2014-02-19-test-driven-development.md', 'Test Driven Development') }}
+4. {{ link('posts/2014-02-26-tdd-just-do-it.md', 'TDD: just do it!') }}
 
 Unlike the two previous articles, this one requires some experience in testing.
 While Test Driven Development (TDD) oficionados would tell you that on the
@@ -127,3 +128,5 @@ I hope you enjoyed this article, if you'd like to make any comments about it
 There's been many criticism about TDD, and most of those are simply
 misconceptions. If you're part of the sceptics,
 [check if your argument is listed in Jason Gorman's article](http://codemanship.co.uk/parlezuml/blog/?postid=1170).
+
+The next article is about {{ link('posts/2014-02-26-tdd-just-do-it.md', 'actually doing TDD') }}.
