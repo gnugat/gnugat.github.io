@@ -5,8 +5,40 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-02-19T00:00:00+01:00</updated>
+            <updated>2014-02-26T00:00:00+01:00</updated>
             <entry>
+        <title>TDD: just do it!</title>
+                <id>http://gnugat.github.io/2014/02/26/tdd-just-do-it.html</id>
+                <updated>2014-02-26T00:00:00+01:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/02/26/tdd-just-do-it.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>This article is part of a series on Tests in general and on how to practice
+them:</p>
+<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+<li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+<li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+</ol><p>The first two articles didn't require special skills whereas the last one needed
+you to be a little bit used to tests. Well the next ones will require you to be
+a little bit used to Test Driven Develoment (TDD), so this article is here to
+make you practice them!</p>
+<p>I really mean it: reading articles on TDD might feel good, but the only thing to
+do to fully grasp them is to:</p>
+<ol><li>start writting tests before any production code</li>
+<li>then write the code to quickly make them pass (write ugly code if needed)</li>
+<li>finally refactor the mess, without touching the tests</li>
+</ol><p>In other word: just do it! The learning curve is steep, so dive into it as soon
+as possible.</p>
+<p>One of the best way to learn is to pair with someone who's used to it. If you
+don't have someone to pair with, you can always read this
+<a href="http://www.objectmentor.com/resources/articles/xpepisode.htm">Extreme Programming Episode by Robert C. Martin and Robert S. Koss</a>.</p>
+<p>The next article will be about the next level: Behavior Driven Development
+(BDD).</p>]]></content>
+    </entry>
+        <entry>
         <title>Test Driven Development</title>
                 <id>http://gnugat.github.io/2014/02/19/test-driven-development.html</id>
                 <updated>2014-02-19T00:00:00+01:00</updated>
@@ -20,6 +52,7 @@ them:</p>
 <ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
 <li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
 <li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+<li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
 </ol><p>Unlike the two previous articles, this one requires some experience in testing.
 While Test Driven Development (TDD) oficionados would tell you that on the
 contrary this is the way to learn tests, I'd rather advise you to practice them
@@ -104,7 +137,8 @@ get something for nothing!</p>
 (either good or bad), please feel free to do so <a href="https://twitter.com/epiloic">on Twitter</a>.</p>
 <p>There's been many criticism about TDD, and most of those are simply
 misconceptions. If you're part of the sceptics,
-<a href="http://codemanship.co.uk/parlezuml/blog/?postid=1170">check if your argument is listed in Jason Gorman's article</a>.</p>]]></content>
+<a href="http://codemanship.co.uk/parlezuml/blog/?postid=1170">check if your argument is listed in Jason Gorman's article</a>.</p>
+<p>The next article is about <a href="../../../2014/02/26/tdd-just-do-it.html">actually doing TDD</a>.</p>]]></content>
     </entry>
         <entry>
         <title>Tests: Tools overview</title>
@@ -119,6 +153,8 @@ misconceptions. If you're part of the sceptics,
 them:</p>
 <ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
 <li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+<li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+<li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
 </ol><p>This article can be read by any regular developer (no special level required),
 we'll put some code on the principles we've previously seen and we'll have a
 quick look on existing tools. Here's what we'll cover:</p>
@@ -500,6 +536,7 @@ them:</p>
 <ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
 <li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
 <li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+<li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
 </ol><p>This introduction can be read by anyone (no special level required) and it
 targets those who've never heard about tests, or those you've never really
 practice them. Here's what we'll cover:</p>
