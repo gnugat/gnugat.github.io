@@ -13,6 +13,7 @@ them:
 2. {{ link('posts/2014-02-12-tests-tools-overview.md', 'Tools overview') }}
 3. {{ link('posts/2014-02-19-test-driven-development.md', 'Test Driven Development') }}
 4. {{ link('posts/2014-02-26-tdd-just-do-it.md', 'TDD: just do it!') }}
+5. {{ link('posts/2014-03-05-spec-bdd.md', 'spec BDD') }}
 
 This article can be read by any regular developer (no special level required),
 we'll put some code on the principles we've previously seen and we'll have a

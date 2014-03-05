@@ -13,6 +13,7 @@ them:
 2. {{ link('posts/2014-02-12-tests-tools-overview.md', 'Tools overview') }}
 3. {{ link('posts/2014-02-19-test-driven-development.md', 'Test Driven Development') }}
 4. {{ link('posts/2014-02-26-tdd-just-do-it.md', 'TDD: just do it!') }}
+5. {{ link('posts/2014-03-05-spec-bdd.md', 'spec BDD') }}
 
 The first two articles didn't require special skills whereas the last one needed
 you to be a little bit used to tests. Well the next ones will require you to be
@@ -33,5 +34,5 @@ One of the best way to learn is to pair with someone who's used to it. If you
 don't have someone to pair with, you can always read this
 [Extreme Programming Episode by Robert C. Martin and Robert S. Koss](http://www.objectmentor.com/resources/articles/xpepisode.htm).
 
-The next article will be about the next level: Behavior Driven Development
-(BDD).
+The next article will be about the next level:
+{{ link('posts/2014-03-05-spec-bdd.md', 'Behavior Driven Development') }} (BDD).
