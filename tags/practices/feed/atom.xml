@@ -5,8 +5,67 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-02-26T00:00:00+01:00</updated>
+            <updated>2014-03-05T00:00:00+01:00</updated>
             <entry>
+        <title>spec BDD</title>
+                <id>http://gnugat.github.io/2014/03/05/spec-bdd.html</id>
+                <updated>2014-03-05T00:00:00+01:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/03/05/spec-bdd.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<p>This article is part of a series on Tests in general and on how to practice
+them:</p>
+<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+<li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+<li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+<li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
+</ol><p>In this article, we'll talk about Behavior Driven Development (BDD). There's no
+special skills required to read on, although some notions on tests and Test
+Driven Development (TDD) would be a plus.</p>
+<h2 id="from-tdd-to-bdd">From TDD to BDD<a href="#from-tdd-to-bdd" class="anchor">#</a></h2>
+<p><a href="http://dannorth.net/about/">Dan North</a>, a fervent TDDist, felt that there was
+something missing about this practice:</p>
+<ul><li>you don't know where to start (which test should be written first?)</li>
+<li>you don't know when to stop (should I test getters/setters?)</li>
+<li>you don't know what defines a failure (compilation error? typo?)</li>
+</ul><p>While being an adapt of the concept, he felt that there was missing some
+important guidelines, and that his tests didn't answered the right questions.</p>
+<p>Around 2006, he wrote an article called
+<a href="http://dannorth.net/about/">introducing BDD</a>, in which he explained his unease
+and how to fix it: instead of writing tests from a technical point of view he
+decided to write them from a business point of view.</p>
+<h2 id="from-unit-tests-to-specification">From unit tests to specification<a href="#from-unit-tests-to-specification" class="anchor">#</a></h2>
+<p>The first step to test the behavior of a class is to write a specification.
+Because xUnit frameworks were in vogue, developers had the habit of making a
+parallel between their Systems Under Test (SUT) and their Test Suites:</p>
+<ul><li>suffix the SUT's name with <code>Test</code> to name the Test Suite</li>
+<li>prefix the SUT's method names with <code>test</code> to name the Test Suite's methods</li>
+</ul><p>In the Software world, a lot of problems can be solved by giving descriptive
+names. And this is what Dan North did: Test Suites became Specification. Why?
+Because it forces you to say "this method should do this" instead of writting
+"test method".</p>
+<p>To be more precise, Dan Nort stated that "test method names should be
+sentences". Which means that test method names should be
+<a href="http://en.wikipedia.org/wiki/Snake_case">snake_cased</a>, as underscores give more
+spaces to words (they're basically spaces).</p>
+<p>And that's pretty much it!</p>
+<h2 id="is-that-all">Is that all?<a href="#is-that-all" class="anchor">#</a></h2>
+<p>Yes! Well, no. I mean... This is only the first part of BDD: it's called specBDD
+(guess why ;) ). I'll write about the second part (storyBDD) in a future
+article.</p>
+<h2 id="conslusion">Conslusion<a href="#conslusion" class="anchor">#</a></h2>
+<p>BDD is just TDD, but tests become specification and test methods are sentences
+which start with "it_should".</p>
+<p>I hope you enjoyed this article. If you want to make any comment, you're welcome
+to do so on <a href="https://twitter.com/epiloic">Twitter</a>.</p>
+<p>To keep good habits, in the next article we'll switch to the technical mode and
+see some <a href="http://www.phpspec.net/">phpspec</a>!</p>]]></content>
+    </entry>
+        <entry>
         <title>TDD: just do it!</title>
                 <id>http://gnugat.github.io/2014/02/26/tdd-just-do-it.html</id>
                 <updated>2014-02-26T00:00:00+01:00</updated>
@@ -21,6 +80,7 @@ them:</p>
 <li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
 <li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
 <li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+<li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
 </ol><p>The first two articles didn't require special skills whereas the last one needed
 you to be a little bit used to tests. Well the next ones will require you to be
 a little bit used to Test Driven Develoment (TDD), so this article is here to
@@ -35,8 +95,8 @@ as possible.</p>
 <p>One of the best way to learn is to pair with someone who's used to it. If you
 don't have someone to pair with, you can always read this
 <a href="http://www.objectmentor.com/resources/articles/xpepisode.htm">Extreme Programming Episode by Robert C. Martin and Robert S. Koss</a>.</p>
-<p>The next article will be about the next level: Behavior Driven Development
-(BDD).</p>]]></content>
+<p>The next article will be about the next level:
+<a href="../../../2014/03/05/spec-bdd.html">Behavior Driven Development</a> (BDD).</p>]]></content>
     </entry>
         <entry>
         <title>Test Driven Development</title>
@@ -53,6 +113,7 @@ them:</p>
 <li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
 <li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
 <li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+<li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
 </ol><p>Unlike the two previous articles, this one requires some experience in testing.
 While Test Driven Development (TDD) oficionados would tell you that on the
 contrary this is the way to learn tests, I'd rather advise you to practice them
@@ -155,6 +216,7 @@ them:</p>
 <li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
 <li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
 <li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+<li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
 </ol><p>This article can be read by any regular developer (no special level required),
 we'll put some code on the principles we've previously seen and we'll have a
 quick look on existing tools. Here's what we'll cover:</p>
@@ -537,6 +599,7 @@ them:</p>
 <li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
 <li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
 <li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+<li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
 </ol><p>This introduction can be read by anyone (no special level required) and it
 targets those who've never heard about tests, or those you've never really
 practice them. Here's what we'll cover:</p>
