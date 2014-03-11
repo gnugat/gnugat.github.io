@@ -14,6 +14,7 @@ them:
 3. {{ link('posts/2014-02-19-test-driven-development.md', 'Test Driven Development') }}
 4. {{ link('posts/2014-02-26-tdd-just-do-it.md', 'TDD: just do it!') }}
 5. {{ link('posts/2014-03-05-spec-bdd.md', 'spec BDD') }}
+6. {{ link('posts/2014-03-11-phpspec-quick-tour.md', 'phpspec') }}
 
 The first two articles didn't require special skills whereas the last one needed
 you to be a little bit used to tests. Well the next ones will require you to be

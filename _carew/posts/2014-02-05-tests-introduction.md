@@ -14,6 +14,7 @@ them:
 3. {{ link('posts/2014-02-19-test-driven-development.md', 'Test Driven Development') }}
 4. {{ link('posts/2014-02-26-tdd-just-do-it.md', 'TDD: just do it!') }}
 5. {{ link('posts/2014-03-05-spec-bdd.md', 'spec BDD') }}
+6. {{ link('posts/2014-03-11-phpspec-quick-tour.md', 'phpspec') }}
 
 This introduction can be read by anyone (no special level required) and it
 targets those who've never heard about tests, or those you've never really
