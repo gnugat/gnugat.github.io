@@ -7,14 +7,14 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
-    <title>TDD: just do it!</title>
+    <title>phpspec: a quick tour</title>
 
     <meta name="description" content="Talks about Symfony2, git and other developer stuff">
     <meta name="author" content="Loïc Chardonnet">
     <meta name="viewport" content="width=device-width">
 
     
-    <link rel="canonical" href="http://gnugat.github.io/2014/02/26/tdd-just-do-it.html"/>
+    <link rel="canonical" href="http://gnugat.github.io/2014/03/11/phpspec-quick-tour.html"/>
               <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Chardonnet&#039;s blog"/>
       
     <link href='http://fonts.googleapis.com/css?family=Bitter' rel='stylesheet' type='text/css'><link href='http://fonts.googleapis.com/css?family=Varela+Round' rel='stylesheet' type='text/css'><link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/bootstrap-responsive.min.css"><link rel="stylesheet" href="../../../css/main.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/xcode.min.css">
@@ -52,19 +52,20 @@
                   <div class="row">
             <div class="span10 offset1 content">
                                                 <div class="page-header">
-                    <h1>TDD: just do it!</h1>
+                    <h1>phpspec: a quick tour</h1>
                   </div>
                               
                 <article>
     <div class="date">
       <i class="icon-calendar"></i>
-      Feb 26th, 2014
+      Mar 11th, 2014
     </div>
 
     <hr />
 
     <div class="body">
-      <p>This article is part of a series on Tests in general and on how to practice
+      <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<p>This article is part of a series on Tests in general and on how to practice
 them:</p>
 <ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
 <li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
@@ -72,22 +73,53 @@ them:</p>
 <li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
 <li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
 <li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec</a></li>
-</ol><p>The first two articles didn't require special skills whereas the last one needed
-you to be a little bit used to tests. Well the next ones will require you to be
-a little bit used to Test Driven Develoment (TDD), so this article is here to
-make you practice them!</p>
-<p>I really mean it: reading articles on TDD might feel good, but the only thing to
-do to fully grasp them is to:</p>
-<ol><li>start writting tests before any production code</li>
-<li>then write the code to quickly make them pass (write ugly code if needed)</li>
-<li>finally refactor the mess, without touching the tests</li>
-</ol><p>In other word: just do it! The learning curve is steep, so dive into it as soon
-as possible.</p>
-<p>One of the best way to learn is to pair with someone who's used to it. If you
-don't have someone to pair with, you can always read this
-<a href="http://www.objectmentor.com/resources/articles/xpepisode.htm">Extreme Programming Episode by Robert C. Martin and Robert S. Koss</a>.</p>
-<p>The next article will be about the next level:
-<a href="../../../2014/03/05/spec-bdd.html">Behavior Driven Development</a> (BDD).</p>
+</ol><p>The <a href="../../../2014/03/05/spec-bdd.html">last article</a> might have seemed
+too abstract. Fortunately, this one will be much more concrete! We'll present
+<a href="http://www.phpspec.net/">phpspec</a>, a spec BDD tool for PHP.</p>
+<h2 id="introduction">Introduction<a href="#introduction" class="anchor">#</a></h2>
+<p>phpspec automates the Test Driven Development (TDD) and spec BDD process by:</p>
+<ul><li>allowing you to generate the specification</li>
+<li>then allowing you to generate the code from it</li>
+</ul><p>It also forces you to follow good practices:</p>
+<ul><li>you can only test non-static public methods</li>
+<li>you cannot generate a code coverage report</li>
+</ul><p>It also tries to be less verbose, as you'll see in the next sections.</p>
+<h2 id="installation">Installation<a href="#installation" class="anchor">#</a></h2>
+<p>Simply install phpspec using <a href="https://getcomposer.org/">Composer</a>:</p>
+<pre><code>composer require --dev 'phpspec/phpspec:~2.0@RC'</code></pre>
+<p>At the time I write this article, phpspec is in Release Candidate, but don't
+worry: I've been using it since the beta version and I've never had any trouble.</p>
+<h2 id="process">Process<a href="#process" class="anchor">#</a></h2>
+<p>First, bootstrap and complete the specification:</p>
+<pre><code>phpspec describe 'Fully\Qualified\Classname'
+$EDITOR spec/Fully/Qualified/ClassnameSpec.php</code></pre>
+<p>Then bootstrap and complete the code to make the tests pass:</p>
+<pre><code>phpspec run
+$EDITOR src/Fully/Qualified/Classname.php
+phpspec run</code></pre>
+<p>Finally refactor, but keep the tests passing:</p>
+<pre><code>$EDITOR src/Fully/Qualified/Classname.php
+phpspec run</code></pre>
+<p>I've found that Marcello Duarte, the creator of phpspec, talks really well about
+it in his presentation <a href="http://www.slideshare.net/marcello.duarte/test-transform-refactor">Test, transform, refactor</a>.</p>
+<p>I advise you to have a look at his slides, as they explain everything you should
+now about the red, green, refactor cycle.</p>
+<h2 id="a-tour-of-the-documentation">A tour of the documentation<a href="#a-tour-of-the-documentation" class="anchor">#</a></h2>
+<p>Surprisingly, the documentation is complete and small:</p>
+<ul><li><a href="http://www.phpspec.net/cookbook/matchers.html">here's the complete list of assertions</a></li>
+<li><a href="http://www.phpspec.net/cookbook/templates.html">here's how to customize the specification and code tempaltes</a></li>
+<li><a href="http://www.phpspec.net/cookbook/configuration.html">here's how to configure phpspec</a></li>
+</ul><p>There's nothing missing in these docs!</p>
+<h2 id="prophecy-the-test-double-framework">Prophecy, the test double framework<a href="#prophecy-the-test-double-framework" class="anchor">#</a></h2>
+<p>Unlike PHPUnit, phpspec uses an external library for its test doubles:
+<a href="https://github.com/phpspec/prophecy">prophecy</a> (but you can still find how to
+use it in the <a href="http://www.phpspec.net/cookbook/configuration.html">documentation</a>).</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>phpspec generates specification and code boilerplates for you. It forces you to
+concentrate on the class behavior rather than on the implementation and it
+provides a non verbose API. Even its documentations is complete and small!</p>
+<p>I hope you enjoyed this article, be sure to
+<a href="https://twitter.com/epiloic">tweet me what you think about it</a> ;) .</p>
     </div>
 
           <hr>
