@@ -5,8 +5,95 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-03-11T00:00:00+01:00</updated>
+            <updated>2014-03-19T00:00:00+01:00</updated>
             <entry>
+        <title>Behavior Driven Development: story BDD</title>
+                <id>http://gnugat.github.io/2014/03/19/behavior-driven-development-story-bdd.html</id>
+                <updated>2014-03-19T00:00:00+01:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/03/19/behavior-driven-development-story-bdd.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<p>This article is part of a series on Tests in general and on how to practice
+them:</p>
+<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+<li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+<li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+<li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
+<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
+</ol><p>In this article, we'll talk about Behavior Driven Development (BDD), again.
+There's no special skills required to read on, although some notions on
+<a href="../../../2014/02/05/tests-introduction.html">tests</a> and
+<a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a>
+(TDD) would be a plus.</p>
+<h2 id="from-spec-bdd-to-story-bdd">From spec BDD to story BDD<a href="#from-spec-bdd-to-story-bdd" class="anchor">#</a></h2>
+<p>So TDD has 3 simple rules:</p>
+<ol><li>write the test first</li>
+<li>then write as quickly as possible the code to make it pass</li>
+<li>finally refactor, without changing the tests (and still making them pass)</li>
+</ol><p>Like many TDD oficionados, <a href="http://dannorth.net/about/">Dan North</a> felt that it
+was missing some guidelines. To fix this, he created spec BDD, which adds the
+following rules to TDD:</p>
+<ul><li>test methods should be sentences (prefix them with <code>it_should</code> instead of <code>test</code>)</li>
+<li>tests should specify the behavior of the System Under Test (SUT)</li>
+</ul><p>One of his colleagues, Chris Matts, suggested to take BDD a step further: why
+not making sure the business value was met? And that's how story BDD was
+created.</p>
+<h2 id="acceptance-tests">Acceptance tests<a href="#acceptance-tests" class="anchor">#</a></h2>
+<p>If you're working with agile methodologies, you should be familiar with user
+stories. Those are simple cards which describe what to do in 3 lines:</p>
+<pre><code>In order to attain a business value
+As an actor
+I need to meet some requirements</code></pre>
+<p>They've also some acceptance criteria, which follow approximately this template:</p>
+<pre><code>Given a context
+When an event happens
+Then an outcome should occur</code></pre>
+<p>If the system fulfills the acceptance test, then it behaves correctly. By making
+them executable, you can test the business behavior of your system! That's what
+story BDD is all about.</p>
+<p>Technically, this means parsing the acceptance tests and match each line with
+a chunk of code. But don't worry about implementation details, we'll see them
+in the next article.</p>
+<h2 id="misconceptions">Misconceptions<a href="#misconceptions" class="anchor">#</a></h2>
+<p>Somehow, a surprising number of people started to think that BDD was all about
+integration tests. For example in a web application, they would write:</p>
+<pre><code>Given I am on "/home"
+When I click on "form#name_form input[name=submit]"
+And I wait until the page is fully loaded
+Then the "form#name_form input[name=first_name]" form field should contain "value"</code></pre>
+<p>What's wrong with it? Well:</p>
+<ul><li>it's not human friendly (usage of xpath)</li>
+<li>it's completely coupled to your routing (usage of URL)</li>
+<li>it's entirely coupled to the web implementation (usage of web vocabulary)</li>
+<li>it's thoroughly coupled to the HTML integration (again, usage of xpath)</li>
+<li>it's fully coupled to the test tool (the waiting line is a hack)</li>
+<li>and mostly: it doesn't describe your business need</li>
+</ul><p>Here's a better approach:</p>
+<pre><code>Given the opportunity to introduce myself
+When I give my name
+Then I should be greeted</code></pre>
+<p>Yep, that's the story BDD example of "Hello World", in case you didn't recognize
+it ;) .</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>If you make a user story's acceptance tests executable, then you're doing story
+BDD. It helps you to make sure that your application meets your business needs.</p>
+<p>Hopefully this article hepled you a little. If you have any questions, rants or
+praises, feel free to send them to me on <a href="https://twitter.com/epiloic">Twitter</a>.</p>
+<p>Tests are hard. TDD is harder. BDD even more! Here's some good references to
+help you on story BDD:</p>
+<ul><li><a href="http://dannorth.net/introducing-bdd/">Introducing BDD, by Dan North</a></li>
+<li><a href="http://dannorth.net/2011/01/31/whose-domain-is-it-anyway/">Whose domain is it anyway? By Dan North</a></li>
+<li><a href="http://slideshare.net/lunivore/behavior-driven-development-11754474">BDD slides by Liz Keogh</a></li>
+<li><a href="http://www.wekeroad.com/2013/08/28/how-behavioral-is-your-bdd/">Are you really doing BDD? By Rob Conery</a></li>
+<li><a href="http://ht.ly/pfNW5">A.T. Fail! By Robert C. Martin</a></li>
+</ul>]]></content>
+    </entry>
+        <entry>
         <title>phpspec: a quick tour</title>
                 <id>http://gnugat.github.io/2014/03/11/phpspec-quick-tour.html</id>
                 <updated>2014-03-11T00:00:00+01:00</updated>
@@ -23,7 +110,8 @@ them:</p>
 <li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
 <li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
 <li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
-<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec</a></li>
+<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
 </ol><p>The <a href="../../../2014/03/05/spec-bdd.html">last article</a> might have seemed
 too abstract. Fortunately, this one will be much more concrete! We'll present
 <a href="http://www.phpspec.net/">phpspec</a>, a spec BDD tool for PHP.</p>
@@ -89,10 +177,13 @@ them:</p>
 <li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
 <li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
 <li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
-<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec</a></li>
+<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
 </ol><p>In this article, we'll talk about Behavior Driven Development (BDD). There's no
-special skills required to read on, although some notions on tests and Test
-Driven Development (TDD) would be a plus.</p>
+special skills required to read on, although some notions on although some
+notions on <a href="../../../2014/02/05/tests-introduction.html">tests</a> and
+<a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a>
+(TDD) would be a plus.</p>
 <h2 id="from-tdd-to-bdd">From TDD to BDD<a href="#from-tdd-to-bdd" class="anchor">#</a></h2>
 <p><a href="http://dannorth.net/about/">Dan North</a>, a fervent TDDist, felt that there was
 something missing about this practice:</p>
@@ -122,8 +213,9 @@ spaces to words (they're basically spaces).</p>
 <p>And that's pretty much it!</p>
 <h2 id="is-that-all">Is that all?<a href="#is-that-all" class="anchor">#</a></h2>
 <p>Yes! Well, no. I mean... This is only the first part of BDD: it's called specBDD
-(guess why ;) ). I'll write about the second part (storyBDD) in a future
-article.</p>
+(guess why ;) ). I'll write about the second part
+(<a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">story BDD</a>)
+in a future article.</p>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>BDD is just TDD, but tests become specifications and test methods are sentences
 which start with "it_should".</p>
@@ -148,7 +240,8 @@ them:</p>
 <li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
 <li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
 <li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
-<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec</a></li>
+<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
 </ol><p>The first two articles didn't require special skills whereas the last one needed
 you to be a little bit used to tests. Well the next ones will require you to be
 a little bit used to Test Driven Develoment (TDD), so this article is here to
@@ -182,7 +275,8 @@ them:</p>
 <li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
 <li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
 <li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
-<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec</a></li>
+<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
 </ol><p>Unlike the two previous articles, this one requires some experience in testing.
 While Test Driven Development (TDD) oficionados would tell you that on the
 contrary this is the way to learn tests, I'd rather advise you to practice them
@@ -286,7 +380,8 @@ them:</p>
 <li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
 <li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
 <li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
-<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec</a></li>
+<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
 </ol><p>This article can be read by any regular developer (no special level required),
 we'll put some code on the principles we've previously seen and we'll have a
 quick look on existing tools. Here's what we'll cover:</p>
@@ -670,7 +765,8 @@ them:</p>
 <li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
 <li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
 <li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
-<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec</a></li>
+<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
 </ol><p>This introduction can be read by anyone (no special level required) and it
 targets those who've never heard about tests, or those you've never really
 practice them. Here's what we'll cover:</p>
