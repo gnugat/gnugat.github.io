@@ -100,7 +100,7 @@ it ;) .
 If you make a user story's acceptance tests executable, then you're doing story
 BDD. It helps you to make sure that your application meets your business needs.
 
-Hopefully this article hepled you a little. If you have any questions, rants or
+Hopefully this article helped you a little. If you have any questions, rants or
 praises, feel free to send them to me on [Twitter](https://twitter.com/epiloic).
 
 Tests are hard. TDD is harder. BDD even more! Here's some good references to
