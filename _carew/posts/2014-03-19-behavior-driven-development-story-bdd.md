@@ -18,6 +18,7 @@ them:
 5. {{ link('posts/2014-03-05-spec-bdd.md', 'spec BDD') }}
 6. {{ link('posts/2014-03-11-phpspec-quick-tour.md', 'phpspec: a quick tour') }}
 7. {{ link('posts/2014-03-19-behavior-driven-development-story-bdd.md', 'Behavior Driven Development: story BDD') }}
+8. {{ link('posts/2014-03-26-behat-quick-tour.md', 'Behat: a quick tour') }}
 
 In this article, we'll talk about Behavior Driven Development (BDD), again.
 There's no special skills required to read on, although some notions on

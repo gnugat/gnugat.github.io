@@ -16,6 +16,7 @@ them:
 5. {{ link('posts/2014-03-05-spec-bdd.md', 'spec BDD') }}
 6. {{ link('posts/2014-03-11-phpspec-quick-tour.md', 'phpspec: a quick tour') }}
 7. {{ link('posts/2014-03-19-behavior-driven-development-story-bdd.md', 'Behavior Driven Development: story BDD') }}
+8. {{ link('posts/2014-03-26-behat-quick-tour.md', 'Behat: a quick tour') }}
 
 The first two articles didn't require special skills whereas the last one needed
 you to be a little bit used to tests. Well the next ones will require you to be
