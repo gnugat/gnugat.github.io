@@ -17,6 +17,7 @@ them:
 6. {{ link('posts/2014-03-11-phpspec-quick-tour.md', 'phpspec: a quick tour') }}
 7. {{ link('posts/2014-03-19-behavior-driven-development-story-bdd.md', 'Behavior Driven Development: story BDD') }}
 8. {{ link('posts/2014-03-26-behat-quick-tour.md', 'Behat: a quick tour') }}
+9. {{ link('posts/2014-04-02-tests-cheat-sheet.md', 'Conclusion') }}
 
 Unlike the two previous articles, this one requires some experience in testing.
 While Test Driven Development (TDD) oficionados would tell you that on the

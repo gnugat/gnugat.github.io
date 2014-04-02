@@ -19,6 +19,7 @@ them:
 6. {{ link('posts/2014-03-11-phpspec-quick-tour.md', 'phpspec: a quick tour') }}
 7. {{ link('posts/2014-03-19-behavior-driven-development-story-bdd.md', 'Behavior Driven Development: story BDD') }}
 8. {{ link('posts/2014-03-26-behat-quick-tour.md', 'Behat: a quick tour') }}
+9. {{ link('posts/2014-04-02-tests-cheat-sheet.md', 'Conclusion') }}
 
 The {{ link('posts/2014-03-05-spec-bdd.md', 'last article') }} might have seemed
 too abstract. Fortunately, this one will be much more concrete! We'll present
