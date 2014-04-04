@@ -58,14 +58,15 @@ tools:</p>
 <ul><li>integration tests:
 <ul><li><a href="https://github.com/alexandresalome/php-webdriver">Alexandre Salome's webdriver</a> (PHP)</li>
 <li><a href="https://github.com/facebook/php-webdriver">Facebook's webdriver</a> (PHP)</li>
-<li><a href="http://casperjs.org/">CasperJs</a> (js)</li>
 <li><a href="https://github.com/fabpot/goutte">Goutte</a> (PHP)</li>
+<li><a href="http://phantomjs.org/">PhantomJS</a></li>
 </ul></li>
 <li>xUnit frameworks:
 <ul><li><a href="http://phpunit.de/">PHPUnit</a> (PHP)</li>
 <li><a href="https://github.com/atoum/">Atoum</a> (PHP)</li>
 <li><a href="http://codeception.com/">Codeception</a> (PHP)</li>
 <li><a href="http://visionmedia.github.io/mocha/">Mocha</a> (js)</li>
+<li><a href="http://casperjs.org/">CasperJs</a> (js)</li>
 </ul></li>
 <li>tests double libraries:
 <ul><li><a href="https://github.com/phpspec/prophecy">Prophecy</a> (PHP)</li>

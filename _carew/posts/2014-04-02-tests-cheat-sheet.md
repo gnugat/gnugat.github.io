@@ -64,13 +64,14 @@ tools:
 * integration tests:
     * [Alexandre Salome's webdriver](https://github.com/alexandresalome/php-webdriver) (PHP)
     * [Facebook's webdriver](https://github.com/facebook/php-webdriver) (PHP)
-    * [CasperJs](http://casperjs.org/) (js)
     * [Goutte](https://github.com/fabpot/goutte) (PHP)
+    * [PhantomJS](http://phantomjs.org/)
 * xUnit frameworks:
     * [PHPUnit](http://phpunit.de/) (PHP)
     * [Atoum](https://github.com/atoum/) (PHP)
     * [Codeception](http://codeception.com/) (PHP)
     * [Mocha](http://visionmedia.github.io/mocha/) (js)
+    * [CasperJs](http://casperjs.org/) (js)
 * tests double libraries:
     * [Prophecy](https://github.com/phpspec/prophecy) (PHP)
     * [Mockery](https://github.com/padraic/mockery) (PHP)
