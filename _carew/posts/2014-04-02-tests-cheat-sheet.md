@@ -134,7 +134,7 @@ automate the process by allowing you to:
 1. bootstrap the test
 2. then you have to manually implement the test
 3. bootstrap the code from the written tests
-4. then you have to manuall implement the code
+4. then you have to manually implement the code
 
 ### References:
 
