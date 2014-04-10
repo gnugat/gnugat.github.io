@@ -170,7 +170,7 @@ A convenient object which allows you to write on the console output:
         public function writeln($messages, $type = self::OUTPUT_NORMAL);
     }
 
-The `writeln` method allows you to write new a line (with a newline character at
+The `writeln` method allows you to write a new line (with a newline character at
 the end). If the given `message` is an array, it will print each elements on a
 new line.
 
