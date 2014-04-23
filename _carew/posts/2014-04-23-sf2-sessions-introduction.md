@@ -64,7 +64,7 @@ you'll only deal with the following four methods of the `AttributeBag` object:
         public function set($name, $value);
     }
 
-When using the sessions, you'll generally need to boostrap things up as follows:
+When using the sessions, you'll generally need to bootstrap things up as follows:
 
     <?php
 
