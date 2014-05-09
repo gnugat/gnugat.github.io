@@ -5,8 +5,197 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-04-30T00:00:00+02:00</updated>
+            <updated>2014-05-09T00:00:00+02:00</updated>
             <entry>
+        <title>Redaktilo: because your code too needs an editor</title>
+                <id>http://gnugat.github.io/2014/05/09/redaktilo.html</id>
+                <updated>2014-05-09T00:00:00+02:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/05/09/redaktilo.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<p>I've been working on a silly library lately:
+<a href="https://github.com/gnugat/redaktilo">Redaktilo</a> (it means editor in esperanto).</p>
+<p>Redaktilo has been created to fulfill actual needs. In this article we'll see
+what it is all about, and why it won't stay silly for long.</p>
+<h2 id="use-case-1-yaml-configuration-edition">Use case 1: YAML configuration edition<a href="#use-case-1-yaml-configuration-edition" class="anchor">#</a></h2>
+<p><a href="https://github.com/Incenteev/ParameterHandler">Incenteev\ParameterHandler</a>
+is a good example: it updates a YAML configuration after each update of the
+dependencies using <a href="https://getcomposer.org/">Composer</a>.</p>
+<p>It uses the
+<a href="http://symfony.com/doc/current/components/yaml/introduction.html">Symfony2 Yaml component</a>
+which converts a YAML string into a PHP array, and then converts it back.
+The problem with it is that it strips empty lines, custom formatting and
+comments...</p>
+<p>Redaktilo only inserts a new line in the file, leaving it as it is.</p>
+<h2 id="use-case-2-json-file-edition">Use case 2: JSON file edition<a href="#use-case-2-json-file-edition" class="anchor">#</a></h2>
+<p>The <code>composer.json</code> file is really usefull and can be almost completly edited
+using the <code>composer.phar</code> CLI application.</p>
+<p>Some part still need manual edition, like the script section. To automate this
+you could use <code>json_decode</code> and <code>json_encode</code>, but similarly to the previous use
+case you would lose empty lines and custom formatting...</p>
+<p>Redaktilo aims at solving this problem, but isn't ready yet: inserting a line
+in JSON often means adding a comma at the end of the previous one.</p>
+<h2 id="use-case-3-php-source-code-edition">Use case 3: PHP source code edition<a href="#use-case-3-php-source-code-edition" class="anchor">#</a></h2>
+<p>To be fair this use case isn't limited to PHP source code: it can be useful for
+any plain text files (text, XML, java, python, anything).</p>
+<p><a href="https://github.com/gnugat/GnugatWizardBundle">GnugatWizardBundle</a> automatically
+registers new bundles installed using Composer in your Symfony2 application.</p>
+<p>To do so it uses
+<a href="https://github.com/sensiolabs/SensioGeneratorBundle">SensioGeneratorBundle</a>'s
+<a href="https://github.com/sensiolabs/SensioGeneratorBundle/blob/8b7a33aa3d22388443b6de0b0cf184122e9f60d2/Manipulator/KernelManipulator.php">KernelManipulator</a>
+to insert a line in the <code>app/AppKernel.php</code>. However this class registers bundles for every
+environments, and doesn't take into account bundle which depend on the kernel.</p>
+<p>If you take a look at the <a href="https://github.com/sensiolabs/SensioGeneratorBundle/blob/8b7a33aa3d22388443b6de0b0cf184122e9f60d2/Manipulator/KernelManipulator.php">KernelManipulator source code</a>
+you'll realise it has been a bit over engineered as it parses PHP tokens.</p>
+<p>A new <code>KernelManipulator</code> could be written using Redaktilo as follow:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Sensio\Bundle\GeneratorBundle\Manipulator;
+
+use Gnugat\Redaktilo\Editor;
+
+class KernelManipulator extends Manipulator
+{
+    protected $editor;
+    protected $appKernelFilename;
+
+    public function __construct(Editor $editor, $appKernelFilename)
+    {
+        $this-&gt;editor = $editor;
+        $this-&gt;appKernelFilename = $appKernelFilename;
+    }
+
+    public function addBundle($bundle)
+    {
+        $file = $this-&gt;editor-&gt;open($this-&gt;appKernelFilename);
+        $newLine = sprintf('            new %s(),', $bundle);
+
+        $this-&gt;editor-&gt;jumpDownTo('    public function registerBundles()');
+        $this-&gt;editor-&gt;jumpDownTo('        $bundles = array(');
+        $this-&gt;editor-&gt;jumpDownTo('        );');
+
+        $this-&gt;editor-&gt;addBefore($file, $newLine);
+
+        $this-&gt;editor-&gt;save($file);
+
+        return true;
+    }
+}</code></pre>
+<h2 id="usage">Usage<a href="#usage" class="anchor">#</a></h2>
+<p>A great effort has been put to document the project, as you can see in the
+<a href="https://github.com/gnugat/redaktilo/#redaktilo">README</a>.</p>
+<p>Here's an overview!</p>
+<p>You can install Redaktilo using <a href="https://getcomposer.org/">Composer</a>:</p>
+<pre><code>composer require "gnugat/redaktilo:~0.3@dev"</code></pre>
+<p>Then you need to create an instance of the <code>Editor</code> class:</p>
+<pre><code class="language-php">&lt;?php
+require_once __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\Filesystem;
+use Gnugat\Redaktilo\Editor;
+use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
+
+$symfonyFilesystem = new SymfonyFilesystem();
+$filesystem = new Filesystem($symfonyFilesystem);
+$editor = new Editor($filesystem);</code></pre>
+<p><code>Editor</code> is completly stateless, which means you can use the same instance
+everywhere in your scripts/applications/libraries.</p>
+<p>Let's now have a look at the available classes and their responsibility.</p>
+<h2 id="file">File<a href="#file" class="anchor">#</a></h2>
+<p>The basic idea behind Redaktilo is to provide an object oriented way to
+represent files:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class File
+{
+    public function getFilename();
+
+    public function read();
+    public function write($newContent);
+
+    // ...
+}</code></pre>
+<p>Once this domain model available, you can build services to manipulate it.</p>
+<h2 id="filesystem">Filesystem<a href="#filesystem" class="anchor">#</a></h2>
+<p>This is the first service available:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class Filesystem
+{
+    public function open($filename); // Cannot open new files
+    public function create($filename); // Cannot create existing files
+
+    public function exists($filename);
+
+    public function write(File $file);
+}</code></pre>
+<p>It creates instances of <code>File</code> and write their content in the actual file.</p>
+<h2 id="editor">Editor<a href="#editor" class="anchor">#</a></h2>
+<p>Developers should only use the <code>Editor</code> class: it's a facade which provides the
+text edition metaphor:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class Editor
+{
+    // Filesystem operations.
+    public function open($filename, $force = false);
+    public function save(File $file);
+
+    // Line insertion.
+    public function addBefore(File $file, $add);
+    public function addAfter(File $file, $add);
+
+    // Content navigation.
+    public function jumpDownTo(File $file, $line);
+    public function jumpUpTo(File $file, $line);
+}</code></pre>
+<p>And that's it.It told you it was a small and simple library ;) . Now let's see
+what's planned for the next releases.</p>
+<h2 id="version-0-4-should-bring-searchengine">Version 0.4 should bring SearchEngine<a href="#version-0-4-should-bring-searchengine" class="anchor">#</a></h2>
+<p>There's still some search logic left in <code>Editor</code>.</p>
+<p>To remove it, a whole system will be put in place: <code>SearchEngineCollection</code> will
+be called by <code>Editor</code> and will ask its <code>SearchEngine</code>s if they support the
+pattern.</p>
+<p>This should allow many search strategies:</p>
+<ul><li>find by line (what's currently done, an exact matching)</li>
+<li>find by line number</li>
+<li>find by regexp</li>
+<li>find by symbol (similar to <a href="http://www.sublimetext.com/">SublimeText</a>'s <code>@</code>)</li>
+</ul><p>You could then have an extending point!</p>
+<h2 id="version-0-5-should-bring-contentconverter">Version 0.5 should bring ContentConverter<a href="#version-0-5-should-bring-contentconverter" class="anchor">#</a></h2>
+<p>Some extra logic are also left in <code>File</code>, regarding the conversion of the
+content into an array of lines.</p>
+<p><code>ContentConverter</code> could take a file, and convert its content into anything:</p>
+<ul><li>an array of lines</li>
+<li>an array of <code>IndentedLine</code></li>
+<li>PHP tokens</li>
+</ul><p>This would allow new types of <code>SearchEngine</code>, and maybe the creation of
+<code>ContentEditor</code> which would bear the single responsibility of inserting,
+replacing or removing bits of it.</p>
+<h2 id="i-need-your-humble-opinion-help">I need your humble opinion / help<a href="#i-need-your-humble-opinion-help" class="anchor">#</a></h2>
+<p>I'd like to hear about more use cases: what would you do with Redaktilo? What
+would you like to do with it?</p>
+<p>You can <a href="https://github.com/gnugat/redaktilo/issues/new">open issues to start discussions</a>,
+just make sure to provide a real life use case ;) .</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p><a href="https://github.com/gnugat/redaktilo">Redaktilo</a> provides an Object Oriented way
+to manipulate files, through the editor metaphor:</p>
+<ul><li>your scripts can open a file</li>
+<li>they can then navigate in the file to select a line</li>
+<li>next, they can insert a new line above/under the current one</li>
+<li>finally they can save the changes on the filesystem</li>
+</ul>]]></content>
+    </entry>
+        <entry>
         <title>PHP generators and coroutines</title>
                 <id>http://gnugat.github.io/2014/04/30/php-generators-and-coroutines.html</id>
                 <updated>2014-04-30T00:00:00+02:00</updated>
