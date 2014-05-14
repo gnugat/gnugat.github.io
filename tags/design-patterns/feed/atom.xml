@@ -5,8 +5,224 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-05-09T00:00:00+02:00</updated>
+            <updated>2014-05-14T00:00:00+02:00</updated>
             <entry>
+        <title>Open/Closed principle, by example</title>
+                <id>http://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html</id>
+                <updated>2014-05-14T00:00:00+02:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<p>This week I've read two articles, which just have been published, on the
+Open/Closed principle:</p>
+<ul><li>one by <a href="http://blog.8thlight.com/uncle-bob/2014/05/12/TheOpenClosedPrinciple.html">Uncle Bob</a></li>
+<li>another one by <a href="http://verraes.net/2014/05/final-classes-in-php/">Mathias Verraes</a></li>
+</ul><p>I'd like to add my small contribution to their explanation by providing a real
+world example: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a>.</p>
+<h2 id="problem-statement">Problem statement<a href="#problem-statement" class="anchor">#</a></h2>
+<p>Let's say you have the following file:</p>
+<pre><code>Egg
+Sausage
+Bacon
+Spam</code></pre>
+<p>Redaktilo provides an <code>Editor</code> class which allows you to jump to the line you
+want, provided that you know exactly its content:</p>
+<pre><code class="language-php">$editor-&gt;has($file, 'Bacon'); // true!
+$editor-&gt;jumpDownTo($file, 'Bacon'); // Current line: Bacon
+$editor-&gt;jumpUpTo($file, 'Sausage'); // Current line: Sausage</code></pre>
+<p>But what if you want to jump two lines under <code>Sausage</code>? You'd have to create
+a new method:</p>
+<pre><code class="language-php">$editor-&gt;moveDown($file, 2); // Current line: Spam</code></pre>
+<p>You have extended <code>Editor</code> by modifying it.</p>
+<h2 id="complying-to-the-open-closed-principle">Complying to the Open/Closed principle<a href="#complying-to-the-open-closed-principle" class="anchor">#</a></h2>
+<p>Having to fork a library to extend it doesn't feel natural. What does the
+Open/Closed principle say?</p>
+<blockquote>
+<p>Software entities (classes, modules, functions, etc.) should be open for
+extension, but closed for modification.</p>
+</blockquote>
+<p>Our <code>Editor</code> class is open to extension, but also to modification.</p>
+<p>To fix this, we can transfer the responsibility of finding a pattern in the file
+to a <code>SearchStrategy</code>:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Gnugat\Redaktilo\Search;
+
+use Gnugat\Redaktilo\File;
+
+interface SearchStrategy
+{
+    public function has(File $file, $pattern);
+
+    public function findNext(File $file, $pattern);
+    public function findPrevious(File $file, $pattern);
+
+    public function supports($pattern);
+}
+</code></pre>
+<p>Here's some implementation ideas:</p>
+<ul><li><code>LineSearchStrategy</code>: looking for the exact line in the file</li>
+<li><code>LineNumberSearchStrategy</code>: jumping to a line relatively to the current one</li>
+<li><code>RegexpSearchStrategy</code>: looking for a pattern in the file using regular expressions</li>
+<li><code>PhpTokenSearchStrategy</code>: parsing PHP tokens</li>
+</ul><p>The <code>supports</code> method tells you that <code>LineSearchStrategy</code> needs <code>$pattern</code> to be
+a string, but that <code>RegexpSearchStrategy</code> needs an <code>Expression</code> value object.</p>
+<p>The responsibility to find a <code>SearchStrategy</code> which supports the given pattern
+should be delegated to <code>SearchEngine</code>:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Gnugat\Redaktilo\Search;
+
+class SearchEngine
+{
+    private $searchStrategies = array();
+
+    public function registerStrategy(SearchStrategy $searchStrategy)
+    {
+        $this-&gt;searchStrategies[] = $searchStrategy;
+    }
+
+    public function resolve($pattern)
+    {
+        foreach ($this-&gt;searchStrategies as $searchStrategy) {
+            if ($searchStrategy-&gt;supports($pattern)) {
+                return $searchStrategy;
+            }
+        }
+
+        throw new PatternNotSupportedException($pattern);
+    }
+}</code></pre>
+<p>You no longer need to fork Redaktilo to add new search related behavior, you can
+now just create a new implementation of <code>SearchStrategy</code>, register it into
+<code>SearchEngine</code> and then inject it into the <code>Editor</code>:</p>
+<pre><code class="language-php">use Gnugat\Redaktilo\Editor;
+use Gnugat\Redaktilo\Filesystem;
+use Gnugat\Redaktilo\Search\SearchEngine;
+use Gnugat\Redaktilo\Search\LineNumberSearchStrategy;
+use Gnugat\Redaktilo\Search\LineSearchStrategy;
+use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
+
+$searchEngine = new SearchEngine();
+
+$lineSearchStrategy = new LineSearchStrategy();
+$searchEngine-&gt;registerStrategy($lineSearchStrategy);
+
+$lineNumberSearchStrategy = new LineNumberSearchStrategy();
+$searchEngine-&gt;registerStrategy($lineNumberSearchStrategy);
+
+$symfonyFilesystem = new SymfonyFilesystem();
+$filesystem = new Filesystem($symfonyFilesystem);
+$editor = new Editor($filesystem, $searchEngine);</code></pre>
+<p>We just made Redaktilo open to extension (still) and closed to modifications,
+hooray!</p>
+<h2 id="editor-s-diff">Editor's diff<a href="#editor-s-diff" class="anchor">#</a></h2>
+<p>Here's what <code>Editor</code> looked like after adding <code>moveDown</code>:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class Editor
+{
+    public function jumpDownTo(File $file, $pattern)
+    {
+        $lines = $file-&gt;readlines();
+        $filename = $file-&gt;getFilename();
+        $currentLineNumber = $file-&gt;getCurrentLineNumber() + 1;
+        $length = count($lines);
+        while ($currentLineNumber &lt; $length) {
+            if ($lines[$currentLineNumber] === $pattern) {
+                $file-&gt;setCurrentLineNumber($currentLineNumber);
+
+                return;
+            }
+            $currentLineNumber++;
+        }
+
+        throw new \Exception("Couldn't find line $pattern in $filename");
+    }
+
+    public function jumpUpTo(File $file, $pattern)
+    {
+        $lines = $file-&gt;readlines();
+        $filename = $file-&gt;getFilename();
+        $currentLineNumber = $file-&gt;getCurrentLineNumber() - 1;
+        while (0 &lt;= $currentLineNumber) {
+            if ($lines[$currentLineNumber] === $pattern) {
+                $file-&gt;setCurrentLineNumber($currentLineNumber);
+
+                return;
+            }
+            $currentLineNumber--;
+        }
+
+        throw new \Exception("Couldn't find line $pattern in $filename");
+    }
+
+    public function moveUp(File $file, $lines = 1)
+    {
+        $newLineNumber = $file-&gt;getCurrentLineNumber() - $lines;
+
+        if ($newLineNumber &lt; 0) {
+            $newLineNumber = 0;
+        }
+
+        $file-&gt;setCurrentLineNumber($newLineNumber);
+    }
+
+    public function has(File $file, $pattern)
+    {
+        return $file-&gt;hasLine($pattern);
+    }
+}</code></pre>
+<p>And now, here's what it looks like:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+use Gnugat\Redaktilo\Search\SearchEngine;
+
+class Editor
+{
+    private $searchEngine;
+
+    public function __construct(SearchEngine $searchEngine)
+    {
+        $this-&gt;searchEngine = $searchEngine;
+    }
+
+    public function jumpDownTo(File $file, $pattern)
+    {
+        $searchStrategy = $this-&gt;searchEngine-&gt;resolve($pattern);
+        $foundLineNumber = $searchStrategy-&gt;findNext($file, $pattern);
+
+        $file-&gt;setCurrentLineNumber($foundLineNumber);
+    }
+
+    public function jumpUpTo(File $file, $pattern)
+    {
+        $searchStrategy = $this-&gt;searchEngine-&gt;resolve($pattern);
+        $foundLineNumber = $searchStrategy-&gt;findPrevious($file, $pattern);
+
+        $file-&gt;setCurrentLineNumber($foundLineNumber);
+    }
+
+    public function has(File $file, $pattern)
+    {
+        $searchStrategy = $this-&gt;searchEngine-&gt;resolve($pattern);
+
+        return $searchStrategy-&gt;has($file, $pattern);
+    }
+}</code></pre>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>You should be able to add new features without modifying existing code.</p>
+<p>I hope you found this article interesting, if you have any questions or
+feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twitter</a>.</p>]]></content>
+    </entry>
+        <entry>
         <title>Redaktilo: because your code too needs an editor</title>
                 <id>http://gnugat.github.io/2014/05/09/redaktilo.html</id>
                 <updated>2014-05-09T00:00:00+02:00</updated>
