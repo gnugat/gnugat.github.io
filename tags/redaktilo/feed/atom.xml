@@ -5,8 +5,87 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-05-14T00:00:00+02:00</updated>
+            <updated>2014-05-21T00:00:00+02:00</updated>
             <entry>
+        <title>Facade design pattern, by example</title>
+                <id>http://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html</id>
+                <updated>2014-05-21T00:00:00+02:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<p>Sometimes, you just want to hide low level complexity behind a unique interface
+which communicates a high level policy. The Facade design pattern is all about
+this.</p>
+<p>In this article, we'll see a real world example with
+<a href="https://github.com/gnugat/redaktilo">Redaktilo</a>.</p>
+<h2 id="low-level-file-manipulation">Low level file manipulation<a href="#low-level-file-manipulation" class="anchor">#</a></h2>
+<p><strong>Redaktilo</strong> provides an object oriented way to manipulate files. For example
+you can open existing ones, or create new ones:</p>
+<pre><code class="language-php">&lt;?php
+require_once __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\DependencyInjection\StaticContainer;
+
+$filesystem = StaticContainer::makeFilesystem();
+
+$filename = '/tmp/monthy.py';
+if ($filesystem-&gt;exists($filename)) {
+    $file = $filesystem-&gt;open('/tmp/existing.txt');
+} else {
+    $file = $filesystem-&gt;create('/tmp/new.txt');
+}
+
+// ...</code></pre>
+<p>The main interest in this library lies in manipulations you can do, for example
+jumping to a line and adding a new one under it:</p>
+<pre><code class="language-php">&lt;?php
+// ...
+
+$lineSearchStrategy = StaticContainer::makeLineSearchStrategy();
+$lineReplaceStrategy = StaticContainer::makeLineReplaceStrategy();
+
+$lineNumber = $lineSearchStrategy-&gt;findNext('if Knight.saysNi():');
+$lineReplaceStrategy-&gt;insertAt($file, $lineNumber, '    print "Ni!"');
+
+// ...</code></pre>
+<p>Finally, you need to actually save the changes (they were only done in memory
+until now) :</p>
+<pre><code class="language-php">// ...
+
+$filesystem-&gt;write($file);</code></pre>
+<h2 id="a-higher-level-api">A higher level API?<a href="#a-higher-level-api" class="anchor">#</a></h2>
+<p>The Filesystem and Search/Replace strategies are low level APIs and require a
+lot of boilerplate code to do every day tasks.</p>
+<p>What if we provided a unique interface in front of those services? One that
+would be in a higher level, say a text editor metaphor for instance?</p>
+<pre><code class="language-php">&lt;?php
+require_once __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\DependencyInjection\StaticContainer;
+
+$editor = StaticContainer::makeEditor();
+
+$filename = '/tmp/monthy.py';
+$file = $editor-&gt;open($filename, true); // Force file creation.
+
+$editor-&gt;jumpDownTo($file, 'if Knight.saysNi():');
+$editor-&gt;addAfter($file, '    print "Ni!"');
+
+$editor-&gt;save($file);</code></pre>
+<p>You don't need to take care of every service creation, and now you only have to
+learn a small set of methods. The text editor metaphor also provides you with a
+neat way to easily remember these methods!</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Facades hide low level implementation by providing a unique high level API.</p>
+<p>Here's another blog post about this pattern, by
+<a href="http://mikeebert.tumblr.com/post/25342991856/design-pattern-facade-pattern">Mike Ebert</a>.</p>
+<p>I hope you found this article interesting, if you have any questions or
+feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twitter</a>.</p>]]></content>
+    </entry>
+        <entry>
         <title>Open/Closed principle, by example</title>
                 <id>http://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html</id>
                 <updated>2014-05-14T00:00:00+02:00</updated>

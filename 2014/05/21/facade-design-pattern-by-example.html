@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Facade design pattern, by example</title>
+
+    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
+    <meta name="author" content="Loïc Chardonnet">
+    <meta name="viewport" content="width=device-width">
+
+    
+    <link rel="canonical" href="http://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html"/>
+              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Chardonnet&#039;s blog"/>
+      
+    <link href='http://fonts.googleapis.com/css?family=Bitter' rel='stylesheet' type='text/css'><link href='http://fonts.googleapis.com/css?family=Varela+Round' rel='stylesheet' type='text/css'><link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/bootstrap-responsive.min.css"><link rel="stylesheet" href="../../../css/main.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/xcode.min.css">
+    <script src="../../../js/vendor/modernizr-2.6.1-respond-1.1.0.min.js"></script>
+  </head>
+
+  <body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+    <![endif]-->
+
+    
+          <div class="navbar">
+          <div class="navbar-inner">
+              <div class="container">
+                  <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                  </a>
+                  <a class="brand" href="../../..">Loïc Chardonnet&#039;s blog</a>
+                  <div class="nav-collapse collapse">
+                    <ul class="nav pull-right">
+                                                                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
+                                                            <li><a href="../../../about-me.html">About me</a></li>
+                                                                                                </ul>
+                                      </div>
+              </div>
+          </div>
+      </div>
+    
+    
+          <div class="container">
+
+        
+                  <div class="row">
+            <div class="span10 offset1 content">
+                                                <div class="page-header">
+                    <h1>Facade design pattern, by example</h1>
+                  </div>
+                              
+                <article>
+    <div class="date">
+      <i class="icon-calendar"></i>
+      May 21st, 2014
+    </div>
+
+    <hr />
+
+    <div class="body">
+      <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<p>Sometimes, you just want to hide low level complexity behind a unique interface
+which communicates a high level policy. The Facade design pattern is all about
+this.</p>
+<p>In this article, we'll see a real world example with
+<a href="https://github.com/gnugat/redaktilo">Redaktilo</a>.</p>
+<h2 id="low-level-file-manipulation">Low level file manipulation<a href="#low-level-file-manipulation" class="anchor">#</a></h2>
+<p><strong>Redaktilo</strong> provides an object oriented way to manipulate files. For example
+you can open existing ones, or create new ones:</p>
+<pre><code class="language-php">&lt;?php
+require_once __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\DependencyInjection\StaticContainer;
+
+$filesystem = StaticContainer::makeFilesystem();
+
+$filename = '/tmp/monthy.py';
+if ($filesystem-&gt;exists($filename)) {
+    $file = $filesystem-&gt;open('/tmp/existing.txt');
+} else {
+    $file = $filesystem-&gt;create('/tmp/new.txt');
+}
+
+// ...</code></pre>
+<p>The main interest in this library lies in manipulations you can do, for example
+jumping to a line and adding a new one under it:</p>
+<pre><code class="language-php">&lt;?php
+// ...
+
+$lineSearchStrategy = StaticContainer::makeLineSearchStrategy();
+$lineReplaceStrategy = StaticContainer::makeLineReplaceStrategy();
+
+$lineNumber = $lineSearchStrategy-&gt;findNext('if Knight.saysNi():');
+$lineReplaceStrategy-&gt;insertAt($file, $lineNumber, '    print "Ni!"');
+
+// ...</code></pre>
+<p>Finally, you need to actually save the changes (they were only done in memory
+until now) :</p>
+<pre><code class="language-php">// ...
+
+$filesystem-&gt;write($file);</code></pre>
+<h2 id="a-higher-level-api">A higher level API?<a href="#a-higher-level-api" class="anchor">#</a></h2>
+<p>The Filesystem and Search/Replace strategies are low level APIs and require a
+lot of boilerplate code to do every day tasks.</p>
+<p>What if we provided a unique interface in front of those services? One that
+would be in a higher level, say a text editor metaphor for instance?</p>
+<pre><code class="language-php">&lt;?php
+require_once __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\DependencyInjection\StaticContainer;
+
+$editor = StaticContainer::makeEditor();
+
+$filename = '/tmp/monthy.py';
+$file = $editor-&gt;open($filename, true); // Force file creation.
+
+$editor-&gt;jumpDownTo($file, 'if Knight.saysNi():');
+$editor-&gt;addAfter($file, '    print "Ni!"');
+
+$editor-&gt;save($file);</code></pre>
+<p>You don't need to take care of every service creation, and now you only have to
+learn a small set of methods. The text editor metaphor also provides you with a
+neat way to easily remember these methods!</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Facades hide low level implementation by providing a unique high level API.</p>
+<p>Here's another blog post about this pattern, by
+<a href="http://mikeebert.tumblr.com/post/25342991856/design-pattern-facade-pattern">Mike Ebert</a>.</p>
+<p>I hope you found this article interesting, if you have any questions or
+feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twitter</a>.</p>
+    </div>
+
+          <hr>
+      <h4>Tags:</h4>
+      <ul class="tag_box inline">
+                  <li>
+            <a href="../../../tags/practices.html">Practices</a>
+          </li>
+                  <li>
+            <a href="../../../tags/redaktilo.html">Redaktilo</a>
+          </li>
+                  <li>
+            <a href="../../../tags/design-pattern.html">Design Pattern</a>
+          </li>
+              </ul>
+      </article>
+            </div>
+          </div>
+        
+                          <footer>
+            <p>
+              &copy;
+                              <a href="http://gnugat.github.io">
+                  Loïc Chardonnet
+                </a>
+                            2014
+              <small>
+                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
+              </small>
+            </p>
+          </footer>
+        
+      </div>
+    
+    
+                  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+      <script>window.jQuery || document.write('<script src="../../../js/vendor/jquery-1.9.0.min.js"><\/script>')</script>
+      <script src="../../../js/vendor/bootstrap.min.js"></script>
+      <script src="http://yandex.st/highlightjs/7.3/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-47822314-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+
+      </body>
+</html>
