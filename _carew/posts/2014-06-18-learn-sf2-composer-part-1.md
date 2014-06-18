@@ -14,7 +14,7 @@ Then this article is for you :) .
 
 Don't get me wrong: one day or another you'll have to read the
 [documentation](http://symfony.com/doc/current/index.html), and you'll have to
-practice a lot in order to master it. But forn now this guide should be a good
+practice a lot in order to master it. But for now this guide should be a good
 start for you.
 
 In the first article of this series, you'll learn about
