@@ -33,7 +33,7 @@ Let's create our project:
     cd knight
     git init
 
-## Getting composer
+## Getting Composer
 
 When developing a project the last thing you want is to waste your time
 re-inventing the wheel, so you install third party libraries. Those libraries
@@ -59,15 +59,18 @@ individually (you can even use them in other frameworks, CMS or projects like
 [OroCRM](http://symfony.com/projects/orocrm) and
 [Piwik](http://symfony.com/projects/piwik) did).
 
+*Note*: Symfony2 libraries are called `components`.
+
 Composer was made to install libraries, so let's use it:
 
     composer require 'symfony/symfony:~2.5' # install every single libraries in sf2
 
-This will create a `composer.lock` file which helps Composer to know the
-installed versions, and a `vendor` directory where you can find the downloaded
-sources.
+This command will do the following steps:
 
-*Note*: Symfony2 libraries are called `components`.
+1. create a `composer.json` configuration file if it doesn't already exist
+2. add `symfony/symfony: ~2.5` in it (useful for further `composer install`)
+3. actually download symfony inside the `vendor/symfony/symfony` directory
+4. create a `composer.lock` file
 
 Later on, to update those dependencies you'll just have to run:
 
@@ -76,23 +79,36 @@ Later on, to update those dependencies you'll just have to run:
 *Note*: a library on which you depend upon is called a `dependency`.
 
 This will look in the `composer.lock` file to know which version has been
-installed and then checks if there's any new versions. Because we specified
-`~2.5` for Symfony2, this will only look for 2.5 bug fixes (for more information
-about how composer handles versions, see
-[Igor's article](https://igor.io/2013/01/07/composer-versioning.html)).
+installed (e.g. 2.5.0) and then checks if there's any new version available.
+For more information about how Composer handles versions, see
+[Igor's article](https://igor.io/2013/01/07/composer-versioning.html).
 
 This means that you can totally ignore the `vendor` directory:
 
     echo '/vendor/*' >> .gitignore
 
 If your team wants to install your project, they'll just have to clone your
-repository and then run `composer install`.
+repository and then run `composer install` which runs into the following steps:
+
+1. read the `composer.json` file to see the list of dependencies
+2. read the `composer.lock` file to check the version installed by the commiter
+3. download the dependencies with the version specified in the lock (even if new
+   ones are available)
+
+If a dependency is listed in `composer.json` but not in `composer.lock`,
+Composer will download the last matching version and add it to the lock.
+
+This means that everyone will have the same version installed! If you allow only
+one person to run `composer update` you can guarantee this.
 
 ## Autloading
 
-Because Composer knows were each classes of the installed libraries are, it
-provides a nice feature: [autoloading](http://www.php.net/manual/en/language.oop5.autoload.php)
-(it automatically includes the classes you need).
+Because Composer knows where each classes of the installed libraries are, it
+provides a nice feature:
+[autoloading](http://www.php.net/manual/en/language.oop5.autoload.php).
+
+Simply put, each time a class is called, Composer will automatically include the
+file where it's declared.
 
 Your own code too can benefit from it. We just need to edit the `composer.json`
 file:
@@ -110,7 +126,7 @@ file:
 
 And run `composer update` to take the changes into account.
 
-This tells composer that we're going to follow the
+This tells Composer that we're going to follow the
 [PSR-4](http://www.php-fig.org/psr/psr-4/) standard and that we're going to put
 our sources in the `src` directory.
 
@@ -127,7 +143,7 @@ Don't worry too much about it for now.
 
 ## Conclusion
 
-And that's everything you need to know about composer for now. Let's commit our
+And that's everything you need to know about Composer for now. Let's commit our
 work:
 
     git add -A
