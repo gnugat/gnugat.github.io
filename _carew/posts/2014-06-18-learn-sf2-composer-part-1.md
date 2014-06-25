@@ -150,3 +150,7 @@ work:
     git ci -m 'Installed Symfony2'
 
 I hope this could help you, stay tuned for the next articles!
+
+### Next articles
+
+1. {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', 'Empty application') }}
