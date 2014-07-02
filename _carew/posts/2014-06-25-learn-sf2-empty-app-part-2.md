@@ -181,6 +181,10 @@ to a controller which takes a HTTP request and returns a HTTP response.
 
 The next article will be all about bundles, so stay tuned :) .
 
+### Next articles
+
+1. {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', '3: Bundles') }}
+
 ### Previous articles
 
-1. {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', 'Composer') }}
+1. {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', '1: Composer') }}

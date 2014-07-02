@@ -153,4 +153,5 @@ I hope this could help you, stay tuned for the next articles!
 
 ### Next articles
 
-1. {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', 'Empty application') }}
+1. {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', '2: Empty application') }}
+2. {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', '3: Bundles') }}
