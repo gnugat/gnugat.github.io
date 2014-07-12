@@ -5,8 +5,269 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-07-02T00:00:00+02:00</updated>
+            <updated>2014-07-12T00:00:00+02:00</updated>
             <entry>
+        <title>Learn Symfony2 - part 4: Controllers</title>
+                <id>http://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html</id>
+                <updated>2014-07-12T00:00:00+02:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>This is the fourth article of the series on learning
+<a href="http://symfony.com/">the Symfony2 framework</a>.
+Have a look at the three first ones:</p>
+<ol><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">Composer</a>.</li>
+<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">Empty application</a>.</li>
+<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">Bundles</a>.</li>
+</ol><p>In the previous articles we created a one-bundled empty application with the
+following files:</p>
+<pre><code>.
+&#9500;&#9472;&#9472; app
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; config.yml
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; logs
+&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; .gitkeep
+&#9500;&#9472;&#9472; composer.json
+&#9500;&#9472;&#9472; composer.lock
+&#9500;&#9472;&#9472; src
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Knight
+&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
+&#9474;&nbsp;&nbsp;         &#9492;&#9472;&#9472; KnightApplicationBundle.php
+&#9500;&#9472;&#9472; .gitignore
+&#9492;&#9472;&#9472; web
+    &#9492;&#9472;&#9472; app.php</code></pre>
+<p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
+with git.</p>
+<p>Let's commit our work:</p>
+<pre><code>git add -A
+git ci -m 'Created Application bundle'</code></pre>
+<p>In this article, we'll learn more about the routing and the controllers.</p>
+<h2 id="discovering-routing-and-controller">Discovering routing and controller<a href="#discovering-routing-and-controller" class="anchor">#</a></h2>
+<p>In order to get familiar with the routing and controllers, we will create a
+route which returns nothing. The first thing to do is to configure the router:</p>
+<pre><code># File: app/config/app.yml
+framework:
+    secret: "Three can keep a secret, if two of them are dead."
+    router:
+        resource: %kernel.root_dir%/config/routing.yml</code></pre>
+<p>We can now write our routes in a separate file:</p>
+<pre><code># File: app/config/routing.yml
+what_john_snow_knows:
+    path: /api/ygritte
+    methods:
+        - GET
+    defaults:
+        _controller: KnightApplicationBundle:Api:ygritte</code></pre>
+<p>As you can see, a route has:</p>
+<ul><li>a name (<code>what_john_snow_knows</code>)</li>
+<li>a path (<code>/api/ygritte</code>)</li>
+<li>one or many HTTP verbs (<code>GET</code>)</li>
+<li>a controller <code>Knight\ApplicationBundle\Controller\ApiController::ygritteAction()</code></li>
+</ul><p><em>Note</em>: the <code>_controller</code> parameter is a shortut composed of three parts, which
+are the name of the bundle, then the unprefixed controller name and finally the
+unprefixed method name.</p>
+<p>Now we need to create the following directory:</p>
+<pre><code>mkdir src/Knight/ApplicationBundle/Controller</code></pre>
+<p>And to create the controller class:</p>
+<pre><code>&lt;?php
+// File: src/Knight/ApplicationBundle/Controller/ApiController.php
+
+namespace Knight\ApplicationBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class ApiController extends Controller
+{
+    public function ygritteAction(Request $request)
+    {
+        return new Response('', Response::HTTP_NO_CONTENT);
+    }
+}</code></pre>
+<p>To test it, I'd advise you to use a HTTP client. Let's install
+<a href="http://httpie.org">HTTPie, the CLI HTTP client</a>:</p>
+<pre><code>sudo apt-get install python-pip
+sudo pip install --upgrade httpie</code></pre>
+<p>We can now test our webservice:</p>
+<pre><code>http GET knight.local/api/ygritte</code></pre>
+<p>The first line should be <code>HTTP/1.1 204 No Content</code>.</p>
+<h2 id="posting-data">Posting data<a href="#posting-data" class="anchor">#</a></h2>
+<p>Our scrum master and product owner managed to write a user story for us:</p>
+<pre><code>As a Knight of Ni
+I want a webservice which says "ni"
+In order to get a shrubbery</code></pre>
+<p>This means we're going to need the following route:</p>
+<pre><code># File: app/config/routing.yml
+ni:
+    path: /api/ni
+    methods:
+        - POST
+    defaults:
+        _controller: KnightApplicationBundle:Api:ni</code></pre>
+<p>Our controller will retrieve the posted value (named <code>offering</code>), check if it
+is a <code>shrubbery</code> and send back a response containing either <code>Ni</code> (on error) or
+<code>Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv</code> (on success):</p>
+<pre><code>&lt;?php
+// File: src/Knight/ApplicationBundle/Controller/ApiController.php
+
+namespace Knight\ApplicationBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+class ApiController extends Controller
+{
+    public function niAction(Request $request)
+    {
+        $postedContent = $request-&gt;getContent();
+        $postedValues = json_decode($postedContent);
+
+        $answer = array('answer' =&gt; 'Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv');
+        $statusCode = Response::HTTP_OK;
+        if (isset($postedValues['offering']) || 'shrubbery' !== $postedValues['offering']) {
+            $answer['answer'] = 'Ni';
+            $statusCode = Response::HTTP_UNPROCESSABLE_ENTITY;
+        }
+
+        return new JsonResponse($answer, $statusCode);
+    }
+}</code></pre>
+<p>The <code>JsonResponse</code> class will convert the array into JSON and set the proper
+HTTP headers.</p>
+<p>If we try to submit something fishy like this:</p>
+<pre><code>http POST knight.local/api/ni offering=hareng</code></pre>
+<p>Then we should have a response similar to:</p>
+<pre><code>HTTP/1.1 422 Unprocessable Entity
+Cache-Control: no-cache
+Content-Type: application/json
+Date: Thu, 10 Jul 2014 15:23:00 GMT
+Server: Apache
+Transfer-Encoding: chunked
+
+{
+    "answer": "Ni"
+}</code></pre>
+<p>And when we submit the correct offering:</p>
+<pre><code>http POST knight.local/api/ni offering=shrubbery</code></pre>
+<p>Then we should have something similar to:</p>
+<pre><code>HTTP/1.1 200 OK
+Cache-Control: no-cache
+Content-Type: application/json
+Date: Thu, 10 Jul 2014 21:42:00 GMT
+Server: Apache
+Transfer-Encoding: chunked
+
+{
+    "answer": "Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv"
+}</code></pre>
+<h2 id="request-s-api">Request's API<a href="#request-s-api" class="anchor">#</a></h2>
+<p>Here's part of the Request's API:</p>
+<pre><code>&lt;?php
+
+namespace Symfony\Component\HttpFoundation;
+
+class Request
+{
+    public $request; // Request body parameters ($_POST)
+    public $query; // Query string parameters ($_GET)
+    public $files; // Uploaded files ($_FILES)
+    public $cookies; // $_COOKIE
+    public $headers; // Taken from $_SERVER
+
+    public static function createFromGlobals():
+    public static function create(
+        $uri,
+        $method = 'GET',
+        $parameters = array(),
+        $cookies = array(),
+        $files = array(),
+        $server = array(),
+        $content = null
+    );
+
+    public function getContent($asResource = false);
+}</code></pre>
+<p>We used <code>createFromGlobals</code> in our front controller (<code>web/app.php</code>), it does
+excalty what it says: it initializes the Request from the PHP superglobals
+(<code>$_POST</code>, <code>$_GET</code>, etc).</p>
+<p>The <code>create</code> method is really handful in tests as we won't need to override the
+values in PHP's superglobals.</p>
+<p>The attributes here listed are all instances of
+<code>Symfony\Component\HttpFoundation\ParameterBag</code>, which is like an object
+oriented array with <code>set</code>, <code>has</code> and <code>get</code> methods (amongst others).</p>
+<p>When you submit a form, your browser automatically sets the HTTP request's
+header <code>Content-Type</code> to <code>application/x-www-form-urlencoded</code>, and the form
+values are sent in the request's content like this:</p>
+<pre><code>offering=hareng</code></pre>
+<p>PHP understands this and will put the values in the <code>$_POST</code> superglobal. This
+mean you could retrieve it like this:</p>
+<pre><code>$request-&gt;request-&gt;get('offering');</code></pre>
+<p>However, when we submit something in JSON with the <code>Content-Type</code> set to
+<code>application/json</code>, PHP doesn't populate <code>$_POST</code>. You need to retrieve the raw
+data with <code>getContent</code> and to convert it using <code>json_decode</code>, as we did in our
+controller.</p>
+<h2 id="response-s-api">Response's API<a href="#response-s-api" class="anchor">#</a></h2>
+<p>Here's a part of the Response's API:</p>
+<pre><code>&lt;?php
+
+namespace Symfony\Component\HttpFoundation;
+
+class Response
+{
+    const HTTP_OK = 200;
+    const HTTP_CREATED = 201;
+    const HTTP_NO_CONTENT = 204;
+    const HTTP_UNAUTHORIZED = 401;
+    const HTTP_FORBIDDEN = 403;
+    const HTTP_NOT_FOUND = 404;
+    const HTTP_UNPROCESSABLE_ENTITY = 422; // RFC4918
+
+    public $headers; // @var Symfony\Component\HttpFoundation\ResponseHeaderBag
+
+    public function __construct($content = '', $status = 200, $headers = array())
+
+    public function getContent();
+    public function getStatusCode();
+
+    public function isSuccessful();
+}</code></pre>
+<p>There's a lot of HTTP status code constants, so I've selected onyl those I'd use
+the most.</p>
+<p>You can set and get the Response's headers via a public property which is also
+a <code>ParameterBag</code>.</p>
+<p>The constructor allows you to set the content, status code and headers.</p>
+<p>The three other methods are mostly used in tests. There's a lot of <code>is</code> method
+to check the type of the request, but usually you'll just want to make sure the
+response is successful.</p>
+<p>You can find other types of responses:</p>
+<ul><li><code>JsonResponse</code>: sets the <code>Content-Type</code> and converts the content into JSON</li>
+<li><code>BinaryFileResponse</code>: sets headers and attaches a file to the response</li>
+<li><code>RedirectResponse</code>: sets the target location for a redirection</li>
+<li><code>StreamedResponse</code>: useful for streaming large files</li>
+</ul><h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Symfony2 is an HTTP framework which primary's public API are the controllers:
+those receive a Request as parameter and return a Response. All you have to do
+is to create a controller, write some configuration in order to link
+it to an URL and you're done!</p>
+<p>Do not forget to commit your work:</p>
+<pre><code>git add -A
+git commit -m 'Created Ni route and controller'</code></pre>
+<p>The next article should be about annotations: stay tuned!</p>
+<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
+<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
+<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
+</ul>]]></content>
+    </entry>
+        <entry>
         <title>Learn Symfony2 - part 3: Bundles</title>
                 <id>http://gnugat.github.io/2014/07/02/learn-sf2-bundles-part-3.html</id>
                 <updated>2014-07-02T00:00:00+02:00</updated>
@@ -18,9 +279,9 @@
         <content type="html" xml:lang="en"><![CDATA[<p>This is the third article of the series on learning
 <a href="http://symfony.com/">the Symfony2 framework</a>.
 Have a look at the two first ones:</p>
-<ol><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">Composer</a>.</li>
-<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">Empty application</a>.</li>
-</ol><p>In the previous articles we began to create an empty application with the
+<ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a>.</li>
+<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a>.</li>
+</ul><p>In the previous articles we began to create an empty application with the
 following files:</p>
 <pre><code>.
 &#9500;&#9472;&#9472; app
@@ -164,15 +425,17 @@ that inside it you created a set of classes which make sense in other projects
 create a third party library. And then you might create a bundle to integrate
 it inside Symfony2 applications.</p>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>Bundles are a way to extend the Dependency Injection Container: their the glue
+<p>Bundles are a way to extend the Dependency Injection Container: they're the glue
 layer between your code and Symfony2 applications.</p>
 <p>They follow conventions which aren't hard coded (you can override anything),
 allowing them to autodiscover some convenient classes.</p>
 <p>Thansk for reading, in the next article, we'll create controllers!</p>
 <h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
-<ol><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
+<ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
 <li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
-</ol><h3 id="resources">Resources<a href="#resources" class="anchor">#</a></h3>
+</ul><h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
+</ul><h3 id="resources">Resources<a href="#resources" class="anchor">#</a></h3>
 <p>Here's a good article about how reusable bundles should be created:</p>
 <ul><li><a href="http://elnur.pro/use-only-infrastructural-bundles-in-symfony/">Use only infrastructural bundles in Symfony2, by Elnur Abdurrakhimov</a></li>
 </ul><p>You don't like the conventions and you're ready to write a lot of boilerplate
@@ -331,10 +594,11 @@ group.</p>
 to a controller which takes a HTTP request and returns a HTTP response.</p>
 <p>The next article will be all about bundles, so stay tuned :) .</p>
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
-<ol><li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
-</ol><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
-<ol><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
-</ol>]]></content>
+<ul><li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
+<li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
+</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
+</ul>]]></content>
     </entry>
         <entry>
         <title>Learn Symfony2 - part 1: Composer</title>
@@ -445,9 +709,10 @@ work:</p>
 git ci -m 'Installed Symfony2'</code></pre>
 <p>I hope this could help you, stay tuned for the next articles!</p>
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
-<ol><li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
+<ul><li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
 <li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
-</ol>]]></content>
+<li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
+</ul>]]></content>
     </entry>
         <entry>
         <title>PHP Tokenizer</title>

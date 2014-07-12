@@ -11,8 +11,8 @@ This is the third article of the series on learning
 [the Symfony2 framework](http://symfony.com/).
 Have a look at the two first ones:
 
-1. {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', 'Composer') }}.
-2. {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', 'Empty application') }}.
+* {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', '1: Composer') }}.
+* {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', '2: Empty application') }}.
 
 In the previous articles we began to create an empty application with the
 following files:
@@ -212,8 +212,12 @@ Thansk for reading, in the next article, we'll create controllers!
 
 ### Previous articles
 
-1. {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', '1: Composer') }}
-2. {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', '2: Empty application') }}
+* {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', '1: Composer') }}
+* {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', '2: Empty application') }}
+
+### Next articles
+
+* {{ link('posts/2014-07-12-learn-sf2-controllers-part-4.md', '4: Controllers') }}
 
 ### Resources
 

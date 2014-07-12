@@ -183,8 +183,9 @@ The next article will be all about bundles, so stay tuned :) .
 
 ### Next articles
 
-1. {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', '3: Bundles') }}
+* {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', '3: Bundles') }}
+* {{ link('posts/2014-07-12-learn-sf2-controllers-part-4.md', '4: Controllers') }}
 
 ### Previous articles
 
-1. {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', '1: Composer') }}
+* {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', '1: Composer') }}
