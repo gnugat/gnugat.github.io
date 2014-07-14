@@ -155,7 +155,7 @@ is a `shrubbery` and send back a response containing either `Ni` (on error) or
 
             $answer = array('answer' => 'Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv');
             $statusCode = Response::HTTP_OK;
-            if (isset($postedValues['offering']) || 'shrubbery' !== $postedValues['offering']) {
+            if (!isset($postedValues['offering']) || 'shrubbery' !== $postedValues['offering']) {
                 $answer['answer'] = 'Ni';
                 $statusCode = Response::HTTP_UNPROCESSABLE_ENTITY;
             }
