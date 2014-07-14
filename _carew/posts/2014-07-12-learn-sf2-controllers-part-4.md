@@ -75,7 +75,7 @@ As you can see, a route has:
 * one or many HTTP verbs (`GET`)
 * a controller `Knight\ApplicationBundle\Controller\ApiController::ygritteAction()`
 
-*Note*: the `_controller` parameter is a shortut composed of three parts, which
+*Note*: the `_controller` parameter is a shortcut composed of three parts, which
 are the name of the bundle, then the unprefixed controller name and finally the
 unprefixed method name.
 
