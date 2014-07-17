@@ -95,7 +95,7 @@ following files:</p>
 with git.</p>
 <p>Let's commit our work:</p>
 <pre><code>git add -A
-git ci -m 'Created Application bundle'</code></pre>
+git commit -m 'Created Application bundle'</code></pre>
 <p>In this article, we'll learn more about the routing and the controllers.</p>
 <h2 id="discovering-routing-and-controller">Discovering routing and controller<a href="#discovering-routing-and-controller" class="anchor">#</a></h2>
 <p>In order to get familiar with the routing and controllers, we will create a
@@ -118,7 +118,7 @@ what_john_snow_knows:
 <li>a path (<code>/api/ygritte</code>)</li>
 <li>one or many HTTP verbs (<code>GET</code>)</li>
 <li>a controller <code>Knight\ApplicationBundle\Controller\ApiController::ygritteAction()</code></li>
-</ul><p><em>Note</em>: the <code>_controller</code> parameter is a shortut composed of three parts, which
+</ul><p><em>Note</em>: the <code>_controller</code> parameter is a shortcut composed of three parts, which
 are the name of the bundle, then the unprefixed controller name and finally the
 unprefixed method name.</p>
 <p>Now we need to create the following directory:</p>
@@ -182,7 +182,7 @@ class ApiController extends Controller
 
         $answer = array('answer' =&gt; 'Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv');
         $statusCode = Response::HTTP_OK;
-        if (isset($postedValues['offering']) || 'shrubbery' !== $postedValues['offering']) {
+        if (!isset($postedValues['offering']) || 'shrubbery' !== $postedValues['offering']) {
             $answer['answer'] = 'Ni';
             $statusCode = Response::HTTP_UNPROCESSABLE_ENTITY;
         }

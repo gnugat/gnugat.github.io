@@ -45,7 +45,7 @@ following files:</p>
 with git.</p>
 <p>Let's commit our work:</p>
 <pre><code>git add -A
-git ci -m 'Created Application bundle'</code></pre>
+git commit -m 'Created Application bundle'</code></pre>
 <p>In this article, we'll learn more about the routing and the controllers.</p>
 <h2 id="discovering-routing-and-controller">Discovering routing and controller<a href="#discovering-routing-and-controller" class="anchor">#</a></h2>
 <p>In order to get familiar with the routing and controllers, we will create a
@@ -68,7 +68,7 @@ what_john_snow_knows:
 <li>a path (<code>/api/ygritte</code>)</li>
 <li>one or many HTTP verbs (<code>GET</code>)</li>
 <li>a controller <code>Knight\ApplicationBundle\Controller\ApiController::ygritteAction()</code></li>
-</ul><p><em>Note</em>: the <code>_controller</code> parameter is a shortut composed of three parts, which
+</ul><p><em>Note</em>: the <code>_controller</code> parameter is a shortcut composed of three parts, which
 are the name of the bundle, then the unprefixed controller name and finally the
 unprefixed method name.</p>
 <p>Now we need to create the following directory:</p>
@@ -132,7 +132,7 @@ class ApiController extends Controller
 
         $answer = array('answer' =&gt; 'Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv');
         $statusCode = Response::HTTP_OK;
-        if (isset($postedValues['offering']) || 'shrubbery' !== $postedValues['offering']) {
+        if (!isset($postedValues['offering']) || 'shrubbery' !== $postedValues['offering']) {
             $answer['answer'] = 'Ni';
             $statusCode = Response::HTTP_UNPROCESSABLE_ENTITY;
         }
@@ -547,7 +547,7 @@ framework:
 CSRF tokens).</p>
 <p>Now that we have our application structure, let's commit it:</p>
 <pre><code>git add -A
-git ci -m 'Created application structure'</code></pre>
+git commit -m 'Created application structure'</code></pre>
 <h3 id="logs-and-cache">Logs and cache<a href="#logs-and-cache" class="anchor">#</a></h3>
 <p>You'll also need to create <code>logs</code> and <code>cache</code> directories:</p>
 <pre><code>mkdir app/{cache,logs}
@@ -559,7 +559,7 @@ echo '/app/logs/*' &gt;&gt; .gitignore
 git add -A
 git add -f app/cache/.gitkeep
 git add -f app/logs/.gitkeep
-git ci -m 'Created temporary directories'</code></pre>
+git commit -m 'Created temporary directories'</code></pre>
 <h3 id="apache-configuration">Apache configuration<a href="#apache-configuration" class="anchor">#</a></h3>
 <p>In order for your website to be browsed, you'll need to configure your web
 server. This configuration is well explained
@@ -706,7 +706,7 @@ class named <code>KnightAppBundle</code> located in the namespace <code>Knight\A
 <p>And that's everything you need to know about Composer for now. Let's commit our
 work:</p>
 <pre><code>git add -A
-git ci -m 'Installed Symfony2'</code></pre>
+git commit -m 'Installed Symfony2'</code></pre>
 <p>I hope this could help you, stay tuned for the next articles!</p>
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>

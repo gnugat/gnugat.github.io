@@ -153,7 +153,7 @@ framework:
 CSRF tokens).</p>
 <p>Now that we have our application structure, let's commit it:</p>
 <pre><code>git add -A
-git ci -m 'Created application structure'</code></pre>
+git commit -m 'Created application structure'</code></pre>
 <h3 id="logs-and-cache">Logs and cache<a href="#logs-and-cache" class="anchor">#</a></h3>
 <p>You'll also need to create <code>logs</code> and <code>cache</code> directories:</p>
 <pre><code>mkdir app/{cache,logs}
@@ -165,7 +165,7 @@ echo '/app/logs/*' &gt;&gt; .gitignore
 git add -A
 git add -f app/cache/.gitkeep
 git add -f app/logs/.gitkeep
-git ci -m 'Created temporary directories'</code></pre>
+git commit -m 'Created temporary directories'</code></pre>
 <h3 id="apache-configuration">Apache configuration<a href="#apache-configuration" class="anchor">#</a></h3>
 <p>In order for your website to be browsed, you'll need to configure your web
 server. This configuration is well explained
