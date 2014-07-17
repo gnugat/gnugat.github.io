@@ -147,7 +147,7 @@ And that's everything you need to know about Composer for now. Let's commit our
 work:
 
     git add -A
-    git ci -m 'Installed Symfony2'
+    git commit -m 'Installed Symfony2'
 
 I hope this could help you, stay tuned for the next articles!
 

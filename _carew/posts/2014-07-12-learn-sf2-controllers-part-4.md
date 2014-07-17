@@ -43,7 +43,7 @@ with git.
 Let's commit our work:
 
     git add -A
-    git ci -m 'Created Application bundle'
+    git commit -m 'Created Application bundle'
 
 In this article, we'll learn more about the routing and the controllers.
 

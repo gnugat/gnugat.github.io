@@ -121,7 +121,7 @@ CSRF tokens).
 Now that we have our application structure, let's commit it:
 
     git add -A
-    git ci -m 'Created application structure'
+    git commit -m 'Created application structure'
 
 ### Logs and cache
 
@@ -139,7 +139,7 @@ Because files in these directory are temporaries, we'll ignore them:
     git add -A
     git add -f app/cache/.gitkeep
     git add -f app/logs/.gitkeep
-    git ci -m 'Created temporary directories'
+    git commit -m 'Created temporary directories'
 
 ### Apache configuration
 
