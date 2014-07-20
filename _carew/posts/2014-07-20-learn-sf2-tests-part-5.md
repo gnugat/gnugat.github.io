@@ -300,6 +300,7 @@ code. Our application is a REST API, so let's do this:
     namespace TempoSimple\Test\Functional\Web;
 
     use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+    use Symfony\Component\HttpFoundation\Response;
 
     class ApiControllerTest extends WebTestCase
     {
@@ -316,14 +317,14 @@ code. Our application is a REST API, so let's do this:
         {
             $response = $this->post('/api/ni', array('offering' => 'shrubbery'));
 
-            $this->assertSame($response->isSuccessful());
+            $this->assertSame(Response::HTTP_OK , $response->getStatusCode());
         }
 
         public function testOfferingTheWrongThing()
         {
             $response = $this->post('/api/ni', array('offering' => 'hareng'));
 
-            $this->assertFalse($response->isSuccessful());
+            $this->assertSame(Response::HTTP_UNPROCESSABLE_ENTITY , $response->getStatusCode());
         }
     }
 
