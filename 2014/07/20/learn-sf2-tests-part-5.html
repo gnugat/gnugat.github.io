@@ -202,7 +202,7 @@ your test directory structure must mirror the one found in the bundle.</p>
 <pre><code>&lt;?php
 // File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
 
-namespace TempoSimple\Test\Functional\Web;
+namespace Knight/ApplicationBundle/Tests/Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -235,7 +235,7 @@ with helper methods:</p>
 <pre><code>&lt;?php
 // File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
 
-namespace TempoSimple\Test\Functional\Web;
+namespace Knight/ApplicationBundle/Tests/Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -264,7 +264,7 @@ class ApiControllerTest extends WebTestCase
 <pre><code>&lt;?php
 // File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
 
-namespace TempoSimple\Test\Functional\Web;
+namespace Knight/ApplicationBundle/Tests/Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -305,9 +305,10 @@ code. Our application is a REST API, so let's do this:</p>
 <pre><code>&lt;?php
 // File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
 
-namespace TempoSimple\Test\Functional\Web;
+namespace Knight/ApplicationBundle/Tests/Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
 
 class ApiControllerTest extends WebTestCase
 {
@@ -324,14 +325,14 @@ class ApiControllerTest extends WebTestCase
     {
         $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'shrubbery'));
 
-        $this-&gt;assertSame($response-&gt;isSuccessful());
+        $this-&gt;assertSame(Response::HTTP_OK , $response-&gt;getStatusCode());
     }
 
     public function testOfferingTheWrongThing()
     {
         $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'hareng'));
 
-        $this-&gt;assertFalse($response-&gt;isSuccessful());
+        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY , $response-&gt;getStatusCode());
     }
 }</code></pre>
 <p>Run the tests:</p>

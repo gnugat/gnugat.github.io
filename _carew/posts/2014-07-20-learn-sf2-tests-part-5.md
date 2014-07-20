@@ -177,7 +177,7 @@ And then our first functional test:
     <?php
     // File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
 
-    namespace TempoSimple\Test\Functional\Web;
+    namespace Knight/ApplicationBundle/Tests/Controller;
 
     use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -215,7 +215,7 @@ with helper methods:
     <?php
     // File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
 
-    namespace TempoSimple\Test\Functional\Web;
+    namespace Knight/ApplicationBundle/Tests/Controller;
 
     use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -249,7 +249,7 @@ Here's a test for failure cases:
     <?php
     // File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
 
-    namespace TempoSimple\Test\Functional\Web;
+    namespace Knight/ApplicationBundle/Tests/Controller;
 
     use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -297,7 +297,7 @@ code. Our application is a REST API, so let's do this:
     <?php
     // File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
 
-    namespace TempoSimple\Test\Functional\Web;
+    namespace Knight/ApplicationBundle/Tests/Controller;
 
     use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
     use Symfony\Component\HttpFoundation\Response;
