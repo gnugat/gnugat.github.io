@@ -28,7 +28,13 @@ We'll now see how to create an empty Symfony2 application.
 
 First things first, we will create an index file which will act as a front
 controller: it will be the only entry point of our application and will decide
-which page to display:
+which page to display.
+
+Create its directory:
+
+    mkdir web
+
+Then the file:
 
     <?php
     // File: web/app.php
@@ -72,7 +78,13 @@ mentioning.
 ## Creating the application's kernel
 
 [The HttpKernel component](http://symfony.com/doc/current/components/http_kernel/introduction.html)
-provides you with a `Kernel` class, which we will extend:
+provides you with a `Kernel` class, which we will extend.
+
+Create the following directory:
+
+    mkdir app
+
+And then the kernel file:
 
     <?php
     // File: app/AppKernel.php
@@ -109,7 +121,13 @@ enable via configuration.
 exactly what they're called: a service. We'll learn more about them in one of
 the next article.
 
-We need to put some configuration in order to be able to make it work properly:
+We need to put some configuration in order to be able to make it work properly.
+
+Create its directory:
+
+    mkdir app/config
+
+And the the YAML file:
 
     # File: app/config/config.yml
     framework:
@@ -185,6 +203,7 @@ The next article will be all about bundles, so stay tuned :) .
 
 * {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', '3: Bundles') }}
 * {{ link('posts/2014-07-12-learn-sf2-controllers-part-4.md', '4: Controllers') }}
+* {{ link('posts/2014-07-20-learn-sf2-tests-part-5.md', '5: Tests') }}
 
 ### Previous articles
 

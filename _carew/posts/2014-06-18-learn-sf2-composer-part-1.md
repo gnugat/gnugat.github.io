@@ -72,9 +72,8 @@ This command will do the following steps:
 3. actually download symfony inside the `vendor/symfony/symfony` directory
 4. create a `composer.lock` file
 
-Later on, to update those dependencies you'll just have to run:
-
-    composer update
+Later on, to update those dependencies you'll just have to run
+`composer update`.
 
 *Note*: a library on which you depend upon is called a `dependency`.
 
@@ -124,7 +123,9 @@ file:
         }
     }
 
-And run `composer update` to take the changes into account.
+And run the following command to take the changes into account:
+
+    composer update
 
 This tells Composer that we're going to follow the
 [PSR-4](http://www.php-fig.org/psr/psr-4/) standard and that we're going to put
@@ -156,3 +157,4 @@ I hope this could help you, stay tuned for the next articles!
 * {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', '2: Empty application') }}
 * {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', '3: Bundles') }}
 * {{ link('posts/2014-07-12-learn-sf2-controllers-part-4.md', '4: Controllers') }}
+* {{ link('posts/2014-07-20-learn-sf2-tests-part-5.md', '5: Tests') }}

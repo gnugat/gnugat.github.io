@@ -178,7 +178,7 @@ class ApiController extends Controller
     public function niAction(Request $request)
     {
         $postedContent = $request-&gt;getContent();
-        $postedValues = json_decode($postedContent);
+        $postedValues = json_decode($postedContent, true);
 
         $answer = array('answer' =&gt; 'Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv');
         $statusCode = Response::HTTP_OK;
@@ -310,8 +310,10 @@ it to an URL and you're done!</p>
 <p>Do not forget to commit your work:</p>
 <pre><code>git add -A
 git commit -m 'Created Ni route and controller'</code></pre>
-<p>The next article should be about annotations: stay tuned!</p>
-<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<p>The next article should be about tests: stay tuned!</p>
+<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
+</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
 <li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
 <li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>

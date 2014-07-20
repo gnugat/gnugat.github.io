@@ -5,8 +5,302 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-07-12T00:00:00+02:00</updated>
+            <updated>2014-07-20T00:00:00+02:00</updated>
             <entry>
+        <title>Learn Symfony2 - part 5: Tests</title>
+                <id>http://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html</id>
+                <updated>2014-07-20T00:00:00+02:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>This is the fifth article of the series on learning
+<a href="http://symfony.com/">the Symfony2 framework</a>.
+Have a look at the four first ones:</p>
+<ol><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">Composer</a>.</li>
+<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">Empty application</a>.</li>
+<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">Bundles</a>.</li>
+<li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">Controllers</a>.</li>
+</ol><p>In the previous articles we created an application for the Knight of Ni with the
+following files:</p>
+<pre><code>.
+&#9500;&#9472;&#9472; app
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; logs
+&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; .gitkeep
+&#9500;&#9472;&#9472; composer.json
+&#9500;&#9472;&#9472; composer.lock
+&#9500;&#9472;&#9472; src
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Knight
+&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Controller
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; ApiController.php
+&#9474;&nbsp;&nbsp;         &#9492;&#9472;&#9472; KnightApplicationBundle.php
+&#9500;&#9472;&#9472; .gitignore
+&#9492;&#9472;&#9472; web
+    &#9492;&#9472;&#9472; app.php</code></pre>
+<p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
+with git.</p>
+<p>In this article, we'll create functional tests using PHPUnit.</p>
+<h2 id="installing-phpunit">Installing PHPUnit<a href="#installing-phpunit" class="anchor">#</a></h2>
+<p><a href="http://phpunit.de/">PHPUnit</a> is a popular test framework.
+Its name is deceptive: you can write any kind of test with it (unit, functional,
+end to end, anything).</p>
+<p>Let's install it in our project:</p>
+<pre><code>composer require --dev "phpunit/phpunit:~4.1"</code></pre>
+<p>The <code>--dev</code> options will prevent Composer from installing PHPUnit when running
+<code>composer install --no-dev</code>: this is use in production (download is costly).</p>
+<p>We will need to create a configuration file to tell PHPUnit to execute the tests
+found in <code>src/Knight/ApplicationBundle/Tests</code>, and to use Composer as an
+autoloader:</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- File: app/phpunit.xml.dist --&gt;
+
+&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
+&lt;phpunit
+    backupGlobals="false"
+    colors="true"
+    syntaxCheck="false"
+    bootstrap="../vendor/autoload.php"&gt;
+
+    &lt;testsuites&gt;
+        &lt;testsuite name="Functional Test Suite"&gt;
+            &lt;directory&gt;../src/Knight/ApplicationBundle/Tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+
+&lt;/phpunit&gt;</code></pre>
+<p><em>Note</em>: <a href="http://symfony.com/doc/current/cookbook/bundles/best_practices.html#directory-structure">By convention</a>
+you should put your tests in <code>src/Knight/ApplicationBundle/Tests</code>. It's not hard
+coded though, but if you want people to find things where they expect them to be
+you better follow them ;) .</p>
+<p>This file is suffixed with <code>.dist</code> because we intend to allow developer to
+override the configuration by creating a <code>app/phpunit.xml</code> file. Only the
+distribution file should be commited, though:</p>
+<pre><code>echo '/app/phpunit.xml' &gt;&gt; .gitignore
+git add -A
+git commit -m 'Installed PHPUnit'</code></pre>
+<h2 id="environments">Environments<a href="#environments" class="anchor">#</a></h2>
+<p>For our functional tests, we will be using the <code>WebTestCase</code> class: it
+instanciates our <code>AppKernel</code> with the <code>test</code> environment. It also uses a
+<code>test.client</code> service, which is disabled by default.</p>
+<p>In order to enable this service, we must change the configuration:</p>
+<pre><code># File: app/config/config.yml
+framework:
+    secret: "Three can keep a secret, if two of them are dead."
+    router:
+        resource: %kernel.root_dir%/config/routing.yml
+
+    # test: ~</code></pre>
+<p>Sometimes, you don't want your configuration to be the same for your tests and
+your production server. That's what environments are for. Let's put this test
+specific configuration in a different file:</p>
+<pre><code># File: app/config/config_test.yml
+imports:
+    - { resource: config.yml }
+
+framework:
+    test: ~</code></pre>
+<p><em>Note</em>: the <code>imports</code> parameter allows you to include other configuration files.
+You can then overwrite the included parameters, or add new ones.</p>
+<p>We should also change the <code>registerContainerConfiguration</code> method of the
+<code>AppKernel</code> class in order to load the test configuration, depending on the
+environment:</p>
+<pre><code>&lt;?php
+// File: app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        return array(
+            new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
+            new Knight\ApplicationBundle\KnightApplicationBundle(),
+        );
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader)
+    {
+        $file = 'config';
+        if ('test' === $this-&gt;getEnvironment()) {
+            $file .= '_test';
+        }
+        $loader-&gt;load(__DIR__."/config/$file.yml");
+    }
+}</code></pre>
+<p>Let's commit our work:</p>
+<pre><code>git add -A
+git ci -m 'Added test configuration'</code></pre>
+<h2 id="functional-tests">Functional tests<a href="#functional-tests" class="anchor">#</a></h2>
+<p>Our test must check that the application behaves as expected. We won't be
+checking that it actually fulfills our business expectations. This means that
+checking the HTTP status code is entirely sufficient.</p>
+<p>Let's create the directory:</p>
+<pre><code>mkdir -p src/Knight/ApplicationBundle/Tests/Controller</code></pre>
+<p><em>Note</em>: Again, <a href="http://symfony.com/doc/current/book/testing.html#unit-tests">by convention</a>,
+your test directory structure must mirror the one found in the bundle.</p>
+<p>And then our first functional test:</p>
+<pre><code>&lt;?php
+// File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
+
+namespace TempoSimple\Test\Functional\Web;
+
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+
+class ApiControllerTest extends WebTestCase
+{
+    public function testOfferingTheRightThing()
+    {
+        $method = 'POST';
+        $uri = '/api/ni';
+        $parameters = array();
+        $files = array();
+        $server = array();
+        $content = json_encode(array(
+            'offering' =&gt; 'shrubbery',
+        ));
+
+        $client = static::createClient();
+        $client-&gt;request($method, $uri, $parameters, $files, $server, $content);
+        $response = $client-&gt;getResponse();
+
+        $this-&gt;assertTrue($response-&gt;isSuccessful());
+    }
+}</code></pre>
+<p>To make sure the test pass, run the following command:</p>
+<pre><code>./vendor/bin/phpunit -c app</code></pre>
+<p>Composer has installed a binary in <code>vendor/bin</code>, and the <code>-c</code> option allows you
+to tell PHPUnit where the configuration is (in <code>./app</code>).</p>
+<p>This looks a bit long because of the content parameter... We can improve this
+with helper methods:</p>
+<pre><code>&lt;?php
+// File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
+
+namespace TempoSimple\Test\Functional\Web;
+
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+
+class ApiControllerTest extends WebTestCase
+{
+    private function post($uri, array $data)
+    {
+        $content = json_encode($data);
+        $client = static::createClient();
+        $client-&gt;request('POST', $uri, array(), array(), array(), $content);
+
+        return $client-&gt;getResponse();
+    }
+
+    public function testOfferingTheRightThing()
+    {
+        $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'shrubbery'));
+
+        $this-&gt;assertTrue($response-&gt;isSuccessful());
+    }
+}</code></pre>
+<p>Make sure the test still pass:</p>
+<pre><code>./vendor/bin/phpunit -c app</code></pre>
+<p>The Response's <code>isSuccessful</code> method only checks that the status code is 200ish.</p>
+<p>Here's a test for failure cases:</p>
+<pre><code>&lt;?php
+// File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
+
+namespace TempoSimple\Test\Functional\Web;
+
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+
+class ApiControllerTest extends WebTestCase
+{
+    private function post($uri, array $data)
+    {
+        $content = json_encode($data);
+        $client = static::createClient();
+        $client-&gt;request('POST', $uri, array(), array(), array(), $content);
+
+        return $client-&gt;getResponse();
+    }
+
+    public function testOfferingTheRightThing()
+    {
+        $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'shrubbery'));
+
+        $this-&gt;assertTrue($response-&gt;isSuccessful());
+    }
+
+    public function testOfferingTheWrongThing()
+    {
+        $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'hareng'));
+
+        $this-&gt;assertFalse($response-&gt;isSuccessful());
+    }
+}</code></pre>
+<p>Run the tests:</p>
+<pre><code>./vendor/bin/phpunit -c app</code></pre>
+<p><em>Note</em>: At this point running the tests should become a habit. Make sure to run
+them whenever you finish a change, and to run them before commiting anything.</p>
+<h2 id="rest-api-functional-tests">Rest API functional tests<a href="#rest-api-functional-tests" class="anchor">#</a></h2>
+<p>In my humble opinion, checking if the status code is 200ish and not checking the
+response content is entirely sufficient for functional tests.</p>
+<p>When creating REST API, it can prove useful to test more precisely the status
+code. Our application is a REST API, so let's do this:</p>
+<pre><code>&lt;?php
+// File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
+
+namespace TempoSimple\Test\Functional\Web;
+
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+
+class ApiControllerTest extends WebTestCase
+{
+    private function post($uri, array $data)
+    {
+        $content = json_encode($data);
+        $client = static::createClient();
+        $client-&gt;request('POST', $uri, array(), array(), array(), $content);
+
+        return $client-&gt;getResponse();
+    }
+
+    public function testOfferingTheRightThing()
+    {
+        $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'shrubbery'));
+
+        $this-&gt;assertSame($response-&gt;isSuccessful());
+    }
+
+    public function testOfferingTheWrongThing()
+    {
+        $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'hareng'));
+
+        $this-&gt;assertFalse($response-&gt;isSuccessful());
+    }
+}</code></pre>
+<p>Run the tests:</p>
+<pre><code>./vendor/bin/phpunit -c app</code></pre>
+<p>All green! That's comforting enough for us to commit our work and call it a day!</p>
+<pre><code>git add -A
+git commit -m 'Added tests'</code></pre>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Running <code>./vendor/bin/phpunit -c app</code> is less cumbersome than having to run
+manually HTTPie (like in the previous article)!</p>
+<p>The next article will be the conclusion of this series, I hope you enjoyed it!</p>
+<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
+<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
+<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
+<li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
+</ul>]]></content>
+    </entry>
+        <entry>
         <title>Learn Symfony2 - part 4: Controllers</title>
                 <id>http://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html</id>
                 <updated>2014-07-12T00:00:00+02:00</updated>
@@ -128,7 +422,7 @@ class ApiController extends Controller
     public function niAction(Request $request)
     {
         $postedContent = $request-&gt;getContent();
-        $postedValues = json_decode($postedContent);
+        $postedValues = json_decode($postedContent, true);
 
         $answer = array('answer' =&gt; 'Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv');
         $statusCode = Response::HTTP_OK;
@@ -260,8 +554,10 @@ it to an URL and you're done!</p>
 <p>Do not forget to commit your work:</p>
 <pre><code>git add -A
 git commit -m 'Created Ni route and controller'</code></pre>
-<p>The next article should be about annotations: stay tuned!</p>
-<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<p>The next article should be about tests: stay tuned!</p>
+<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
+</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
 <li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
 <li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
@@ -430,11 +726,12 @@ layer between your code and Symfony2 applications.</p>
 <p>They follow conventions which aren't hard coded (you can override anything),
 allowing them to autodiscover some convenient classes.</p>
 <p>Thansk for reading, in the next article, we'll create controllers!</p>
-<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
+<li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
+</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
 <li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
-</ul><h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
-<ul><li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
 </ul><h3 id="resources">Resources<a href="#resources" class="anchor">#</a></h3>
 <p>Here's a good article about how reusable bundles should be created:</p>
 <ul><li><a href="http://elnur.pro/use-only-infrastructural-bundles-in-symfony/">Use only infrastructural bundles in Symfony2, by Elnur Abdurrakhimov</a></li>
@@ -474,7 +771,10 @@ in git.</p>
 <h2 id="the-front-controller">The front controller<a href="#the-front-controller" class="anchor">#</a></h2>
 <p>First things first, we will create an index file which will act as a front
 controller: it will be the only entry point of our application and will decide
-which page to display:</p>
+which page to display.</p>
+<p>Create its directory:</p>
+<pre><code>mkdir web</code></pre>
+<p>Then the file:</p>
 <pre><code>&lt;?php
 // File: web/app.php
 
@@ -508,7 +808,10 @@ possible and then execute some actions like sending emails.</p>
 mentioning.</p>
 <h2 id="creating-the-application-s-kernel">Creating the application's kernel<a href="#creating-the-application-s-kernel" class="anchor">#</a></h2>
 <p><a href="http://symfony.com/doc/current/components/http_kernel/introduction.html">The HttpKernel component</a>
-provides you with a <code>Kernel</code> class, which we will extend:</p>
+provides you with a <code>Kernel</code> class, which we will extend.</p>
+<p>Create the following directory:</p>
+<pre><code>mkdir app</code></pre>
+<p>And then the kernel file:</p>
 <pre><code>&lt;?php
 // File: app/AppKernel.php
 
@@ -539,7 +842,10 @@ enable via configuration.</p>
 <p><em>Note</em>: Services are objects which do one thing and do it well. They provide
 exactly what they're called: a service. We'll learn more about them in one of
 the next article.</p>
-<p>We need to put some configuration in order to be able to make it work properly:</p>
+<p>We need to put some configuration in order to be able to make it work properly.</p>
+<p>Create its directory:</p>
+<pre><code>mkdir app/config</code></pre>
+<p>And the the YAML file:</p>
 <pre><code># File: app/config/config.yml
 framework:
     secret: "Three can keep a secret, if two of them are dead."</code></pre>
@@ -596,6 +902,7 @@ to a controller which takes a HTTP request and returns a HTTP response.</p>
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
 <li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
+<li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
 </ul>]]></content>
@@ -654,8 +961,8 @@ individually (you can even use them in other frameworks, CMS or projects like
 <li>add <code>symfony/symfony: ~2.5</code> in it (useful for further <code>composer install</code>)</li>
 <li>actually download symfony inside the <code>vendor/symfony/symfony</code> directory</li>
 <li>create a <code>composer.lock</code> file</li>
-</ol><p>Later on, to update those dependencies you'll just have to run:</p>
-<pre><code>composer update</code></pre>
+</ol><p>Later on, to update those dependencies you'll just have to run
+<code>composer update</code>.</p>
 <p><em>Note</em>: a library on which you depend upon is called a <code>dependency</code>.</p>
 <p>This will look in the <code>composer.lock</code> file to know which version has been
 installed (e.g. 2.5.0) and then checks if there's any new version available.
@@ -691,7 +998,8 @@ file:</p>
         }
     }
 }</code></pre>
-<p>And run <code>composer update</code> to take the changes into account.</p>
+<p>And run the following command to take the changes into account:</p>
+<pre><code>composer update</code></pre>
 <p>This tells Composer that we're going to follow the
 <a href="http://www.php-fig.org/psr/psr-4/">PSR-4</a> standard and that we're going to put
 our sources in the <code>src</code> directory.</p>
@@ -712,6 +1020,7 @@ git commit -m 'Installed Symfony2'</code></pre>
 <ul><li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
 <li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
 <li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
+<li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
 </ul>]]></content>
     </entry>
         <entry>

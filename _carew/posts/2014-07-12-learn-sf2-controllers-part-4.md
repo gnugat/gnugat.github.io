@@ -151,7 +151,7 @@ is a `shrubbery` and send back a response containing either `Ni` (on error) or
         public function niAction(Request $request)
         {
             $postedContent = $request->getContent();
-            $postedValues = json_decode($postedContent);
+            $postedValues = json_decode($postedContent, true);
 
             $answer = array('answer' => 'Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv');
             $statusCode = Response::HTTP_OK;
@@ -317,11 +317,14 @@ Do not forget to commit your work:
     git add -A
     git commit -m 'Created Ni route and controller'
 
-The next article should be about annotations: stay tuned!
+The next article should be about tests: stay tuned!
+
+### Next articles
+
+* {{ link('posts/2014-07-20-learn-sf2-tests-part-5.md', '5: Tests') }}
 
 ### Previous articles
 
 * {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', '1: Composer') }}
 * {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', '2: Empty application') }}
 * {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', '3: Bundles') }}
-

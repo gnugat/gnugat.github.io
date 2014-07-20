@@ -210,14 +210,15 @@ allowing them to autodiscover some convenient classes.
 
 Thansk for reading, in the next article, we'll create controllers!
 
+### Next articles
+
+* {{ link('posts/2014-07-12-learn-sf2-controllers-part-4.md', '4: Controllers') }}
+* {{ link('posts/2014-07-20-learn-sf2-tests-part-5.md', '5: Tests') }}
+
 ### Previous articles
 
 * {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', '1: Composer') }}
 * {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', '2: Empty application') }}
-
-### Next articles
-
-* {{ link('posts/2014-07-12-learn-sf2-controllers-part-4.md', '4: Controllers') }}
 
 ### Resources
 

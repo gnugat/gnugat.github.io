@@ -80,7 +80,10 @@ in git.</p>
 <h2 id="the-front-controller">The front controller<a href="#the-front-controller" class="anchor">#</a></h2>
 <p>First things first, we will create an index file which will act as a front
 controller: it will be the only entry point of our application and will decide
-which page to display:</p>
+which page to display.</p>
+<p>Create its directory:</p>
+<pre><code>mkdir web</code></pre>
+<p>Then the file:</p>
 <pre><code>&lt;?php
 // File: web/app.php
 
@@ -114,7 +117,10 @@ possible and then execute some actions like sending emails.</p>
 mentioning.</p>
 <h2 id="creating-the-application-s-kernel">Creating the application's kernel<a href="#creating-the-application-s-kernel" class="anchor">#</a></h2>
 <p><a href="http://symfony.com/doc/current/components/http_kernel/introduction.html">The HttpKernel component</a>
-provides you with a <code>Kernel</code> class, which we will extend:</p>
+provides you with a <code>Kernel</code> class, which we will extend.</p>
+<p>Create the following directory:</p>
+<pre><code>mkdir app</code></pre>
+<p>And then the kernel file:</p>
 <pre><code>&lt;?php
 // File: app/AppKernel.php
 
@@ -145,7 +151,10 @@ enable via configuration.</p>
 <p><em>Note</em>: Services are objects which do one thing and do it well. They provide
 exactly what they're called: a service. We'll learn more about them in one of
 the next article.</p>
-<p>We need to put some configuration in order to be able to make it work properly:</p>
+<p>We need to put some configuration in order to be able to make it work properly.</p>
+<p>Create its directory:</p>
+<pre><code>mkdir app/config</code></pre>
+<p>And the the YAML file:</p>
 <pre><code># File: app/config/config.yml
 framework:
     secret: "Three can keep a secret, if two of them are dead."</code></pre>
@@ -202,6 +211,7 @@ to a controller which takes a HTTP request and returns a HTTP response.</p>
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
 <li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
+<li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
 </ul>

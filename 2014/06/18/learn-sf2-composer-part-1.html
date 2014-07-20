@@ -110,8 +110,8 @@ individually (you can even use them in other frameworks, CMS or projects like
 <li>add <code>symfony/symfony: ~2.5</code> in it (useful for further <code>composer install</code>)</li>
 <li>actually download symfony inside the <code>vendor/symfony/symfony</code> directory</li>
 <li>create a <code>composer.lock</code> file</li>
-</ol><p>Later on, to update those dependencies you'll just have to run:</p>
-<pre><code>composer update</code></pre>
+</ol><p>Later on, to update those dependencies you'll just have to run
+<code>composer update</code>.</p>
 <p><em>Note</em>: a library on which you depend upon is called a <code>dependency</code>.</p>
 <p>This will look in the <code>composer.lock</code> file to know which version has been
 installed (e.g. 2.5.0) and then checks if there's any new version available.
@@ -147,7 +147,8 @@ file:</p>
         }
     }
 }</code></pre>
-<p>And run <code>composer update</code> to take the changes into account.</p>
+<p>And run the following command to take the changes into account:</p>
+<pre><code>composer update</code></pre>
 <p>This tells Composer that we're going to follow the
 <a href="http://www.php-fig.org/psr/psr-4/">PSR-4</a> standard and that we're going to put
 our sources in the <code>src</code> directory.</p>
@@ -168,6 +169,7 @@ git commit -m 'Installed Symfony2'</code></pre>
 <ul><li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
 <li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
 <li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
+<li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
 </ul>
     </div>
 
