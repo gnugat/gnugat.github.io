@@ -52,7 +52,7 @@ with git.
 
 Here's the [repository where you can find the actual code](https://github.com/gnugat/learning-symfony2/tree/5-tests).
 
-This article will be like a cheat sheet of what we saw in the previous one.
+This article will be like a cheat sheet of what we saw in the previous ones.
 
 ## Composer
 
@@ -315,7 +315,7 @@ The workflow is really simple:
 
 1. Symfony2 converts the HTTP request into a `Request` object
 2. the routing allows to execute a controller related to the current URL
-3. the controller receives the `Request` object as a parameter and mus return a
+3. the controller receives the `Request` object as a parameter and must return a
    `Response` object
 4. Symfony2 converts the `Response` object into the HTTP response
 
@@ -324,7 +324,7 @@ The workflow is really simple:
 Practice.
 
 We now know the strict minimum about Symfony2, and the only way to learn more is
-to practice, encounter new use cases, find answer in the
+to practice, encounter new use cases, find answers in the
 [documentation](http://symfony.com/doc/current/index.html) and ask questions on
 [StackOverflow](http://stackoverflow.com/questions/tagged/symfony2) (if they
 haven't been already asked).
