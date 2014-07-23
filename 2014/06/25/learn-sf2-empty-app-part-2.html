@@ -76,6 +76,7 @@ files:</p>
 &#9492;&#9472;&#9472; .gitignore</code></pre>
 <p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
 in git.</p>
+<p>Here's the <a href="https://github.com/gnugat/learning-symfony2/tree/1-composer">repository where you can find the actual code</a>.</p>
 <p>We'll now see how to create an empty Symfony2 application.</p>
 <h2 id="the-front-controller">The front controller<a href="#the-front-controller" class="anchor">#</a></h2>
 <p>First things first, we will create an index file which will act as a front
@@ -168,7 +169,7 @@ git commit -m 'Created application structure'</code></pre>
 <pre><code>mkdir app/{cache,logs}
 touch app/{cache,logs}/.gitkeep</code></pre>
 <p>Git doesn't allow to commit empty directory, hence the <code>.gitkeep</code> files.</p>
-<p>Because files in these directory are temporaries, we'll ignore them:</p>
+<p>Because files in these directories are temporaries, we'll ignore them:</p>
 <pre><code>echo '/app/cache/*' &gt;&gt; .gitignore
 echo '/app/logs/*' &gt;&gt; .gitignore
 git add -A
@@ -212,6 +213,7 @@ to a controller which takes a HTTP request and returns a HTTP response.</p>
 <ul><li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
 <li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
 <li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
+<li><a href="../../../2014/07/23/learn-sf2-conclusion.html">Conclusion</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
 </ul>

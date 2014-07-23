@@ -68,8 +68,8 @@
       <p>This is the third article of the series on learning
 <a href="http://symfony.com/">the Symfony2 framework</a>.
 Have a look at the two first ones:</p>
-<ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a>.</li>
-<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a>.</li>
+<ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
+<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
 </ul><p>In the previous articles we began to create an empty application with the
 following files:</p>
 <pre><code>.
@@ -88,6 +88,7 @@ following files:</p>
     &#9492;&#9472;&#9472; app.php</code></pre>
 <p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
 with git.</p>
+<p>Here's the <a href="https://github.com/gnugat/learning-symfony2/releases/tag/2-empty-application">repository where you can find the actual code</a>.</p>
 <p>We'll now see what a bundle is.</p>
 <h2 id="creating-the-application-bundle">Creating the application bundle<a href="#creating-the-application-bundle" class="anchor">#</a></h2>
 <p>We'll need some use case in order for our code snippets to make sense. So here
@@ -129,6 +130,9 @@ class AppKernel extends Kernel
         $loader-&gt;load(__DIR__.'/config/config.yml');
     }
 }</code></pre>
+<p>Let's commit our work:</p>
+<pre><code>git add -A
+git commit -m 'Created Application bundle'</code></pre>
 <h2 id="bundles-allow-you-to-extend-the-application-s-dic">Bundles allow you to extend the application's DIC<a href="#bundles-allow-you-to-extend-the-application-s-dic" class="anchor">#</a></h2>
 <p>The <code>KnightApplicationBundle</code> class extends the following one:</p>
 <pre><code>&lt;?php
@@ -166,14 +170,13 @@ often you'll load a configuration file which can be located in
 <p>And that's precisely the purpose of bundles: registering services in the
 application's DIC.</p>
 <h3 id="side-note-about-dic-and-services">Side note about DIC and services<a href="#side-note-about-dic-and-services" class="anchor">#</a></h3>
-<p>We'll see later what is a service and the purpose of the DIC. However if you
-want to discover early what it is all about, have a look at these two articles:</p>
+<p>Services and Dependency Injection isn't in the scope of this series. However if
+you want to discover what it is all about, have a look at these two articles:</p>
 <ul><li><a href="../../../2014/01/22/ioc-di-and-service-locator.html">Inversion of Control, Dependency Injection, Dependency Injection Container and Service Locator</a></li>
 <li><a href="../../../2014/01/29/sf2-di-component-by-example.html">Symfony2 Dependency Injection component, by example</a></li>
 </ul><p><em>Note</em>: this is a kindly reminder about the nature of Symfony2 Components. Those
 are third party libraries which can be used on their own outside of the
 framework.</p>
-<p>We'll see more about services in the next articles.</p>
 <h3 id="side-note-about-commands">Side note about commands<a href="#side-note-about-commands" class="anchor">#</a></h3>
 <p>The Symfony2 Console Component allows you to create CLI applications. This
 application can have one or many commands. To learn more about them, have a look
@@ -200,8 +203,8 @@ our own code to it, one day or another. We could go the long and painful way
 (writing a lot of boilerplate code and configurations), or we could use a bundle
 to do automatically the job for us!</p>
 <p>Sometimes, we'll find applications which have many bundles in order to
-categorize it into modules. This isn't necessary and it's a bit tiresome if we
-ask me: we can simply create folders in a unique bundle to categorize our
+categorize them into modules. This isn't necessary and it's a bit tiresome if
+you ask me: we can simply create folders in a unique bundle to categorize our
 modules.</p>
 <p>The creation of many bundles necessitates some extra manual steps. It also makes
 little sense as a bundle is supposed to be a decoupled unit: if we create a
@@ -209,7 +212,7 @@ UserBundle, FrontendBundle, BlogBundle and ForumBundle, we'll find ourselves
 with bundles depending on one another, often with cyclic dependencies and we'll
 waste time wondering where to put new classes (which can rely on 3 bundles).</p>
 <p>My advice: create a single bundle for your application. If later on you find
-that inside it you created a set of classes which make sense in other projects
+that inside it you created a set of classes which makes sense in other projects
 (Symfony2 and non-Symfon2 ones alike), then maybe you can extract them to
 create a third party library. And then you might create a bundle to integrate
 it inside Symfony2 applications.</p>
@@ -218,10 +221,11 @@ it inside Symfony2 applications.</p>
 layer between your code and Symfony2 applications.</p>
 <p>They follow conventions which aren't hard coded (you can override anything),
 allowing them to autodiscover some convenient classes.</p>
-<p>Thansk for reading, in the next article, we'll create controllers!</p>
+<p>Thanks for reading, in the next article, we'll create controllers!</p>
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
 <li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
+<li><a href="../../../2014/07/23/learn-sf2-conclusion.html">Conclusion</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
 <li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
@@ -238,7 +242,7 @@ code and configuration? Here you go (I'd not advise you to do so, though):</p>
 <li><a href="http://www.slideshare.net/matthiasnoback/high-quality-symfony-bundles-tutorial-dutch-php-conference-2014">Naked bundles, slides by Matthias Noback</a></li>
 </ul><p>I'm only putting these links because I like how they explain how Symfony2 works
 behind the hood, but I wouldn't apply them in a real world application as it
-makes too much fuss to no avail (that's my umble opinion anyway).</p>
+makes too much fuss to no avail (that's my humble opinion anyway).</p>
     </div>
 
           <hr>

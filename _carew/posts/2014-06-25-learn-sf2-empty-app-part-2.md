@@ -22,6 +22,8 @@ files:
 Running `composer install` should create a `vendor` directory, which we ignored
 in git.
 
+Here's the [repository where you can find the actual code](https://github.com/gnugat/learning-symfony2/tree/1-composer).
+
 We'll now see how to create an empty Symfony2 application.
 
 ## The front controller
@@ -150,7 +152,7 @@ You'll also need to create `logs` and `cache` directories:
 
 Git doesn't allow to commit empty directory, hence the `.gitkeep` files.
 
-Because files in these directory are temporaries, we'll ignore them:
+Because files in these directories are temporaries, we'll ignore them:
 
     echo '/app/cache/*' >> .gitignore
     echo '/app/logs/*' >> .gitignore
@@ -204,6 +206,7 @@ The next article will be all about bundles, so stay tuned :) .
 * {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', '3: Bundles') }}
 * {{ link('posts/2014-07-12-learn-sf2-controllers-part-4.md', '4: Controllers') }}
 * {{ link('posts/2014-07-20-learn-sf2-tests-part-5.md', '5: Tests') }}
+* {{ link('posts/2014-07-23-learn-sf2-conclusion.md', 'Conclusion') }}
 
 ### Previous articles
 

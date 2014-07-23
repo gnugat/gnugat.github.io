@@ -137,8 +137,9 @@ our sources in the `src` directory.
 * give the same name to your file and your class
 * use the path of the class for the namespace
 
-For example: the file `src/Knight/AppBundle/KnightAppBundle.php` contains a
-class named `KnightAppBundle` located in the namespace `Knight\AppBundle`.
+For example: the file `src/Knight/ApplicationBundle/KnightApplicationBundle.php`
+contains a class named `KnightApplicationBundle` located in the namespace
+`Knight\ApplicationBundle`.
 
 Don't worry too much about it for now.
 
@@ -158,3 +159,4 @@ I hope this could help you, stay tuned for the next articles!
 * {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', '3: Bundles') }}
 * {{ link('posts/2014-07-12-learn-sf2-controllers-part-4.md', '4: Controllers') }}
 * {{ link('posts/2014-07-20-learn-sf2-tests-part-5.md', '5: Tests') }}
+* {{ link('posts/2014-07-23-learn-sf2-conclusion.md', 'Conclusion') }}

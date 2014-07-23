@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Learn Symfony2 - Conclusion</title>
+
+    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
+    <meta name="author" content="Loïc Chardonnet">
+    <meta name="viewport" content="width=device-width">
+
+    
+    <link rel="canonical" href="http://gnugat.github.io/2014/07/23/learn-sf2-conclusion.html"/>
+              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Chardonnet&#039;s blog"/>
+      
+    <link href='http://fonts.googleapis.com/css?family=Bitter' rel='stylesheet' type='text/css'><link href='http://fonts.googleapis.com/css?family=Varela+Round' rel='stylesheet' type='text/css'><link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/bootstrap-responsive.min.css"><link rel="stylesheet" href="../../../css/main.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/xcode.min.css">
+    <script src="../../../js/vendor/modernizr-2.6.1-respond-1.1.0.min.js"></script>
+  </head>
+
+  <body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+    <![endif]-->
+
+    
+          <div class="navbar">
+          <div class="navbar-inner">
+              <div class="container">
+                  <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                  </a>
+                  <a class="brand" href="../../..">Loïc Chardonnet&#039;s blog</a>
+                  <div class="nav-collapse collapse">
+                    <ul class="nav pull-right">
+                                                                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
+                                                            <li><a href="../../../about-me.html">About me</a></li>
+                                                                                                </ul>
+                                      </div>
+              </div>
+          </div>
+      </div>
+    
+    
+          <div class="container">
+
+        
+                  <div class="row">
+            <div class="span10 offset1 content">
+                                                <div class="page-header">
+                    <h1>Learn Symfony2 - Conclusion</h1>
+                  </div>
+                              
+                <article>
+    <div class="date">
+      <i class="icon-calendar"></i>
+      Jul 23rd, 2014
+    </div>
+
+    <hr />
+
+    <div class="body">
+      <p>This is the conclusion of the series on learning
+<a href="http://symfony.com/">the Symfony2 framework</a>.
+Have a look at the five first ones:</p>
+<ol><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">Composer</a></li>
+<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">Empty application</a></li>
+<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">Bundles</a></li>
+<li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">Controllers</a></li>
+<li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">Tests</a></li>
+</ol><p>In the previous articles we created a tested application for the Knight of Ni
+with the following files:</p>
+<pre><code>.
+&#9500;&#9472;&#9472; app
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_test.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; logs
+&#9474;&nbsp;&nbsp; &#9474;   &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; phpunit.xml.dist
+&#9500;&#9472;&#9472; composer.json
+&#9500;&#9472;&#9472; composer.lock
+&#9500;&#9472;&#9472; src
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Knight
+&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Controller
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; ApiController.php
+&#9474;           &#9500;&#9472;&#9472; KnightApplicationBundle.php
+&#9474;           &#9492;&#9472;&#9472; Tests
+&#9474;               &#9492;&#9472;&#9472; Controller
+&#9474;                   &#9492;&#9472;&#9472; ApiControllerTest.php
+&#9500;&#9472;&#9472; .gitignore
+&#9492;&#9472;&#9472; web
+    &#9492;&#9472;&#9472; app.php</code></pre>
+<p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
+with git.</p>
+<p>Here's the <a href="https://github.com/gnugat/learning-symfony2/tree/5-tests">repository where you can find the actual code</a>.</p>
+<p>This article will be like a cheat sheet of what we saw in the previous one.</p>
+<h2 id="composer">Composer<a href="#composer" class="anchor">#</a></h2>
+<p><a href="https://getcomposer.org/">Composer</a> will help you install and update third
+party libraries.</p>
+<p>Download it once for all and install it in your global binaries:</p>
+<pre><code>curl -sS https://getcomposer.org/installer | php
+sudo mv ./composer.phar /usr/local/bin/composer</code></pre>
+<p>It should then be executable like this: <code>composer</code>.</p>
+<ul><li>install a third party library: <code>composer require [--dev] &lt;vendor/name:version&gt;</code></li>
+<li>download the project's third party libraries: <code>composer install</code></li>
+<li>update the project's third party libraries: <code>composer update</code></li>
+</ul><p>The available third party libraries can be found on
+<a href="https://packagist.org/">Packagist</a>.</p>
+<p>Here's an explanation of <a href="https://igor.io/2013/01/07/composer-versioning.html">Composer version constraints by Igor</a>.</p>
+<p>In these articles, we create a project from scratch, but the recommended way of
+starting a Symfony2 application is to use the Composer bootstrap command:
+<code>composer create-project &lt;vendor/name&gt; &lt;path-to-install&gt;</code></p>
+<p>You could use the <a href="https://github.com/symfony/symfony-standard">Symfony Standard Edition</a>
+(<code>symfony/framework-standard-edition</code>), or any other distribution.</p>
+<p>I'd advise you to use an empty boilerplate with the
+<a href="https://github.com/gnugat/symfony-empty">Symfony Empty Edition</a>:</p>
+<pre><code>composer create-project gnugat/symfony-framework-empty-edition &lt;path-to-install&gt;</code></pre>
+<p><em>Tip</em>: For the production server, use this command to install the project's
+dependencies (the third party libraries):</p>
+<pre><code>composer install --no-dev --optimize</code></pre>
+<h2 id="bundles">Bundles<a href="#bundles" class="anchor">#</a></h2>
+<p>They integrate your code with the framework. More specifically, they configure
+the Kernel's dependency injection container.</p>
+<p><em>Note</em>: To learn more about Dependency Injection, have a look at the following
+articles:</p>
+<ul><li><a href="../../../2014/01/22/ioc-di-and-service-locator.html">Inversion of Control, Dependency Injection, Dependency Injection Container and Service Locator</a></li>
+<li><a href="../../../2014/01/29/sf2-di-component-by-example.html">Symfony2 Dependency Injection component, by example</a></li>
+</ul><p>The only bundle you'll need to create is the <code>ApplicationBundle</code>, where all your
+code will be. Here's how to create a bundle:</p>
+<ol><li>create its directory: <code>mkdir -p src/&lt;Vendor&gt;/&lt;Name&gt;Bundle</code></li>
+<li>create its class: <code>$EDITOR src/&lt;Vendor&gt;/&lt;Name&gt;Bundle/&lt;Vendor&gt;&lt;Name&gt;Bundle.php</code></li>
+<li>register it in the kernel: <code>$EDITOR app/AppKernel.php</code></li>
+</ol><p>A Bundle class looks like this:</p>
+<pre><code>&lt;?php
+// File: src/Knight/ApplicationBundle/KnightApplicationBundle.php
+
+namespace Knight\ApplicationBundle;
+
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+
+class KnightApplicationBundle extends Bundle
+{
+}</code></pre>
+<h2 id="application">Application<a href="#application" class="anchor">#</a></h2>
+<p>In your application, there's only a few files related to the Symfony2 framework.
+Here's the list of the ones you'll usually edit.</p>
+<h3 id="the-application-s-kernel">The application's kernel<a href="#the-application-s-kernel" class="anchor">#</a></h3>
+<p>The <code>app/AppKernel.php</code> file is where the bundles are registered and where the
+configuration is loaded. You'll only need to edit it when you install a new
+bundle.</p>
+<p>Here's how we would proceed: first install the bundle via Composer:</p>
+<pre><code>composer require [--dev] &lt;vendor/name:version&gt;</code></pre>
+<p>Then register it in the application's kernel:</p>
+<pre><code>&lt;?php
+// File: app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        $bundles = array(
+            new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
+            new Symfony\Bundle\SecurityBundle\SecurityBundle(),
+            new Symfony\Bundle\TwigBundle\TwigBundle(),
+            new Symfony\Bundle\MonologBundle\MonologBundle(),
+            new Symfony\Bundle\AsseticBundle\AsseticBundle(),
+            new Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
+            new Sensio\Bundle\FrameworkExtraBundle\SensioFrameworkExtraBundle(),
+
+            // Add your bundles here!
+        );
+
+        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
+            $bundles[] = new Symfony\Bundle\WebProfilerBundle\WebProfilerBundle();
+            $bundles[] = new Sensio\Bundle\DistributionBundle\SensioDistributionBundle();
+            $bundles[] = new Sensio\Bundle\GeneratorBundle\SensioGeneratorBundle();
+
+            // Or here, if you want it to only be available in dev or test environment
+        }
+
+        return $bundles;
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader)
+    {
+        $loader-&gt;load(__DIR__.'/config/config_'.$this-&gt;getEnvironment().'.yml');
+    }
+}</code></pre>
+<h3 id="the-routing-configuration">The routing configuration<a href="#the-routing-configuration" class="anchor">#</a></h3>
+<p>The <code>app/config/routing.yml</code> file is where you will link a controller's action
+to an URL. Here's an example:</p>
+<pre><code># File: app/config/routing.yml
+ni:
+    path: /api/ni
+    methods:
+        - POST
+    defaults:
+        _controller: KnightApplicationBundle:Api:ni
+
+question_to_cross_the_bridge:
+    path: /api/question/{number}
+    methods:
+        - GET
+    defaults:
+        _controller: KnightApplicationBundle:Api:question</code></pre>
+<p>As you can see, you can tell the routing to use placeholders, which will be then
+available in the controller via the Request object:</p>
+<pre><code>$request-&gt;query-&gt;get('number'); // query is an instance of ParameterBag</code></pre>
+<h3 id="controllers-your-entry-point">Controllers, your entry point<a href="#controllers-your-entry-point" class="anchor">#</a></h3>
+<p>Each route is associated to a controller's action.</p>
+<p>A controller is a class located in <code>src/&lt;Vendor&gt;/ApplicationBundle/Controller</code>,
+suffixed with <code>Controller</code>.</p>
+<p>An action is a controller's public method, suffixed with <code>Action</code>, which takes
+a <code>Request $request</code> parameter and must return an instance of the <code>Response</code>
+object:</p>
+<pre><code>&lt;?php
+// File: src/Knight/ApplicationBundle/Controller/ApiController.php
+
+namespace Knight\ApplicationBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+class ApiController extends Controller
+{
+    public function niAction(Request $request)
+    {
+        $postedContent = $request-&gt;getContent();
+        $postedValues = json_decode($postedContent, true);
+
+        $answer = array('answer' =&gt; 'Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv');
+        $statusCode = Response::HTTP_OK;
+        if (!isset($postedValues['offering']) || 'shrubbery' !== $postedValues['offering']) {
+            $answer['answer'] = 'Ni';
+            $statusCode = Response::HTTP_UNPROCESSABLE_ENTITY;
+        }
+
+        return new JsonResponse($answer, $statusCode);
+    }
+}</code></pre>
+<p><em>Note</em>: you can create sub-directories in <code>src/&lt;Vendor&gt;/ApplicationBundle/Controller</code>,
+allowing you to categorize your controllers. In the routing, this would look
+like this: <code>KnightApplicationBundle:Subdirectory\Controller:action</code>.</p>
+<h3 id="functional-tests">Functional tests<a href="#functional-tests" class="anchor">#</a></h3>
+<p>Of course you can use any test framework with a Symfony2 project. PHPUnit is one
+of them, and a popular one, so we'll use it for our examples.</p>
+<p>Functional tests mirror the controllers and check if the status code is
+successful. If you're building an API, you can check more precisely the status
+code:</p>
+<pre><code>&lt;?php
+// File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
+
+namespace Knight\ApplicationBundle\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
+
+class ApiControllerTest extends WebTestCase
+{
+    private function post($uri, array $data)
+    {
+        $content = json_encode($data);
+        $client = static::createClient();
+        $client-&gt;request('POST', $uri, array(), array(), array(), $content);
+
+        return $client-&gt;getResponse();
+    }
+
+    public function testOfferingTheRightThing()
+    {
+        $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'shrubbery'));
+
+        $this-&gt;assertSame(Response::HTTP_OK , $response-&gt;getStatusCode());
+    }
+
+    public function testOfferingTheWrongThing()
+    {
+        $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'hareng'));
+
+        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY , $response-&gt;getStatusCode());
+    }
+}</code></pre>
+<p>The <code>WebTestCase</code> class is provided by the framework: it creates an application
+(just like we do in <code>web/app.php</code>), so you can send requests and test the
+response.</p>
+<h3 id="where-to-put-your-own-code">Where to put your own code<a href="#where-to-put-your-own-code" class="anchor">#</a></h3>
+<p>You can put your code anywhere in <code>src/&lt;Vendor&gt;/ApplicationBundle</code>.</p>
+<p>Who said you needed to decouple your code from Symfony2? You can already write
+decoupled code!</p>
+<p>A convention is to create directories named after the type of objects it holds.
+For example the <code>Controller</code> contains controller classes (which are suffixed
+with <code>Controller</code>). You don't have to follow it though (except for controllers
+and commands): use your best judgement!</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Symfony2 gets out of your way, the only class from the framework we need to use
+is the controller, the request and the response.</p>
+<p>The workflow is really simple:</p>
+<ol><li>Symfony2 converts the HTTP request into a <code>Request</code> object</li>
+<li>the routing allows to execute a controller related to the current URL</li>
+<li>the controller receives the <code>Request</code> object as a parameter and mus return a
+<code>Response</code> object</li>
+<li>Symfony2 converts the <code>Response</code> object into the HTTP response</li>
+</ol><h3 id="what-should-we-do-now">What should we do now?<a href="#what-should-we-do-now" class="anchor">#</a></h3>
+<p>Practice.</p>
+<p>We now know the strict minimum about Symfony2, and the only way to learn more is
+to practice, encounter new use cases, find answer in the
+<a href="http://symfony.com/doc/current/index.html">documentation</a> and ask questions on
+<a href="http://stackoverflow.com/questions/tagged/symfony2">StackOverflow</a> (if they
+haven't been already asked).</p>
+<p>If you really want to master Symfony2, then stay tuned: I'll start writing a new
+series of articles!</p>
+<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
+<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
+<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
+<li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
+<li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
+</ul>
+    </div>
+
+          <hr>
+      <h4>Tags:</h4>
+      <ul class="tag_box inline">
+                  <li>
+            <a href="../../../tags/symfony2.html">Symfony2</a>
+          </li>
+                  <li>
+            <a href="../../../tags/technical.html">Technical</a>
+          </li>
+                  <li>
+            <a href="../../../tags/learn-symfony2-series.html">Learn Symfony2 Series</a>
+          </li>
+              </ul>
+      </article>
+            </div>
+          </div>
+        
+                          <footer>
+            <p>
+              &copy;
+                              <a href="http://gnugat.github.io">
+                  Loïc Chardonnet
+                </a>
+                            2014
+              <small>
+                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
+              </small>
+            </p>
+          </footer>
+        
+      </div>
+    
+    
+                  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+      <script>window.jQuery || document.write('<script src="../../../js/vendor/jquery-1.9.0.min.js"><\/script>')</script>
+      <script src="../../../js/vendor/bootstrap.min.js"></script>
+      <script src="http://yandex.st/highlightjs/7.3/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-47822314-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+
+      </body>
+</html>

@@ -68,9 +68,9 @@
       <p>This is the fourth article of the series on learning
 <a href="http://symfony.com/">the Symfony2 framework</a>.
 Have a look at the three first ones:</p>
-<ol><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">Composer</a>.</li>
-<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">Empty application</a>.</li>
-<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">Bundles</a>.</li>
+<ol><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">Composer</a></li>
+<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">Empty application</a></li>
+<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">Bundles</a></li>
 </ol><p>In the previous articles we created a one-bundled empty application with the
 following files:</p>
 <pre><code>.
@@ -93,9 +93,7 @@ following files:</p>
     &#9492;&#9472;&#9472; app.php</code></pre>
 <p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
 with git.</p>
-<p>Let's commit our work:</p>
-<pre><code>git add -A
-git commit -m 'Created Application bundle'</code></pre>
+<p>Here's the <a href="https://github.com/gnugat/learning-symfony2/releases/tag/3-bundles">repository where you can find the actual code</a>.</p>
 <p>In this article, we'll learn more about the routing and the controllers.</p>
 <h2 id="discovering-routing-and-controller">Discovering routing and controller<a href="#discovering-routing-and-controller" class="anchor">#</a></h2>
 <p>In order to get familiar with the routing and controllers, we will create a
@@ -289,12 +287,12 @@ class Response
 
     public function isSuccessful();
 }</code></pre>
-<p>There's a lot of HTTP status code constants, so I've selected onyl those I'd use
+<p>There's a lot of HTTP status code constants, so I've selected only those I'd use
 the most.</p>
 <p>You can set and get the Response's headers via a public property which is also
 a <code>ParameterBag</code>.</p>
 <p>The constructor allows you to set the content, status code and headers.</p>
-<p>The three other methods are mostly used in tests. There's a lot of <code>is</code> method
+<p>The three other methods are mostly used in tests. There's a lot of <code>is</code> methods
 to check the type of the request, but usually you'll just want to make sure the
 response is successful.</p>
 <p>You can find other types of responses:</p>
@@ -313,6 +311,7 @@ git commit -m 'Created Ni route and controller'</code></pre>
 <p>The next article should be about tests: stay tuned!</p>
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
+<li><a href="../../../2014/07/23/learn-sf2-conclusion.html">Conclusion</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
 <li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>

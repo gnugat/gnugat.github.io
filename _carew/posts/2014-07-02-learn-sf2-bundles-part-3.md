@@ -11,8 +11,8 @@ This is the third article of the series on learning
 [the Symfony2 framework](http://symfony.com/).
 Have a look at the two first ones:
 
-* {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', '1: Composer') }}.
-* {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', '2: Empty application') }}.
+* {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', '1: Composer') }}
+* {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', '2: Empty application') }}
 
 In the previous articles we began to create an empty application with the
 following files:
@@ -34,6 +34,8 @@ following files:
 
 Running `composer install` should create a `vendor` directory, which we ignored
 with git.
+
+Here's the [repository where you can find the actual code](https://github.com/gnugat/learning-symfony2/releases/tag/2-empty-application).
 
 We'll now see what a bundle is.
 
@@ -85,6 +87,11 @@ Finally we register the bundle into our application:
         }
     }
 
+Let's commit our work:
+
+    git add -A
+    git commit -m 'Created Application bundle'
+
 ## Bundles allow you to extend the application's DIC
 
 The `KnightApplicationBundle` class extends the following one:
@@ -135,8 +142,8 @@ application's DIC.
 
 ### Side note about DIC and services
 
-We'll see later what is a service and the purpose of the DIC. However if you
-want to discover early what it is all about, have a look at these two articles:
+Services and Dependency Injection isn't in the scope of this series. However if
+you want to discover what it is all about, have a look at these two articles:
 
 * {{ link('posts/2014-01-22-ioc-di-and-service-locator.md', 'Inversion of Control, Dependency Injection, Dependency Injection Container and Service Locator') }}
 * {{ link('posts/2014-01-29-sf2-di-component-by-example.md', 'Symfony2 Dependency Injection component, by example') }}
@@ -144,8 +151,6 @@ want to discover early what it is all about, have a look at these two articles:
 *Note*: this is a kindly reminder about the nature of Symfony2 Components. Those
 are third party libraries which can be used on their own outside of the
 framework.
-
-We'll see more about services in the next articles.
 
 ### Side note about commands
 
@@ -184,8 +189,8 @@ our own code to it, one day or another. We could go the long and painful way
 to do automatically the job for us!
 
 Sometimes, we'll find applications which have many bundles in order to
-categorize it into modules. This isn't necessary and it's a bit tiresome if we
-ask me: we can simply create folders in a unique bundle to categorize our
+categorize them into modules. This isn't necessary and it's a bit tiresome if
+you ask me: we can simply create folders in a unique bundle to categorize our
 modules.
 
 The creation of many bundles necessitates some extra manual steps. It also makes
@@ -195,7 +200,7 @@ with bundles depending on one another, often with cyclic dependencies and we'll
 waste time wondering where to put new classes (which can rely on 3 bundles).
 
 My advice: create a single bundle for your application. If later on you find
-that inside it you created a set of classes which make sense in other projects
+that inside it you created a set of classes which makes sense in other projects
 (Symfony2 and non-Symfon2 ones alike), then maybe you can extract them to
 create a third party library. And then you might create a bundle to integrate
 it inside Symfony2 applications.
@@ -208,12 +213,13 @@ layer between your code and Symfony2 applications.
 They follow conventions which aren't hard coded (you can override anything),
 allowing them to autodiscover some convenient classes.
 
-Thansk for reading, in the next article, we'll create controllers!
+Thanks for reading, in the next article, we'll create controllers!
 
 ### Next articles
 
 * {{ link('posts/2014-07-12-learn-sf2-controllers-part-4.md', '4: Controllers') }}
 * {{ link('posts/2014-07-20-learn-sf2-tests-part-5.md', '5: Tests') }}
+* {{ link('posts/2014-07-23-learn-sf2-conclusion.md', 'Conclusion') }}
 
 ### Previous articles
 
@@ -238,4 +244,4 @@ code and configuration? Here you go (I'd not advise you to do so, though):
 
 I'm only putting these links because I like how they explain how Symfony2 works
 behind the hood, but I wouldn't apply them in a real world application as it
-makes too much fuss to no avail (that's my umble opinion anyway).
+makes too much fuss to no avail (that's my humble opinion anyway).

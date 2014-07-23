@@ -68,10 +68,10 @@
       <p>This is the fifth article of the series on learning
 <a href="http://symfony.com/">the Symfony2 framework</a>.
 Have a look at the four first ones:</p>
-<ol><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">Composer</a>.</li>
-<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">Empty application</a>.</li>
-<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">Bundles</a>.</li>
-<li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">Controllers</a>.</li>
+<ol><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">Composer</a></li>
+<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">Empty application</a></li>
+<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">Bundles</a></li>
+<li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">Controllers</a></li>
 </ol><p>In the previous articles we created an application for the Knight of Ni with the
 following files:</p>
 <pre><code>.
@@ -97,6 +97,7 @@ following files:</p>
     &#9492;&#9472;&#9472; app.php</code></pre>
 <p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
 with git.</p>
+<p>Here's the <a href="https://github.com/gnugat/learning-symfony2/tree/4-controllers">repository where you can find the actual code</a>.</p>
 <p>In this article, we'll create functional tests using PHPUnit.</p>
 <h2 id="installing-phpunit">Installing PHPUnit<a href="#installing-phpunit" class="anchor">#</a></h2>
 <p><a href="http://phpunit.de/">PHPUnit</a> is a popular test framework.
@@ -189,7 +190,7 @@ class AppKernel extends Kernel
 }</code></pre>
 <p>Let's commit our work:</p>
 <pre><code>git add -A
-git ci -m 'Added test configuration'</code></pre>
+git commit -m 'Added test configuration'</code></pre>
 <h2 id="functional-tests">Functional tests<a href="#functional-tests" class="anchor">#</a></h2>
 <p>Our test must check that the application behaves as expected. We won't be
 checking that it actually fulfills our business expectations. This means that
@@ -343,8 +344,13 @@ git commit -m 'Added tests'</code></pre>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>Running <code>./vendor/bin/phpunit -c app</code> is less cumbersome than having to run
 manually HTTPie (like in the previous article)!</p>
+<p>Writing functional tests is easy and quick, the only thing you need to do is
+check if the HTTP response's status code is successful (and for REST API you
+need to check the precise HTTP response's status code).</p>
 <p>The next article will be the conclusion of this series, I hope you enjoyed it!</p>
-<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/07/23/learn-sf2-conclusion.html">Conclusion</a></li>
+</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
 <li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
 <li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>

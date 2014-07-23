@@ -11,10 +11,10 @@ This is the fifth article of the series on learning
 [the Symfony2 framework](http://symfony.com/).
 Have a look at the four first ones:
 
-1. {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', 'Composer') }}.
-2. {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', 'Empty application') }}.
-3. {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', 'Bundles') }}.
-4. {{ link('posts/2014-07-12-learn-sf2-controllers-part-4.md', 'Controllers') }}.
+1. {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', 'Composer') }}
+2. {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', 'Empty application') }}
+3. {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', 'Bundles') }}
+4. {{ link('posts/2014-07-12-learn-sf2-controllers-part-4.md', 'Controllers') }}
 
 In the previous articles we created an application for the Knight of Ni with the
 following files:
@@ -43,6 +43,8 @@ following files:
 
 Running `composer install` should create a `vendor` directory, which we ignored
 with git.
+
+Here's the [repository where you can find the actual code](https://github.com/gnugat/learning-symfony2/tree/4-controllers).
 
 In this article, we'll create functional tests using PHPUnit.
 
@@ -157,7 +159,7 @@ environment:
 Let's commit our work:
 
     git add -A
-    git ci -m 'Added test configuration'
+    git commit -m 'Added test configuration'
 
 ## Functional tests
 
@@ -342,7 +344,15 @@ All green! That's comforting enough for us to commit our work and call it a day!
 Running `./vendor/bin/phpunit -c app` is less cumbersome than having to run
 manually HTTPie (like in the previous article)!
 
+Writing functional tests is easy and quick, the only thing you need to do is
+check if the HTTP response's status code is successful (and for REST API you
+need to check the precise HTTP response's status code).
+
 The next article will be the conclusion of this series, I hope you enjoyed it!
+
+### Next articles
+
+* {{ link('posts/2014-07-23-learn-sf2-conclusion.md', 'Conclusion') }}
 
 ### Previous articles
 
@@ -350,4 +360,3 @@ The next article will be the conclusion of this series, I hope you enjoyed it!
 * {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', '2: Empty application') }}
 * {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', '3: Bundles') }}
 * {{ link('posts/2014-07-12-learn-sf2-controllers-part-4.md', '4: Controllers') }}
-

@@ -11,9 +11,9 @@ This is the fourth article of the series on learning
 [the Symfony2 framework](http://symfony.com/).
 Have a look at the three first ones:
 
-1. {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', 'Composer') }}.
-2. {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', 'Empty application') }}.
-3. {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', 'Bundles') }}.
+1. {{ link('posts/2014-06-18-learn-sf2-composer-part-1.md', 'Composer') }}
+2. {{ link('posts/2014-06-25-learn-sf2-empty-app-part-2.md', 'Empty application') }}
+3. {{ link('posts/2014-07-02-learn-sf2-bundles-part-3.md', 'Bundles') }}
 
 In the previous articles we created a one-bundled empty application with the
 following files:
@@ -40,10 +40,7 @@ following files:
 Running `composer install` should create a `vendor` directory, which we ignored
 with git.
 
-Let's commit our work:
-
-    git add -A
-    git commit -m 'Created Application bundle'
+Here's the [repository where you can find the actual code](https://github.com/gnugat/learning-symfony2/releases/tag/3-bundles).
 
 In this article, we'll learn more about the routing and the controllers.
 
@@ -286,7 +283,7 @@ Here's a part of the Response's API:
         public function isSuccessful();
     }
 
-There's a lot of HTTP status code constants, so I've selected onyl those I'd use
+There's a lot of HTTP status code constants, so I've selected only those I'd use
 the most.
 
 You can set and get the Response's headers via a public property which is also
@@ -294,7 +291,7 @@ a `ParameterBag`.
 
 The constructor allows you to set the content, status code and headers.
 
-The three other methods are mostly used in tests. There's a lot of `is` method
+The three other methods are mostly used in tests. There's a lot of `is` methods
 to check the type of the request, but usually you'll just want to make sure the
 response is successful.
 
@@ -322,6 +319,7 @@ The next article should be about tests: stay tuned!
 ### Next articles
 
 * {{ link('posts/2014-07-20-learn-sf2-tests-part-5.md', '5: Tests') }}
+* {{ link('posts/2014-07-23-learn-sf2-conclusion.md', 'Conclusion') }}
 
 ### Previous articles
 
