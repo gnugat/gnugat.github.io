@@ -5,8 +5,212 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-08-05T00:00:00+02:00</updated>
+            <updated>2014-08-13T00:00:00+02:00</updated>
             <entry>
+        <title>Master Symfony2 - part 2: Test Driven Development</title>
+                <id>http://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html</id>
+                <updated>2014-08-13T00:00:00+02:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>This is the second article of the series on learning the
+<a href="http://symfony.com/">Symfony2</a> framework. Have a look at the first one:
+<a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">Bootstraping</a>.</p>
+<p>In the first article we bootstraped our project with the following files:</p>
+<pre><code>.
+&#9500;&#9472;&#9472; app
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_prod.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_test.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml.dist
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; logs
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; phpunit.xml.dist
+&#9500;&#9472;&#9472; composer.json
+&#9500;&#9472;&#9472; composer.lock
+&#9500;&#9472;&#9472; src
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Fortune
+&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
+&#9474;&nbsp;&nbsp;         &#9492;&#9472;&#9472; FortuneApplicationBundle.php
+&#9492;&#9472;&#9472; web
+    &#9492;&#9472;&#9472; app.php</code></pre>
+<p>Here's the <a href="https://github.com/gnugat/mastering-symfony2">repository where you can find the actual code</a>.</p>
+<p>In this one we'll implement the first User Story, by writing tests first.</p>
+<p><strong>Note</strong>: writing tests before writing any code is part of the
+<a href="../../../2014/02/19/test-driven-development.html">Test Driven Development (TDD) methodology</a>.</p>
+<h2 id="defining-the-user-story">Defining the User Story<a href="#defining-the-user-story" class="anchor">#</a></h2>
+<p>With the help of our Scrum Master, our Product Owner (Nostradamus) managed to
+write the following user story:</p>
+<pre><code>As a User
+I want to be able to submit a new quote
+In order to make it available</code></pre>
+<h2 id="writing-the-test">Writing the test<a href="#writing-the-test" class="anchor">#</a></h2>
+<p>Our first reflex will be to write a functional test. First create the directory:</p>
+<pre><code>mkdir -p src/Fortune/ApplicationBundle/Tests/Controller</code></pre>
+<p>Then the test class:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Tests/Controller/QuoteControllerTest.php
+
+namespace Fortune\ApplicationBundle\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
+
+class QuoteControllerTest extends WebTestCase
+{
+    private function post($uri, array $data)
+    {
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $content = json_encode($data);
+        $client = static::createClient();
+        $client-&gt;request('POST', $uri, array(), array(), $headers, $content);
+
+        return $client-&gt;getResponse();
+    }
+
+    public function testSubmitNewQuote()
+    {
+        $response = $this-&gt;post('/api/quotes', array('content' =&gt; '&lt;KnightOfNi&gt; Ni!'));
+
+        $this-&gt;assertSame(Response::HTTP_CREATED, $response-&gt;getStatusCode());
+    }
+}</code></pre>
+<h2 id="configuring-the-route">Configuring the route<a href="#configuring-the-route" class="anchor">#</a></h2>
+<p>Now we need to link the <code>/quotes</code> URL to a controller, so let's edit the
+configuration:</p>
+<pre><code># File: app/config/routing.yml
+submit_quote:
+    path: /api/quotes
+    methods:
+        - POST
+    defaults:
+        _controller: FortuneApplicationBundle:Quote:submit</code></pre>
+<h2 id="creating-the-controller">Creating the controller<a href="#creating-the-controller" class="anchor">#</a></h2>
+<p>There wasn't any controllers until now, so we create the directory:</p>
+<pre><code>mkdir src/Fortune/ApplicationBundle/Controller</code></pre>
+<p>And finally the controller class:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
+
+namespace Fortune\ApplicationBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+class QuoteController extends Controller
+{
+    public function submitAction(Request $request)
+    {
+        $postedContent = $request-&gt;getContent();
+        $postedValues = json_decode($postedContent, true);
+
+        $answer['quote']['content'] = $postedValues['content'];
+
+        return new JsonResponse($answer, Response::HTTP_CREATED);
+    }
+}</code></pre>
+<p>Now let's run our tests:</p>
+<pre><code>./vendor/bin/phpunit -c app</code></pre>
+<p><a href="https://www.youtube.com/watch?v=lFeLDc2CzOs">All green</a>! This makes us
+confident enough to commit our work:</p>
+<pre><code>git add -A
+git commit -m 'Created submission of quotes'</code></pre>
+<h2 id="testing-bad-cases">Testing bad cases<a href="#testing-bad-cases" class="anchor">#</a></h2>
+<p>The submitted content shouldn't be empty. Let's add a test for the bad cases:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Tests/Controller/QuoteControllerTest.php
+
+namespace Fortune\ApplicationBundle\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
+
+class QuoteControllerTest extends WebTestCase
+{
+    private function post($uri, array $data)
+    {
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $content = json_encode($data);
+        $client = static::createClient();
+        $client-&gt;request('POST', $uri, array(), array(), $headers, $content);
+
+        return $client-&gt;getResponse();
+    }
+
+    public function testSubmitNewQuote()
+    {
+        $response = $this-&gt;post('/api/quotes', array('content' =&gt; '&lt;KnightOfNi&gt; Ni!'));
+
+        $this-&gt;assertSame(Response::HTTP_CREATED, $response-&gt;getStatusCode());
+    }
+
+    public function testSubmitEmptyQuote()
+    {
+        $response = $this-&gt;post('/api/quotes', array('content' =&gt; ''));
+
+        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response-&gt;getStatusCode());
+    }
+
+    public function testSubmitNoQuote()
+    {
+        $response = $this-&gt;post('/api/quotes', array());
+
+        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response-&gt;getStatusCode());
+    }
+}</code></pre>
+<h2 id="checking-bad-cases">Checking bad cases<a href="#checking-bad-cases" class="anchor">#</a></h2>
+<p>Now let's fix the new tests:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
+
+namespace Fortune\ApplicationBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+class QuoteController extends Controller
+{
+    public function submitAction(Request $request)
+    {
+        $postedContent = $request-&gt;getContent();
+        $postedValues = json_decode($postedContent, true);
+
+        if (empty($postedValues['content'])) {
+            $answer = array('message' =&gt; 'Missing required parameter: content');
+
+            return new JsonResponse($answer, Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $answer['quote']['content'] = $postedValues['content'];
+
+        return new JsonResponse($answer, Response::HTTP_CREATED);
+    }
+}</code></pre>
+<p>Finally run the tests:</p>
+<pre><code>./vendor/bin/phpunit -c app</code></pre>
+<p>All green! Let's call it a day and commit our work:</p>
+<pre><code>git add -A
+git commit -m 'Managed submission of empty/no quotes'</code></pre>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>For those who didn't practice a lot with Symfony2, this article should have
+demonstrated how quick and simple it is to implement the first User Story
+(test and code alike).</p>
+<p>In the next article, we'll learn how to work with services.</p>
+<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
+</ul>]]></content>
+    </entry>
+        <entry>
         <title>Master Symfony2 - part 1: Bootstraping</title>
                 <id>http://gnugat.github.io/2014/08/05/master-sf2-part-1-bootstraping.html</id>
                 <updated>2014-08-05T00:00:00+02:00</updated>
@@ -175,7 +379,10 @@ group.</p>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>Using Composer's <code>create-project</code> command with a Symfony2 Distribution is the
 quickest way to bootstrap a project.</p>
-<p>In the next article, we will start to work on our first User Story.</p>]]></content>
+<p>In the next article, we will start to work on our first User Story.</p>
+<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+</ul>]]></content>
     </entry>
         <entry>
         <title>Learn Symfony2 - Conclusion</title>
