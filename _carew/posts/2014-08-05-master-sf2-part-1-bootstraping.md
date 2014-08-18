@@ -80,7 +80,7 @@ Remove the documentation files:
 
     rm README.md LICENSE
 
-Change the `composer.json` informations:
+Change the `composer.json` information:
 
     {
         "name": "nostradamus/fortune",
