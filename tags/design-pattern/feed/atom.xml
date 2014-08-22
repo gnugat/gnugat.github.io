@@ -5,8 +5,472 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-08-13T00:00:00+02:00</updated>
+            <updated>2014-08-22T00:00:00+02:00</updated>
             <entry>
+        <title>Master Symfony2 - part 3: Services</title>
+                <id>http://gnugat.github.io/2014/08/22/master-sf2-part-3-services.html</id>
+                <updated>2014-08-22T00:00:00+02:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/08/22/master-sf2-part-3-services.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>This is the third article of the series on mastering the
+<a href="http://symfony.com/">Symfony2</a> framework. Have a look at the two first ones:</p>
+<ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
+<li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+</ul><p>In the previous articles we created an API allowing us to submit new quotes:</p>
+<pre><code>.
+&#9500;&#9472;&#9472; app
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_prod.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_test.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml.dist
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; logs
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; phpunit.xml.dist
+&#9500;&#9472;&#9472; composer.json
+&#9500;&#9472;&#9472; composer.lock
+&#9500;&#9472;&#9472; src
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Fortune
+&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Controller
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteController.php
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; FortuneApplicationBundle.php
+&#9474;&nbsp;&nbsp;         &#9492;&#9472;&#9472; Tests
+&#9474;&nbsp;&nbsp;             &#9492;&#9472;&#9472; Controller
+&#9474;&nbsp;&nbsp;                 &#9492;&#9472;&#9472; QuoteControllerTest.php
+&#9492;&#9472;&#9472; web
+    &#9492;&#9472;&#9472; app.php</code></pre>
+<p>Here's the <a href="https://github.com/gnugat/mastering-symfony2">repository where you can find the actual code</a>.</p>
+<p>In this one we'll list the existing quotes and learn about entities, services,
+the repository design pattern and dependency injection.</p>
+<h2 id="defining-the-second-user-story">Defining the second User Story<a href="#defining-the-second-user-story" class="anchor">#</a></h2>
+<p>By the time we finished to implement the first User Story, Nostradamus (our
+customer and product owner) wrote the second one:</p>
+<pre><code>As a User
+I want to be able to read the available quotes
+In order to find interesting ones</code></pre>
+<p>Currently we don't persist our quotes, but now we will need to. However I'd like
+to dedicate a separate article to database persistence, so we will save our
+quotes in a file and concentrate on services.</p>
+<h2 id="the-quote-entity">The quote entity<a href="#the-quote-entity" class="anchor">#</a></h2>
+<p>Until now we wrote our code in the controller and it was ok, as there wasn't
+much code. But now our application will grow, so we need to put the code
+elsewhere: in the services.</p>
+<p>Basically a service is just a class which does one thing (and does it well).
+They are stateless, which means that calling a method many times with the same
+parameter should always return the same value.</p>
+<p>They manipulate entities which are classes representing the data. Those don't
+have any behavior. Let's create the <code>Entity</code> directory:</p>
+<pre><code>mkdir src/Fortune/ApplicationBundle/Entity</code></pre>
+<p>And now we'll write the <code>Quote</code> entity:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Entity/Quote.php
+
+namespace Fortune\ApplicationBundle\Entity;
+
+class Quote
+{
+    private $id;
+    private $content;
+
+    public function __construct($id, $content)
+    {
+        $this-&gt;id = $id;
+        $this-&gt;content = $content;
+    }
+
+    public function getId()
+    {
+        return $this-&gt;id;
+    }
+
+    public function getContent()
+    {
+        return $this-&gt;content;
+    }
+}</code></pre>
+<p>There's no need to write a unit test for it: it doesn't contain any logic. The
+tests of its services (which manipulate it) will be enough.</p>
+<h2 id="the-repository-service">The repository service<a href="#the-repository-service" class="anchor">#</a></h2>
+<p>We'll create a persistence service which will follow the
+<a href="http://code.tutsplus.com/tutorials/the-repository-design-pattern--net-35804">Repository design pattern</a>:
+the repository calls a gateway to retreive some raw data and transforms it using
+a factory.</p>
+<p>Before creating it, we will write a unit test which will help us to specify how
+it should work. Here's its directory:</p>
+<pre><code>mkdir src/Fortune/ApplicationBundle/Tests/Entity</code></pre>
+<p>And its code:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Tests/Entity/QuoteRepositoryTest.php
+
+namespace Fortune\ApplicationBundle\Tests\Entity;
+
+use Fortune\ApplicationBundle\Entity\QuoteFactory;
+use Fortune\ApplicationBundle\Entity\QuoteGateway;
+use Fortune\ApplicationBundle\Entity\QuoteRepository;
+
+class QuoteRepositoryTest extends \PHPUnit_Framework_TestCase
+{
+    const CONTENT = '&lt;KnightOfNi&gt; Ni!';
+
+    private $repository;
+
+    public function setUp()
+    {
+        $filename = '/tmp/fortune_database_test.txt';
+        $gateway = new QuoteGateway($filename);
+        $factory = new QuoteFactory();
+        $this-&gt;repository = new QuoteRepository($gateway, $factory);
+    }
+
+    public function testItPersistsTheQuote()
+    {
+        $quote = $this-&gt;repository-&gt;insert(self::CONTENT);
+        $id = $quote['quote']['id'];
+        $quotes = $this-&gt;repository-&gt;findAll();
+        $foundQuote = $quotes['quotes'][$id];
+
+        $this-&gt;assertSame(self::CONTENT, $foundQuote['content']);
+    }
+}</code></pre>
+<p>Now we can create the class which should make the test pass:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Entity/QuoteRepository.php
+
+namespace Fortune\ApplicationBundle\Entity;
+
+class QuoteRepository
+{
+    private $gateway;
+    private $factory;
+
+    public function __construct(QuoteGateway $gateway, QuoteFactory $factory)
+    {
+        $this-&gt;gateway = $gateway;
+        $this-&gt;factory = $factory;
+    }
+
+    public function insert($content)
+    {
+        $quote = $this-&gt;gateway-&gt;insert($content);
+
+        return $this-&gt;factory-&gt;makeOne($quote);
+    }
+
+    public function findAll()
+    {
+        $quotes = $this-&gt;gateway-&gt;findAll();
+
+        return $this-&gt;factory-&gt;makeAll($quotes);
+    }
+}</code></pre>
+<p>See what we've done in the constructor? That's dependency injection (passing
+arguments on which the class relies).</p>
+<p><strong>Note</strong>: for more information about the Dependency Injection,
+<a href="../../../2014/01/22/ioc-di-and-service-locator.html">you can read this article</a>.</p>
+<h3 id="the-gateway-service">The gateway service<a href="#the-gateway-service" class="anchor">#</a></h3>
+<p>The gateway is the class where the actual persistence is done:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Entity/QuoteGateway.php
+
+namespace Fortune\ApplicationBundle\Entity;
+
+class QuoteGateway
+{
+    private $filename;
+
+    public function __construct($filename)
+    {
+        $this-&gt;filename = $filename;
+    }
+
+    public function insert($content)
+    {
+        $content = trim($content);
+        $line = $content."\n";
+        file_put_contents($this-&gt;filename, $line, FILE_APPEND);
+        $lines = file($this-&gt;filename);
+        $lineNumber = count($lines) - 1;
+
+        return new Quote($lineNumber, $content);
+    }
+
+    public function findAll()
+    {
+        $contents = file($this-&gt;filename);
+        foreach ($contents as $id =&gt; $content) {
+            $quotes[$id] = new Quote($id, trim($content));
+        }
+
+        return $quotes;
+    }
+}</code></pre>
+<p>Wait a minute, we didn't write any test for this class! Well, that's because
+<code>QuoteRepositoryTest</code> already covers it.</p>
+<h2 id="the-factory-service">The factory service<a href="#the-factory-service" class="anchor">#</a></h2>
+<p>The factroy converts the object returned by the gateway to something usable by
+the controller (a JSONable array):</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Entity/QuoteFactory.php
+
+namespace Fortune\ApplicationBundle\Entity;
+
+class QuoteFactory
+{
+    public function makeOne(Quote $rawQuote)
+    {
+        return array('quote' =&gt; $this-&gt;make($rawQuote));
+    }
+
+    public function makeAll(array $rawQuotes)
+    {
+        foreach ($rawQuotes as $rawQuote) {
+            $quotes['quotes'][$rawQuote-&gt;getId()] = $this-&gt;make($rawQuote);
+        }
+
+        return $quotes;
+    }
+
+    private function make(Quote $rawQuote)
+    {
+        return array(
+            'id' =&gt; $rawQuote-&gt;getId(),
+            'content' =&gt; $rawQuote-&gt;getContent(),
+        );
+    }
+}</code></pre>
+<p>No unit test for this factory: the one for the repository already covers it.
+Now that the code is written, we can check that the test pass:</p>
+<pre><code>./vendor/bin/phpunit -c app</code></pre>
+<h2 id="using-the-service-in-the-controller">Using the service in the controller<a href="#using-the-service-in-the-controller" class="anchor">#</a></h2>
+<p>The controller responsibility is to retrieve the parameters from the request,
+inject them in a service and then use its return value to create a response.
+We won't construct directly the <code>QuoteRepository</code> service in the controller:
+Symfony2 comes with a <a href="http://symfony.com/doc/current/components/dependency_injection/introduction.html">Dependency Injection Container</a> (DIC).
+In a nutshell when you ask the container a service, it will construct it for
+you.</p>
+<p>The first thing we need is to prepare the bundle by creating the following
+directories:</p>
+<pre><code>mkdir src/Fortune/ApplicationBundle/DependencyInjection
+mkdir -p src/Fortune/ApplicationBundle/Resources/config</code></pre>
+<p>Then we need to create a class which will load the bundle's services into the
+DIC:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/DependencyInjection/FortuneApplicationExtension.php
+
+namespace Fortune\ApplicationBundle\DependencyInjection;
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+
+class FortuneApplicationExtension extends Extension
+{
+    public function load(array $configs, ContainerBuilder $container)
+    {
+        $fileLocator = new FileLocator(__DIR__.'/../Resources/config');
+        $loader = new XmlFileLoader($container, $fileLocator);
+
+        $loader-&gt;load('services.xml');
+    }
+}</code></pre>
+<p>As you can see, we told the extension to look for a configuration file. Here it
+is:</p>
+<pre><code>&lt;?xml version="1.0" ?&gt;
+&lt;!-- File: src/Fortune/ApplicationBundle/Resources/config/services.xml --&gt;
+
+&lt;container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
+    &lt;services&gt;
+        &lt;service id="fortune_application.quote_factory"
+            class="Fortune\ApplicationBundle\Entity\QuoteFactory"
+        &gt;
+        &lt;/service&gt;
+        &lt;service id="fortune_application.quote_gateway"
+            class="Fortune\ApplicationBundle\Entity\QuoteGateway"
+        &gt;
+            &lt;argument&gt;/tmp/fortune_database.txt&lt;/argument&gt;
+        &lt;/service&gt;
+        &lt;service id="fortune_application.quote_repository"
+            class="Fortune\ApplicationBundle\Entity\QuoteRepository"
+        &gt;
+            &lt;argument type="service" id="fortune_application.quote_gateway" /&gt;
+            &lt;argument type="service" id="fortune_application.quote_factory" /&gt;
+        &lt;/service&gt;
+    &lt;/services&gt;
+&lt;/container&gt;</code></pre>
+<p>Now <code>QuoteRepository</code> is available in the controller:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
+
+namespace Fortune\ApplicationBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+class QuoteController extends Controller
+{
+    public function submitAction(Request $request)
+    {
+        $postedContent = $request-&gt;getContent();
+        $postedValues = json_decode($postedContent, true);
+        if (empty($postedValues['content'])) {
+            $answer = array('message' =&gt; 'Missing required parameter: content');
+
+            return new JsonResponse($answer, Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $quoteRepository = $this-&gt;container-&gt;get('fortune_application.quote_repository');
+        $quote = $quoteRepository-&gt;insert($postedValues['content']);
+
+        return new JsonResponse($quote, Response::HTTP_CREATED);
+    }
+}</code></pre>
+<p>We can now make sure that everything is fine by running the tests:</p>
+<pre><code>./vendor/bin/phpunit -c app</code></pre>
+<p><strong>Note</strong>: for more information about Symfony2 Dependency Injection Component
+<a href="../../../2014/01/29/sf2-di-component-by-example.html">you can read this article</a>.</p>
+<h2 id="listing-quotes">Listing quotes<a href="#listing-quotes" class="anchor">#</a></h2>
+<p>It's now time to fulfill the second user story, starting with a functional test:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Tests/Controller/QuoteControllerTest.php
+
+namespace Fortune\ApplicationBundle\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
+
+class QuoteControllerTest extends WebTestCase
+{
+    private function post($uri, array $data)
+    {
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $content = json_encode($data);
+        $client = static::createClient();
+        $client-&gt;request('POST', $uri, array(), array(), $headers, $content);
+
+        return $client-&gt;getResponse();
+    }
+
+    private function get($uri)
+    {
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $client = static::createClient();
+        $client-&gt;request('GET', $uri, array(), array(), $headers);
+
+        return $client-&gt;getResponse();
+    }
+
+    public function testSubmitNewQuote()
+    {
+        $response = $this-&gt;post('/api/quotes', array('content' =&gt; '&lt;KnightOfNi&gt; Ni!'));
+
+        $this-&gt;assertSame(Response::HTTP_CREATED, $response-&gt;getStatusCode());
+    }
+
+    public function testSubmitEmptyQuote()
+    {
+        $response = $this-&gt;post('/api/quotes', array('content' =&gt; ''));
+
+        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response-&gt;getStatusCode());
+    }
+
+    public function testSubmitNoQuote()
+    {
+        $response = $this-&gt;post('/api/quotes', array());
+
+        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response-&gt;getStatusCode());
+    }
+
+    public function testListingAllQuotes()
+    {
+        $response = $this-&gt;get('/api/quotes');
+
+        $this-&gt;assertSame(Response::HTTP_OK, $response-&gt;getStatusCode());
+    }
+}</code></pre>
+<p>The next step is to update the configuration:</p>
+<pre><code># File: app/config/routing.yml
+submit_quote:
+    path: /api/quotes
+    methods:
+        - POST
+    defaults:
+        _controller: FortuneApplicationBundle:Quote:submit
+
+list_quotes:
+    path: /api/quotes
+    methods:
+        - GET
+    defaults:
+        _controller: FortuneApplicationBundle:Quote:list</code></pre>
+<p>Then we write the action:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
+
+namespace Fortune\ApplicationBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+class QuoteController extends Controller
+{
+    public function submitAction(Request $request)
+    {
+        $quoteRepository = $this-&gt;container-&gt;get('fortune_application.quote_repository');
+        $postedContent = $request-&gt;getContent();
+        $postedValues = json_decode($postedContent, true);
+
+        if (empty($postedValues['content'])) {
+            $answer = array('message' =&gt; 'Missing required parameter: content');
+
+            return new JsonResponse($answer, Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $quote = $quoteRepository-&gt;insert($postedValues['content']);
+
+        return new JsonResponse($quote, Response::HTTP_CREATED);
+    }
+
+    public function listAction(Request $request)
+    {
+        $quoteRepository = $this-&gt;container-&gt;get('fortune_application.quote_repository');
+        $quotes = $quoteRepository-&gt;findAll();
+
+        return new JsonResponse($quotes, Response::HTTP_OK);
+    }
+}</code></pre>
+<p>And finally we run the tests:</p>
+<pre><code>./vendor/bin/phpunit -c app</code></pre>
+<p>Everything is fine, we can commit:</p>
+<pre><code>git add -A
+git ci -m 'Added listing of quotes'</code></pre>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Services is where the logic should be. Those manipulate entities, which carry
+the data. We used the repository design pattern which is very handy for APIs:
+it calls a gateway which retrieves raw data and then convert it using a factory,
+so the controller only needs to comunicate with the repository. Finally, we saw
+that "Dependency Injection" is just a fancy term for "passing arguments".</p>
+<p>In the next article, we'll learn use database persistence, using
+<a href="http://www.doctrine-project.org/projects/orm.html">Doctrine2 ORM</a>.</p>
+<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
+<li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+</ul>]]></content>
+    </entry>
+        <entry>
         <title>Master Symfony2 - part 2: Test Driven Development</title>
                 <id>http://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html</id>
                 <updated>2014-08-13T00:00:00+02:00</updated>
@@ -15,7 +479,7 @@
             <email>loic.chardonnet@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html"/>
-        <content type="html" xml:lang="en"><![CDATA[<p>This is the second article of the series on learning the
+        <content type="html" xml:lang="en"><![CDATA[<p>This is the second article of the series on mastering the
 <a href="http://symfony.com/">Symfony2</a> framework. Have a look at the first one:
 <a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">Bootstraping</a>.</p>
 <p>In the first article we bootstraped our project with the following files:</p>
@@ -206,7 +670,9 @@ git commit -m 'Managed submission of empty/no quotes'</code></pre>
 demonstrated how quick and simple it is to implement the first User Story
 (test and code alike).</p>
 <p>In the next article, we'll learn how to work with services.</p>
-<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
+</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
 </ul>]]></content>
     </entry>
@@ -382,6 +848,7 @@ quickest way to bootstrap a project.</p>
 <p>In the next article, we will start to work on our first User Story.</p>
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+<li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
 </ul>]]></content>
     </entry>
         <entry>

@@ -7,7 +7,7 @@ tags:
     - Master Symfony2 series
 ---
 
-This is the second article of the series on learning the
+This is the second article of the series on mastering the
 [Symfony2](http://symfony.com/) framework. Have a look at the first one:
 {{ link('posts/2014-08-05-master-sf2-part-1-bootstraping.md', 'Bootstraping') }}.
 
@@ -236,6 +236,10 @@ demonstrated how quick and simple it is to implement the first User Story
 (test and code alike).
 
 In the next article, we'll learn how to work with services.
+
+### Next articles
+
+* {{ link('posts/2014-08-22-master-sf2-part-3-services.md', '3: Services') }}
 
 ### Previous articles
 
