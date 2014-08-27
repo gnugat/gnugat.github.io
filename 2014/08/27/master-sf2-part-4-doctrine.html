@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Master Symfony2 - part 4: Doctrine</title>
+
+    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
+    <meta name="author" content="Loïc Chardonnet">
+    <meta name="viewport" content="width=device-width">
+
+    
+    <link rel="canonical" href="http://gnugat.github.io/2014/08/27/master-sf2-part-4-doctrine.html"/>
+              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Chardonnet&#039;s blog"/>
+      
+    <link href='http://fonts.googleapis.com/css?family=Bitter' rel='stylesheet' type='text/css'><link href='http://fonts.googleapis.com/css?family=Varela+Round' rel='stylesheet' type='text/css'><link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/bootstrap-responsive.min.css"><link rel="stylesheet" href="../../../css/main.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/xcode.min.css">
+    <script src="../../../js/vendor/modernizr-2.6.1-respond-1.1.0.min.js"></script>
+  </head>
+
+  <body>
+    <!--[if lt IE 7]>
+        <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+    <![endif]-->
+
+    
+          <div class="navbar">
+          <div class="navbar-inner">
+              <div class="container">
+                  <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                      <span class="icon-bar"></span>
+                  </a>
+                  <a class="brand" href="../../..">Loïc Chardonnet&#039;s blog</a>
+                  <div class="nav-collapse collapse">
+                    <ul class="nav pull-right">
+                                                                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
+                                                            <li><a href="../../../about-me.html">About me</a></li>
+                                                                                                </ul>
+                                      </div>
+              </div>
+          </div>
+      </div>
+    
+    
+          <div class="container">
+
+        
+                  <div class="row">
+            <div class="span10 offset1 content">
+                                                <div class="page-header">
+                    <h1>Master Symfony2 - part 4: Doctrine</h1>
+                  </div>
+                              
+                <article>
+    <div class="date">
+      <i class="icon-calendar"></i>
+      Aug 27th, 2014
+    </div>
+
+    <hr />
+
+    <div class="body">
+      <p>This is the fourth article of the series on mastering the
+<a href="http://symfony.com/">Symfony2</a> framework. Have a look at the three first ones:</p>
+<ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
+<li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+<li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
+</ul><p>In the previous articles we created an API allowing us to submit and list
+quotes:</p>
+<pre><code>.
+&#9500;&#9472;&#9472; app
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_prod.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_test.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml.dist
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; logs
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; phpunit.xml.dist
+&#9500;&#9472;&#9472; composer.json
+&#9500;&#9472;&#9472; composer.lock
+&#9500;&#9472;&#9472; src
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Fortune
+&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Controller
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteController.php
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; DependencyInjection
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; FortuneApplicationExtension.php
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Entity
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; QuoteFactory.php
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; QuoteGateway.php
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; Quote.php
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteRepository.php
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; FortuneApplicationBundle.php
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Resources
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; config
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; services.xml
+&#9474;&nbsp;&nbsp;         &#9492;&#9472;&#9472; Tests
+&#9474;&nbsp;&nbsp;             &#9500;&#9472;&#9472; Controller
+&#9474;&nbsp;&nbsp;             &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteControllerTest.php
+&#9474;&nbsp;&nbsp;             &#9492;&#9472;&#9472; Entity
+&#9474;&nbsp;&nbsp;                 &#9492;&#9472;&#9472; QuoteRepositoryTest.php
+&#9492;&#9472;&#9472; web
+    &#9492;&#9472;&#9472; app.php</code></pre>
+<p>Here's the <a href="https://github.com/gnugat/mastering-symfony2">repository where you can find the actual code</a>.</p>
+<p>In this one we'll use real database persistence using
+<a href="http://www.doctrine-project.org/projects/orm.html">Doctrine ORM</a>, a third party
+bundle, the command line console and a mocking library.</p>
+<p><strong>Note</strong>: Symfony2 isn't coupled to any ORM or database library. We could use
+anything else like <a href="http://php.net/manual/en/book.pdo.php">PDO</a>,
+<a href="http://propelorm.org/">Propel ORM</a>, <a href="http://www.pomm-project.org/">POMM</a>, or
+anything you want!</p>
+<h2 id="installing-doctrinebundle">Installing DoctrineBundle<a href="#installing-doctrinebundle" class="anchor">#</a></h2>
+<p>Just like Symfony, Doctrine is composed of many libraries which can be used
+separately. The two main ones are:</p>
+<ul><li>the DataBase Abstraction Layer (DBAL), provides a unique API for many databse
+vendors (MySQL, PostgreSQL, Oracle, etc)</li>
+<li>the Object Relation Mapping (ORM), provides an object oriented way to depict
+the data (which are usually relational)</li>
+</ul><p>DoctrineBundle registers the library's services into our Dependency Injection
+Container. It can be installed quickly:</p>
+<pre><code>composer require 'doctrine/doctrine-bundle:~1.2'</code></pre>
+<p>The bundle doesn't force you to use the ORM (you can simply use the DBAL), so we
+need to explicitly install it:</p>
+<pre><code>composer require 'doctrine/orm:~2.2,&gt;=2.2.3'</code></pre>
+<p>The bundle has to be registered in our application:</p>
+<pre><code>&lt;?php
+// File: app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        return array(
+            new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
+            new Fortune\ApplicationBundle\FortuneApplicationBundle(),
+            new Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
+        );
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader)
+    {
+        $loader-&gt;load(__DIR__.'/config/config_'.$this-&gt;getEnvironment().'.yml');
+    }
+}</code></pre>
+<p>Its services depend on some configuration parameters, which we will add:</p>
+<pre><code># File: app/config/config.yml
+imports:
+    - { resource: parameters.yml }
+    - { resource: doctrine.yml }
+
+framework:
+    secret: %secret%
+    router:
+        resource: %kernel.root_dir%/config/routing.yml</code></pre>
+<p>Next we create the actual configuration:</p>
+<pre><code># File: app/config/doctrine.yml
+doctrine:
+    dbal:
+        driver: pdo_mysql
+        host: 127.0.0.1
+        port: ~
+        dbname: %database_name%
+        user: %database_user%
+        password: %database_password%
+        charset: UTF8
+
+    orm:
+        auto_generate_proxy_classes: %kernel.debug%
+        auto_mapping: true</code></pre>
+<p><strong>Note</strong>: the <code>~</code> value is equivalent to <code>null</code> in PHP.</p>
+<p>The values surrounded by <code>%</code> will be replaced by parameters coming from the DIC.
+For example, <code>kernel.debug</code> is set by the FrameworkBundle. We'll set the values
+of the database ones in the following file:</p>
+<pre><code># File: app/config/parameters.yml
+parameters:
+    secret: hazuZRqYGdRrL8ATdB8kAqBZ
+
+    database_name: fortune
+    database_user: root
+    database_password: ~</code></pre>
+<p>For security reason, this file is not commited. You can update the distributed
+file though, so your team will know that they need to set a value:</p>
+<pre><code># File: app/config/parameters.yml.dist
+parameters:
+    secret: ChangeMePlease
+
+    database_name: fortune
+    database_user: root
+    database_password: ~</code></pre>
+<h2 id="configuring-the-schema">Configuring the schema<a href="#configuring-the-schema" class="anchor">#</a></h2>
+<p>The first thing we need is to define the schema (tables with their fields), so
+we'll create this directory:</p>
+<pre><code>mkdir src/Fortune/ApplicationBundle/Resources/config/doctrine</code></pre>
+<p>And then the configuration file for the <code>Quote</code> entity:</p>
+<pre><code># src/Fortune/ApplicationBundle/Resources/config/doctrine/Quote.orm.yml
+Fortune\ApplicationBundle\Entity\Quote:
+    type: entity
+    repositoryClass: Fortune\ApplicationBundle\Entity\QuoteGateway
+    table: quote
+    id:
+        id:
+            type: integer
+            generator:
+                strategy: AUTO
+    fields:
+        content:
+            type: text
+        createdAt:
+            type: datetime
+            column: created_at</code></pre>
+<p><strong>Note</strong>: Doctrine uses the word "Repository" with a different meaning than the
+Repository design pattern (the one with gateway and factory). In our case it
+corresponds to the gateway.</p>
+<p>As you can see, we've added a <code>createdAt</code> attribute to our entity. Let's update
+its code:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Entity/Quote.php
+
+namespace Fortune\ApplicationBundle\Entity;
+
+class Quote
+{
+    private $id;
+    private $content;
+    private $createdAt;
+
+    public function __construct($id, $content)
+    {
+        $this-&gt;id = $id;
+        $this-&gt;content = $content;
+        $this-&gt;createdAt = new \DateTime();
+    }
+
+    public static function fromContent($content)
+    {
+        return new Quote(null, $content);
+    }
+
+    public function getId()
+    {
+        return $this-&gt;id;
+    }
+
+    public function getContent()
+    {
+        return $this-&gt;content;
+    }
+
+    public function getCreatedAt()
+    {
+        return $this-&gt;createdAt;
+    }
+}</code></pre>
+<p><strong>Note</strong>: We've added <a href="http://verraes.net/2014/06/named-constructors-in-php/">a named constructor</a>
+which will prove usefull with the gateway.</p>
+<h2 id="creating-the-console">Creating the console<a href="#creating-the-console" class="anchor">#</a></h2>
+<p>Symfony2 provides a powerful <a href="http://symfony.com/doc/current/components/console/introduction.html">Console Component</a>
+allowing you to create command line utilities. It can be used standalone, or
+in the full stack framework thanks to the FrameworkBundle. To create the
+console, we just need to create the following file:</p>
+<pre><code>#!/usr/bin/env php
+&lt;?php
+// File: app/console
+
+set_time_limit(0);
+
+require_once __DIR__.'/../vendor/autoload.php';
+require_once __DIR__.'/AppKernel.php';
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+
+$input = new ArgvInput();
+$kernel = new AppKernel('prod', false);
+$application = new Application($kernel);
+$application-&gt;run($input);</code></pre>
+<p>The object <code>ArgvInput</code> contains the input given by the user (command name,
+arguments and options). Bundles can register commands in the application by
+fetching them from their <code>Command</code> directory.</p>
+<p>We can now create the database and schema easily:</p>
+<pre><code>php app/console doctrine:database:create
+php app/console doctrine:schema:create</code></pre>
+<p><strong>Note</strong>: Those are useful when developing the application, but shouldn't be used in
+production.</p>
+<p><strong>Note</strong>: If you want to learn more about the Symfony2 Console Component,
+<a href="../../../2014/04/09/sf2-console-component-by-example.html">you can read this article</a>.</p>
+<h2 id="adapting-the-gateway">Adapting the Gateway<a href="#adapting-the-gateway" class="anchor">#</a></h2>
+<p>Until now, our <code>QuoteGateway</code> was saving and retrieving the quotes from a file.
+We'll update it to be a Doctrine Repository:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Entity/QuoteGateway.php
+
+namespace Fortune\ApplicationBundle\Entity;
+
+use Doctrine\ORM\EntityRepository;
+
+class QuoteGateway extends EntityRepository
+{
+    public function insert($content)
+    {
+        $entityManager = $this-&gt;getEntityManager();
+
+        $quote = Quote::fromContent($content);
+        $entityManager-&gt;persist($quote);
+        $entityManager-&gt;flush();
+
+        return $quote;
+    }
+}</code></pre>
+<p>The <code>EntityManager</code> object does the actual persistence and will set the quote's
+ID. The <code>EntityRepository</code> already has a <code>findAll</code> method, so we can remove it.</p>
+<p>The last thing we need is to update the DIC's configuration:</p>
+<pre><code>&lt;?xml version="1.0" ?&gt;
+&lt;!-- File: src/Fortune/ApplicationBundle/Resources/config/services.xml --&gt;
+
+&lt;container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
+    &lt;services&gt;
+        &lt;service id="fortune_application.quote_factory"
+            class="Fortune\ApplicationBundle\Entity\QuoteFactory"
+        &gt;
+        &lt;/service&gt;
+        &lt;service id="fortune_application.quote_gateway"
+            class="Fortune\ApplicationBundle\Entity\QuoteGateway"
+            factory-service="doctrine"
+            factory-method="getRepository"&gt;
+            &lt;argument&gt;FortuneApplicationBundle:Quote&lt;/argument&gt;
+        &lt;/service&gt;
+        &lt;service id="fortune_application.quote_repository"
+            class="Fortune\ApplicationBundle\Entity\QuoteRepository"
+        &gt;
+            &lt;argument type="service" id="fortune_application.quote_gateway" /&gt;
+            &lt;argument type="service" id="fortune_application.quote_factory" /&gt;
+        &lt;/service&gt;
+    &lt;/services&gt;
+&lt;/container&gt;</code></pre>
+<p>The <code>doctrine</code> service manages the Doctrine Repositories. To manually get a
+repository you'd need to do somethig like
+<code>$container-&gt;get('doctrine')-&gt;getRepository('FortuneApplicationBundle:QuoteGateway')</code>,
+the <code>factory-service</code> and <code>factory-method</code> attributes allow us to simply call
+container-&gt;get('fortune_application.quote_gateway')`.</p>
+<h2 id="mocking-the-database">Mocking the database<a href="#mocking-the-database" class="anchor">#</a></h2>
+<p>Database operations can be slow however we want our tests to run as fast as
+possible: <a href="http://blog.8thlight.com/uncle-bob/2014/05/10/WhenToMock.html">this is a good opportunity to use a test double</a>.</p>
+<p>PHPUnit comes with its own mocking library, but we'll use a less verbose and
+more one: <a href="https://github.com/phpspec/prophecy">Prophecy</a>. First we install
+the PHPUnit integration of Prophecy:</p>
+<pre><code>composer require --dev 'phpspec/prophecy-phpunit:~1.0'</code></pre>
+<p>Then we update our test:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Tests/Entity/QuoteRepositoryTest.php
+
+namespace Fortune\ApplicationBundle\Tests\Entity;
+
+use Fortune\ApplicationBundle\Entity\Quote;
+use Fortune\ApplicationBundle\Entity\QuoteFactory;
+use Fortune\ApplicationBundle\Entity\QuoteGateway;
+use Fortune\ApplicationBundle\Entity\QuoteRepository;
+use Prophecy\PhpUnit\ProphecyTestCase;
+
+class QuoteRepositoryTest extends ProphecyTestCase
+{
+    const ID = 42;
+    const CONTENT = '&lt;KnightOfNi&gt; Ni!';
+
+    private $gateway;
+    private $repository;
+
+    public function setUp()
+    {
+        parent::setUp();
+        $gatewayClassname = 'Fortune\ApplicationBundle\Entity\QuoteGateway';
+        $this-&gt;gateway = $this-&gt;prophesize($gatewayClassname);
+        $factory = new QuoteFactory();
+        $this-&gt;repository = new QuoteRepository($this-&gt;gateway-&gt;reveal(), $factory);
+    }
+
+    public function testItPersistsTheQuote()
+    {
+        $quote = new Quote(self::ID, self::CONTENT);
+        $this-&gt;gateway-&gt;insert(self::CONTENT)-&gt;willReturn($quote);
+        $this-&gt;repository-&gt;insert(self::CONTENT);
+
+        $this-&gt;gateway-&gt;findAll()-&gt;willReturn(array($quote));
+        $quotes = $this-&gt;repository-&gt;findAll();
+        $foundQuote = $quotes['quotes'][self::ID];
+
+        $this-&gt;assertSame(self::CONTENT, $foundQuote['content']);
+    }
+}</code></pre>
+<p>We Created a mock of <code>QuoteGateway</code> which returns a quote we created beforehand.</p>
+<p>Our changes are finished, let's run the tests:</p>
+<pre><code>./vendor/bin/phpunit -c app</code></pre>
+<p>No regression detected! We can commit our work:</p>
+<pre><code>git add -A
+git ci -m 'Added doctrine'</code></pre>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Doctrine allows us to persist the data, its bundle integrates it smoothly into
+our application and provides us with handy command line tools.</p>
+<p>You can have a look at <a href="http://docs.doctrine-project.org/projects/doctrine-migrations/en/latest/reference/introduction.html">Doctrine Migration</a>,
+a standalone library allowing you to deploy database changes, it even has
+<a href="http://symfony.com/doc/current/bundles/DoctrineMigrationsBundle/index.html">a bundle</a>.</p>
+<p>In the next article, we'll talk about how to extend the framework using events.</p>
+<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
+<li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+<li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
+</ul>
+    </div>
+
+          <hr>
+      <h4>Tags:</h4>
+      <ul class="tag_box inline">
+                  <li>
+            <a href="../../../tags/symfony2.html">Symfony2</a>
+          </li>
+                  <li>
+            <a href="../../../tags/technical.html">Technical</a>
+          </li>
+                  <li>
+            <a href="../../../tags/master-symfony2-series.html">Master Symfony2 Series</a>
+          </li>
+              </ul>
+      </article>
+            </div>
+          </div>
+        
+                          <footer>
+            <p>
+              &copy;
+                              <a href="http://gnugat.github.io">
+                  Loïc Chardonnet
+                </a>
+                            2014
+              <small>
+                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
+              </small>
+            </p>
+          </footer>
+        
+      </div>
+    
+    
+                  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+      <script>window.jQuery || document.write('<script src="../../../js/vendor/jquery-1.9.0.min.js"><\/script>')</script>
+      <script src="../../../js/vendor/bootstrap.min.js"></script>
+      <script src="http://yandex.st/highlightjs/7.3/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-47822314-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+
+      </body>
+</html>

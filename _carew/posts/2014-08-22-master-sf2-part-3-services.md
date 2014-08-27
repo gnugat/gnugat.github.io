@@ -521,6 +521,10 @@ that "Dependency Injection" is just a fancy term for "passing arguments".
 In the next article, we'll learn use database persistence, using
 [Doctrine2 ORM](http://www.doctrine-project.org/projects/orm.html).
 
+### Next articles
+
+* {{ link('posts/2014-08-27-master-sf2-part-4-doctrine.md', '4: Doctrine') }}
+
 ### Previous articles
 
 * {{ link('posts/2014-08-05-master-sf2-part-1-bootstraping.md', '1: Bootstraping') }}

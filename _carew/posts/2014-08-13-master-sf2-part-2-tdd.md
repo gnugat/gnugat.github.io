@@ -240,6 +240,7 @@ In the next article, we'll learn how to work with services.
 ### Next articles
 
 * {{ link('posts/2014-08-22-master-sf2-part-3-services.md', '3: Services') }}
+* {{ link('posts/2014-08-27-master-sf2-part-4-doctrine.md', '4: Doctrine') }}
 
 ### Previous articles
 
