@@ -74,7 +74,7 @@ anything you want!
 Just like Symfony, Doctrine is composed of many libraries which can be used
 separately. The two main ones are:
 
-* the DataBase Abstraction Layer (DBAL), provides a unique API for many databse
+* the DataBase Abstraction Layer (DBAL), provides a unique API for many database
   vendors (MySQL, PostgreSQL, Oracle, etc)
 * the Object Relation Mapping (ORM), provides an object oriented way to depict
   the data (which are usually relational)
@@ -400,7 +400,7 @@ Then we update our test:
         }
     }
 
-We Created a mock of `QuoteGateway` which returns a quote we created beforehand.
+We created a mock of `QuoteGateway` which returns a quote we created beforehand.
 
 Our changes are finished, let's run the tests:
 
