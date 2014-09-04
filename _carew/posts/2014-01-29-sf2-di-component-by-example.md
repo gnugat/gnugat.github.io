@@ -203,7 +203,7 @@ your application: [take a look at the documentation](http://symfony.com/doc/curr
 ## Wiring your application
 
 There's a fantastic conclusion we can deduce from the above section: we can
-reduce the lines of codes of our porjects simply by extracting object
+reduce the lines of codes of our projects simply by extracting object
 construction and putting it into configuration files.
 
 Object construction is part of the "wiring layer" of your application: it
@@ -389,7 +389,7 @@ I hope you enjoyed this article, be sure to
 
 ### Nota bene
 
-We've used the componant as a standalone library, but everything we've done
+We've used the component as a standalone library, but everything we've done
 here is possible inside a Symfony2 fullstack application.
 
 There's also some tips I'd like to share with you:

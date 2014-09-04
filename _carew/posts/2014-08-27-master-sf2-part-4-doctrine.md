@@ -422,6 +422,10 @@ a standalone library allowing you to deploy database changes, it even has
 
 In the next article, we'll talk about how to extend the framework using events.
 
+### Next articles
+
+* {{ link('posts/2014-09-03-master-sf2-part-5-events.md', '5: Events') }}
+
 ### Previous articles
 
 * {{ link('posts/2014-08-05-master-sf2-part-1-bootstraping.md', '1: Bootstraping') }}
