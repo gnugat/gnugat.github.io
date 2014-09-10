@@ -5,8 +5,232 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-09-03T00:00:00+02:00</updated>
+            <updated>2014-09-10T00:00:00+02:00</updated>
             <entry>
+        <title>Master Symfony2 - part 6: Annotations</title>
+                <id>http://gnugat.github.io/2014/09/10/master-sf2-part-6-annotations.html</id>
+                <updated>2014-09-10T00:00:00+02:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/09/10/master-sf2-part-6-annotations.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>This is the sixth article of the series on mastering the
+<a href="http://symfony.com/">Symfony2</a> framework. Have a look at the four first ones:</p>
+<ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
+<li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+<li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
+<li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
+<li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
+</ul><p>In the previous articles we created an API allowing us to submit and list
+quotes:</p>
+<pre><code>.
+&#9500;&#9472;&#9472; app
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_prod.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_test.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; doctrine.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml.dist
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; console
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; logs
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; phpunit.xml.dist
+&#9500;&#9472;&#9472; composer.json
+&#9500;&#9472;&#9472; composer.lock
+&#9500;&#9472;&#9472; src
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Fortune
+&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Controller
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteController.php
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; DependencyInjection
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; FortuneApplicationExtension.php
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Entity
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; QuoteFactory.php
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; QuoteGateway.php
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; Quote.php
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteRepository.php
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; EventListener
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; SubmitJsonListener.php
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; FortuneApplicationBundle.php
+&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Resources
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; config
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp;     &#9500;&#9472;&#9472; doctrine
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp;     &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Quote.orm.yml
+&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; services.xml
+&#9474;&nbsp;&nbsp;         &#9492;&#9472;&#9472; Tests
+&#9474;&nbsp;&nbsp;             &#9500;&#9472;&#9472; Controller
+&#9474;&nbsp;&nbsp;             &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteControllerTest.php
+&#9474;&nbsp;&nbsp;             &#9492;&#9472;&#9472; Entity
+&#9474;&nbsp;&nbsp;                 &#9492;&#9472;&#9472; QuoteRepositoryTest.php
+&#9492;&#9472;&#9472; web
+    &#9492;&#9472;&#9472; app.php</code></pre>
+<p>Here's the <a href="https://github.com/gnugat/mastering-symfony2">repository where you can find the actual code</a>.</p>
+<p>In this article, we'll discover annotations.</p>
+<h2 id="doctrine-annotations">Doctrine Annotations<a href="#doctrine-annotations" class="anchor">#</a></h2>
+<p>Inspired by <a href="http://legacy.python.org/dev/peps/pep-0318/">Python Decorators</a> and
+<a href="http://docs.oracle.com/javase/tutorial/java/annotations/">Java Annotations</a>,
+the <a href="http://www.doctrine-project.org/">Doctrine Project</a> created a convenient
+library allowing to put in the same file: information (like configuration) and
+source code.</p>
+<p>In concrete terms, <a href="http://docs.doctrine-project.org/projects/doctrine-common/en/latest/reference/annotations.html">Annotations</a>
+are comments which are read by <code>AnnotationReader</code> and can then be cached in any
+format (generally PHP) to make things faster afterwards.</p>
+<p>It's main strength is the possibility to avoid having a configuration file in a
+path too far from the source code which uses it. For example intead of having
+the schema definition in <code>src/Fortune/ApplicationBundle/Resources/config/doctrine/Quote.orm.yml</code>
+we could have it directly in the <code>QuoteEntity</code>.</p>
+<h2 id="installing-sensio-frameworkextra-bundle">Installing Sensio FrameworkExtra Bundle<a href="#installing-sensio-frameworkextra-bundle" class="anchor">#</a></h2>
+<p>The <a href="http://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/index.html">Sensio FrameworkExtra Bundle</a>
+provides controller annotations, amongst them lies <code>@Route</code> allowing us to move
+the routing configuration from <code>app/config/routing.yml</code> directly to the actions.</p>
+<p>Let's download the bundle:</p>
+<pre><code>composer require sensio/framework-extra-bundle:~3.0</code></pre>
+<p>Then register it:</p>
+<pre><code>&lt;?php
+// File: app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        return array(
+            new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
+            new Fortune\ApplicationBundle\FortuneApplicationBundle(),
+            new Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
+            new Sensio\Bundle\FrameworkExtraBundle\SensioFrameworkExtraBundle(),
+        );
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader)
+    {
+        $loader-&gt;load(__DIR__.'/config/config_'.$this-&gt;getEnvironment().'.yml');
+    }
+}</code></pre>
+<p>Finally, we need to tell Doctrine's Annotation library  where to find the
+classes by registering Composer's autoloader:</p>
+<pre><code>&lt;?php
+// File: app/autoload.php
+
+use Doctrine\Common\Annotations\AnnotationRegistry;
+
+$loader = require __DIR__.'/../vendor/autoload.php';
+
+AnnotationRegistry::registerLoader(array($loader, 'loadClass'));
+
+return $loader;</code></pre>
+<p>This file should be used in our front controller:</p>
+<pre><code>&lt;?php
+
+use Symfony\Component\HttpFoundation\Request;
+
+require_once __DIR__.'/app/autoload.php';
+require_once __DIR__.'/../app/AppKernel.php';
+
+$kernel = new AppKernel('prod', false);
+$request = Request::createFromGlobals();
+$response = $kernel-&gt;handle($request);
+$response-&gt;send();
+$kernel-&gt;terminate($request, $response);</code></pre>
+<p>But also in our test suite:</p>
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
+&lt;phpunit
+    backupGlobals="false"
+    colors="true"
+    syntaxCheck="false"
+    bootstrap="autoload.php"&gt;
+
+    &lt;testsuites&gt;
+        &lt;testsuite name="Functional Test Suite"&gt;
+            &lt;directory&gt;../src/*/*/Tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;</code></pre>
+<h2 id="using-the-route-annotation">Using the @Route annotation<a href="#using-the-route-annotation" class="anchor">#</a></h2>
+<p>We can now empty the <code>routing.yml</code> file and tell it to import the configuration
+from the <code>QuoteController</code> using its annotations:</p>
+<pre><code># File: app/config/routing.yml
+fortune_application:
+    resource: @FortuneApplicationBundle/Controller
+    type: annotation</code></pre>
+<p>The controller itself will look like this:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
+
+namespace Fortune\ApplicationBundle\Controller;
+
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+class QuoteController extends Controller
+{
+    /**
+     * @Route("/api/quotes", methods={"POST"})
+     */
+    public function submitAction(Request $request)
+    {
+        $postedValues = $request-&gt;request-&gt;all();
+        if (empty($postedValues['content'])) {
+            $answer = array('message' =&gt; 'Missing required parameter: content');
+
+            return new JsonResponse($answer, Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $quoteRepository = $this-&gt;container-&gt;get('fortune_application.quote_repository');
+        $quote = $quoteRepository-&gt;insert($postedValues['content']);
+
+        return new JsonResponse($quote, Response::HTTP_CREATED);
+    }
+
+    /**
+     * @Route("/api/quotes", methods={"GET"})
+     */
+    public function listAction(Request $request)
+    {
+        $quoteRepository = $this-&gt;container-&gt;get('fortune_application.quote_repository');
+        $quotes = $quoteRepository-&gt;findAll();
+
+        return new JsonResponse($quotes, Response::HTTP_OK);
+    }
+}</code></pre>
+<p>And now annotations are ready to be used, as the tests prove it:</p>
+<pre><code>./vendor/bin/phpunit -c app</code></pre>
+<p>That's green enough for us to commit:</p>
+<pre><code>git add -A
+git commit -m 'Used annotations'</code></pre>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Annotations allow us to remove the distance between configuration and code.</p>
+<blockquote>
+<p><strong>Note</strong>: You should know that annotations can
+<a href="https://r.je/php-annotations-are-an-abomination.html">raise concerns about tight coupling</a>,
+but it doesn't seem to be <a href="http://marekkalnik.tumblr.com/post/34047514685/are-annotations-really-bad">relevant when used as configuration</a>.</p>
+<p>The best thing to do is to minimize their use to the classes which are
+already coupled to our tools (for example the controllers) and do some
+research on the subject to make your own opinion.</p>
+</blockquote>
+<p>If the concept seduced you, have a look a <a href="https://github.com/mmoreram/ControllerExtraBundle">ControllerExtraBundle</a>.</p>
+<p>In the next article, we'll learn more about a specific annotation:
+<code>@ParamConverter</code>.</p>
+<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
+<li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+<li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
+<li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
+<li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
+</ul>]]></content>
+    </entry>
+        <entry>
         <title>Master Symfony2 - part 5: Events</title>
                 <id>http://gnugat.github.io/2014/09/03/master-sf2-part-5-events.html</id>
                 <updated>2014-09-03T00:00:00+02:00</updated>
@@ -287,7 +511,9 @@ and we could even <a href="http://isometriks.com/symfony2-custom-events">create 
 code we cannot know that submitted JSON has been handled, we lose explicitness.</p>
 <p>In the next article, we'll talk about how to further improve our controllers
 using annotations.</p>
-<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
+</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
 <li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
 <li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
@@ -361,7 +587,7 @@ anything you want!</p>
 <h2 id="installing-doctrinebundle">Installing DoctrineBundle<a href="#installing-doctrinebundle" class="anchor">#</a></h2>
 <p>Just like Symfony, Doctrine is composed of many libraries which can be used
 separately. The two main ones are:</p>
-<ul><li>the DataBase Abstraction Layer (DBAL), provides a unique API for many databse
+<ul><li>the DataBase Abstraction Layer (DBAL), provides a unique API for many database
 vendors (MySQL, PostgreSQL, Oracle, etc)</li>
 <li>the Object Relation Mapping (ORM), provides an object oriented way to depict
 the data (which are usually relational)</li>
@@ -641,7 +867,7 @@ class QuoteRepositoryTest extends ProphecyTestCase
         $this-&gt;assertSame(self::CONTENT, $foundQuote['content']);
     }
 }</code></pre>
-<p>We Created a mock of <code>QuoteGateway</code> which returns a quote we created beforehand.</p>
+<p>We created a mock of <code>QuoteGateway</code> which returns a quote we created beforehand.</p>
 <p>Our changes are finished, let's run the tests:</p>
 <pre><code>./vendor/bin/phpunit -c app</code></pre>
 <p>No regression detected! We can commit our work:</p>
@@ -656,6 +882,7 @@ a standalone library allowing you to deploy database changes, it even has
 <p>In the next article, we'll talk about how to extend the framework using events.</p>
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
+<li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
 <li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
@@ -1124,6 +1351,7 @@ that "Dependency Injection" is just a fancy term for "passing arguments".</p>
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
 <li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
+<li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
 <li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
@@ -1333,6 +1561,7 @@ demonstrated how quick and simple it is to implement the first User Story
 <ul><li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
 <li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
 <li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
+<li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
 </ul>]]></content>
@@ -1512,6 +1741,7 @@ quickest way to bootstrap a project.</p>
 <li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
 <li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
 <li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
+<li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
 </ul>]]></content>
     </entry>
         <entry>

@@ -217,3 +217,4 @@ In the next article, we will start to work on our first User Story.
 * {{ link('posts/2014-08-22-master-sf2-part-3-services.md', '3: Services') }}
 * {{ link('posts/2014-08-27-master-sf2-part-4-doctrine.md', '4: Doctrine') }}
 * {{ link('posts/2014-09-03-master-sf2-part-5-events.md', '5: Events') }}
+* {{ link('posts/2014-09-10-master-sf2-part-6-annotations.md', '6: Annotations') }}

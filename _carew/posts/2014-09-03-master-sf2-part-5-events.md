@@ -333,6 +333,10 @@ code we cannot know that submitted JSON has been handled, we lose explicitness.
 In the next article, we'll talk about how to further improve our controllers
 using annotations.
 
+### Next articles
+
+* {{ link('posts/2014-09-10-master-sf2-part-6-annotations.md', '6: Annotations') }}
+
 ### Previous articles
 
 * {{ link('posts/2014-08-05-master-sf2-part-1-bootstraping.md', '1: Bootstraping') }}

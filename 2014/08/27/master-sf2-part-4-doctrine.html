@@ -123,7 +123,7 @@ anything you want!</p>
 <h2 id="installing-doctrinebundle">Installing DoctrineBundle<a href="#installing-doctrinebundle" class="anchor">#</a></h2>
 <p>Just like Symfony, Doctrine is composed of many libraries which can be used
 separately. The two main ones are:</p>
-<ul><li>the DataBase Abstraction Layer (DBAL), provides a unique API for many databse
+<ul><li>the DataBase Abstraction Layer (DBAL), provides a unique API for many database
 vendors (MySQL, PostgreSQL, Oracle, etc)</li>
 <li>the Object Relation Mapping (ORM), provides an object oriented way to depict
 the data (which are usually relational)</li>
@@ -403,7 +403,7 @@ class QuoteRepositoryTest extends ProphecyTestCase
         $this-&gt;assertSame(self::CONTENT, $foundQuote['content']);
     }
 }</code></pre>
-<p>We Created a mock of <code>QuoteGateway</code> which returns a quote we created beforehand.</p>
+<p>We created a mock of <code>QuoteGateway</code> which returns a quote we created beforehand.</p>
 <p>Our changes are finished, let's run the tests:</p>
 <pre><code>./vendor/bin/phpunit -c app</code></pre>
 <p>No regression detected! We can commit our work:</p>
@@ -418,6 +418,7 @@ a standalone library allowing you to deploy database changes, it even has
 <p>In the next article, we'll talk about how to extend the framework using events.</p>
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
+<li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
 <li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
