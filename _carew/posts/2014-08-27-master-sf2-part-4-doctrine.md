@@ -426,6 +426,7 @@ In the next article, we'll talk about how to extend the framework using events.
 
 * {{ link('posts/2014-09-03-master-sf2-part-5-events.md', '5: Events') }}
 * {{ link('posts/2014-09-10-master-sf2-part-6-annotations.md', '6: Annotations') }}
+* {{ link('posts/2014-10-08-master-sf2-conclusion.md', 'Conclusion') }}
 
 ### Previous articles
 

@@ -330,12 +330,12 @@ and we could even [create our own events](http://isometriks.com/symfony2-custom-
 The only drawback is that they're sort of hidden: by looking at the controller's
 code we cannot know that submitted JSON has been handled, we lose explicitness.
 
-In the next article, we'll talk about how to further improve our controllers
-using annotations.
+The next article will be about annotations.
 
 ### Next articles
 
 * {{ link('posts/2014-09-10-master-sf2-part-6-annotations.md', '6: Annotations') }}
+* {{ link('posts/2014-10-08-master-sf2-conclusion.md', 'Conclusion') }}
 
 ### Previous articles
 

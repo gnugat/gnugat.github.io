@@ -246,8 +246,11 @@ Annotations allow us to remove the distance between configuration and code.
 
 If the concept seduced you, have a look a [ControllerExtraBundle](https://github.com/mmoreram/ControllerExtraBundle).
 
-In the next article, we'll learn more about a specific annotation:
-`@ParamConverter`.
+The next artile will be the conclusion, I hope you enjoy this series!
+
+## Next articles
+
+* {{ link('posts/2014-10-08-master-sf2-conclusion.md', 'Conclusion') }}
 
 ### Previous articles
 

@@ -5,11 +5,79 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-09-10T00:00:00+02:00</updated>
+            <updated>2014-10-08T00:00:00+01:00</updated>
             <entry>
+        <title>Master Symfony2 - Conclusion</title>
+                <id>http://gnugat.github.io/2014/10/08/master-sf2-conclusion.html</id>
+                <updated>2014-10-08T00:00:00+01:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/10/08/master-sf2-conclusion.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>This is the conclusion of the series on mastering the
+<a href="http://symfony.com/">Symfony2</a> framework. Have a look at the five articles:</p>
+<ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
+<li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+<li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
+<li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
+<li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
+<li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
+</ul><p>It quickly sums up what we've seen and provides some directions to the next
+steps, for those interrested in learning more (there's always more!).</p>
+<h2 id="summary">Summary<a href="#summary" class="anchor">#</a></h2>
+<p>In these 6 articles, we've learned how to master Symfony2 through:</p>
+<ol><li>the usage of distributions to bootstrap our projects</li>
+<li>the writing of simple functional tests (we used TDD/PHPUnit but any methodology/Framework can be used)</li>
+<li>the creation of services and entities (where our business related code actually lies)</li>
+<li>the usage of a third party library (Doctrine)</li>
+<li>the extension of the framework via events (change the Request and Response at will)</li>
+<li>the configuration via annotations, allowing to reduce the distance with the code</li>
+</ol><p>As a bonus, we've also seen:</p>
+<ul><li>the Repository Design Pattern (retrieve data and format it before using it)</li>
+<li>the Symfony Console Component, which can be used as a standalone library</li>
+</ul><h2 id="going-further">Going further<a href="#going-further" class="anchor">#</a></h2>
+<p>There's still a deal lot more to learn, but with this series we've hopefully
+seen the strict minimum to create any day to day application with deep knowledge
+on how to extend the framework and where to put our code.</p>
+<p>We've seen Symfony as a full stack framework: it deals with the HTTP protocol
+for you. But the truth is that Symfony is a collection of third party libraries
+before anything else. Here's a short selection of its available components:</p>
+<ul><li>Validation: define constraints and check if the given variable complies to them</li>
+<li>Form: define fields, generate the HTML form and populate variables from the request</li>
+<li>Yaml: parse a yaml file</li>
+<li>Security: check the identity users and their permissions</li>
+</ul><p>Do you want to go further? Then have a look a these fabulous resources:</p>
+<ul><li><a href="http://symfony.com/doc/current/index.html">The documentation</a></li>
+<li><a href="https://twitter.com/raulfraile">Raul Fraile</a> overview articles on the:
+<ul><li><a href="http://blog.servergrove.com/2013/09/23/symfony2-components-overview-httpfoundation/">HttpFoundation Component</a></li>
+<li><a href="http://blog.servergrove.com/2013/09/30/symfony2-components-overview-httpkernel/">HttpKernel Component</a></li>
+<li><a href="http://blog.servergrove.com/2013/10/08/symfony2-components-overview-routing/">Routing Component</a></li>
+<li><a href="http://blog.servergrove.com/2013/10/23/symfony2-components-overview-eventdispatcher/">EventDispather Component</a></li>
+<li><a href="http://blog.servergrove.com/2014/02/21/symfony2-components-overview-config/">Config Component</a></li>
+<li><a href="http://blog.servergrove.com/2014/03/03/symfony2-components-overview-validator/">Validator Component</a></li>
+<li><a href="http://blog.servergrove.com/2014/03/11/symfony2-components-overview-templating/">Templating Component</a></li>
+<li><a href="http://blog.servergrove.com/2014/03/18/symfony2-components-overview-translation/">Translation Component</a></li>
+<li><a href="http://blog.servergrove.com/2014/03/26/symfony2-components-overview-finder/">Finder Component</a></li>
+<li><a href="http://blog.servergrove.com/2014/04/07/symfony2-components-overview-expression-language/">ExpressionLanguage Component</a></li>
+<li><a href="http://blog.servergrove.com/2014/04/16/symfony2-components-overview-process/">Process Component</a></li>
+</ul></li>
+<li><a href="https://twitter.com/khepin">Sebastien Armand</a>'s book <a href="http://www.amazon.co.uk/Extending-Symfony-Web-Application-Framework/dp/1783287195">Extending Symfony Web Application Framework</a></li>
+<li><a href="https://twitter.com/matthiasnoback">Matthias Noback</a>'s book <a href="http://www.amazon.co.uk/Year-With-Symfony-reusable-Symfony2/dp/9082120119">A Year with Symfony</a></li>
+<li><a href="https://twitter.com/kriswallsmith">Kris Walsmith</a> slides on the <a href="http://www.slideshare.net/kriswallsmith/love-and-loss-a-symfony-security-play">Security Component</a></li>
+</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
+<li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+<li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
+<li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
+<li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
+<li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
+</ul>]]></content>
+    </entry>
+        <entry>
         <title>Master Symfony2 - part 6: Annotations</title>
                 <id>http://gnugat.github.io/2014/09/10/master-sf2-part-6-annotations.html</id>
-                <updated>2014-09-10T00:00:00+02:00</updated>
+                <updated>2014-09-10T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -220,9 +288,10 @@ already coupled to our tools (for example the controllers) and do some
 research on the subject to make your own opinion.</p>
 </blockquote>
 <p>If the concept seduced you, have a look a <a href="https://github.com/mmoreram/ControllerExtraBundle">ControllerExtraBundle</a>.</p>
-<p>In the next article, we'll learn more about a specific annotation:
-<code>@ParamConverter</code>.</p>
-<h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
+<p>The next artile will be the conclusion, I hope you enjoy this series!</p>
+<h2 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h2>
+<ul><li><a href="../../../2014/10/08/master-sf2-conclusion.html">Conclusion</a></li>
+</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
 <li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
 <li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
@@ -233,7 +302,7 @@ research on the subject to make your own opinion.</p>
         <entry>
         <title>Master Symfony2 - part 5: Events</title>
                 <id>http://gnugat.github.io/2014/09/03/master-sf2-part-5-events.html</id>
-                <updated>2014-09-03T00:00:00+02:00</updated>
+                <updated>2014-09-03T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -509,10 +578,10 @@ register it on a specific event and you're done.</p>
 and we could even <a href="http://isometriks.com/symfony2-custom-events">create our own events</a>!</p>
 <p>The only drawback is that they're sort of hidden: by looking at the controller's
 code we cannot know that submitted JSON has been handled, we lose explicitness.</p>
-<p>In the next article, we'll talk about how to further improve our controllers
-using annotations.</p>
+<p>The next article will be about annotations.</p>
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
+<li><a href="../../../2014/10/08/master-sf2-conclusion.html">Conclusion</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
 <li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
@@ -523,7 +592,7 @@ using annotations.</p>
         <entry>
         <title>Master Symfony2 - part 4: Doctrine</title>
                 <id>http://gnugat.github.io/2014/08/27/master-sf2-part-4-doctrine.html</id>
-                <updated>2014-08-27T00:00:00+02:00</updated>
+                <updated>2014-08-27T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -883,6 +952,7 @@ a standalone library allowing you to deploy database changes, it even has
 <h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
 <li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
+<li><a href="../../../2014/10/08/master-sf2-conclusion.html">Conclusion</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
 <li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
@@ -892,7 +962,7 @@ a standalone library allowing you to deploy database changes, it even has
         <entry>
         <title>Master Symfony2 - part 3: Services</title>
                 <id>http://gnugat.github.io/2014/08/22/master-sf2-part-3-services.html</id>
-                <updated>2014-08-22T00:00:00+02:00</updated>
+                <updated>2014-08-22T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -1352,6 +1422,7 @@ that "Dependency Injection" is just a fancy term for "passing arguments".</p>
 <ul><li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
 <li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
 <li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
+<li><a href="../../../2014/10/08/master-sf2-conclusion.html">Conclusion</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
 <li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
@@ -1360,7 +1431,7 @@ that "Dependency Injection" is just a fancy term for "passing arguments".</p>
         <entry>
         <title>Master Symfony2 - part 2: Test Driven Development</title>
                 <id>http://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html</id>
-                <updated>2014-08-13T00:00:00+02:00</updated>
+                <updated>2014-08-13T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -1562,6 +1633,7 @@ demonstrated how quick and simple it is to implement the first User Story
 <li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
 <li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
 <li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
+<li><a href="../../../2014/10/08/master-sf2-conclusion.html">Conclusion</a></li>
 </ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
 <ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
 </ul>]]></content>
@@ -1569,7 +1641,7 @@ demonstrated how quick and simple it is to implement the first User Story
         <entry>
         <title>Master Symfony2 - part 1: Bootstraping</title>
                 <id>http://gnugat.github.io/2014/08/05/master-sf2-part-1-bootstraping.html</id>
-                <updated>2014-08-05T00:00:00+02:00</updated>
+                <updated>2014-08-05T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -1742,12 +1814,13 @@ quickest way to bootstrap a project.</p>
 <li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
 <li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
 <li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
+<li><a href="../../../2014/10/08/master-sf2-conclusion.html">Conclusion</a></li>
 </ul>]]></content>
     </entry>
         <entry>
         <title>Learn Symfony2 - Conclusion</title>
                 <id>http://gnugat.github.io/2014/07/23/learn-sf2-conclusion.html</id>
-                <updated>2014-07-23T00:00:00+02:00</updated>
+                <updated>2014-07-23T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -2024,7 +2097,7 @@ series of articles!</p>
         <entry>
         <title>Learn Symfony2 - part 5: Tests</title>
                 <id>http://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html</id>
-                <updated>2014-07-20T00:00:00+02:00</updated>
+                <updated>2014-07-20T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -2325,7 +2398,7 @@ need to check the precise HTTP response's status code).</p>
         <entry>
         <title>Learn Symfony2 - part 4: Controllers</title>
                 <id>http://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html</id>
-                <updated>2014-07-12T00:00:00+02:00</updated>
+                <updated>2014-07-12T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -2587,7 +2660,7 @@ git commit -m 'Created Ni route and controller'</code></pre>
         <entry>
         <title>Learn Symfony2 - part 3: Bundles</title>
                 <id>http://gnugat.github.io/2014/07/02/learn-sf2-bundles-part-3.html</id>
-                <updated>2014-07-02T00:00:00+02:00</updated>
+                <updated>2014-07-02T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -2775,7 +2848,7 @@ makes too much fuss to no avail (that's my humble opinion anyway).</p>]]></conte
         <entry>
         <title>Learn Symfony2 - part 2: Empty application</title>
                 <id>http://gnugat.github.io/2014/06/25/learn-sf2-empty-app-part-2.html</id>
-                <updated>2014-06-25T00:00:00+02:00</updated>
+                <updated>2014-06-25T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -2937,7 +3010,7 @@ to a controller which takes a HTTP request and returns a HTTP response.</p>
         <entry>
         <title>Learn Symfony2 - part 1: Composer</title>
                 <id>http://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html</id>
-                <updated>2014-06-18T00:00:00+02:00</updated>
+                <updated>2014-06-18T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3055,7 +3128,7 @@ git commit -m 'Installed Symfony2'</code></pre>
         <entry>
         <title>PHP Tokenizer</title>
                 <id>http://gnugat.github.io/2014/06/04/php-tokenizer.html</id>
-                <updated>2014-06-04T00:00:00+02:00</updated>
+                <updated>2014-06-04T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3183,7 +3256,7 @@ use <code>token_name($token)</code>.</p>
         <entry>
         <title>Redaktilo v0.7</title>
                 <id>http://gnugat.github.io/2014/05/27/redaktilo-0-7.html</id>
-                <updated>2014-05-27T00:00:00+02:00</updated>
+                <updated>2014-05-27T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3305,7 +3378,7 @@ start a discussion here.</p>]]></content>
         <entry>
         <title>Facade design pattern, by example</title>
                 <id>http://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html</id>
-                <updated>2014-05-21T00:00:00+02:00</updated>
+                <updated>2014-05-21T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3384,7 +3457,7 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
         <entry>
         <title>Open/Closed principle, by example</title>
                 <id>http://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html</id>
-                <updated>2014-05-14T00:00:00+02:00</updated>
+                <updated>2014-05-14T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3600,7 +3673,7 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
         <entry>
         <title>Redaktilo: because your code too needs an editor</title>
                 <id>http://gnugat.github.io/2014/05/09/redaktilo.html</id>
-                <updated>2014-05-09T00:00:00+02:00</updated>
+                <updated>2014-05-09T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3789,7 +3862,7 @@ to manipulate files, through the editor metaphor:</p>
         <entry>
         <title>PHP generators and coroutines</title>
                 <id>http://gnugat.github.io/2014/04/30/php-generators-and-coroutines.html</id>
-                <updated>2014-04-30T00:00:00+02:00</updated>
+                <updated>2014-04-30T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3886,7 +3959,7 @@ it!</p>
         <entry>
         <title>Symfony2 Sessions introduction</title>
                 <id>http://gnugat.github.io/2014/04/23/sf2-sessions-introduction.html</id>
-                <updated>2014-04-23T00:00:00+02:00</updated>
+                <updated>2014-04-23T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -4199,7 +4272,7 @@ questions don't be shy and drop me a line on
         <entry>
         <title>Pomodoro: manage your breaks, improve your focus</title>
                 <id>http://gnugat.github.io/2014/04/16/pomodoro-manage-your-breaks-improve-your-focus.html</id>
-                <updated>2014-04-16T00:00:00+02:00</updated>
+                <updated>2014-04-16T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -4238,7 +4311,7 @@ questions, don't be shy and drop me line on
         <entry>
         <title>Symfony2 Console component, by example</title>
                 <id>http://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html</id>
-                <updated>2014-04-09T00:00:00+02:00</updated>
+                <updated>2014-04-09T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -4748,7 +4821,7 @@ if you have any feedbacks/questions, be sure to contact me on
         <entry>
         <title>Tests cheat sheet</title>
                 <id>http://gnugat.github.io/2014/04/02/tests-cheat-sheet.html</id>
-                <updated>2014-04-02T00:00:00+02:00</updated>
+                <updated>2014-04-02T00:00:00+01:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -4896,7 +4969,7 @@ to you?</p>]]></content>
         <entry>
         <title>Behat: a quick tour</title>
                 <id>http://gnugat.github.io/2014/03/26/behat-quick-tour.html</id>
-                <updated>2014-03-26T00:00:00+01:00</updated>
+                <updated>2014-03-26T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -5079,7 +5152,7 @@ here's a list of references:</p>
         <entry>
         <title>Behavior Driven Development: story BDD</title>
                 <id>http://gnugat.github.io/2014/03/19/behavior-driven-development-story-bdd.html</id>
-                <updated>2014-03-19T00:00:00+01:00</updated>
+                <updated>2014-03-19T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -5168,7 +5241,7 @@ help you on story BDD:</p>
         <entry>
         <title>phpspec: a quick tour</title>
                 <id>http://gnugat.github.io/2014/03/11/phpspec-quick-tour.html</id>
-                <updated>2014-03-11T00:00:00+01:00</updated>
+                <updated>2014-03-11T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -5237,7 +5310,7 @@ provides a non verbose API. Even its documentations is complete and small!</p>
         <entry>
         <title>spec BDD</title>
                 <id>http://gnugat.github.io/2014/03/05/spec-bdd.html</id>
-                <updated>2014-03-05T00:00:00+01:00</updated>
+                <updated>2014-03-05T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -5303,7 +5376,7 @@ we'll switch to the technical mode and see some <a href="http://www.phpspec.net/
         <entry>
         <title>TDD: just do it!</title>
                 <id>http://gnugat.github.io/2014/02/26/tdd-just-do-it.html</id>
-                <updated>2014-02-26T00:00:00+01:00</updated>
+                <updated>2014-02-26T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -5340,7 +5413,7 @@ don't have someone to pair with, you can always read this
         <entry>
         <title>Test Driven Development</title>
                 <id>http://gnugat.github.io/2014/02/19/test-driven-development.html</id>
-                <updated>2014-02-19T00:00:00+01:00</updated>
+                <updated>2014-02-19T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -5447,7 +5520,7 @@ misconceptions. If you're part of the sceptics,
         <entry>
         <title>Tests: Tools overview</title>
                 <id>http://gnugat.github.io/2014/02/12/tests-tools-overview.html</id>
-                <updated>2014-02-12T00:00:00+01:00</updated>
+                <updated>2014-02-12T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -5834,7 +5907,7 @@ if you want to give me your opinion, be sure to do so on
         <entry>
         <title>Tests: Introduction</title>
                 <id>http://gnugat.github.io/2014/02/05/tests-introduction.html</id>
-                <updated>2014-02-05T00:00:00+01:00</updated>
+                <updated>2014-02-05T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -6064,7 +6137,7 @@ critical parts of your system...</p>
         <entry>
         <title>Symfony2 Dependency Injection component, by example</title>
                 <id>http://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html</id>
-                <updated>2014-01-29T00:00:00+01:00</updated>
+                <updated>2014-01-29T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -6436,7 +6509,7 @@ Locator is a unjustified decision ;) .</p>]]></content>
         <entry>
         <title>Inversion of Control, Dependency Injection, Dependency Injection Container and Service Locator</title>
                 <id>http://gnugat.github.io/2014/01/22/ioc-di-and-service-locator.html</id>
-                <updated>2014-01-22T00:00:00+01:00</updated>
+                <updated>2014-01-22T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -6857,7 +6930,7 @@ Fabien Potencier's series on <a href="http://fabien.potencier.org/article/11/wha
         <entry>
         <title>Bootstrap the markdown files of your FOSS project</title>
                 <id>http://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html</id>
-                <updated>2014-01-15T00:00:00+01:00</updated>
+                <updated>2014-01-15T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -7022,7 +7095,7 @@ documentation so everyone can see how awesome your work is!</p>
         <entry>
         <title>Technology scouting</title>
                 <id>http://gnugat.github.io/2014/01/08/technology-scouting.html</id>
-                <updated>2014-01-08T00:00:00+01:00</updated>
+                <updated>2014-01-08T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -7086,7 +7159,7 @@ actually) and new trending tools.</p>
         <entry>
         <title>Carew, the static site generator</title>
                 <id>http://gnugat.github.io/2014/01/01/carew-static-site-generator.html</id>
-                <updated>2014-01-01T00:00:00+01:00</updated>
+                <updated>2014-01-01T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
