@@ -5,11 +5,689 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-10-15T00:00:00+01:00</updated>
+            <updated>2014-10-29T00:00:00+00:00</updated>
             <entry>
+        <title>Symfony2 Bundle, standalone</title>
+                <id>http://gnugat.github.io/2014/10/29/sf2-bundle-standalone.html</id>
+                <updated>2014-10-29T00:00:00+00:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/10/29/sf2-bundle-standalone.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<blockquote>
+<p><strong>TL;DR</strong>: Create an empty application in your bundle to allow people to test
+it (manually or automatically) outside of an actual application.</p>
+</blockquote>
+<p><a href="http://symfony.com">Symfony2</a> bundles are a great way to:</p>
+<ul><li>configure the application's Dependency Injection Container (DIC)</li>
+<li>provide it with resources (mainly templates and assets)</li>
+<li>register entry points (like controllers and commands)</li>
+</ul><p>In this article, we will see how to make sure a third party bundle actually work
+by creating an embed application. We will then have a look at its practical use:</p>
+<ol><li><a href="#minimal-bundle">Minimal Bundle</a></li>
+<li><a href="#embed-application">Embed Application</a></li>
+<li><a href="#manual-tests">Manual tests</a>
+<ul><li><a href="#running-commands">Running commands</a></li>
+<li><a href="#browsing-pages">Browsing pages</a></li>
+</ul></li>
+<li><a href="#automated-tests">Automated tests</a>
+<ul><li><a href="#container-tests">Container tests</a></li>
+<li><a href="#functional-cli-tests">Functional CLI tests</a></li>
+<li><a href="#functional-web-tests">Functional web tests</a></li>
+</ul></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ol><h2 id="minimal-bundle">Minimal Bundle<a href="#minimal-bundle" class="anchor">#</a></h2>
+<p>Creating a bundle is fairly easy as you just need to create the following class:</p>
+<pre><code class="language-php">&lt;?php
+// File: AcmeStandaloneBundle.php
+
+namespace Acme\StandaloneBundle;
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+
+class AcmeStandaloneBundle extends Bundle
+{
+}</code></pre>
+<p>It also needs a <code>composer.json</code> file, so it can be distributed all around the
+world:</p>
+<pre><code class="language-json">{
+    "name": "acme/standalone-bundle",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Acme\\StandaloneBundle\\": ""
+        }
+    },
+    "require": {
+        "symfony/http-kernel": "~2.3"
+    }
+}</code></pre>
+<blockquote>
+<p><strong>Note</strong>: to release it, you would then need to create a git repository and
+to register it in <a href="https://packagist.org/">Packagist</a>.</p>
+</blockquote>
+<h2 id="embed-application">Embed Application<a href="#embed-application" class="anchor">#</a></h2>
+<p>Now how can we make sure our bundle would work in an application? We could:</p>
+<ol><li>use an existing application</li>
+<li>make the bundle's sources available in it somehow:
+<ul><li>creating the bundle in the application</li>
+<li>or making a symbolic link that points to the bundle</li>
+</ul></li>
+<li>register it in its <code>app/AppKernel.php</code> file and have a look...</li>
+</ol><p>But we can do better!</p>
+<p>We can create the smallest Symfony2 application ever <strong>inside</strong> our bundle:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        return array(
+            new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
+            new Acme\StandaloneBundle\AcmeStandaloneBundle(),
+        );
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader)
+    {
+        $loader-&gt;load(__DIR__.'/config.yml');
+    }
+}</code></pre>
+<p><a href="https://github.com/symfony/FrameworkBundle">FrameworkBundle</a> requires the
+following configuration parameter in order to work:</p>
+<pre><code class="language-yaml"># File: Tests/app/config.yml
+framework:
+    secret: "Three can keep a secret, if two of them are dead."</code></pre>
+<p>I'd also advise you to create an autoload file to make things easier:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/app/autoload.php
+
+$loader = require __DIR__.'/../../vendor/autoload.php';
+require __DIR__.'/AppKernel.php';</code></pre>
+<p>The last step is to add the new dependency in the <code>composer.json</code> file:</p>
+<pre><code class="language-json">{
+    "name": "acme/standalone-bundle",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Acme\\StandaloneBundle\\": ""
+        }
+    },
+    "require": {
+        "symfony/http-kernel": "~2.3"
+    },
+    "require-dev": {
+        "symfony/framework-bundle": "~2.3"
+    }
+}</code></pre>
+<p>We would also need to ignore the following directories:</p>
+<pre><code># File: .gitignore
+
+/Tests/app/cache
+/Tests/app/logs</code></pre>
+<p>And that's it, we now have a minimalistic embed application in our bundle.
+As it can now be ran on its own, it has become a <strong>Standalone Bundle</strong>!</p>
+<p>Let's see the practical use.</p>
+<h2 id="manual-tests">Manual tests<a href="#manual-tests" class="anchor">#</a></h2>
+<p>Because your bundle now doesn't need any existing applications to be used,
+people will be able to test it manually and do some demonstrations with it.</p>
+<h3 id="running-commands">Running commands<a href="#running-commands" class="anchor">#</a></h3>
+<p>Let's pretend we created a command in our bundle. We'd like to run it just to
+make sure everything works as expected. For this we'll need to create an
+embed console:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/app/console.php
+
+set_time_limit(0);
+
+require_once __DIR__.'/autoload.php';
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+
+$kernel = new AppKernel('dev', true);
+$application = new Application($kernel);
+$application-&gt;run();</code></pre>
+<p>That's it! You can now run:</p>
+<pre><code>php Tests/app/console.php</code></pre>
+<h3 id="browsing-pages">Browsing pages<a href="#browsing-pages" class="anchor">#</a></h3>
+<p>Let's pretend we created a controller which returns some JSON data. We'd like to
+browse it just to make sure everyting works as expected. For this, we'll need to
+create an embed web app:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/app/web.php
+
+use Symfony\Component\HttpFoundation\Request;
+
+require_once __DIR__.'/autoload.php';
+
+$kernel = new AppKernel('prod', false);
+$request = Request::createFromGlobals();
+$response = $kernel-&gt;handle($request);
+$response-&gt;send();</code></pre>
+<p>That's it! You can now run:</p>
+<pre><code>php Tests/app/console.php server:run -d Tests/app</code></pre>
+<p>And browse your application.</p>
+<blockquote>
+<p><strong>Note</strong>: If you use a templating engine like Twig to render HTML pages,
+or if you use the Symfony2 Form Component in your bundle, don't forget to add
+the dependencies to your <code>composer.json</code> file and to register the appropriate
+bundles to the embed <code>AppKernel</code>.</p>
+</blockquote>
+<h2 id="automated-tests">Automated tests<a href="#automated-tests" class="anchor">#</a></h2>
+<p>Manual tests are great to get a quick idea of what your bundle does.
+But an embed application is also great to write automated tests.</p>
+<h3 id="container-tests">Container tests<a href="#container-tests" class="anchor">#</a></h3>
+<p>Let's pretend we created a service which is defined in the DIC. We'd like to
+make sure it is properly configured (for e.g. checking if we forgot to inject a
+dependency). For this, we'll need to created a simple test:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/ServiceTest.php
+
+namespace Acme\StandaloneBundle\Tests;
+
+class ServiceTest extends \PHPUnit_Framework_TestCase
+{
+    private $container;
+
+    protected function setUp()
+    {
+        $kernel = new \AppKernel('test', true);
+        $kernel-&gt;boot();
+
+        $this-&gt;container = $kernel-&gt;getContainer();
+    }
+
+    public function testServiceIsDefinedInContainer()
+    {
+        $service = $this-&gt;container-&gt;get('acme_standalone.service');
+
+        $this-&gt;assertInstanceOf('Acme\StandaloneBundle\Service', $service);
+    }
+}</code></pre>
+<p>We need to add <a href="https://phpunit.de/">PHPUnit</a> as a development dependency:</p>
+<pre><code class="language-json">{
+    "name": "acme/standalone-bundle",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Acme\\StandaloneBundle\\": ""
+        }
+    },
+    "require": {
+        "symfony/http-kernel": "~2.3"
+    },
+    "require-dev": {
+        "symfony/framework-bundle": "~2.3"
+        "phpunit/phpunit": "~4.3"
+    }
+}</code></pre>
+<p>Finally we need to configure PHPUnit to use our autoload:</p>
+<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- http://phpunit.de/manual/4.3/en/appendixes.configuration.html --&gt;
+&lt;phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.3/phpunit.xsd"
+    backupGlobals="false"
+    colors="true"
+    bootstrap="./Tests/app/autoload.php"
+&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="Test Suite"&gt;
+            &lt;directory&gt;./Tests/&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;</code></pre>
+<p>That's it! You can now run:</p>
+<pre><code>./vendor/bin/phpunit</code></pre>
+<blockquote>
+<p><strong>Note</strong>: You can of course use any testing framework of your choice.</p>
+</blockquote>
+<h3 id="functional-cli-tests">Functional CLI tests<a href="#functional-cli-tests" class="anchor">#</a></h3>
+<p>Let's pretend we created a command. We'd like to run it automatically and check
+its exit code to make sure it works. For this, we'll need to created a simple
+test:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/ServiceTest.php
+
+namespace Acme\StandaloneBundle\Tests\Command;
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
+
+class DemoCommandTest extends \PHPUnit_Framework_TestCase
+{
+    private $application;
+
+    protected function setUp()
+    {
+        $kernel = new AppKernel('dev', true);
+        $this-&gt;application = new Application($kernel);
+    }
+
+    public function testItRunsSuccessfully()
+    {
+        $output = new NullOutput();
+        $input = new ArrayInput(
+            'command_name' =&gt; 'acme:demo',
+            'argument' =&gt; 'value',
+            '--option' =&gt; 'value',
+        );
+        $exitCode = $this-&gt;application-&gt;run($input, $output);
+
+        $this-&gt;assertSame(0, $exitCode);
+    }
+}</code></pre>
+<p>And that's it!</p>
+<h3 id="functional-web-tests">Functional web tests<a href="#functional-web-tests" class="anchor">#</a></h3>
+<p>Let's pretend we created a controller which returns some JSON data. We'd like to
+browse it automatically and check its status code to make sure it works. For
+this, we'll need to created a simple test:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/ServiceTest.php
+
+namespace Acme\StandaloneBundle\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
+
+class DemoControllerTest extends \PHPUnit_Framework_TestCase
+{
+    private $client;
+
+    protected function setUp()
+    {
+        $kernel = new AppKernel('test', true);
+        $kernel-&gt;boot();
+
+        $this-&gt;client = $kernel-&gt;getContainer()-&gt;get('test.client');
+    }
+
+    public function testItRunsSuccessfully()
+    {
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $content = array('parameter' =&gt; 'value');
+        $response = $this-&gt;client-&gt;request(
+            'POST',
+            '/demo',
+            array(),
+            array(),
+            $headers,
+            $content
+        );
+
+        $this-&gt;assertTrue($response-&gt;isSuccessful());
+    }
+}</code></pre>
+<p>The <code>test.client</code> service is only available when the <code>test</code> configuration
+parameter is set.</p>
+<pre><code class="language-yaml"># File: Tests/app/config.yml
+framework:
+    secret: "Three can keep a secret, if two of them are dead."
+    test: ~</code></pre>
+<p>And that's it!</p>
+<blockquote>
+<p><strong>Note</strong>: When creating APIs, you might want to test the precise status code.</p>
+</blockquote>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Creating an embed application in a third party bundle is fairly easy and brings
+many advantages as it enables demonstrations and simple automated tests.</p>
+<p>I hope you enjoyed this article, if you have any questions or comments, please
+<a href="https://twitter.com/epiloic">let me know</a>.</p>]]></content>
+    </entry>
+        <entry>
+        <title>Symfony2 Bundle, standalone</title>
+                <id>http://gnugat.github.io/2014/10/28/sf2-bundle-standalone.html</id>
+                <updated>2014-10-28T00:00:00+00:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/10/28/sf2-bundle-standalone.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<blockquote>
+<p><strong>TL;DR</strong>: Create an empty application in your bundle to allow people to test
+it (manually or automatically) outside of an actual application.</p>
+</blockquote>
+<p><a href="http://symfony.com">Symfony2</a> bundles are a great way to:</p>
+<ul><li>configure the application's Dependency Injection Container (DIC)</li>
+<li>provide it with resources (mainly templates and assets)</li>
+<li>register entry points (like controllers and commands)</li>
+</ul><p>In this article, we will see how to make sure a third party bundle actually work
+by creating an embed application. We will then have a look at its practical use:</p>
+<ol><li><a href="#minimal-bundle">Minimal Bundle</a></li>
+<li><a href="#embed-application">Embed Application</a></li>
+<li><a href="#manual-tests">Manual tests</a>
+<ul><li><a href="#running-commands">Running commands</a></li>
+<li><a href="#browsing-pages">Browsing pages</a></li>
+</ul></li>
+<li><a href="#automated-tests">Automated tests</a>
+<ul><li><a href="#container-tests">Container tests</a></li>
+<li><a href="#functional-cli-tests">Functional CLI tests</a></li>
+<li><a href="#functional-web-tests">Functional web tests</a></li>
+</ul></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ol><h2 id="minimal-bundle">Minimal Bundle<a href="#minimal-bundle" class="anchor">#</a></h2>
+<p>Creating a bundle is fairly easy as you just need to create the following class:</p>
+<pre><code class="language-php">&lt;?php
+// File: AcmeStandaloneBundle.php
+
+namespace Acme\StandaloneBundle;
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+
+class AcmeStandaloneBundle extends Bundle
+{
+}</code></pre>
+<p>It also needs a <code>composer.json</code> file, so it can be distributed all around the
+world:</p>
+<pre><code class="language-json">{
+    "name": "acme/standalone-bundle",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Acme\\StandaloneBundle\\": ""
+        }
+    },
+    "require": {
+        "symfony/http-kernel": "~2.3"
+    }
+}</code></pre>
+<blockquote>
+<p><strong>Note</strong>: to release it, you would then need to create a git repository and
+to register it in <a href="">Packagist</a>.</p>
+</blockquote>
+<h2 id="embed-application">Embed Application<a href="#embed-application" class="anchor">#</a></h2>
+<p>Now how can we make sure our bundle would work in an application? We could:</p>
+<ol><li>use an existing application</li>
+<li>make the bundle's sources available in it somehow:
+<ul><li>creating the bundle in the application</li>
+<li>or making a symbolic link that points to the bundle</li>
+</ul></li>
+<li>register it in its <code>app/AppKernel.php</code> file and have a look...</li>
+</ol><p>But we can do better!</p>
+<p>We can create the smallest Symfony2 application ever <strong>inside</strong> our bundle:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        return array(
+            new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
+            new Acme\StandaloneBundle\AcmeStandaloneBundle(),
+        );
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader)
+    {
+        $loader-&gt;load(__DIR__.'/config.yml');
+    }
+}</code></pre>
+<p><a href="">FrameworkBundle</a> requires the following configuration parameter in order to
+work:</p>
+<pre><code class="language-yaml"># File: Tests/app/config.yml
+framework:
+    secret: "Three can keep a secret, if two of them are dead."</code></pre>
+<p>I'd also advise you to create an autoload file to make things easier:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/app/autoload.php
+
+$loader = require __DIR__.'/../../vendor/autoload.php';
+require __DIR__.'/AppKernel.php';</code></pre>
+<p>The last step is to add the new dependency in the <code>composer.json</code> file:</p>
+<pre><code class="language-json">{
+    "name": "acme/standalone-bundle",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Acme\\StandaloneBundle\\": ""
+        }
+    },
+    "require": {
+        "symfony/http-kernel": "~2.3"
+    },
+    "require-dev": {
+        "symfony/framework-bundle": "~2.3"
+    }
+}</code></pre>
+<p>We would also need to ignore the following directories:</p>
+<pre><code># File: .gitignore
+
+/Tests/app/cache
+/Tests/app/logs</code></pre>
+<p>And that's it, we now have a minimalistic embed application in our bundle.
+As it can now be ran on its own, it has become a <strong>Standalone Bundle</strong>!</p>
+<p>Let's see the practical use.</p>
+<h2 id="manual-tests">Manual tests<a href="#manual-tests" class="anchor">#</a></h2>
+<p>Because your bundle now doesn't need any existing applications to be used,
+people will be able to test it manually and do some demonstrations with it.</p>
+<h3 id="running-commands">Running commands<a href="#running-commands" class="anchor">#</a></h3>
+<p>Let's pretend we created a command in our bundle. We'd like to run it just to
+make sure everything works as expected. For this we'll need to create an
+embed console:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/app/console.php
+
+set_time_limit(0);
+
+require_once __DIR__.'/autoload.php';
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+
+$kernel = new AppKernel('dev', true);
+$application = new Application($kernel);
+$application-&gt;run();</code></pre>
+<p>That's it! You can now run:</p>
+<pre><code>php Tests/app/console.php</code></pre>
+<h3 id="browsing-pages">Browsing pages<a href="#browsing-pages" class="anchor">#</a></h3>
+<p>Let's pretend we created a controller which returns some JSON data. We'd like to
+browse it just to make sure everyting works as expected. For this, we'll need to
+create an embed web app:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/app/web.php
+
+use Symfony\Component\HttpFoundation\Request;
+
+require_once __DIR__.'/autoload.php';
+
+$kernel = new AppKernel('prod', false);
+$request = Request::createFromGlobals();
+$response = $kernel-&gt;handle($request);
+$response-&gt;send();</code></pre>
+<p>That's it! You can now run:</p>
+<pre><code>php Tests/app/console.php server:run -d Tests/app</code></pre>
+<p>And browse your application.</p>
+<blockquote>
+<p><strong>Note</strong>: If you use a templating engine like Twig to render HTML pages,
+or if you use the Symfony2 Form Component in your bundle, don't forget to add
+the dependencies to your <code>composer.json</code> file and to register the appropriate
+bundles to the embed <code>AppKernel</code>.</p>
+</blockquote>
+<h2 id="automated-tests">Automated tests<a href="#automated-tests" class="anchor">#</a></h2>
+<p>Manual tests are great to get a quick idea of what your bundle does.
+But an embed application is also great to write automated tests.</p>
+<h3 id="container-tests">Container tests<a href="#container-tests" class="anchor">#</a></h3>
+<p>Let's pretend we created a service which is defined in the DIC. We'd like to
+make sure it is properly configured (for e.g. checking if we forgot to inject a
+dependency). For this, we'll need to created a simple test:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/ServiceTest.php
+
+namespace Acme\StandaloneBundle\Tests;
+
+class ServiceTest extends \PHPUnit_Framework_TestCase
+{
+    private $container;
+
+    protected function setUp()
+    {
+        $kernel = new \AppKernel('test', true);
+        $kernel-&gt;boot();
+
+        $this-&gt;container = $kernel-&gt;getContainer();
+    }
+
+    public function testServiceIsDefinedInContainer()
+    {
+        $service = $this-&gt;container-&gt;get('acme_standalone.service');
+
+        $this-&gt;assertInstanceOf('Acme\StandaloneBundle\Service', $service);
+    }
+}</code></pre>
+<p>We need to add <a href="">PHPUnit</a> as a development dependency:</p>
+<pre><code class="language-json">{
+    "name": "acme/standalone-bundle",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Acme\\StandaloneBundle\\": ""
+        }
+    },
+    "require": {
+        "symfony/http-kernel": "~2.3"
+    },
+    "require-dev": {
+        "symfony/framework-bundle": "~2.3"
+        "phpunit/phpunit": "~4.3"
+    }
+}</code></pre>
+<p>Finally we need to configure PHPUnit to use our autoload:</p>
+<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- http://phpunit.de/manual/4.3/en/appendixes.configuration.html --&gt;
+&lt;phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.3/phpunit.xsd"
+    backupGlobals="false"
+    colors="true"
+    bootstrap="./Tests/app/autoload.php"
+&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="Test Suite"&gt;
+            &lt;directory&gt;./Tests/&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;</code></pre>
+<p>That's it! You can now run:</p>
+<pre><code>./vendor/bin/phpunit</code></pre>
+<blockquote>
+<p><strong>Note</strong>: You can of course use any testing framework of your choice.</p>
+</blockquote>
+<h3 id="functional-cli-tests">Functional CLI tests<a href="#functional-cli-tests" class="anchor">#</a></h3>
+<p>Let's pretend we created a command. We'd like to run it automatically and check
+its exit code to make sure it works. For this, we'll need to created a simple
+test:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/ServiceTest.php
+
+namespace Acme\StandaloneBundle\Tests\Command;
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
+
+class DemoCommandTest extends \PHPUnit_Framework_TestCase
+{
+    private $application;
+
+    protected function setUp()
+    {
+        $kernel = new AppKernel('dev', true);
+        $this-&gt;application = new Application($kernel);
+    }
+
+    public function testItRunsSuccessfully()
+    {
+        $output = new NullOutput();
+        $input = new ArrayInput(
+            'command_name' =&gt; 'acme:demo',
+            'argument' =&gt; 'value',
+            '--option' =&gt; 'value',
+        );
+        $exitCode = $this-&gt;application-&gt;run($input, $output);
+
+        $this-&gt;assertSame(0, $exitCode);
+    }
+}</code></pre>
+<p>And that's it!</p>
+<h3 id="functional-web-tests">Functional web tests<a href="#functional-web-tests" class="anchor">#</a></h3>
+<p>Let's pretend we created a controller which returns some JSON data. We'd like to
+browse it automatically and check its status code to make sure it works. For
+this, we'll need to created a simple test:</p>
+<pre><code class="language-php">&lt;?php
+// File: Tests/ServiceTest.php
+
+namespace Acme\StandaloneBundle\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
+
+class DemoControllerTest extends \PHPUnit_Framework_TestCase
+{
+    private $client;
+
+    protected function setUp()
+    {
+        $kernel = new AppKernel('test', true);
+        $kernel-&gt;boot();
+
+        $this-&gt;client = $kernel-&gt;getContainer()-&gt;get('test.client');
+    }
+
+    public function testItRunsSuccessfully()
+    {
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $content = array('parameter' =&gt; 'value');
+        $response = $this-&gt;client-&gt;request(
+            'POST',
+            '/demo',
+            array(),
+            array(),
+            $headers,
+            $content
+        );
+
+        $this-&gt;assertTrue($response-&gt;isSuccessful());
+    }
+}</code></pre>
+<p>The <code>test.client</code> service is only available when the <code>test</code> configuration
+parameter is set.</p>
+<pre><code class="language-yaml"># File: Tests/app/config.yml
+framework:
+    secret: "Three can keep a secret, if two of them are dead."
+    test: ~</code></pre>
+<p>And that's it!</p>
+<blockquote>
+<p><strong>Note</strong>: When creating APIs, you might want to test the precise status code.</p>
+</blockquote>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Creating an embed application in a third party bundle is fairly easy and brings
+many advantages as it enables demonstrations and simple automated tests.</p>
+<p>I hope you enjoyed this article, if you have any questions or comments, please
+<a href="https://twitter.com/epiloic">let me know</a>.</p>]]></content>
+    </entry>
+        <entry>
         <title>PHP array manipulation</title>
                 <id>http://gnugat.github.io/2014/10/15/php-array-manipulation.html</id>
-                <updated>2014-10-15T00:00:00+01:00</updated>
+                <updated>2014-10-15T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -398,7 +1076,7 @@ you.</p>
         <entry>
         <title>Master Symfony2 - Conclusion</title>
                 <id>http://gnugat.github.io/2014/10/08/master-sf2-conclusion.html</id>
-                <updated>2014-10-08T00:00:00+01:00</updated>
+                <updated>2014-10-08T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -466,7 +1144,7 @@ before anything else. Here's a short selection of its available components:</p>
         <entry>
         <title>Master Symfony2 - part 6: Annotations</title>
                 <id>http://gnugat.github.io/2014/09/10/master-sf2-part-6-annotations.html</id>
-                <updated>2014-09-10T00:00:00+01:00</updated>
+                <updated>2014-09-10T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -691,7 +1369,7 @@ research on the subject to make your own opinion.</p>
         <entry>
         <title>Master Symfony2 - part 5: Events</title>
                 <id>http://gnugat.github.io/2014/09/03/master-sf2-part-5-events.html</id>
-                <updated>2014-09-03T00:00:00+01:00</updated>
+                <updated>2014-09-03T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -981,7 +1659,7 @@ code we cannot know that submitted JSON has been handled, we lose explicitness.<
         <entry>
         <title>Master Symfony2 - part 4: Doctrine</title>
                 <id>http://gnugat.github.io/2014/08/27/master-sf2-part-4-doctrine.html</id>
-                <updated>2014-08-27T00:00:00+01:00</updated>
+                <updated>2014-08-27T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -1351,7 +2029,7 @@ a standalone library allowing you to deploy database changes, it even has
         <entry>
         <title>Master Symfony2 - part 3: Services</title>
                 <id>http://gnugat.github.io/2014/08/22/master-sf2-part-3-services.html</id>
-                <updated>2014-08-22T00:00:00+01:00</updated>
+                <updated>2014-08-22T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -1820,7 +2498,7 @@ that "Dependency Injection" is just a fancy term for "passing arguments".</p>
         <entry>
         <title>Master Symfony2 - part 2: Test Driven Development</title>
                 <id>http://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html</id>
-                <updated>2014-08-13T00:00:00+01:00</updated>
+                <updated>2014-08-13T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -2030,7 +2708,7 @@ demonstrated how quick and simple it is to implement the first User Story
         <entry>
         <title>Master Symfony2 - part 1: Bootstraping</title>
                 <id>http://gnugat.github.io/2014/08/05/master-sf2-part-1-bootstraping.html</id>
-                <updated>2014-08-05T00:00:00+01:00</updated>
+                <updated>2014-08-05T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -2209,7 +2887,7 @@ quickest way to bootstrap a project.</p>
         <entry>
         <title>Learn Symfony2 - Conclusion</title>
                 <id>http://gnugat.github.io/2014/07/23/learn-sf2-conclusion.html</id>
-                <updated>2014-07-23T00:00:00+01:00</updated>
+                <updated>2014-07-23T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -2486,7 +3164,7 @@ series of articles!</p>
         <entry>
         <title>Learn Symfony2 - part 5: Tests</title>
                 <id>http://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html</id>
-                <updated>2014-07-20T00:00:00+01:00</updated>
+                <updated>2014-07-20T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -2787,7 +3465,7 @@ need to check the precise HTTP response's status code).</p>
         <entry>
         <title>Learn Symfony2 - part 4: Controllers</title>
                 <id>http://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html</id>
-                <updated>2014-07-12T00:00:00+01:00</updated>
+                <updated>2014-07-12T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3049,7 +3727,7 @@ git commit -m 'Created Ni route and controller'</code></pre>
         <entry>
         <title>Learn Symfony2 - part 3: Bundles</title>
                 <id>http://gnugat.github.io/2014/07/02/learn-sf2-bundles-part-3.html</id>
-                <updated>2014-07-02T00:00:00+01:00</updated>
+                <updated>2014-07-02T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3237,7 +3915,7 @@ makes too much fuss to no avail (that's my humble opinion anyway).</p>]]></conte
         <entry>
         <title>Learn Symfony2 - part 2: Empty application</title>
                 <id>http://gnugat.github.io/2014/06/25/learn-sf2-empty-app-part-2.html</id>
-                <updated>2014-06-25T00:00:00+01:00</updated>
+                <updated>2014-06-25T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3399,7 +4077,7 @@ to a controller which takes a HTTP request and returns a HTTP response.</p>
         <entry>
         <title>Learn Symfony2 - part 1: Composer</title>
                 <id>http://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html</id>
-                <updated>2014-06-18T00:00:00+01:00</updated>
+                <updated>2014-06-18T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3517,7 +4195,7 @@ git commit -m 'Installed Symfony2'</code></pre>
         <entry>
         <title>PHP Tokenizer</title>
                 <id>http://gnugat.github.io/2014/06/04/php-tokenizer.html</id>
-                <updated>2014-06-04T00:00:00+01:00</updated>
+                <updated>2014-06-04T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3645,7 +4323,7 @@ use <code>token_name($token)</code>.</p>
         <entry>
         <title>Redaktilo v0.7</title>
                 <id>http://gnugat.github.io/2014/05/27/redaktilo-0-7.html</id>
-                <updated>2014-05-27T00:00:00+01:00</updated>
+                <updated>2014-05-27T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3767,7 +4445,7 @@ start a discussion here.</p>]]></content>
         <entry>
         <title>Facade design pattern, by example</title>
                 <id>http://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html</id>
-                <updated>2014-05-21T00:00:00+01:00</updated>
+                <updated>2014-05-21T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -3846,7 +4524,7 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
         <entry>
         <title>Open/Closed principle, by example</title>
                 <id>http://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html</id>
-                <updated>2014-05-14T00:00:00+01:00</updated>
+                <updated>2014-05-14T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -4062,7 +4740,7 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
         <entry>
         <title>Redaktilo: because your code too needs an editor</title>
                 <id>http://gnugat.github.io/2014/05/09/redaktilo.html</id>
-                <updated>2014-05-09T00:00:00+01:00</updated>
+                <updated>2014-05-09T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -4251,7 +4929,7 @@ to manipulate files, through the editor metaphor:</p>
         <entry>
         <title>PHP generators and coroutines</title>
                 <id>http://gnugat.github.io/2014/04/30/php-generators-and-coroutines.html</id>
-                <updated>2014-04-30T00:00:00+01:00</updated>
+                <updated>2014-04-30T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -4348,7 +5026,7 @@ it!</p>
         <entry>
         <title>Symfony2 Sessions introduction</title>
                 <id>http://gnugat.github.io/2014/04/23/sf2-sessions-introduction.html</id>
-                <updated>2014-04-23T00:00:00+01:00</updated>
+                <updated>2014-04-23T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -4661,7 +5339,7 @@ questions don't be shy and drop me a line on
         <entry>
         <title>Pomodoro: manage your breaks, improve your focus</title>
                 <id>http://gnugat.github.io/2014/04/16/pomodoro-manage-your-breaks-improve-your-focus.html</id>
-                <updated>2014-04-16T00:00:00+01:00</updated>
+                <updated>2014-04-16T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -4700,7 +5378,7 @@ questions, don't be shy and drop me line on
         <entry>
         <title>Symfony2 Console component, by example</title>
                 <id>http://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html</id>
-                <updated>2014-04-09T00:00:00+01:00</updated>
+                <updated>2014-04-09T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
@@ -5210,7 +5888,7 @@ if you have any feedbacks/questions, be sure to contact me on
         <entry>
         <title>Tests cheat sheet</title>
                 <id>http://gnugat.github.io/2014/04/02/tests-cheat-sheet.html</id>
-                <updated>2014-04-02T00:00:00+01:00</updated>
+                <updated>2014-04-02T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
