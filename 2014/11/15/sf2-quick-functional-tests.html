@@ -129,7 +129,7 @@ class HelloWorldCommandTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $kernel = new AppKernel('test', false);
+        $kernel = new \AppKernel('test', false);
         $this-&gt;app = new Application($kernel);
         $this-&gt;app-&gt;setAutoExit(false);
         $this-&gt;output = new NullOutput();
@@ -167,7 +167,7 @@ class DemoControllerTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this-&gt;app = new AppKernel('test', false);
+        $this-&gt;app = new \AppKernel('test', false);
         $this-&gt;app-&gt;boot();
     }
 
@@ -205,7 +205,8 @@ class DemoControllerTest extends \PHPUnit_Framework_TestCase
 <p><strong>Note</strong>: The <code>boot</code> method makes the container available.</p>
 </blockquote>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>Functional tests with Symfony2 are quick and easy!</p>
+<p>We stripped Symfony2 to its bare minimum and as a result we are now able to
+write functional tests without any effort.</p>
 <p>I hope you enjoyed this article, please feel free to
 <a href="https://twitter.com/epiloic">tweet me</a> for any comment and question.</p>
     </div>

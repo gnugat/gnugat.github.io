@@ -84,7 +84,7 @@ class HelloWorldCommandTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $kernel = new AppKernel('test', false);
+        $kernel = new \AppKernel('test', false);
         $this->app = new Application($kernel);
         $this->app->setAutoExit(false);
         $this->output = new NullOutput();
@@ -127,7 +127,7 @@ class DemoControllerTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->app = new AppKernel('test', false);
+        $this->app = new \AppKernel('test', false);
         $this->app->boot();
     }
 
@@ -167,7 +167,8 @@ class DemoControllerTest extends \PHPUnit_Framework_TestCase
 
 ## Conclusion
 
-Functional tests with Symfony2 are quick and easy!
+We stripped Symfony2 to its bare minimum and as a result we are now able to
+write functional tests without any effort.
 
 I hope you enjoyed this article, please feel free to
 [tweet me](https://twitter.com/epiloic) for any comment and question.
