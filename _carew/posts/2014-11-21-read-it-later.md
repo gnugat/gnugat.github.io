@@ -19,7 +19,8 @@ read them later.
 
 We all have different strategies to "bookmark" links: actually bookmark them,
 favorite a tweet, subscribing to a RSS feed... The problem arises when we do all
-of those: wouldn't it be nice to have a single place to read them all?
+of those in the same time: wouldn't it be nice to have a single place to read
+them all?
 
 We could use our emails for this: we check them often, we can archive them,
 favorite them or delete them. [Inbox](http://www.google.com/inbox/) from Google
@@ -35,6 +36,9 @@ The advantage of Pocket is that you can install an extension in your browser so
 you can save a link or a tweet, and there's a mobile application which works
 offline, so you can read in the subway if you want.
 
+> **Note**: Pocket's ain page is the list of item to read, you can then favorite
+> them, tag them, archive them or delete them.
+
 ## If "this", then "that"
 
 The Pocket extension allows us to save manually links, but what about RSS feeds?
@@ -45,13 +49,23 @@ Basically you can select one of the (many) supported triggers (RSS feed, tweet
 favoriting and others), then select one of the (many) supported actions (save to
 pocket, send an email and others).
 
-> **Note**: I can't seem to be able to find the "Twitter list has new tweets"
-> trigger. But there's a "Someone tweets" trigger, so we can compose with it.
-
 ## Conclusion
 
-You don't have to reinvent the wheel: all the tools are here! They're free of
-charge and they follow the philosophy "do one thing and do it well".
+All the tools are here! They're free of charge and they follow the philosophy
+"do one thing and do it well".
+
+I personally store every links to read later in Pocket, either using the browser
+extension or with IFTTT using the following recipe templates:
+
+* If new tweet by specific user, then save in Pocket
+* If new RSS feed item, then save in Pocket
+
+I then read everyting in the subway (no network, but pocket preloads the items
+and keeps them available offline).
+
+If you have trouble going back to Pocket, have a look at
+[Muna](http://geoffrey.io/muna-your-personnal-paperboy.html): it should soon be
+able to send you a digested email of your Pocket's links to read, every morning.
 
 I hope you enjoyed this article, [tweet me](https://twitter.com/epiloic) your
 questions/comments if you have nay :) .

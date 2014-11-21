@@ -3,15 +3,15 @@ title: About me
 navigations: main
 ---
 
-Hi! My name is Loïc Chardonnet, I'm developer at
-[SensioLabs](http://sensiolabs.com/) and I frequently use the following tools:
+Hi! My name is Loïc (pronounced "Low-ic") Chardonnet, I'm developer and I
+frequently use the following tools/practices:
 
 * TDD / BDD
 * Symfony2
 * git
 * Ubuntu
 
-Hint: this blog will be about these tools.
+> **Hint**: this blog might talk a lot about these.
 
 ## Projects
 
@@ -21,8 +21,6 @@ Hint: this blog will be about these tools.
   Shrinks bundle installation steps to Composer's `require` command
 * [Symfony Empty Edition](https://github.com/gnugat/symfony-empty):
   Light distribution of the Symfony framework
-* [SoulMeMaybe](https://github.com/gnugat/SoulMeMaybe):
-  A NetSoul client, to allow Ionis students to access internet
 * [Bisouland](http://bisouland.piwai.info/):
   Steel your opponents "love points" by kissing them, in this free browser game
 

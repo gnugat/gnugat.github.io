@@ -15,57 +15,50 @@
 
     
     <link rel="canonical" href="http://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Chardonnet&#039;s blog"/>
+              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Posts"/>
       
-    <link href='http://fonts.googleapis.com/css?family=Bitter' rel='stylesheet' type='text/css'><link href='http://fonts.googleapis.com/css?family=Varela+Round' rel='stylesheet' type='text/css'><link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/bootstrap-responsive.min.css"><link rel="stylesheet" href="../../../css/main.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/xcode.min.css">
-    <script src="../../../js/vendor/modernizr-2.6.1-respond-1.1.0.min.js"></script>
-  </head>
+    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/xcode.min.css">  </head>
 
   <body>
     <!--[if lt IE 7]>
         <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
     <![endif]-->
 
-    
-          <div class="navbar">
-          <div class="navbar-inner">
-              <div class="container">
-                  <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                      <span class="icon-bar"></span>
-                      <span class="icon-bar"></span>
-                      <span class="icon-bar"></span>
-                  </a>
-                  <a class="brand" href="../../..">Loïc Chardonnet&#039;s blog</a>
-                  <div class="nav-collapse collapse">
-                    <ul class="nav pull-right">
-                                                                                                            <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                                </ul>
-                                      </div>
-              </div>
-          </div>
-      </div>
-    
-    
           <div class="container">
+        <div class="row">
+          <div class="">
+                <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="../../..">Posts</a>
+            </div>
 
-        
-                  <div class="row">
-            <div class="span10 offset1 content">
-                                                <div class="page-header">
-                    <h1>Symfony2 Console component, by example</h1>
-                  </div>
-                              
-                <article>
-    <div class="date">
-      <i class="icon-calendar"></i>
-      Published on 09/04/2014
-    </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
+                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
+                                                                                        </ul>
+                            </div>
+        </div>
+    </nav>
 
-    <hr />
-
-    <div class="body">
-      <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+                          <div class="content">
+                                                      <h1>Symfony2 Console component, by example</h1>
+                                  
+                    <article>
+        <p class="text-muted">
+            <span class="glyphicon glyphicon-calendar"></span>
+            09/04/2014
+        </p>
+        <hr />
+        <div class="body">
+            <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 <p><a href="http://symfony.com/">Symfony2</a> is a set of libraries which help you in your
 everyday tasks. You can even stack them together and create a framework with it:</p>
 <ul><li><a href="https://github.com/symfony/symfony-standard">Symfony standard edition</a></li>
@@ -164,7 +157,7 @@ class Command
 methods:</p>
 <ul><li><code>configure</code>: the configuration of the command's name, arguments, options, etc</li>
 <li><code>execute</code>: where you process the input, call your services and write to the
- output</li>
+output</li>
 </ul><p>The <code>interact</code> method is called before the <code>execute</code> one: it allows you to ask
 questions to the user to set more input arguments and options.</p>
 <p>Here's my stand on arguments and options modes:</p>
@@ -565,42 +558,39 @@ output messages to the user using a special kind of logger.</p>
 <p>Although this article was a bit long, I might have missed something here, so
 if you have any feedbacks/questions, be sure to contact me on
 <a href="https://twitter.com/epiloic">Twitter</a>.</p>
-    </div>
+        </div>
 
-          <hr>
-      <h4>Tags:</h4>
-      <ul class="tag_box inline">
-                  <li>
-            <a href="../../../tags/technical.html">Technical</a>
-          </li>
-                  <li>
-            <a href="../../../tags/symfony2.html">Symfony2</a>
-          </li>
-              </ul>
-      </article>
-            </div>
+                    <hr/>
+            <h4>Tags:</h4>
+            <h4><span class="glyphicon glyphicon-tags"></span>&nbsp;
+                                    <a href="../../../tags/technical.html"><span class="label label-primary">Technical</span></a>
+                                    <a href="../../../tags/symfony2.html"><span class="label label-primary">Symfony2</span></a>
+                            </h4>
+            </article>
+              </div>
+            
+                                  <footer>
+                <p class="text-center">
+                  &copy;
+                                      <a href="http://gnugat.github.io">
+                      Loïc Chardonnet
+                    </a>
+                                    2014
+                  <small>
+                    with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
+                  </small>
+                </p>
+              </footer>
+            
           </div>
-        
-                          <footer>
-            <p>
-              &copy;
-                              <a href="http://gnugat.github.io">
-                  Loïc Chardonnet
-                </a>
-                            2014
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
+        </div>
       </div>
     
     
-                  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-      <script>window.jQuery || document.write('<script src="../../../js/vendor/jquery-1.9.0.min.js"><\/script>')</script>
-      <script src="../../../js/vendor/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/7.3/highlight.min.js"></script>
+                  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+      <script>window.jQuery || document.write('<script src="../../../js/jquery-2.1.0.min.js"><\/script>')</script>
+      <script src="../../../js/bootstrap.min.js"></script>
+      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
       <script>hljs.initHighlightingOnLoad();</script>
     
 

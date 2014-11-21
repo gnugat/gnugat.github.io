@@ -1,6 +1,9 @@
 ---
-title: Technical and Practices advices
+title: Hi, I'm Loïc
 ---
+
+This is my blog, where I speak about [Symfony2](http://symfony.com) and other
+developer stuf.
 
 ## Useful links
 

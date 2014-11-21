@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <title>Loïc Chardonnet&#039;s blog</title>
+    <title>Posts</title>
     <subtitle>Talks about Symfony2, git and other developer stuff</subtitle>
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-11-20T00:00:00+00:00</updated>
+            <updated>2014-11-21T00:00:00+00:00</updated>
             <entry>
         <title>Read it Later</title>
-                <id>http://gnugat.github.io/2014/11/20/read-it-later.html</id>
-                <updated>2014-11-20T00:00:00+00:00</updated>
+                <id>http://gnugat.github.io/2014/11/21/read-it-later.html</id>
+                <updated>2014-11-21T00:00:00+00:00</updated>
         <author>
             <name>Loïc Chardonnet</name>
             <email>loic.chardonnet@gmail.com</email>
         </author>
-        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/11/20/read-it-later.html"/>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/11/21/read-it-later.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
 <p><strong>TL;DR</strong>: Use <a href="https://ifttt.com/">IFTTT</a> and <a href="http://getpocket.com/">Pocket</a>
 to read tweets, blogs and stuff later (in a commute, in the loo, anywhere).</p>
@@ -29,7 +29,8 @@ read them later.</p>
 <h2 id="pocket">Pocket<a href="#pocket" class="anchor">#</a></h2>
 <p>We all have different strategies to "bookmark" links: actually bookmark them,
 favorite a tweet, subscribing to a RSS feed... The problem arises when we do all
-of those: wouldn't it be nice to have a single place to read them all?</p>
+of those in the same time: wouldn't it be nice to have a single place to read
+them all?</p>
 <p>We could use our emails for this: we check them often, we can archive them,
 favorite them or delete them. <a href="http://www.google.com/inbox/">Inbox</a> from Google
 makes the task even easier: we can snooze an email so it only appears at a given
@@ -41,6 +42,10 @@ accidently ignore a business email by mistaking it with a "bookmark".</p>
 The advantage of Pocket is that you can install an extension in your browser so
 you can save a link or a tweet, and there's a mobile application which works
 offline, so you can read in the subway if you want.</p>
+<blockquote>
+<p><strong>Note</strong>: Pocket's ain page is the list of item to read, you can then favorite
+them, tag them, archive them or delete them.</p>
+</blockquote>
 <h2 id="if-this-then-that">If "this", then "that"<a href="#if-this-then-that" class="anchor">#</a></h2>
 <p>The Pocket extension allows us to save manually links, but what about RSS feeds?
 What if we're used to favorite tweets (habits die hard)?</p>
@@ -48,13 +53,18 @@ What if we're used to favorite tweets (habits die hard)?</p>
 Basically you can select one of the (many) supported triggers (RSS feed, tweet
 favoriting and others), then select one of the (many) supported actions (save to
 pocket, send an email and others).</p>
-<blockquote>
-<p><strong>Note</strong>: I can't seem to be able to find the "Twitter list has new tweets"
-trigger. But there's a "Someone tweets" trigger, so we can compose with it.</p>
-</blockquote>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>You don't have to reinvent the wheel: all the tools are here! They're free of
-charge and they follow the philosophy "do one thing and do it well".</p>
+<p>All the tools are here! They're free of charge and they follow the philosophy
+"do one thing and do it well".</p>
+<p>I personally store every links to read later in Pocket, either using the browser
+extension or with IFTTT using the following recipe templates:</p>
+<ul><li>If new tweet by specific user, then save in Pocket</li>
+<li>If new RSS feed item, then save in Pocket</li>
+</ul><p>I then read everyting in the subway (no network, but pocket preloads the items
+and keeps them available offline).</p>
+<p>If you have trouble going back to Pocket, have a look at
+<a href="http://geoffrey.io/muna-your-personnal-paperboy.html">Muna</a>: it should soon be
+able to send you a digested email of your Pocket's links to read, every morning.</p>
 <p>I hope you enjoyed this article, <a href="https://twitter.com/epiloic">tweet me</a> your
 questions/comments if you have nay :) .</p>]]></content>
     </entry>
@@ -5533,7 +5543,7 @@ class Command
 methods:</p>
 <ul><li><code>configure</code>: the configuration of the command's name, arguments, options, etc</li>
 <li><code>execute</code>: where you process the input, call your services and write to the
- output</li>
+output</li>
 </ul><p>The <code>interact</code> method is called before the <code>execute</code> one: it allows you to ask
 questions to the user to set more input arguments and options.</p>
 <p>Here's my stand on arguments and options modes:</p>
@@ -8296,10 +8306,10 @@ scenes:</p>
 <ol><li>simply write your pages in markdown</li>
 <li>launch a command to generate HTML from it</li>
 </ol><p><a href="http://carew.github.io/">Carew</a> is one of them (among
-  <a href="http://jekyllrb.com/">Jekyll</a>,
-  <a href="http://hyde.github.io/">Hyde</a>,
-  <a href="https://github.com/obensonne/poole">Poole</a>
-  and <a href="https://github.com/spjwebster/lanyon">Lanyon</a>):
+<a href="http://jekyllrb.com/">Jekyll</a>,
+<a href="http://hyde.github.io/">Hyde</a>,
+<a href="https://github.com/obensonne/poole">Poole</a>
+and <a href="https://github.com/spjwebster/lanyon">Lanyon</a>):
 it is written in PHP, allows you to use the template engine
 <a href="http://twig.sensiolabs.org/">Twig</a> in your markdown and it provides a theme
 using <a href="http://getbootstrap.com/2.3.2/">Bootstrap</a>.</p>
