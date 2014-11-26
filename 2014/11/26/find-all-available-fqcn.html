@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Find all available Fully Qualified ClassNames</title>
+
+    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
+    <meta name="author" content="Loïc Chardonnet">
+    <meta name="viewport" content="width=device-width">
+
+    
+    <link rel="canonical" href="http://gnugat.github.io/2014/11/26/find-all-available-fqcn.html"/>
+              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Posts"/>
+      
+    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="http://yandex.st/highlightjs/7.3/styles/xcode.min.css">  </head>
+
+  <body>
+          <div class="container">
+            <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="../../..">Posts</a>
+            </div>
+
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
+                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
+                                                                                        </ul>
+                            </div>
+        </div>
+    </nav>
+
+                  <div class="content">
+                                          <h1>
+                  Find all available Fully Qualified ClassNames</h1>
+                          
+                <article>
+        <p class="text-muted">
+            <span class="glyphicon glyphicon-calendar"></span>
+            26/11/2014
+        </p>
+        <hr />
+        <div class="body">
+            <blockquote>
+<p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/nomo-spaco">Nomo Spaco</a> finds a given
+project's PHP files, and read them to give you the available Fully Qualified
+ClassNames.</p>
+</blockquote>
+<p>PHP provides the following function to find the declared classes of a project:
+<a href="http://php.net/get_declared_classes">get_declared_classes</a>.</p>
+<p>However this function only lists the classes which have been loaded
+(included/required) before its call: the usage of an autoloader breaks it
+(<a href="http://getcomposer.org">Composer</a> for example).</p>
+<p>In this article, we'll see how to solve this problem.</p>
+<h2 id="for-a-single-class">For a single class<a href="#for-a-single-class" class="anchor">#</a></h2>
+<p>The first step is to find a way to get the Fully Qualified ClassName (fqcn) of
+a single class.</p>
+<p>A solution would be to read in its source file: if the project follows the
+<a href="http://php-fig.org/psr/psr-0">PSR-0</a> or <a href="http://php-fig.org/psr/psr-4">PSR-4</a>
+standards, the file should only contain one class and its filename should be the
+same as the classname.</p>
+<p>Let's create a function that retrieves the namespace declaration:</p>
+<pre><code class="language-php">&lt;?php
+
+function _get_full_namespace($filename) {
+    $lines = file($filename);
+    $namespaceLine = array_shift(preg_grep('/^namespace /', $lines));
+    $match = array();
+    preg_match('/^namespace (.*);$/', $namespaceLine, $match);
+    $fullNamespace = array_pop($match);
+
+    return $fullNamespace;
+}</code></pre>
+<p>Now let's create a function that chops down the filename to get the classname:</p>
+<pre><code class="language-php">&lt;?php
+
+function _get_classname($filename) {
+    $directoriesAndFilename = explode('/', $this-&gt;filename);
+    $filename = array_pop($directoriesAndFilename);
+    $nameAndExtension = explode('.', $filename);
+    $className = array_shift($nameAndExtension);
+
+    return $className;
+}</code></pre>
+<p>That was easy! To get the Fully Qualified ClassName from a filename we can simply
+call those two functions:</p>
+<pre><code class="language-php">&lt;?php
+
+$fqcn = _get_full_namespace($filename).'\\'._get_class_name($filename);</code></pre>
+<h2 id="for-a-project">For a project<a href="#for-a-project" class="anchor">#</a></h2>
+<p>The second step is to find the filenames of all the project's classes. Let's use
+the <a href="http://symfony.com/doc/current/components/finder/index.html">Symfony2 Finder Component</a>:</p>
+<pre><code class="language-php">&lt;?php
+
+use Symfony\Component\Finder\Finder;
+
+require __DIR__.'/vendor/autoload.php';
+
+function _get_filenames($path) {
+    $finderFiles = Finder::create()-&gt;files()-&gt;in($path)-&gt;name('*.php');
+    $filenames = array();
+    foreach ($finderFiles as $finderFile) {
+        $filenames[] $finderFiles-&gt;getRealpath();
+    }
+
+    return $filenames;
+}</code></pre>
+<p>And that's it! We can now create a function which calls those three:</p>
+<pre><code class="language-php">&lt;?php
+
+function get_all_fcqns($path) {
+    $filenames = _get_filenames($projectRoot);
+    $fcqns = array();
+    foreach ($filenames as $filename) {
+        $fcqns[] = _get_full_namespace($filename).'\\'._get_class_name($filename);
+    }
+
+    return $fcqns
+}</code></pre>
+<p>It can simply be used like this:</p>
+<pre><code class="language-php">&lt;?php
+
+$allFcqns = get_all_fcqns(__DIR__);</code></pre>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>By finding all the PHP filenames in a project, and reading them to extract their
+namespace and classname, we can easily find all the all available Fully
+Qualified ClassNames.</p>
+<p>The given functions are not meant to be used in production:</p>
+<ol><li>they won't include standard and loaded extensions classes
+(we could merge the result with <code>get_declared_classes()</code>)</li>
+<li>they don't check if the files comply to PSR-0 or PSR-1</li>
+<li>they will include test and fixture PHP files</li>
+</ol><p>I've started a proof of concept: <a href="https://github.com/gnugat/nomo-spaco">Nomo Spaco</a>.
+Hopefully it will grow to be more efficient, safer and tested. But for now it
+provides you with a package, so you don't have to copy paste anything :) .</p>
+        </div>
+
+                    <hr/>
+            <h4>Tags:</h4>
+            <h4><span class="glyphicon glyphicon-tags"></span>&nbsp;
+                                    <a href="../../../tags/technical.html"><span class="label label-primary">Technical</span></a>
+                                    <a href="../../../tags/php.html"><span class="label label-primary">Php</span></a>
+                                    <a href="../../../tags/pet-project.html"><span class="label label-primary">Pet Project</span></a>
+                            </h4>
+            </article>
+          </div>
+        
+                          <footer>
+            <p class="text-center">
+              &copy;
+                              <a href="http://gnugat.github.io">
+                  Loïc Chardonnet
+                </a>
+                            2014
+              <small>
+                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
+              </small>
+            </p>
+          </footer>
+        
+      </div>
+    
+    
+                  <script src="../../../js/jquery-2.1.0.min.js"></script>
+      <script src="../../../js/bootstrap.min.js"></script>
+      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-47822314-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+
+      </body>
+</html>

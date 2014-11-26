@@ -12,6 +12,30 @@ navigations: main
 
 And here's the books I'd like to read: [my wish list](http://amzn.com/w/39ZFHHUADC8QU).
 
+## Extending Symfony
+
+An overview of the [Symfony2](http://symfony.com) framework extension points:
+services, listeners, form types, etc, full of real life examples.
+
+Overall, I've found it more usefull for developers who start with the framework,
+by I'd still advise it.
+
+[Buy this book]()
+
+## A year with Symfony - Matthias Noback
+
+An easy to read book about how the [Symfony2](http://symfony.com) framework
+works behind the scene, and with many advices on how to structure your
+application.
+
+I'd advise it to beginners as well to advanced developers: it's not one of those
+"printed copy of the documentation". The only downsides to me were the chapters
+on the configuration (because I'm not interrested) and on the security (I
+expected explanations on the Security Component, but it is instead some general
+security wise tips).
+
+[Buy this book]()
+
 ## HTML5: Up and Running - Mark Pilgrim
 
 A more than complete book about HTML5, I've appreciated the contextualization:

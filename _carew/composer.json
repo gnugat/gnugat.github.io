@@ -8,8 +8,8 @@
         }
     ],
     "require": {
-        "carew/carew": "~2.0@dev",
-        "carew/theme-bootstrap": "~2.0@dev",
+        "carew/carew": "~2.0",
+        "carew/theme-bootstrap": "~2.1",
         "twig/twig": "~1.14"
     },
     "config": {

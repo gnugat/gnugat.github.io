@@ -15,6 +15,8 @@ frequently use the following tools/practices:
 
 ## Projects
 
+* [Redaktilo](https://github.com/gnugat/redaktilo):
+  Makes line manipulation easier
 * [fossil](https://github.com/gnugat/fossil):
   Bootstraps the markdown files of your projects
 * [GnugatWizardBundle](https://github.com/gnugat/GnugatWizardBundle):
