@@ -276,7 +276,7 @@ We need to add [PHPUnit](https://phpunit.de/) as a development dependency:
         "symfony/http-kernel": "~2.3"
     },
     "require-dev": {
-        "symfony/framework-bundle": "~2.3"
+        "symfony/framework-bundle": "~2.3",
         "phpunit/phpunit": "~4.3"
     }
 }
