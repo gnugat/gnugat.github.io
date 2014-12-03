@@ -237,7 +237,7 @@ This is usefull for example in [Symfony2](https://symfony.com): you can create
 a Konzolo exception listener.
 
 You can find more about the different kind of exceptions and their specific
-methods in [its dedicated documentation](http://github.com/gnugat/konzolo/tree/master/doc/exceptions.md).
+methods in [its dedicated documentation](http://github.com/gnugat/konzolo/tree/master/doc/exception.md).
 
 ## Conclusion
 
