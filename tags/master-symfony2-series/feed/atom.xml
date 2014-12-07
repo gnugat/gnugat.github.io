@@ -208,7 +208,7 @@ specific exceptions, you can catch them all!</p>
 <p>This is usefull for example in <a href="https://symfony.com">Symfony2</a>: you can create
 a Konzolo exception listener.</p>
 <p>You can find more about the different kind of exceptions and their specific
-methods in <a href="http://github.com/gnugat/konzolo/tree/master/doc/exceptions.md">its dedicated documentation</a>.</p>
+methods in <a href="http://github.com/gnugat/konzolo/tree/master/doc/exception.md">its dedicated documentation</a>.</p>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>We have seen how to create commands and validate their inputs.</p>
 <p>Our examples showed how to create a CLI application, but Konzolo is mainly aimed at being used <strong>in</strong>

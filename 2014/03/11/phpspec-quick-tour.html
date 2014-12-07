@@ -121,7 +121,12 @@ provides a non verbose API. Even its documentations is complete and small!</p>
             </article>
           </div>
         
-                          <footer>
+                  <div class="row comments">
+          <div class="span10 offset1 content">
+              <div id="disqus_thread"></div>
+          </div>
+      </div>
+                  <footer>
             <p class="text-center">
               &copy;
                               <a href="http://gnugat.github.io">
@@ -155,5 +160,13 @@ provides a non verbose API. Even its documentations is complete and small!</p>
     })();
     </script>
 
+            <script type="text/javascript">
+            var disqus_shortname = 'gnugatgithubio';
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
       </body>
 </html>

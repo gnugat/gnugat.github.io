@@ -365,7 +365,12 @@ questions don't be shy and drop me a line on
             </article>
           </div>
         
-                          <footer>
+                  <div class="row comments">
+          <div class="span10 offset1 content">
+              <div id="disqus_thread"></div>
+          </div>
+      </div>
+                  <footer>
             <p class="text-center">
               &copy;
                               <a href="http://gnugat.github.io">
@@ -399,5 +404,13 @@ questions don't be shy and drop me a line on
     })();
     </script>
 
+            <script type="text/javascript">
+            var disqus_shortname = 'gnugatgithubio';
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
       </body>
 </html>
