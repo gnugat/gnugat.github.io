@@ -15,8 +15,13 @@ frequently use the following tools/practices:
 
 ## Projects
 
+* [Konzolo](https://github.com/gnugat/konzolo):
+  A lightweight console library for PHP
+* [Nomo Spaco](https://github.com/gnugat/nomo-spaco):
+  Finds the available Fully Qualified ClassNames (fqcn) in a project.
 * [Redaktilo](https://github.com/gnugat/redaktilo):
-  Makes line manipulation easier
+  An easy "line manipulation" PHP lib: jump, insert and do anything!
+  ([Symfony2 Bundle](https://github.com/gnugat/redaktilo-bundle))
 * [fossil](https://github.com/gnugat/fossil):
   Bootstraps the markdown files of your projects
 * [GnugatWizardBundle](https://github.com/gnugat/GnugatWizardBundle):
