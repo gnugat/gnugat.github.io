@@ -3,6 +3,8 @@ title: Books I've read
 navigations: main
 ---
 
+* [Extending Symfony 2 Web Appication Framework - Sebastien Armand](#extending-symfony-2-web-appication-framework-sebastien-armand)
+* [A year with Symfony - Matthias Noback](#a-year-with-symfony-matthias-noback)
 * [HTML5: Up and Running - Mark Pilgrim](#html5-up-and-running-mark-pilgrim)
 * [Patterns of Enterprise Application Architecture - Martin Fowler](#patterns-of-enterprise-application-architecture-martin-fowler)
 * [Eloquent JavaScript: A Modern Introduction to Programming - Marijn Haverbeke](#eloquent-javascript-a-modern-introduction-to-programming-marijn-haverbeke)
@@ -12,7 +14,7 @@ navigations: main
 
 And here's the books I'd like to read: [my wish list](http://amzn.com/w/39ZFHHUADC8QU).
 
-## Extending Symfony
+## Extending Symfony 2 Web Appication Framework - Sebastien Armand
 
 An overview of the [Symfony2](http://symfony.com) framework extension points:
 services, listeners, form types, etc, full of real life examples.
@@ -20,7 +22,7 @@ services, listeners, form types, etc, full of real life examples.
 Overall, I've found it more usefull for developers who start with the framework,
 by I'd still advise it.
 
-[Buy this book]()
+[Buy this book](http://www.amazon.co.uk/dp/1783287195)
 
 ## A year with Symfony - Matthias Noback
 
@@ -34,7 +36,7 @@ on the configuration (because I'm not interrested) and on the security (I
 expected explanations on the Security Component, but it is instead some general
 security wise tips).
 
-[Buy this book]()
+[Buy this book](http://www.amazon.co.uk/dp/9082120119)
 
 ## HTML5: Up and Running - Mark Pilgrim
 
