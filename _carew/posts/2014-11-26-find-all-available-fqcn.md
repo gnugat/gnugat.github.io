@@ -52,7 +52,7 @@ Now let's create a function that chops down the filename to get the classname:
 <?php
 
 function _get_classname($filename) {
-    $directoriesAndFilename = explode('/', $this->filename);
+    $directoriesAndFilename = explode('/', $filename);
     $filename = array_pop($directoriesAndFilename);
     $nameAndExtension = explode('.', $filename);
     $className = array_shift($nameAndExtension);
