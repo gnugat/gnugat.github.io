@@ -3,7 +3,7 @@ title: Books I've read
 navigations: main
 ---
 
-* [Extending Symfony 2 Web Appication Framework - Sebastien Armand](#extending-symfony-2-web-appication-framework-sebastien-armand)
+* [Extending Symfony 2 Web Application Framework - Sebastien Armand](#extending-symfony-2-web-application-framework-sebastien-armand)
 * [A year with Symfony - Matthias Noback](#a-year-with-symfony-matthias-noback)
 * [HTML5: Up and Running - Mark Pilgrim](#html5-up-and-running-mark-pilgrim)
 * [Patterns of Enterprise Application Architecture - Martin Fowler](#patterns-of-enterprise-application-architecture-martin-fowler)
@@ -14,7 +14,7 @@ navigations: main
 
 And here's the books I'd like to read: [my wish list](http://amzn.com/w/39ZFHHUADC8QU).
 
-## Extending Symfony 2 Web Appication Framework - Sebastien Armand
+## Extending Symfony 2 Web Application Framework - Sebastien Armand
 
 An overview of the [Symfony2](http://symfony.com) framework extension points:
 services, listeners, form types, etc, full of real life examples.
