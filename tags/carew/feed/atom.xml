@@ -336,7 +336,7 @@ function _get_full_namespace($filename) {
 <pre><code class="language-php">&lt;?php
 
 function _get_classname($filename) {
-    $directoriesAndFilename = explode('/', $this-&gt;filename);
+    $directoriesAndFilename = explode('/', $filename);
     $filename = array_pop($directoriesAndFilename);
     $nameAndExtension = explode('.', $filename);
     $className = array_shift($nameAndExtension);
