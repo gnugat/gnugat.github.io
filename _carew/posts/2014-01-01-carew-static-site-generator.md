@@ -2,7 +2,7 @@
 layout: post
 title: Carew, the static site generator
 tags:
-    - technical
+    - practices
     - carew
 ---
 
