@@ -5,8 +5,108 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2014-12-10T00:00:00+00:00</updated>
+            <updated>2014-12-17T00:00:00+00:00</updated>
             <entry>
+        <title>Semantic Versioning</title>
+                <id>http://gnugat.github.io/2014/12/17/semantic-versioning.html</id>
+                <updated>2014-12-17T00:00:00+00:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/12/17/semantic-versioning.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<blockquote>
+<p><strong>TL;DR</strong>: A library's public API can be: fully qualified class names,
+object's types, exceptions, method names and arguments.</p>
+</blockquote>
+<p>When working on a project, every change made to it can possibly break its usage.
+Sometimes this is because we introduced a bug, but some other times this is
+because the project's usage needed to be changed.</p>
+<p>Or did it?</p>
+<p>In this article, we will discuss about semantic versioning, and public API.</p>
+<h2 id="semantic-versioning">Semantic Versioning<a href="#semantic-versioning" class="anchor">#</a></h2>
+<p>In order to make the migration between two versions easier for users, we could
+use <a href="http://semver.org/">Semantic Versioning</a>, which can be summed up as follow:</p>
+<blockquote>
+<p>Given a version number MAJOR.MINOR.PATCH, increment the:</p>
+<ol><li>MAJOR version when you make incompatible API changes</li>
+<li>MINOR version when you add functionality in a backwards-compatible manner</li>
+<li>PATCH version when you make backwards-compatible bug fixes</li>
+</ol></blockquote>
+<p>The trick is to define a "public API" (what the user actually use) and promise
+that we won't break it as long as we don't increment the MAJOR version.</p>
+<h2 id="public-api">Public API<a href="#public-api" class="anchor">#</a></h2>
+<p>The "public API" will vary between projects:</p>
+<ul><li>for a CLI tool, it will be the command names, their options and arguments</li>
+<li>for a web API, it will be the URLs</li>
+<li>for a library, it will be a set of defined classes</li>
+</ul><p>Let's focus on libraries.</p>
+<h2 id="redaktilo-example">Redaktilo example<a href="#redaktilo-example" class="anchor">#</a></h2>
+<p>When I started the <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> library I
+had a lot of decisions to make:</p>
+<ul><li>what name and responsibility to give to new objects</li>
+<li>what names and arguments to give to methods</li>
+<li>what exception to throw in case of errors</li>
+</ul><p>I knew that I could make the wrong choices, which would mean changing names,
+types, arguments, etc. Basically, for the developers using the library it would
+mean breaking their code.</p>
+<h3 id="private-and-public-classes">Private and public classes<a href="#private-and-public-classes" class="anchor">#</a></h3>
+<p>In order to avoid that as much as possible, I've decided to minimize the number
+of classes the developers would use: a <code>Text</code> model and an <code>Editor</code> service.
+<code>Editor</code> doesn't contain any logic, it relies on several "private" classes to do
+the actual job. It's a <a href="http://en.wikipedia.org/wiki/Facade_pattern">Facade</a>.</p>
+<p>So my public API was the <code>Gnugat\Redaktilo\Editor</code>'s fully qualified classname
+(full namespace and the class name), and its methods (name and arguments).</p>
+<h3 id="private-class-constructors">Private class constructors<a href="#private-class-constructors" class="anchor">#</a></h3>
+<p>Later on in the project we've introduced a version that didn't change the
+defined public API, but broke the projects that were using Redaktilo: the issue
+was that we added a new arguments in a private class's constructor.</p>
+<p>Therefore the public API was extended to <strong>every</strong> constructors.</p>
+<p>To fix the backward compatibility break, we made this new argument optional.</p>
+<h3 id="exceptions">Exceptions<a href="#exceptions" class="anchor">#</a></h3>
+<p>Some time passed and we've decided to re-organize the project's exceptions:
+moving them to their own sub-namespace (<code>Gnugat\Redaktilo\Exception</code>)
+and throwing only exceptions we owned.
+But by doing so we could potentially break project's using our library.</p>
+<p>Hence we extended the public API to exceptions.</p>
+<p>To avoid backward compatible breaks we simply duplicated the exceptions:
+the new ones in the sub-namespace contain all the logic and inherit from the old
+exceptions to get their types.</p>
+<h2 id="making-changes-to-the-public-api">Making changes to the public API<a href="#making-changes-to-the-public-api" class="anchor">#</a></h2>
+<p>Defining a public API doesn't mean we can't make changes to it:</p>
+<ul><li>we can add new arguments to methods, by making them optional</li>
+<li>we can change a class name and type, by creating a new one and make it extend the old one</li>
+<li>we can change a method name, by creating a new one and use it in the old one</li>
+<li>we can add a method to an interface, by creating a new interface and make it extend the old one</li>
+</ul><p>Those changes will introduce deprecations that will be removed only when the
+MAJOR version is incremented.</p>
+<p>This can be documented directly in the code, using <a href="http://www.phpdoc.org/docs/latest/references/phpdoc/tags/deprecated.html">phpdoc</a>:
+use <code>@deprecated &lt;since-version&gt; &lt;what to use instead&gt;</code>.</p>
+<p>This can also be described in a migration documentation (e.g. <code>UPGRADE-2.0.md</code>).</p>
+<h2 id="avoid-complete-rewrites">Avoid complete rewrites<a href="#avoid-complete-rewrites" class="anchor">#</a></h2>
+<p>Semantic versioning only applies to versions greater than <code>1.0.0</code>: if you tag your project as
+being in version <code>0.MINOR.PATCH</code> you are allowed to break everything. But
+remember that it will make your project very unstable, and people won't trust
+it.</p>
+<p>In theory you could break everything again when incrementing the MAJOR version
+(e.g. from version 1 to version 2), but this won't be appealing at all for
+people that already use your project. Try to make as few changes as possible,
+document them and give time to your users to stop using deprecated stuff.</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Semantic versioning is a versioning methodology which has its perks and
+advantages. It gives high priority to user's experience, so you have to define a
+line between what should be used (public API) and what shouldn't (private).</p>
+<p>Changes to the public API can be made by keeping the old stuff and document it
+as deprecated.</p>
+<p>When creating a library, remember that exceptions and all constructors (even of
+private classes) are part of the public API.</p>
+<blockquote>
+<p><strong>Note</strong>: Many thanks to <a href="http://loickpiera.com/">Lo&iuml;ck Piera</a> and his help,
+without him I'd still think that declaring a class as being part of the public
+API is sufficient.</p>
+</blockquote>]]></content>
+    </entry>
+        <entry>
         <title>Keep It Simple and Git</title>
                 <id>http://gnugat.github.io/2014/12/10/keep-it-simple-and-git.html</id>
                 <updated>2014-12-10T00:00:00+00:00</updated>
