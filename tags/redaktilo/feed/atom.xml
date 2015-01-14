@@ -5,8 +5,73 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2015-01-07T00:00:00+00:00</updated>
+            <updated>2015-01-14T00:00:00+00:00</updated>
             <entry>
+        <title>Symfony / Web Services - part 1: Introduction</title>
+                <id>http://gnugat.github.io/2015/01/14/sf-ws-part-1-introduction.html</id>
+                <updated>2015-01-14T00:00:00+00:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/01/14/sf-ws-part-1-introduction.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>Welcome to this new series of articles on managing Web Services in a
+<a href="https://symfony.com">Symfony</a> environment. Its purpose is to provide an example,
+it doesn't pretend to be the best solution and it requires you to know the basics
+of Symfony (if you know what a service is, you're good) and of web services
+(basically to know that they're a way to provide data remotely).</p>
+<blockquote>
+<p><strong>Spoiler alert</strong>: There won't be much Symfony specific code ;) .</p>
+</blockquote>
+<p>In this post we'll describe the different endpoints of the (fake) web service
+which will be used as a reference thoughout the whole series:</p>
+<ul><li><a href="#json-objects">JSON objects</a></li>
+<li><a href="#authentication">Authentication</a></li>
+<li><a href="#retrieve-one-profile">Create a profile</a></li>
+<li><a href="#delete-a-profile">Delete a profile</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul><h2 id="json-objects">JSON objects<a href="#json-objects" class="anchor">#</a></h2>
+<p>The posted and returned resources will always be wrapped in a JSON object.</p>
+<h2 id="authentication">Authentication<a href="#authentication" class="anchor">#</a></h2>
+<p>All endpoints require HTTP Basic Authentication with the following credentials:</p>
+<ul><li>user: <code>spanish_inquisition</code></li>
+<li>password: <code>NobodyExpectsIt!</code></li>
+</ul><p>If those credentials are missing or wrong (<code>403 FORBIDDEN</code>), it will return:</p>
+<pre><code>{
+    "error": "The credentials are either missing or incorrect"
+}</code></pre>
+<h2 id="create-a-profile">Create a profile<a href="#create-a-profile" class="anchor">#</a></h2>
+<ul><li><code>POST http://ws.local/api/v1/profiles</code></li>
+</ul><p>The request body should be as follow:</p>
+<pre><code>{
+    "name": "Fawlty Tower"
+}</code></pre>
+<p>In case of success (<code>201 CREATED</code>), it will return:</p>
+<pre><code>{
+    "id": 23,
+    "name": "Fawlty Tower"
+}</code></pre>
+<p>If the request's body contains malformed JSON (<code>400 BAD REQUEST</code>), it will return:</p>
+<pre><code>{
+    "error": "Invalid or malformed JSON"
+}</code></pre>
+<p>If the <code>name</code> parameter is missing from the request's body (<code>422 UNPROCESSABLE ENTITY</code>),
+it will return:</p>
+<pre><code>{
+    "error": "The \"name\" parameter is missing from the request's body"
+}</code></pre>
+<p>If the name already exists (<code>422 UNPROCESSABLE ENTITY</code>), it will return:</p>
+<pre><code>{
+    "error": "The name \"Proven&ccedil;al le Gaulois\" is already taken"
+}</code></pre>
+<h2 id="delete-a-profile">Delete a profile<a href="#delete-a-profile" class="anchor">#</a></h2>
+<ul><li><code>DELETE http://ws.local/api/v1/profiles/{id}</code></li>
+</ul><p>This endpoint will always return an empty body (<code>204 NO CONTENT</code>).</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>So basically we can create and remove profiles, which have an identifier and a name.</p>
+<p>In next week's article we'll see how to build such web service.</p>]]></content>
+    </entry>
+        <entry>
         <title>Links from 2014</title>
                 <id>http://gnugat.github.io/2015/01/07/links-from-2014.html</id>
                 <updated>2015-01-07T00:00:00+00:00</updated>
