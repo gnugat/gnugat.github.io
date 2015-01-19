@@ -20,7 +20,7 @@ which will be used as a reference thoughout the whole series:
 
 * [JSON objects](#json-objects)
 * [Authentication](#authentication)
-* [Create a profile](#retrieve-one-profile)
+* [Create a profile](#create-a-profile)
 * [Delete a profile](#delete-a-profile)
 * [Conclusion](#conclusion)
 
@@ -99,4 +99,5 @@ This endpoint will always return an empty body (`204 NO CONTENT`).
 
 So basically we can create and remove profiles, which have an identifier and a name.
 
-In next week's article we'll see how to build such web service.
+In {{ link('posts/2015-01-21-sf-ws-part-2-1-creation-bootstrap.md', 'next week article') }}
+we'll see how to build such web service.
