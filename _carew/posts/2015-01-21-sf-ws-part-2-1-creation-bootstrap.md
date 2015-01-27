@@ -352,5 +352,5 @@ This is enough for today, we'll commit our work:
 
 Our application is now ready!
 
-In the next article we'll create the first endpoint, the creation of profiles,
-using a pragmatic approach.
+In the {{ link('posts/2015-01-28-sf-ws-part-2-2-creation-pragmatic.md', 'next article') }}
+we'll create the first endpoint, the creation of profiles, using a pragmatic approach.
