@@ -648,4 +648,4 @@ our code by creating some services, each with their specific responsibilities,
 to prevent our application from becoming a [big ball of mud](https://speakerdeck.com/richardmiller/atm)
 where everything is hard to read, impossible to test and expensive to change.
 
-This will the subject of next week's article.
+This will the subject of {{ link('posts/2015-03-04-sf-ws-part-2-3-creation-refactoring.md', 'next week') }}'s article.
