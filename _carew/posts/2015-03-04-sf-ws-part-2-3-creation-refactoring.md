@@ -569,7 +569,8 @@ It's easy to write unit test for CommandHandlers, and they can be reused
 (creating a profile is surely something we can need elsewhere in our application).
 
 This article concludes the second part of this series on web services in a Symfony environment.
-In the next one, we'll start a new application which consumes the one we just created.
+In the {{ link('posts/2015-03-11-sf-ws-part-3-1-consuming-request-handler.md', 'next one') }},
+we'll start a new application which consumes the one we just created.
 
 > **Note**: The web service we described also had a removal endpoint. Since there's not much else
 > to learn, it won't be created in this series.

@@ -190,7 +190,7 @@ We'll also install [phpspec](http://phpspec.net):
 With this our tests will be awesome! Time to commit:
 
     git add -A
-    git ci -m 'Configured tests'
+    git commit -m 'Configured tests'
 
 ## Patching for JSON submit
 
@@ -346,7 +346,7 @@ access the page.
 This is enough for today, we'll commit our work:
 
     git add -A
-    git ci -m 'Created custom event listeners'
+    git commit -m 'Created custom event listeners'
 
 ## Conclusion
 
