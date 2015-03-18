@@ -10,10 +10,10 @@ tags:
 This is the fifth article of the series on managing Web Services in a
 [Symfony](https://symfony.com) environment. Have a look at the four first ones:
 
-* {{ link('posts/2015-01-14-sf-ws-part-1-introduction.md', '1. Introduction') }}.
-* {{ link('posts/2015-01-21-sf-ws-part-2-1-creation-bootstrap.md', '2.1 Creation bootstrap') }}.
-* {{ link('posts/2015-01-28-sf-ws-part-2-2-creation-pragmatic.md', '2.2 Creation, the pragmatic way') }}.
-* {{ link('posts/2015-03-04-sf-ws-part-2-3-creation-refactoring.md', '2.3 Creation, refactoring') }}.
+* {{ link('posts/2015-01-14-sf-ws-part-1-introduction.md', '1. Introduction') }}
+* {{ link('posts/2015-01-21-sf-ws-part-2-1-creation-bootstrap.md', '2.1 Creation bootstrap') }}
+* {{ link('posts/2015-01-28-sf-ws-part-2-2-creation-pragmatic.md', '2.2 Creation, the pragmatic way') }}
+* {{ link('posts/2015-03-04-sf-ws-part-2-3-creation-refactoring.md', '2.3 Creation, refactoring') }}
 
 Our purpose in this third section is to create an application that consumes the
 [previously created web services](https://github.com/gnugat-examples/sf-ws).
@@ -144,7 +144,7 @@ All green, we can commit:
 
 ## Request headers
 
-A request usually have headers:
+A request usually has headers:
 
 ```php
 // File: spec/AppBundle/RequestHandler/RequestSpec.php
@@ -394,5 +394,6 @@ Let's make our console grin:
 ## Conclusion
 
 We've bootstrapped an application, and created a RequestHandler which will help us
-to avoid coupling with Guzzle. In the next article, we'll talk about middleware
-and start to create some RequestHandler implementations (yes, more than one!).
+to avoid coupling with Guzzle. In the {{ link('posts/2015-03-18-sf-ws-part-3-2-consuming-guzzle.md', 'next article') }},
+we'll talk about middleware and start to create some RequestHandler
+implementations (yes, more than one!).

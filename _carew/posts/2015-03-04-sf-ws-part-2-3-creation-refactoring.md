@@ -10,9 +10,9 @@ tags:
 This is the fourth article of the series on managing Web Services in a
 [Symfony](https://symfony.com) environment. Have a look at the three first ones:
 
-* {{ link('posts/2015-01-14-sf-ws-part-1-introduction.md', '1. Introduction') }}.
-* {{ link('posts/2015-01-21-sf-ws-part-2-1-creation-bootstrap.md', '2.1 Creation bootstrap') }}.
-* {{ link('posts/2015-01-28-sf-ws-part-2-2-creation-pragmatic.md', '2.2 Creation, the pragmatic way') }}.
+* {{ link('posts/2015-01-14-sf-ws-part-1-introduction.md', '1. Introduction') }}
+* {{ link('posts/2015-01-21-sf-ws-part-2-1-creation-bootstrap.md', '2.1 Creation bootstrap') }}
+* {{ link('posts/2015-01-28-sf-ws-part-2-2-creation-pragmatic.md', '2.2 Creation, the pragmatic way') }}
 
 You can check the code in the [following repository](https://github.com/gnugat-examples/sf-ws).
 
