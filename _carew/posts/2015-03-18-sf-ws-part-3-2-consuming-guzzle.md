@@ -456,6 +456,9 @@ Finally, we want to define our listener:
 
 And that's it!
 
+    git add -A
+    git commit -m 'Defined RequestHandler as a service'
+
 ## Conclusion
 
 We can now send remote request using Guzzle, without coupling ourself to the library.

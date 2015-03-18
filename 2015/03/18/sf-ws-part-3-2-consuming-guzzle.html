@@ -411,6 +411,8 @@ can define an alias:</p>
         tags:
             - { name: kernel.event_listener, event: request_handler.received_response, method: onReceivedResponse }</code></pre>
 <p>And that's it!</p>
+<pre><code>git add -A
+git commit -m 'Defined RequestHandler as a service'</code></pre>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>We can now send remote request using Guzzle, without coupling ourself to the library.
 We even implemented an EventRequestHandler to allow extension points, it also provides
