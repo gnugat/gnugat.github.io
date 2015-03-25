@@ -15,7 +15,7 @@ This is the seventh article of the series on managing Web Services in a
 * {{ link('posts/2015-01-28-sf-ws-part-2-2-creation-pragmatic.md', '2.2 Creation, the pragmatic way') }}
 * {{ link('posts/2015-03-04-sf-ws-part-2-3-creation-refactoring.md', '2.3 Creation, refactoring') }}
 * {{ link('posts/2015-03-11-sf-ws-part-3-1-consuming-request-handler.md', '3.1 Consuming, RequestHandler') }}
-* {{ link('posts/2015-03-18-sf-ws-part-3-2-consuming-guzzle.md', '3.1 Consuming, Guzzle') }}
+* {{ link('posts/2015-03-18-sf-ws-part-3-2-consuming-guzzle.md', '3.2 Consuming, Guzzle') }}
 
 You can check the code in the [following repository](https://github.com/gnugat-examples/sf-cs).
 
@@ -118,8 +118,8 @@ We can now generate the code's skeleton:
 
     ./bin/phpspec run
 
-It constructs a `Request` object, gives it to `RequestHandler` and then return the
-`Repsonse`'s body:
+It constructs a `Request` object, gives it to `RequestHandler` and then returns the
+`Response`'s body:
 
 ```php
 <?php
