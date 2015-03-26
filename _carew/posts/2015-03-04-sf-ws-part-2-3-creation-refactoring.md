@@ -382,7 +382,7 @@ exception listener and create a nice response:
 
 ```php
 <?php
-// File: src/AppBundle/EventListener/ForbiddenExceptionListener.php
+// File: src/AppBundle/EventListener/DomainExceptionListener.php
 
 namespace AppBundle\EventListener;
 

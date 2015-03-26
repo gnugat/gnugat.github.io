@@ -1273,7 +1273,7 @@ git commit -m 'Added check on name presence in the request'</code></pre>
 <p>Our Command and CommandHandler both throw a DomainException, we can catch it in an
 exception listener and create a nice response:</p>
 <pre><code class="language-php">&lt;?php
-// File: src/AppBundle/EventListener/ForbiddenExceptionListener.php
+// File: src/AppBundle/EventListener/DomainExceptionListener.php
 
 namespace AppBundle\EventListener;
 
