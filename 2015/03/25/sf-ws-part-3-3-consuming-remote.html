@@ -58,7 +58,7 @@
 <li><a href="../../../2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">2.2 Creation, the pragmatic way</a></li>
 <li><a href="../../../2015/03/04/sf-ws-part-2-3-creation-refactoring.html">2.3 Creation, refactoring</a></li>
 <li><a href="../../../2015/03/11/sf-ws-part-3-1-consuming-request-handler.html">3.1 Consuming, RequestHandler</a></li>
-<li><a href="../../../2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">3.1 Consuming, Guzzle</a></li>
+<li><a href="../../../2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">3.2 Consuming, Guzzle</a></li>
 </ul><p>You can check the code in the <a href="https://github.com/gnugat-examples/sf-cs">following repository</a>.</p>
 <p>In the previous article, we've created a Guzzle RequestHandler: we are now able
 to make remote calls using a third party library, but without the cost of coupling
@@ -134,8 +134,8 @@ class ProfileGatewaySpec extends ObjectBehavior
 }</code></pre>
 <p>We can now generate the code's skeleton:</p>
 <pre><code>./bin/phpspec run</code></pre>
-<p>It constructs a <code>Request</code> object, gives it to <code>RequestHandler</code> and then return the
-<code>Repsonse</code>'s body:</p>
+<p>It constructs a <code>Request</code> object, gives it to <code>RequestHandler</code> and then returns the
+<code>Response</code>'s body:</p>
 <pre><code class="language-php">&lt;?php
 // File: src/AppBundle/Profile/ProfileGateway.php
 

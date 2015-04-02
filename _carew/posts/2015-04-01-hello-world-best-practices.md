@@ -3,6 +3,8 @@ layout: post
 title: Hello World, best practices - part 1.1.1
 ---
 
+> **TL;DR**: Happy April Fool joke!
+
 Hello World applications are often used to showcase framework capabilities, but
 they usually fail to do so! This is because real world applications are never that simple.
 
@@ -29,3 +31,29 @@ In the conlusion we'll explore Docker, [Go Martini](http://www.slideshare.net/gi
 Of course we're going to use [full stack BDD](https://cukes.info/blog/2015/03/24/single-source-of-truth) all along!
 
 Get ready for the best "Hello World" application you've ever seen!
+
+## April Fool
+
+This was my April Fool joke, no let's get serious and build  what I think is the best
+Hello World application:
+
+```php
+<?php
+
+echo 'Hello world';
+```
+
+Note that there's no symfony, no RabbitMQ, no nothing involved. That's because
+a Hello World application doesn't require anything else, those tools were design
+to solve issues that we don't have here.
+
+If you're concerned about our Hello World application's performance, well you shouldn't be.
+First of all, it's a Hello World application... As far as I'm concerned it prints
+pretty much instantly this way.
+
+Second of all, you shouldn't worry about performance when building an application.
+This is something you should start worrying only when you have performance issues.
+The best thing you could do, is build the application in a way that will allow you
+to change it afterwards, if the need comes (and it usually will: requirements are changing by nature).
+
+I hope you enjoyed it :) .

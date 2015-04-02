@@ -15,7 +15,10 @@
             <email>loic.chardonnet@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/04/01/hello-world-best-practices.html"/>
-        <content type="html" xml:lang="en"><![CDATA[<p>Hello World applications are often used to showcase framework capabilities, but
+        <content type="html" xml:lang="en"><![CDATA[<blockquote>
+<p><strong>TL;DR</strong>: Happy April Fool joke!</p>
+</blockquote>
+<p>Hello World applications are often used to showcase framework capabilities, but
 they usually fail to do so! This is because real world applications are never that simple.</p>
 <p>In this series of articles, we will demonstrate how to build a real world Hello World application.</p>
 <p>The first part will include the following standard technologies:</p>
@@ -32,7 +35,24 @@ they usually fail to do so! This is because real world applications are never th
 </ul><p>In the conlusion we'll explore Docker, <a href="http://www.slideshare.net/giorrrgio/import-golang-struct-microservice">Go Martini</a> (for faster GET endpoints),
 <a href="http://www.crummy.com/software/BeautifulSoup/">Python beautiful soup</a> (for web crawling) and NodeJs (to monitor our queues).</p>
 <p>Of course we're going to use <a href="https://cukes.info/blog/2015/03/24/single-source-of-truth">full stack BDD</a> all along!</p>
-<p>Get ready for the best "Hello World" application you've ever seen!</p>]]></content>
+<p>Get ready for the best "Hello World" application you've ever seen!</p>
+<h2 id="april-fool">April Fool<a href="#april-fool" class="anchor">#</a></h2>
+<p>This was my April Fool joke, no let's get serious and build  what I think is the best
+Hello World application:</p>
+<pre><code class="language-php">&lt;?php
+
+echo 'Hello world';</code></pre>
+<p>Note that there's no symfony, no RabbitMQ, no nothing involved. That's because
+a Hello World application doesn't require anything else, those tools were design
+to solve issues that we don't have here.</p>
+<p>If you're concerned about our Hello World application's performance, well you shouldn't be.
+First of all, it's a Hello World application... As far as I'm concerned it prints
+pretty much instantly this way.</p>
+<p>Second of all, you shouldn't worry about performance when building an application.
+This is something you should start worrying only when you have performance issues.
+The best thing you could do, is build the application in a way that will allow you
+to change it afterwards, if the need comes (and it usually will: requirements are changing by nature).</p>
+<p>I hope you enjoyed it :) .</p>]]></content>
     </entry>
         <entry>
         <title>Symfony / Web Services - part 3.3: Consuming, remote calls</title>
@@ -50,7 +70,7 @@ they usually fail to do so! This is because real world applications are never th
 <li><a href="../../../2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">2.2 Creation, the pragmatic way</a></li>
 <li><a href="../../../2015/03/04/sf-ws-part-2-3-creation-refactoring.html">2.3 Creation, refactoring</a></li>
 <li><a href="../../../2015/03/11/sf-ws-part-3-1-consuming-request-handler.html">3.1 Consuming, RequestHandler</a></li>
-<li><a href="../../../2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">3.1 Consuming, Guzzle</a></li>
+<li><a href="../../../2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">3.2 Consuming, Guzzle</a></li>
 </ul><p>You can check the code in the <a href="https://github.com/gnugat-examples/sf-cs">following repository</a>.</p>
 <p>In the previous article, we've created a Guzzle RequestHandler: we are now able
 to make remote calls using a third party library, but without the cost of coupling
@@ -126,8 +146,8 @@ class ProfileGatewaySpec extends ObjectBehavior
 }</code></pre>
 <p>We can now generate the code's skeleton:</p>
 <pre><code>./bin/phpspec run</code></pre>
-<p>It constructs a <code>Request</code> object, gives it to <code>RequestHandler</code> and then return the
-<code>Repsonse</code>'s body:</p>
+<p>It constructs a <code>Request</code> object, gives it to <code>RequestHandler</code> and then returns the
+<code>Response</code>'s body:</p>
 <pre><code class="language-php">&lt;?php
 // File: src/AppBundle/Profile/ProfileGateway.php
 
