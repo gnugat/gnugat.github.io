@@ -15,21 +15,13 @@ frequently use the following tools/practices:
 
 ## Projects
 
-* [Konzolo](https://github.com/gnugat/konzolo):
-  A lightweight console library for PHP
-* [Nomo Spaco](https://github.com/gnugat/nomo-spaco):
-  Finds the available Fully Qualified ClassNames (fqcn) in a project.
+* [Memio](https://github.com/memio/memio):
+  A highly opinionated PHP code generation library
 * [Redaktilo](https://github.com/gnugat/redaktilo):
   An easy "line manipulation" PHP lib: jump, insert and do anything!
   ([Symfony2 Bundle](https://github.com/gnugat/redaktilo-bundle))
-* [fossil](https://github.com/gnugat/fossil):
-  Bootstraps the markdown files of your projects
-* [GnugatWizardBundle](https://github.com/gnugat/GnugatWizardBundle):
-  Shrinks bundle installation steps to Composer's `require` command
 * [Symfony Empty Edition](https://github.com/gnugat/symfony-empty):
   Light distribution of the Symfony framework
-* [Bisouland](http://bisouland.piwai.info/):
-  Steel your opponents "love points" by kissing them, in this free browser game
 
 ## Profiles
 
