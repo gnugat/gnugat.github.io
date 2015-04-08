@@ -2,23 +2,19 @@
 
 {% block content_main %}
     <article>
-        <p class="text-muted">
-            <span class="glyphicon glyphicon-calendar"></span>
-            {{ carew.document.metadatas.date|date('d/m/Y') }}
-        </p>
+        <ul class="list-inline">
+            <li>
+                {{ carew.document.metadatas.date|date('d/m/Y') }}
+            </li>
+            {% for tag in carew.document.tags %}
+            <li>
+                <a href="{{ path('tags/'~tag) }}"><span class="label label-primary">{{ tag|title }}</span></a>
+            </li>
+            {% endfor %}
+        </ul>
         <hr />
         <div class="body">
             {{ carew.document.body|raw }}
         </div>
-
-        {% if carew.document.tags|length > 0 %}
-            <hr/>
-            <h4>Tags:</h4>
-            <h4><span class="glyphicon glyphicon-tags"></span>&nbsp;
-                {% for tag in carew.document.tags %}
-                    <a href="{{ path('tags/'~tag) }}"><span class="label label-primary">{{ tag|title }}</span></a>
-                {% endfor %}
-            </h4>
-        {% endif %}
     </article>
 {% endblock %}
