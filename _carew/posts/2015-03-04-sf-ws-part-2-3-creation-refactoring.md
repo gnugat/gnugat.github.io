@@ -3,7 +3,7 @@ layout: post
 title: Symfony / Web Services - part 2.3: Creation, refactoring
 tags:
     - Symfony
-    - technical
+    - phpspec
     - Symfony / Web Services series
 ---
 

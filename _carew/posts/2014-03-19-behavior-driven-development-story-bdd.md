@@ -2,7 +2,6 @@
 layout: post
 title: Behavior Driven Development: story BDD
 tags:
-    - practices
     - Tests series
 ---
 

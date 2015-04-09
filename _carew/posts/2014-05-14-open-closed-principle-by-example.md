@@ -2,9 +2,9 @@
 layout: post
 title: Open/Closed principle, by example
 tags:
-    - practices
+    - design principle
     - redaktilo
-    - principle
+    - pet project
 ---
 
 [TL;DR: jump to the conclusion](#conclusion).

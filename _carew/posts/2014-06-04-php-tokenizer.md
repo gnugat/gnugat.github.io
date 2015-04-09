@@ -2,7 +2,6 @@
 layout: post
 title: PHP Tokenizer
 tags:
-    - technical
     - php
 ---
 

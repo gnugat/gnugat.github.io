@@ -2,7 +2,7 @@
 layout: post
 title: Semantic Versioning
 tags:
-    - practices
+    - introducing methodology
 ---
 
 > **TL;DR**: A library's public API can be: fully qualified class names,

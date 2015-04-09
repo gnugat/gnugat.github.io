@@ -3,7 +3,7 @@ layout: post
 title: Symfony / Web Services - part 3.3: Consuming, remote calls
 tags:
     - Symfony
-    - technical
+    - phpspec
     - Symfony / Web Services series
 ---
 

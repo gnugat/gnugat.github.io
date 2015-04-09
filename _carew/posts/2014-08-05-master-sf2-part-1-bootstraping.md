@@ -2,8 +2,7 @@
 layout: post
 title: Master Symfony2 - part 1: Bootstraping
 tags:
-    - Symfony2
-    - technical
+    - Symfony
     - Master Symfony2 series
 ---
 

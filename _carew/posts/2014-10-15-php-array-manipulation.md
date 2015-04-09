@@ -2,8 +2,9 @@
 layout: post
 title: PHP array manipulation
 tags:
-    - Redaktilo
-    - technical
+    - redaktilo
+    - pet project
+    - php
 ---
 
 > **TL;DR**: [Redaktilo](https://github.com/gnugat/redaktilo) provides a nice

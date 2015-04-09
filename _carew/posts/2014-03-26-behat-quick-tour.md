@@ -2,7 +2,6 @@
 layout: post
 title: Behat: a quick tour
 tags:
-    - technical
     - Tests series
 ---
 

@@ -2,8 +2,7 @@
 layout: post
 title: Learn Symfony2 - part 2: Empty application
 tags:
-    - Symfony2
-    - technical
+    - Symfony
     - Learn Symfony2 series
 ---
 

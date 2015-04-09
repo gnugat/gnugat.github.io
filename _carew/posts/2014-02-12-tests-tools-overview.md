@@ -2,7 +2,6 @@
 layout: post
 title: Tests: Tools overview
 tags:
-    - technical
     - Tests series
 ---
 

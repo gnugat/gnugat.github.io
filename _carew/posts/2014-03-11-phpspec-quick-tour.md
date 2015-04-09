@@ -2,8 +2,9 @@
 layout: post
 title: phpspec: a quick tour
 tags:
-    - technical
     - Tests series
+    - introducing tool
+    - phpspec
 ---
 
 [TL;DR: jump to the conclusion](#conclusion).

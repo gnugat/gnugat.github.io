@@ -2,7 +2,6 @@
 layout: post
 title: Find all available Fully Qualified ClassNames
 tags:
-    - technical
     - php
     - pet project
 ---

@@ -2,7 +2,6 @@
 layout: post
 title: Lightweight console library
 tags:
-    - technical
     - pet project
 ---
 

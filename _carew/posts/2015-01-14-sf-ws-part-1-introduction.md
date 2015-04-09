@@ -3,7 +3,6 @@ layout: post
 title: Symfony / Web Services - part 1: Introduction
 tags:
     - Symfony
-    - technical
     - Symfony / Web Services series
 ---
 

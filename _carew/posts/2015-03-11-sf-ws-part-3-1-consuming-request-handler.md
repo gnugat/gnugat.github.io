@@ -3,7 +3,7 @@ layout: post
 title: Symfony / Web Services - part 3.1: Consuming, RequestHandler
 tags:
     - Symfony
-    - technical
+    - phpspec
     - Symfony / Web Services series
 ---
 

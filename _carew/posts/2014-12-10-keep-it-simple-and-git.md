@@ -2,7 +2,7 @@
 layout: post
 title: Keep It Simple and Git
 tags:
-    - practices
+    - introducing methodology
     - git
 ---
 

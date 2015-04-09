@@ -2,7 +2,6 @@
 layout: post
 title: Tests: Introduction
 tags:
-    - practices
     - Tests series
 ---
 

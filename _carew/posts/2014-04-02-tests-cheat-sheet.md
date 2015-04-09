@@ -2,7 +2,6 @@
 layout: post
 title: Tests cheat sheet
 tags:
-    - practices
     - Tests series
 ---
 

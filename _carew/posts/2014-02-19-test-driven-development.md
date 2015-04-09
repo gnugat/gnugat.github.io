@@ -2,7 +2,6 @@
 layout: post
 title: Test Driven Development
 tags:
-    - practices
     - Tests series
 ---
 

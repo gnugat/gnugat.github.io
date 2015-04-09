@@ -2,9 +2,7 @@
 layout: post
 title: Symfony2 - Quick functional tests
 tags:
-    - Symfony2
-    - technical
-    - tests
+    - Symfony
 ---
 
 > **TL;DR**: Only check the status and exit code, don't use the given `TestCase`.

@@ -2,8 +2,9 @@
 layout: post
 title: Introducting Memio, code generator
 tags:
-    - technical
     - memio
+    - pet project
+    - introducing library
 ---
 
 > **TL;DR**: Work in Progress: Memio, a library for PHP code generation.

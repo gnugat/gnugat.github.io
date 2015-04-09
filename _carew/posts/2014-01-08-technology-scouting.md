@@ -2,7 +2,7 @@
 layout: post
 title:  Technology scouting
 tags:
-    - practices
+    - introducing methodology
 ---
 
 As a curious person I'm constantly trying to learn new practices and to discover

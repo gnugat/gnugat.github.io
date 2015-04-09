@@ -2,8 +2,8 @@
 layout: post
 title: Symfony2 Console component, by example
 tags:
-    - technical
-    - Symfony2
+    - Symfony
+    - introducing library
 ---
 
 [TL;DR: jump to the conclusion](#conclusion).

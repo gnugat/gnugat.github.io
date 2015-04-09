@@ -2,7 +2,7 @@
 layout: post
 title:  Inversion of Control, Dependency Injection, Dependency Injection Container and Service Locator
 tags:
-    - design patterns
+    - design pattern
 ---
 
 If you don't want to read this article, just jump to the [conclusion](#conclusion)

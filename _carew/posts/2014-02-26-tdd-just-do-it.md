@@ -2,7 +2,6 @@
 layout: post
 title: TDD: just do it!
 tags:
-    - technical
     - Tests series
 ---
 

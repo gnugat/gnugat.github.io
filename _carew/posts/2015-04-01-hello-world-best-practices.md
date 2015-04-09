@@ -1,6 +1,8 @@
 ---
 layout: post
 title: Hello World, best practices - part 1.1.1
+tags:
+    - april fool
 ---
 
 > **TL;DR**: Happy April Fool joke!

@@ -2,7 +2,7 @@
 layout: post
 title:  Read it Later
 tags:
-    - practices
+    - introducing methodology
 ---
 
 > **TL;DR**: Use [IFTTT](https://ifttt.com/) and [Pocket](http://getpocket.com/)

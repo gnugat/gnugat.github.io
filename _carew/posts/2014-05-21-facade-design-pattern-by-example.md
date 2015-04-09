@@ -2,9 +2,9 @@
 layout: post
 title: Facade design pattern, by example
 tags:
-    - practices
-    - redaktilo
     - design pattern
+    - redaktilo
+    - pet project
 ---
 
 [TL;DR: jump to the conclusion](#conclusion).

@@ -3,7 +3,6 @@ layout: post
 title: Symfony / Web Services - part 2.1: Creation bootstrap
 tags:
     - Symfony
-    - technical
     - Symfony / Web Services series
 ---
 

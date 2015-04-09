@@ -2,8 +2,7 @@
 layout: post
 title: Carew, the static site generator
 tags:
-    - practices
-    - carew
+    - introducing tool
 ---
 
 Frameworks are a real help when building web applications which serve business

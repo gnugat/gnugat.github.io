@@ -2,8 +2,7 @@
 layout: post
 title: Master Symfony2 - part 5: Events
 tags:
-    - Symfony2
-    - technical
+    - Symfony
     - Master Symfony2 series
 ---
 

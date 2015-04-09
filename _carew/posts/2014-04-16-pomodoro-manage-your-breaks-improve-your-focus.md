@@ -2,7 +2,7 @@
 layout: post
 title: Pomodoro: manage your breaks, improve your focus
 tags:
-    - practices
+    - introducing methodology
 ---
 
 [TL;DR: jump to the conclusion](#conclusion).

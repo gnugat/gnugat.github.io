@@ -2,7 +2,8 @@
 layout: post
 title:  Bootstrap the markdown files of your FOSS project
 tags:
-    - technical
+    - introducing tool
+    - pet project
 ---
 
 The one thing that will make developers use your Free or Open Source Software

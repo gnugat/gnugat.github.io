@@ -2,8 +2,9 @@
 layout: post
 title: Redaktilo: because your code too needs an editor
 tags:
-    - technical
     - redaktilo
+    - pet project
+    - introducing library
 ---
 
 [TL;DR: jump to the conclusion](#conclusion).

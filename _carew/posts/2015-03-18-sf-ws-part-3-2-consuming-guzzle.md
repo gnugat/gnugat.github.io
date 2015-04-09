@@ -3,7 +3,7 @@ layout: post
 title: Symfony / Web Services - part 3.2: Consuming, Guzzle
 tags:
     - Symfony
-    - technical
+    - phpspec
     - Symfony / Web Services series
 ---
 
