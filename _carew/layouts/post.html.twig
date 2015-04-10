@@ -16,5 +16,21 @@
         <div class="body">
             {{ carew.document.body|raw }}
         </div>
+
+        <footer class="next-previous row">
+            {% set previous = previous_document(carew.posts, carew.document) %}
+            {% if previous %}
+            <div class="col-md-6">
+                <a class="btn btn-lg btn-default btn-block" href="{{ render_document_path(previous) }}" role="button">Previous: {{ previous.title }}</a>
+            </div>
+            {% endif %}
+
+            {% set next = next_document(carew.posts, carew.document) %}
+            {% if next %}
+            <div class="col-md-6">
+                <a class="btn btn-lg btn-default btn-block" href="{{ render_document_path(next) }}" role="button">Next: {{ next.title }}</a>
+            </div>
+            {% endif %}
+        </footer>
     </article>
 {% endblock %}

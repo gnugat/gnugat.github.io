@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Introducting Memio, code generator
+title: Introducing Memio, code generator
 tags:
     - memio
     - pet project

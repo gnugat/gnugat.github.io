@@ -10,3 +10,6 @@ site:
 engine:
     themes:
         - "%dir%/vendor/carew/theme-bootstrap"
+
+    extensions:
+        - Gnugat\CarewNext\NextExtension

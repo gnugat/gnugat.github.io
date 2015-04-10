@@ -10,6 +10,7 @@
     "require": {
         "carew/carew": "~2.0",
         "carew/theme-bootstrap": "~2.1",
+        "gnugat/carew-next": "~1.0",
         "twig/twig": "~1.14"
     },
     "config": {

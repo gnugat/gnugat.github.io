@@ -121,3 +121,12 @@ a.navbar-brand, a.navbar-brand:link {
     font-weight: bold;
 
 }
+
+.next-previous {
+    border-top: 1px solid #e5e5e5;
+}
+
+a.btn, a.btn:link {
+    margin-top: 15px;
+    text-decoration: none;
+}
