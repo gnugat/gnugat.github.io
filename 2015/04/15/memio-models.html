@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Memio models</title>
+
+    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
+    <meta name="author" content="Loïc Chardonnet">
+    <meta name="viewport" content="width=device-width">
+
+    
+    <link rel="canonical" href="http://gnugat.github.io/2015/04/15/memio-models.html"/>
+              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
+      
+    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+
+  <body>
+          <div class="container">
+            <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="../../..">Articles</a>
+            </div>
+
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
+                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
+                                                                                        </ul>
+                            </div>
+        </div>
+    </nav>
+
+                  <div class="content">
+                                          <h1>
+                  Memio models</h1>
+                          
+                <article>
+        <ul class="list-inline">
+            <li>
+                15/04/2015
+            </li>
+                        <li>
+                <a href="../../../tags/memio.html"><span class="label label-primary">Memio</span></a>
+            </li>
+                        <li>
+                <a href="../../../tags/pet-project.html"><span class="label label-primary">Pet Project</span></a>
+            </li>
+                        <li>
+                <a href="../../../tags/introducing-library.html"><span class="label label-primary">Introducing Library</span></a>
+            </li>
+                    </ul>
+        <hr />
+        <div class="body">
+            <blockquote>
+<p><strong>TL;DR</strong>: Describe code by building <a href="http://github.com/memio/model">models</a>.</p>
+</blockquote>
+<p>Memio is a highly opinionated PHP code generation library, its version 1.0.0 (stable)
+is going to be released soon: currently the main package <code>memio/memio</code> is being
+split into smaller packages.</p>
+<p>In this article, we'll have a look at the very first package to be ready: <code>memio/model</code>.</p>
+<h2 id="describing-code">Describing code<a href="#describing-code" class="anchor">#</a></h2>
+<p>Let's have a look at the following method:</p>
+<pre><code class="language-php">    public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = true)
+    {
+    }</code></pre>
+<p>We have many things here:</p>
+<ul><li>a method named <code>handle</code> which is:
+<ul><li>public</li>
+<li>non static</li>
+<li>non final</li>
+<li>non abstract</li>
+</ul></li>
+</ul><p>It has the following arguments:</p>
+<ul><li>a <code>Request</code> object named <code>request</code></li>
+<li>an integer named <code>type</code> which defaults to <code>self::MASTER_REQUEST</code></li>
+<li>a boolean named <code>catch</code> which defaults to <code>true</code></li>
+</ul><p>Memio provides models that allow us to describe this method by constructing objects:</p>
+<pre><code class="language-php">&lt;?php
+
+use Memio\Model\Argument;
+use Memio\Model\Method;
+
+require __DIR__.'/vendor/autoload.php';
+
+$method = Method::make('handle')
+    -&gt;addArgument(Argument::make('Request', 'request'))
+    -&gt;addArgument(Argument::make('int', 'type')
+        -&gt;setDefaultValue('self::MASTER_REQUEST')
+    )
+    -&gt;addArgument(Argument::make('bool', 'catch')
+        -&gt;setDefaultValue('true')
+    )
+;</code></pre>
+<blockquote>
+<p><strong>Note</strong>: Static constructors are used to allow fluent interface (chaining calls).
+From PHP 5.6 it is possible to do the following:
+<code>(new Method('handle'))-&gt;addArgument(new Argument('Request', 'request'));</code></p>
+</blockquote>
+<h2 id="building-models-dynamically">Building models dynamically<a href="#building-models-dynamically" class="anchor">#</a></h2>
+<p>Usually models aren't built manually, they could be constructed using:</p>
+<ul><li>a configuration (a PHP array, a YAML file, etc)</li>
+<li>parameters (from CLI input, a web request, etc)</li>
+<li>existing code (using <a href="http://nikic.github.io/aboutMe.html">nikic</a>'s <a href="https://github.com/nikic/PHP-Parser">PHP-Parser</a> for instance)</li>
+</ul><p>Here's a usage example. When running the test suite, <a href="http://phpspec.net">phpspec</a>
+generates missing methods in our code (amongst many other nice things).</p>
+<p>If the following call is found in a test:</p>
+<pre><code class="language-php">        $this-&gt;handle($request);</code></pre>
+<p>And if the <code>handle</code> method isn't defined in the class currently tested, then phpspec
+gathers the following parameters:</p>
+<ul><li><code>$methodName</code>, which here is set to <code>'handle'</code></li>
+<li><code>$arguments</code>, which here is set to <code>array($request)</code></li>
+</ul><p>Let's re-write its generator using Memio:</p>
+<pre><code class="language-php">&lt;?php
+
+use Memio\Model\Argument;
+use Memio\Model\Method;
+
+require __DIR__.'/vendor/autoload.php';
+
+function phpspec_generator($methodName, array $arguments) {
+    $method = new Method($methodName);
+    $index = 1;
+    foreach ($arguments as $argument) {
+        $type = is_object($argument) ? get_class($argument) : gettype($argument);
+        $argumentName = 'argument'.$index++;
+        $method-&gt;addArgument(new Argument($type, $argumentName));
+    }
+
+    return $method
+}</code></pre>
+<p>Pretty straightforward!</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Models are Memio's core, almost every memio packages will rely on them:</p>
+<ul><li><code>memio/linter</code> will scan models to detect errors (e.g. abstract methods in a final class)</li>
+<li><code>memio/twig-template</code> will use them to actually generate the corresponding code</li>
+</ul><p>For now they can describe:</p>
+<ul><li>a method argument (typehint when needed, default value)</li>
+<li>a method (with PHPdoc, visibility, staticness, abstracness and if it's final)</li>
+<li>a property (with PHPdoc, visibility, staticness, default value)</li>
+<li>a constant</li>
+<li>a class (with PHPdoc, parents, interfaces, abstractness and if it's final)</li>
+<li>an interface (with PHPdoc, parent interfaces)</li>
+<li>a file (with license header, namespace, use statements)</li>
+</ul><p>There are some limitations:</p>
+<ul><li>it can only describe a method's body using a string (e.g. <code>$toto = 42;\necho $toto;</code>)</li>
+<li>a file must have a class or an interface</li>
+</ul><p>For now, it will be sufficient to start working on exciting projects!</p>
+<p>If you'd like to find out more about Memio Models, have a look at the documentation:</p>
+<ul><li><a href="http://memio.github.io/memio/doc/01-model-tutorial.html">regular Models</a></li>
+<li><a href="http://memio.github.io/memio/doc/02-phpdoc-tutorial.html">PHPdoc Models</a></li>
+</ul>
+        </div>
+
+        <footer class="next-previous row">
+                                    <div class="col-md-6">
+                <a class="btn btn-lg btn-default btn-block" href="../../../2015/04/08/introducing-memio-code-generator.html" role="button">Previous: Introducing Memio, code generator</a>
+            </div>
+            
+                                </footer>
+    </article>
+          </div>
+        
+                  <div class="row comments">
+          <div class="span10 offset1 content">
+              <div id="disqus_thread"></div>
+          </div>
+      </div>
+                  <footer>
+            <p class="text-center">
+              &copy;
+                              <a href="http://gnugat.github.io">
+                  Loïc Chardonnet
+                </a>
+                            2015
+              <small>
+                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
+              </small>
+            </p>
+          </footer>
+        
+      </div>
+    
+    
+                  <script src="../../../js/jquery-2.1.0.min.js"></script>
+      <script src="../../../js/bootstrap.min.js"></script>
+      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-47822314-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+
+            <script type="text/javascript">
+            var disqus_shortname = 'gnugatgithubio';
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+      </body>
+</html>
