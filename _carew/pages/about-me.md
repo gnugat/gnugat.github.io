@@ -15,11 +15,16 @@ frequently use the following tools/practices:
 
 ## Projects
 
-* [Memio](https://github.com/memio/memio):
+* [Marshaller](https://gnugat.github.io/marshaller):
+  A PHP library that converts from one format to another.
+  ([Symfony Bundle](https://gnugat.github.io/marshaller-bundle))
+* [Memio](https://memio.github.io/memio):
   A highly opinionated PHP code generation library
-* [Redaktilo](https://github.com/gnugat/redaktilo):
+* [Redaktilo](https://gnugat.github.io/redaktilo):
   An easy "line manipulation" PHP lib: jump, insert and do anything!
   ([Symfony2 Bundle](https://github.com/gnugat/redaktilo-bundle))
+* [SpecGen](https://memio.github.io/spec-gen):
+  A phpspec extension that makes its code generator even more awesome!
 * [Symfony Empty Edition](https://github.com/gnugat/symfony-empty):
   Light distribution of the Symfony framework
 
