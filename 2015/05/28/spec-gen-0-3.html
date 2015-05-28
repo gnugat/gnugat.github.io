@@ -5,14 +5,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>SpecGen v0.2</title>
+    <title>SpecGen v0.3</title>
 
     <meta name="description" content="Talks about Symfony2, git and other developer stuff">
     <meta name="author" content="Loïc Chardonnet">
     <meta name="viewport" content="width=device-width">
 
     
-    <link rel="canonical" href="http://gnugat.github.io/2015/05/20/spec-gen-0-2.html"/>
+    <link rel="canonical" href="http://gnugat.github.io/2015/05/28/spec-gen-0-3.html"/>
               <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
       
     <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
@@ -42,12 +42,12 @@
 
                   <div class="content">
                                           <h1>
-                  SpecGen v0.2</h1>
+                  SpecGen v0.3</h1>
                           
                 <article>
         <ul class="list-inline">
             <li>
-                20/05/2015
+                28/05/2015
             </li>
                         <li>
                 <a href="../../../tags/memio.html"><span class="label label-primary">Memio</span></a>
@@ -68,151 +68,127 @@
         <hr />
         <div class="body">
             <blockquote>
-<p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.2 inserts use statements.</p>
+<p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.3 inserts a property for each constructor argument.</p>
 </blockquote>
-<p>SpecGen v0.2 has been released, it introduces a small change: use statement insertion.</p>
-<h2 id="it-inserts-use-statements">It inserts use statements<a href="#it-inserts-use-statements" class="anchor">#</a></h2>
-<p>Let's go back to the sources of the example used in the <a href="../../../2015/05/13/memio-spec-gen.html">previous article</a>
-and clean it a little bit:</p>
-<pre><code>rm -rf src</code></pre>
-<p>Given the following specification:</p>
-<pre><code class="language-php">&lt;?php
-// File: spec/Vendor/Project/RequestHandlerSpec.php
-
-namespace spec\Vendor\Project;
-
-use PhpSpec\ObjectBehavior;
-use Vendor\Project\Message\Request;
-
-class RequestHandlerSpec extends ObjectBehavior
-{
-    function it_takes_a_request_and_returns_a_response(Request $request)
-    {
-        $parameters = array();
-        $isEnabled = true;
-        $this-&gt;handle($request, $parameters, $isEnabled)-&gt;shouldHaveType('Vendor\Project\Message\Response');
-    }
+<p>SpecGen is a <a href="http://phpspec.net">phpspec</a> extension which enhance its code generator.
+With the latest release, v0.3, we get the following features:</p>
+<ul><li>method generation:
+<ul><li>it inserts method at the end of the class</li>
+<li>it typehints object, array and callable arguments</li>
+<li>it names object arguments after their type</li>
+<li>it names scalar arguments after a generic name (<code>argument</code>)</li>
+<li>it adds number on names that could collide (e.g. <code>$argument1, $argument2</code>)</li>
+</ul></li>
+<li>constructor generation, same as method except:
+<ul><li>it inserts constructor at the begining of the class</li>
+<li>it inserts properties with initialization for each constructor arguments</li>
+</ul></li>
+</ul><p>Here's a simple example to demonstrate how helpful it can be.</p>
+<h2 id="example">Example<a href="#example" class="anchor">#</a></h2>
+<p>First of all, we need to set up a project with <a href="https://getcomposer.org/download">Composer</a>.
+Let's write the following <code>composer.json</code>:</p>
+<pre><code>{
+    "name": "vendor/project",
+    "autoload": {
+        "psr-4": {
+            "Vendor\\Project\\": "src/Vendor/Project"
+        }
+    },
+    "require": {},
+    "require-dev": {}
 }</code></pre>
-<p>When we run the test suite:</p>
-<pre><code>phpspec run</code></pre>
-<p>Then we should get the following file, with a use statement:</p>
-<pre><code class="language-php">&lt;?php
-
-namespace Vendor\Project;
-
-use Vendor\Project\Message\Request;
-
-class RequestHandler
-{
-    public function handle(Request $request, array $argument1, $argument2)
-    {
-    }
-}</code></pre>
-<h2 id="it-doesn-t-insert-use-statements-twice">It doesn't insert use statements twice<a href="#it-doesn-t-insert-use-statements-twice" class="anchor">#</a></h2>
-<p>Given the following new step in our specification:</p>
-<pre><code class="language-php">&lt;?php
-// File: spec/Vendor/Project/RequestHandlerSpec.php
-
-namespace spec\Vendor\Project;
-
-use PhpSpec\ObjectBehavior;
-use Vendor\Project\Message\Request;
-
-class RequestHandlerSpec extends ObjectBehavior
-{
-    function it_takes_a_request_and_returns_a_response(Request $request)
-    {
-        $parameters = array();
-        $isEnabled = true;
-        $this-&gt;handle($request, $parameters, $isEnabled)-&gt;shouldHaveType('Vendor\Project\Message\Response');
-    }
-
-    function it_supports_request(Request $request)
-    {
-        $this-&gt;supports($request)-&gt;shouldBe(true);
-    }
-}</code></pre>
-<p>When we run the test suite:</p>
-<pre><code>phpspec run</code></pre>
-<p>Then we should get the following file, without new use statements:</p>
-<pre><code class="language-php">&lt;?php
-
-namespace Vendor\Project;
-
-use Vendor\Project\Message\Request;
-
-class RequestHandler
-{
-    public function handle(Request $request, array $argument1, $argument2)
-    {
-    }
-
-    public function supports(Request $request)
-    {
-    }
-}</code></pre>
-<h2 id="it-doesn-t-insert-use-statement-for-same-namespace">It doesn't insert use statement for same namespace<a href="#it-doesn-t-insert-use-statement-for-same-namespace" class="anchor">#</a></h2>
-<p>Let's clear everything:</p>
-<pre><code>rm -rf src</code></pre>
-<p>Given the following specification:</p>
-<pre><code class="language-php">&lt;?php
-// File: spec/Vendor/Project/RequestHandlerSpec.php
-
-namespace spec\Vendor\Project;
-
-use PhpSpec\ObjectBehavior;
-use Vendor\Project\Request;
-
-class RequestHandlerSpec extends ObjectBehavior
-{
-    function it_takes_a_request_and_returns_a_response(Request $request)
-    {
-        $parameters = array();
-        $isEnabled = true;
-        $this-&gt;handle($request, $parameters, $isEnabled)-&gt;shouldHaveType('Vendor\Project\Response');
-    }
-}</code></pre>
+<p>Then we can install phpspec with SpecGen by running those commands:</p>
+<pre><code>composer require --dev phpspec/phpspec:~2.2
+composer require --dev memio/spec-gen:~0.3
+echo 'extensions:' &gt; phpspec.yml
+echo '  - Memio\SpecGen\MemioSpecGenExtension' &gt;&gt; phpspec.yml</code></pre>
+<p>In our example, we'll specify a <code>TextEditor</code> service, it should be able to
+create new files by relying on <code>Filesystem</code>, another service.</p>
+<p>This can be done as follow:</p>
+<pre><code>phpspec describe 'Vendor\Project\TextEditor'</code></pre>
 <blockquote>
-<p><strong>Note</strong>: <code>Request</code> and <code>RequestHandler</code> are both in the same namespace.</p>
+<p><strong>Tip</strong>: make your vendor's binaries available by adding <code>vendor/bin</code> to your <code>$PATH</code>.
+<code>export PATH="vendor/bin:$PATH"</code>.</p>
 </blockquote>
-<p>When we run the test suite:</p>
+<p>This should generate a <code>spec\Vendor\Project\TextEditorSpec.php</code> file:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace spec\Vendor\Project;
+
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class TextEditorSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType('Vendor\Project\TextEditor');
+    }
+}</code></pre>
+<p>It needs to be edited to fit our needs:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace spec\Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+use Vendor\Project\File;
+use PhpSpec\ObjectBehavior;
+
+class TextEditorSpec extends ObjectBehavior
+{
+    const FILENAME = '/tmp/file.txt';
+    const FORCE_FILE_CREATION = true;
+
+    function let(Filesystem $filesystem)
+    {
+        $this-&gt;beConstructedWith($filesystem);
+    }
+
+    function it_creates_new_files(File $file, Filesystem $filesystem)
+    {
+        $filesystem-&gt;exists(self::FILENAME)-&gt;willReturn(false);
+        $filesystem-&gt;create(self::FILENAME)-&gt;willReturn($file);
+
+        $this-&gt;open(self::FILENAME, self::FORCE_FILE_CREATION)-&gt;shouldBe($file);
+    }
+}</code></pre>
+<p>The Test Driven Development cycle advises us to run the test suite now:</p>
 <pre><code>phpspec run</code></pre>
-<p>Then we should get the following, without any use statements:</p>
+<p>This will bootstrap the following code:</p>
 <pre><code class="language-php">&lt;?php
 
 namespace Vendor\Project;
 
-class RequestHandler
+use Vendor\Project\Service\Filesystem;
+
+class TextEditor
 {
-    public function handle(Request $request, array $argument1, $argument2)
+    private $filesystem;
+
+    public function __construct(Filesystem $filesystem)
+    {
+        $this-&gt;filesystem = $filesystem;
+    }
+
+    public function open($argument1, $argument2)
     {
     }
 }</code></pre>
-<h2 id="behind-the-hood">Behind the hood<a href="#behind-the-hood" class="anchor">#</a></h2>
-<p>This small feature was the occasion to refactor SpecGen a bit! This resulted in the
-introduction of <code>CodeEditor</code>, a facade for a home made <code>CommandBus</code> and for
-<a href="http://gnugat.github.io/redaktilo">Redaktilo</a>'s <code>Editor</code>.</p>
-<p>With these, the code to generate a method and insert a use statement looks like this:</p>
-<pre><code class="language-php">$file = $this-&gt;codeEditor-&gt;open($fileName);
-$this-&gt;codeEditor-&gt;handle(new InsertUseStatements($file, $fullyQualifiedNames));
-$this-&gt;codeEditor-&gt;handle(new InsertMethod($file, $method));
-$this-&gt;codeEditor-&gt;save($file);</code></pre>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>While some improvements can still be done (use statements in alphabetical order,
-typehint interfaces only), the version 0.3 will mainly be about the introduction
-of a new generator: insertion of properties when the method is a constructor.</p>
-<p>Stay tuned!</p>
+<p>It created a <code>filesystem</code> property to mirror the constructor arguments. Neat!</p>
+<h2 id="what-s-next">What's next?<a href="#what-s-next" class="anchor">#</a></h2>
+<p>In our example phpspec also generated the collaborators (<code>File</code> and <code>Filesystem</code>).
+These don't beneficiate from SpecGen help yet, so the next release (v0.4) will
+probably be about using it for collaborators.</p>
+<p>Other features that could be implemented would be PHPdoc generation, or avoiding the
+<code>Interface</code> / <code>Abstract</code> suffix/prefix in interface and abstract object argument names.</p>
         </div>
 
         <footer class="next-previous row">
                                     <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2015/05/13/memio-spec-gen.html" role="button">Previous: Memio SpecGen v0.1</a>
+                <a class="btn btn-lg btn-default btn-block" href="../../../2015/05/20/spec-gen-0-2.html" role="button">Previous: SpecGen v0.2</a>
             </div>
             
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2015/05/28/spec-gen-0-3.html" role="button">Next: SpecGen v0.3</a>
-            </div>
-                    </footer>
+                                </footer>
     </article>
           </div>
         
