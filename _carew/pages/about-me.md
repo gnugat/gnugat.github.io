@@ -20,6 +20,9 @@ frequently use the following tools/practices:
   ([Symfony Bundle](https://gnugat.github.io/marshaller-bundle))
 * [Memio](https://memio.github.io/memio):
   A highly opinionated PHP code generation library
+* [QueryBus](https://gnugat.github.io/query-bus):
+  A PHP library for (interrogatory messages)[http://verraes.net/2015/01/messaging-flavours/].
+  ([Symfony Bundle](https://gnugat.github.io/query-bus-bundle))
 * [Redaktilo](https://gnugat.github.io/redaktilo):
   An easy "line manipulation" PHP lib: jump, insert and do anything!
   ([Symfony2 Bundle](https://github.com/gnugat/redaktilo-bundle))

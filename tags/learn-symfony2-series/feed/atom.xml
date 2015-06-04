@@ -5,8 +5,112 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2015-05-28T00:00:00+01:00</updated>
+            <updated>2015-06-03T00:00:00+01:00</updated>
             <entry>
+        <title>Symfony Differently - part 1: Introduction</title>
+                <id>http://gnugat.github.io/2015/06/03/sf-differently-part-1-introduction.html</id>
+                <updated>2015-06-03T00:00:00+01:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/06/03/sf-differently-part-1-introduction.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p><a href="https://symfony.com">Symfony</a> is an amazing HTTP framework which powers
+<a href="http://labs.octivi.com/handling-1-billion-requests-a-week-with-symfony2/">high traffic websites</a>.
+Performance shouldn't be a concern when first creating a website, because between
+the time it is launched and the time it actually has a high traffic many things
+that we didn't expect in the first days will happen:</p>
+<ul><li>requirements will change</li>
+<li>user behavior will change</li>
+<li>even the team can change</li>
+</ul><p>Optimizing applications has an impact over maintenance, and making it harder to change
+right from the begining might not be the best option. However when the need of performance
+actually arises, we need to tackle it.</p>
+<p>This series of articles is about this specific moment, and how to tackle it in a pragmatic way.</p>
+<blockquote>
+<p><strong>Spoiler Alert</strong>: It will feature a section where we optimize our application step by step,
+with a monitoring of the impact on performance. We'll see that those don't make a big
+difference, which is why those concerns shouldn't be addressed from day 1.</p>
+</blockquote>
+<p>First, let's have a look at the big picture. Please note that the approach we use
+here is only one amongst many (every need is different, it might not be the best in every situations).</p>
+<h2 id="the-project">The project<a href="#the-project" class="anchor">#</a></h2>
+<p>For our examples, we'll pretend to be the Acme Company which powers half the planet
+in almost every aspect of our lives. Performance isn't just a concern, it has become
+a reality.</p>
+<blockquote>
+<p><strong>Note</strong>: Those examples are all made up, but they're based on real experience.</p>
+</blockquote>
+<p>We've analysed our market and we'd like to have the following new feature:</p>
+<pre><code>As a customer, I'd like to buy an item</code></pre>
+<p>During a meeting, we've come up with the following example:</p>
+<pre><code>Given a "fruit" category
+When I pick a "banana"
+Then it should be ordered</code></pre>
+<h2 id="the-team">The team<a href="#the-team" class="anchor">#</a></h2>
+<p>In the first days of Acme, we only had a few developers which were full stack. It
+worked quite well but we've grown so much that we had to recruit more specialized
+profiles with a frontend team and an API one: it allowed us to parallelise the work.</p>
+<h2 id="the-architecture">The architecture<a href="#the-architecture" class="anchor">#</a></h2>
+<p>Frontend applications that live in the customer's browser have been chosen because:</p>
+<ul><li>they are extremely responsive</li>
+<li>they provide a richer User eXperience</li>
+<li>they have a lower server consumption</li>
+</ul><p>In the early days of Acme there was a single big application, but with the number
+of customer growing and asking features specific to their need, it failed us hard
+costing us Money, Customers and Developers.
+Now each frontend applications talk to a dedicated API.</p>
+<p>The dedicated APIs mix and match data coming from another layer of specific APIs.
+Those basically provide Create Read Update Delete and Search (CRUDS) access to
+their own data storage.</p>
+<blockquote>
+<p><strong>Note</strong>: We've decided to have two layers of APIs in order to avoid mixing
+features specific to a customer in an endpoint used by everyone.</p>
+</blockquote>
+<p>From the Use Stories, we've identified two types of data: <code>item</code> related ones
+and <code>order</code> related one.
+We've decided to create the following applications:</p>
+<ul><li><code>acme/order-items-front</code>, the frontend application</li>
+<li><code>acme/order-items-api</code> the dedicated API</li>
+<li><code>acme/items</code>, an API specific to the <code>item</code> and <code>item_category</code> tables</li>
+<li><code>acme/orders</code>, an API specific to the <code>order</code> table</li>
+</ul><p>In this series, we'll focus on the creation of the Search endpoint in <code>acme/items</code>.</p>
+<h2 id="the-task">The task<a href="#the-task" class="anchor">#</a></h2>
+<p>The Search endpoint should allow:</p>
+<ul><li>pagination of items, using <code>page</code> and <code>per_page</code> parameters</li>
+<li>filtering of items, using column name with value for parameters</li>
+<li>ordering items, using a <code>sort</code> parameter</li>
+</ul><p>In this series, we'll focus on filtering items.</p>
+<p>Here's a valid <code>Request</code> sample:</p>
+<pre><code>GET /v1/items?name=AN HTTP/1.1</code></pre>
+<p>It should return a <code>Response</code> similar to:</p>
+<pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"data":[{"id":42,"name":"banana","category_id":23}],"page":{"current_page":1,"per_page":1,"total_elements":1,"total_pages":1}}</code></pre>
+<blockquote>
+<p><strong>Note</strong>: The given pattern "AN" should be able to match "banana", which means
+the search has to be case insensitive and able to look for a part of a word
+(in this case in the middle of the word).</p>
+</blockquote>
+<p>Here's an invalid (unkown field) <code>Request</code> sample:</p>
+<pre><code>GET /v1/items?nobody_expects=the%20spanish%20inquisition HTTP/1.1</code></pre>
+<p>It should return a <code>Response</code> similar to:</p>
+<pre><code>HTTP/1.1 422 UNPROCESSABLE ENTITY
+Content-Type: application/json
+
+{"message":"Invalid parameter: cannot filter by column \"nobody_expects\", valid choices are \"id\", \"name\" and \"category_id\""}</code></pre>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Our Acme mega corporation needs a new feature and we've decided to implement it
+by creating a frontend, its dedicated API which mix and match data coming from two new
+specific APIs.</p>
+<p>The choice of this architecture has been made because it solved issues encountered
+in Acme's past, when we had a single big application.</p>
+<p>In the next article we'll bootstrap a Symfony application to create an endpoint to search
+for items. In the mean time if you're interrested in creating APIs in a pragmatic way you can
+read <a href="http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api">the following article</a>.</p>]]></content>
+    </entry>
+        <entry>
         <title>SpecGen v0.3</title>
                 <id>http://gnugat.github.io/2015/05/28/spec-gen-0-3.html</id>
                 <updated>2015-05-28T00:00:00+01:00</updated>
