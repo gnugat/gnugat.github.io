@@ -51,7 +51,7 @@ During a meeting, we've come up with the following example:
 
 In the first days of Acme, we only had a few developers which were full stack. It
 worked quite well but we've grown so much that we had to recruit more specialized
-profiles with a frontend team and an API one: it allowed us to parallelise the work.
+profiles with a frontend team and an API one: it allowed us to parallelize the work.
 
 ## The architecture
 
@@ -82,6 +82,8 @@ We've decided to create the following applications:
 * `acme/items`, an API specific to the `item` and `item_category` tables
 * `acme/orders`, an API specific to the `order` table
 
+![Diagram](http://yuml.me/c0591d90)
+
 In this series, we'll focus on the creation of the Search endpoint in `acme/items`.
 
 ## The task
@@ -92,12 +94,12 @@ The Search endpoint should allow:
 * filtering of items, using column name with value for parameters
 * ordering items, using a `sort` parameter
 
-In this series, we'll focus on filtering items.
+In this series, we'll focus on paginating items.
 
 Here's a valid `Request` sample:
 
 ```
-GET /v1/items?name=AN HTTP/1.1
+GET /v1/items?page=2&per_page=1 HTTP/1.1
 ```
 
 It should return a `Response` similar to:
@@ -106,37 +108,22 @@ It should return a `Response` similar to:
 HTTP/1.1 200 OK
 Content-Type: application/json
 
-{"data":[{"id":42,"name":"banana","category_id":23}],"page":{"current_page":1,"per_page":1,"total_elements":1,"total_pages":1}}
-```
-
-> **Note**: The given pattern "AN" should be able to match "banana", which means
-> the search has to be case insensitive and able to look for a part of a word
-> (in this case in the middle of the word).
-
-Here's an invalid (unkown field) `Request` sample:
-
-```
-GET /v1/items?nobody_expects=the%20spanish%20inquisition HTTP/1.1
-```
-
-It should return a `Response` similar to:
-
-```
-HTTP/1.1 422 UNPROCESSABLE ENTITY
-Content-Type: application/json
-
-{"message":"Invalid parameter: cannot filter by column \"nobody_expects\", valid choices are \"id\", \"name\" and \"category_id\""}
+{"data":[{"id":42,"name":"banana","category_id":23}],"page":{"current_page":2,"per_page":1,"total_elements":2,"total_pages":2}}
 ```
 
 ## Conclusion
 
 Our Acme mega corporation needs a new feature and we've decided to implement it
-by creating a frontend, its dedicated API which mix and match data coming from two new
-specific APIs.
+by creating a frontend, its dedicated API which mix and match data coming from two
+new specific APIs.
 
 The choice of this architecture has been made because it solved issues encountered
 in Acme's past, when we had a single big application.
 
 In the next article we'll bootstrap a Symfony application to create an endpoint to search
-for items. In the mean time if you're interrested in creating APIs in a pragmatic way you can
+for items.
+
+In the mean time if you're interrested in creating APIs in a pragmatic way you can
 read [the following article](http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api).
+If you're wondering why Acme didn't use this approach from the begining you might
+want to read [the following article](http://martinfowler.com/bliki/MonolithFirst.html).

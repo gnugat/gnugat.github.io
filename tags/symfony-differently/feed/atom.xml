@@ -50,7 +50,7 @@ Then it should be ordered</code></pre>
 <h2 id="the-team">The team<a href="#the-team" class="anchor">#</a></h2>
 <p>In the first days of Acme, we only had a few developers which were full stack. It
 worked quite well but we've grown so much that we had to recruit more specialized
-profiles with a frontend team and an API one: it allowed us to parallelise the work.</p>
+profiles with a frontend team and an API one: it allowed us to parallelize the work.</p>
 <h2 id="the-architecture">The architecture<a href="#the-architecture" class="anchor">#</a></h2>
 <p>Frontend applications that live in the customer's browser have been chosen because:</p>
 <ul><li>they are extremely responsive</li>
@@ -74,41 +74,33 @@ We've decided to create the following applications:</p>
 <li><code>acme/order-items-api</code> the dedicated API</li>
 <li><code>acme/items</code>, an API specific to the <code>item</code> and <code>item_category</code> tables</li>
 <li><code>acme/orders</code>, an API specific to the <code>order</code> table</li>
-</ul><p>In this series, we'll focus on the creation of the Search endpoint in <code>acme/items</code>.</p>
+</ul><p><img alt="Diagram" src="http://yuml.me/c0591d90"></p>
+<p>In this series, we'll focus on the creation of the Search endpoint in <code>acme/items</code>.</p>
 <h2 id="the-task">The task<a href="#the-task" class="anchor">#</a></h2>
 <p>The Search endpoint should allow:</p>
 <ul><li>pagination of items, using <code>page</code> and <code>per_page</code> parameters</li>
 <li>filtering of items, using column name with value for parameters</li>
 <li>ordering items, using a <code>sort</code> parameter</li>
-</ul><p>In this series, we'll focus on filtering items.</p>
+</ul><p>In this series, we'll focus on paginating items.</p>
 <p>Here's a valid <code>Request</code> sample:</p>
-<pre><code>GET /v1/items?name=AN HTTP/1.1</code></pre>
+<pre><code>GET /v1/items?page=2&amp;per_page=1 HTTP/1.1</code></pre>
 <p>It should return a <code>Response</code> similar to:</p>
 <pre><code>HTTP/1.1 200 OK
 Content-Type: application/json
 
-{"data":[{"id":42,"name":"banana","category_id":23}],"page":{"current_page":1,"per_page":1,"total_elements":1,"total_pages":1}}</code></pre>
-<blockquote>
-<p><strong>Note</strong>: The given pattern "AN" should be able to match "banana", which means
-the search has to be case insensitive and able to look for a part of a word
-(in this case in the middle of the word).</p>
-</blockquote>
-<p>Here's an invalid (unkown field) <code>Request</code> sample:</p>
-<pre><code>GET /v1/items?nobody_expects=the%20spanish%20inquisition HTTP/1.1</code></pre>
-<p>It should return a <code>Response</code> similar to:</p>
-<pre><code>HTTP/1.1 422 UNPROCESSABLE ENTITY
-Content-Type: application/json
-
-{"message":"Invalid parameter: cannot filter by column \"nobody_expects\", valid choices are \"id\", \"name\" and \"category_id\""}</code></pre>
+{"data":[{"id":42,"name":"banana","category_id":23}],"page":{"current_page":2,"per_page":1,"total_elements":2,"total_pages":2}}</code></pre>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>Our Acme mega corporation needs a new feature and we've decided to implement it
-by creating a frontend, its dedicated API which mix and match data coming from two new
-specific APIs.</p>
+by creating a frontend, its dedicated API which mix and match data coming from two
+new specific APIs.</p>
 <p>The choice of this architecture has been made because it solved issues encountered
 in Acme's past, when we had a single big application.</p>
 <p>In the next article we'll bootstrap a Symfony application to create an endpoint to search
-for items. In the mean time if you're interrested in creating APIs in a pragmatic way you can
-read <a href="http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api">the following article</a>.</p>]]></content>
+for items.</p>
+<p>In the mean time if you're interrested in creating APIs in a pragmatic way you can
+read <a href="http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api">the following article</a>.
+If you're wondering why Acme didn't use this approach from the begining you might
+want to read <a href="http://martinfowler.com/bliki/MonolithFirst.html">the following article</a>.</p>]]></content>
     </entry>
         <entry>
         <title>SpecGen v0.3</title>
