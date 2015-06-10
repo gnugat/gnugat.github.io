@@ -241,7 +241,7 @@ class RollbackKernel implements HttpKernelInterface
 }
 ```
 
-To be able to use `RollabKernel` in our test we need to make it available by
+To be able to use `RollbackKernel` in our tests we need to make it available by
 creating the following `app/bootstrap_test.php`:
 
 ```php
