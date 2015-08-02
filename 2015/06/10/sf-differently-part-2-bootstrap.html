@@ -75,7 +75,7 @@ here is that the choice should mainly rely on skills we have internally
 <pre><code>composer create-project symfony/framework-standard-edition items</code></pre>
 <p>This will create a directory structure for our project, download a set of third
 party libraries and ask us to set a bunch of configuration parameters. In this
-series we'll use a Postgres database, so we need to edit <code>app/config.yml</code>:</p>
+series we'll use a Postgres database, so we need to edit <code>app/config/config.yml</code>:</p>
 <pre><code># ...
 
 # Doctrine Configuration
@@ -90,15 +90,15 @@ git init
 git add -A
 git ci -m 'Created a standard Symfony application'</code></pre>
 <blockquote>
-<p><strong>Note</strong>: We can also ue the <a href="http://symfony.com/doc/current/book/installation.html#installing-the-symfony-installer">Symfony Installer</a>
+<p><strong>Note</strong>: We can also use the <a href="http://symfony.com/doc/current/book/installation.html#installing-the-symfony-installer">Symfony Installer</a>
 to create new projects.</p>
 </blockquote>
 <h2 id="configuring-apache">Configuring Apache<a href="#configuring-apache" class="anchor">#</a></h2>
 <p>For the same reason we chose Symfony we've decided to use Apache for our web servers
 (it's the one used for all previous projects).</p>
 <blockquote>
-<p><strong>Note</strong>: By providing Nginx trainings and recruiting devops used to it Acme
-could change our technology stack. The only rule when switching to another
+<p><strong>Note</strong>: By providing Nginx trainings and recruiting devops used to, it Acme
+could change its technology stack. The only rule when switching to another
 technology is to stick to it in order to avoid having too many different technologies.</p>
 </blockquote>
 <p>We need to create a virtual host first by creating the <code>/etc/apache2/sites-available/items.conf</code>
@@ -386,7 +386,10 @@ application in the future, we've chosen to stay consistent with the rest.</p>
                 <a class="btn btn-lg btn-default btn-block" href="../../../2015/06/03/sf-differently-part-1-introduction.html" role="button">Previous: Symfony Differently - part 1: Introduction</a>
             </div>
             
-                                </footer>
+                                    <div class="col-md-6">
+                <a class="btn btn-lg btn-default btn-block" href="../../../2015/08/02/sf-differently-part-3-conclusion.html" role="button">Next: Symfony Differently - part 3: Conclusion</a>
+            </div>
+                    </footer>
     </article>
           </div>
         
