@@ -27,7 +27,7 @@ The first step is to use [Composer](http://getcomposer.com/):
 
 This will create a directory structure for our project, download a set of third
 party libraries and ask us to set a bunch of configuration parameters. In this
-series we'll use a Postgres database, so we need to edit `app/config.yml`:
+series we'll use a Postgres database, so we need to edit `app/config/config.yml`:
 
 ```
 # ...
@@ -49,7 +49,7 @@ git add -A
 git ci -m 'Created a standard Symfony application'
 ```
 
-> **Note**: We can also ue the [Symfony Installer](http://symfony.com/doc/current/book/installation.html#installing-the-symfony-installer)
+> **Note**: We can also use the [Symfony Installer](http://symfony.com/doc/current/book/installation.html#installing-the-symfony-installer)
 > to create new projects.
 
 ## Configuring Apache
@@ -57,8 +57,8 @@ git ci -m 'Created a standard Symfony application'
 For the same reason we chose Symfony we've decided to use Apache for our web servers
 (it's the one used for all previous projects).
 
-> **Note**: By providing Nginx trainings and recruiting devops used to it Acme
-> could change our technology stack. The only rule when switching to another
+> **Note**: By providing Nginx trainings and recruiting devops used to, it Acme
+> could change its technology stack. The only rule when switching to another
 > technology is to stick to it in order to avoid having too many different technologies.
 
 We need to create a virtual host first by creating the `/etc/apache2/sites-available/items.conf`
