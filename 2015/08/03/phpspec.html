@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>phpspec</title>
+
+    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
+    <meta name="author" content="Loïc Chardonnet">
+    <meta name="viewport" content="width=device-width">
+
+    
+    <link rel="canonical" href="http://gnugat.github.io/2015/08/03/phpspec.html"/>
+              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
+      
+    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+
+  <body>
+          <div class="container">
+            <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="../../..">Articles</a>
+            </div>
+
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
+                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
+                                                                                        </ul>
+                            </div>
+        </div>
+    </nav>
+
+                  <div class="content">
+                                          <h1>
+                  phpspec</h1>
+                          
+                <article>
+        <ul class="list-inline">
+            <li>
+                03/08/2015
+            </li>
+                        <li>
+                <a href="../../../tags/introducing-library.html"><span class="label label-primary">Introducing Library</span></a>
+            </li>
+                        <li>
+                <a href="../../../tags/phpspec.html"><span class="label label-primary">Phpspec</span></a>
+            </li>
+                    </ul>
+        <hr />
+        <div class="body">
+            <p><a href="http://www.phpspec.net">phpspec</a> is a highly opinionated unit test framework:
+it was conceived to practice <a href="http://dannorth.net/introducing-bdd/">specBDD</a>
+(test method names should be sentences) and
+<a href="http://martinfowler.com/articles/mocksArentStubs.html">Mockist TDD</a>
+(collaborators should always be mocked) and tries to enforce some testing practices
+(see <a href="https://twitter.com/_md">Marcello Duarte</a>'s <a href="http://techportal.inviqa.com/2014/09/11/my-top-ten-favourite-phpspec-limitations/">top 10 favourite phpspec limitations</a>).</p>
+<p>The <a href="http://blog.astrumfutura.com/2008/01/the-phpspec-zend-framework-app-testing-manifesto-zf-integration/">first version</a>
+was created by <a href="https://twitter.com/padraicb">Pádraic Brady</a> as a port of <a href="http://rspec.info/">rspec</a>,
+but Marcello Duarte and <a href="https://twitter.com/everzet">Konstantin Kudryashov</a>
+took over and released a second version which added code generation.
+<a href="https://twitter.com/CiaranMcNulty">Ciaran McNulty</a> then took the lead from v2.1
+and added many features like collaborator generation, better exception specification
+and currently for version 2.3 better constructor specification.</p>
+<h2 id="usage-example">Usage example<a href="#usage-example" class="anchor">#</a></h2>
+<p>Let's have a look at how phpspec works. For this we'll need to have a project configured with
+<a href="https://getcomposer.org/download">Composer</a>. Here's the <code>composer.json</code> file:</p>
+<pre><code>{
+    "name": "vendor/project",
+    "autoload": {
+        "psr-4": {
+            "Vendor\\Project\\": "src/Vendor/Project"
+        }
+    },
+    "require": {},
+    "require-dev": {}
+}</code></pre>
+<p>We can install phpspec with the following:</p>
+<pre><code>composer require --dev phpspec/phpspec:^2.2</code></pre>
+<p>Let's say we want to create a class that edits text files. We can call this class
+<code>TextEditor</code>:</p>
+<pre><code>phpspec describe 'Vendor\Project\TextEditor'</code></pre>
+<blockquote>
+<p><strong>Tip</strong>: make your vendor's binaries available by adding <code>vendor/bin</code> to your <code>$PATH</code>.
+<code>export PATH="vendor/bin:$PATH"</code>.</p>
+</blockquote>
+<p>We should now have the <code>spec/Vendor/Project/TextEditorSpec.php</code> file, bootstraped
+for us by phpspec:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace spec\Vendor\Project;
+
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class TextEditorSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType('Vendor\Project\TextEditor');
+    }
+}</code></pre>
+<blockquote>
+<p><strong>Note</strong>: this test can only be used to test the <code>TextEditor</code> class.</p>
+</blockquote>
+<p>Our first use case will be about creating a file if it doesn't already exist.
+Those are filesystem operations, so we decide to delegate the actual logic to a
+<code>Filesystem</code> class (we'll create it later).</p>
+<p>So our first step will be to create a set up method (it will be executed before
+every test method) that initializes our object:</p>
+<pre><code class="language-php">&lt;?php
+// File: spec/Vendor/Project/TextEditorSpec.php
+
+namespace spec\Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+use PhpSpec\ObjectBehavior;
+
+class TextEditorSpec extends ObjectBehavior
+{
+    function let(Filesystem $filesystem)
+    {
+        $this-&gt;beConstructedWith($filesystem);
+    }
+}</code></pre>
+<p>Arguments passed to test methods are actually test doubles (phpspec uses the typehint
+to know what to mock).</p>
+<p>Now we can create the actual test method:</p>
+<pre><code class="language-php">&lt;?php
+// File: spec/Vendor/Project/TextEditorSpec.php
+
+namespace spec\Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+use Vendor\Project\File;
+use PhpSpec\ObjectBehavior;
+
+class TextEditorSpec extends ObjectBehavior
+{
+    const FILENAME = '/tmp/file.txt';
+    const FORCE_FILE_CREATION = true;
+
+    function let(Filesystem $filesystem)
+    {
+        $this-&gt;beConstructedWith($filesystem);
+    }
+
+    function it_can_force_file_creation_if_it_does_not_already_exists(File $file, Filesystem $filesystem)
+    {
+        $filesystem-&gt;exists(self::FILENAME)-&gt;willReturn(false);
+        $filesystem-&gt;create(self::FILENAME)-&gt;willReturn($file);
+
+        $this-&gt;open(self::FILENAME, self::FORCE_FILE_CREATION)-&gt;shouldBe($file);
+    }
+}</code></pre>
+<p>This is roughly the equivalent of the following with <a href="https://phpunit.de/">PHPUnit</a>:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project\Tests;
+
+use Vendor\Project\Service\Filesystem;
+use Vendor\Project\File;
+use PhpSpec\ObjectBehavior;
+
+class TextEditorTest extends PHPUnit_Framewor_TestCase
+{
+    const FILENAME = '/tmp/file.txt';
+    const FORCE_FILE_CREATION = true;
+
+    private $prophet;
+    private $filesystem;
+    private $textEditor;
+
+    protected function setUp()
+    {
+        $this-&gt;prophet = new \Prophecy\Prophet();
+        $this-&gt;filesystem = $this-&gt;prophet-&gt;prophesize('Vendor\Project\Service\Filesystem');
+        $this-&gt;textEditor = new TextEditor($filesystem-&gt;reveal());
+    }
+
+    protected function tearDown()
+    {
+        $this-&gt;prophet-&gt;checkPredictions();
+    }
+
+    /**
+     * @test
+     */
+    public function it_can_force_file_creation_if_it_does_not_already_exists()
+    {
+        $file = $this-&gt;prophet-&gt;prophesize('Vendor\Project\File');
+        $this-&gt;filesystem-&gt;exists(self::FILENAME)-&gt;willReturn(false);
+        $this-&gt;filesystem-&gt;create(self::FILENAME)-&gt;willReturn($file);
+
+        self::assertSame($file, $this-&gt;textEditor-&gt;open(self::FILENAME, self::FORCE_FILE_CREATION));
+    }
+}</code></pre>
+<blockquote>
+<p><strong>Note</strong>: We tried to make the test method as descriptive as possible (e.g. not <code>testOpen()</code>).
+This is the whole point of specBDD (specification Behavior Driven Development).</p>
+</blockquote>
+<p>phpspec uses the mocking library prophecy (also available in PHPUnit since version 4.4),
+which tries to be as less verbose as possible: to describe interractions, test doubles
+can almost be used as the actual object, except we need to add a <code>-&gt;willreturn()</code> or
+<code>-&gt;shouldBeCalled()</code> call afterwards.</p>
+<blockquote>
+<p><strong>Note</strong>: By mocking all collaborators, we are forced to think how our object interracts with them.
+This is the whole point of Mockist TDD (Mockist Test Driven Development).</p>
+</blockquote>
+<p>Now that we have a test, we are going to execute the test suite (as advocated by TDD):</p>
+<pre><code>phpspec run</code></pre>
+<p>It will ask the following 7 questions:</p>
+<ol><li>Would you like me to generate an interface <code>Vendor\Project\Service\Filesystem</code> for you?</li>
+<li>Would you like me to generate an interface <code>Vendor\Project\File</code> for you?</li>
+<li>Would you like me to generate a method signature <code>Vendor\Project\Service\Filesystem::exists()</code> for you?</li>
+<li>Would you like me to generate a method signature <code>Vendor\Project\Service\Filesystem::create()</code> for you?</li>
+<li>Do you want me to create <code>Vendor\Project\TextEditor</code> for you?</li>
+<li>Do you want me to create <code>Vendor\Project\TextEditor::__construct()</code> for you?</li>
+<li>Do you want me to create <code>Vendor\Project\TextEditor::open()</code> for you?</li>
+</ol><p>By accepting everytime, phpspec will bootstrap the following
+<code>src/Vendor/Project/Vendor/TextEditor.php</code> file:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project;
+
+class TextEditor
+{
+
+    public function __construct($argument1)
+    {
+        // TODO: write logic here
+    }
+
+    public function open($argument1, $argument2)
+    {
+        // TODO: write logic here
+    }
+}</code></pre>
+<p>In our specification, we make use of non existing class (<code>File</code> and <code>Filesystem</code>)
+but phpspec also bootstraped them for us, for example <code>src/Vendor/Project/Vendor/Filesystem.php</code>:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project\Service;
+
+interface Filesystem
+{
+
+    public function exists($argument1);
+
+    public function create($argument1);
+}</code></pre>
+<p>This is extremely usefull to kickstart our TDD cycle!</p>
+<p>Once the code is written, we'll execute the test suite again, and then we'll add more
+use cases to the test class (e.g. what happens if the file already exists?).</p>
+<p>For further usage example, have a look at: <a href="../../../tags/phpspec.html">articles tagged with phpspec</a>.</p>
+<h2 id="specgen">SpecGen<a href="#specgen" class="anchor">#</a></h2>
+<p>phpspec's code generator is a big part of its value, but it could do more for us.
+Hence the <a href="https://github.com/memio/spec-gen">SpecGen</a> extension!</p>
+<p>We can install it as follow:</p>
+<pre><code>composer require --dev memio/spec-gen:^0.4
+echo 'extensions:' &gt; phpspec.yml
+echo '  - Memio\SpecGen\MemioSpecGenExtension' &gt;&gt; phpspec.yml</code></pre>
+<p>If we remove the code generated by phpspec:</p>
+<pre><code>rm src/Vendor/Project/TextEditor.php</code></pre>
+<p>And re-run the tests:</p>
+<pre><code>phpspec run</code></pre>
+<p>Then the generated class will be:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+
+class TextEditor
+{
+    private $filesystem;
+
+    public function __construct(Filesystem $filesystem)
+    {
+        $this-&gt;filesystem = $filesystem;
+    }
+
+    public function open($argument1, $argument2)
+    {
+    }
+}</code></pre>
+<h2 id="emergent-design">Emergent Design<a href="#emergent-design" class="anchor">#</a></h2>
+<p>Test are more than simple regression checks: when a class is hard to test it indicates
+that it does too many things or is too coupled.</p>
+<p>They can also be used as a design tool: in our test method we can define exactly how
+we would like to use the future object. We can even decide on the go that some logic
+could be done by collaborators that don't exist yet and start defining how we like to
+interract with them.</p>
+<p>This is what Emergent Design is all about: the design emerges on the go from the tests.
+Then they stop being simple tests, they become specifications: a live documentation
+of your code, which never become out of date.</p>
+<h2 id="tips">Tips<a href="#tips" class="anchor">#</a></h2>
+<p>Here are some personal tips:</p>
+<ul><li>use <code>willReturn</code> if you need the returned value of a collaborator (official name: Mock)</li>
+<li>use <code>shouldBeCalled</code> to check that a collaborator is called (official name: Stub)</li>
+<li>do not chain <code>willReturn</code> and <code>shouldBeCalled</code>, you have to pick one!</li>
+<li>create a <code>it_is_a_</code> test method with a <code>shouldImplement</code> check when testing implementations</li>
+<li>the <code>shouldBe</code> matcher is usually the only one you need</li>
+<li>if you have a lot (how many? that's your call) of test methods, maybe it's time to split your object</li>
+<li>if you copy paste the same block of code in many test methods, maybe it's time extract it into an object</li>
+</ul><p>If the tested object (official name: System Under Test, SUT) creates a value object and passes
+it to a collaborator you have two choices:</p>
+<ul><li>pass <code>Argument::type('MyValueObject')</code></li>
+<li>create a factory and add it as a dependency</li>
+</ul><h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>phpspec is a nice unit testing framework, with many advantages:</p>
+<ul><li>it's fast: on average projects the test suite is run in less than a second</li>
+<li>it's a good pair-programming partner: when something is hard to test, it means that there is a better diffrent way to do it</li>
+<li>it's a time saver: the code bootstrapping feature is a must have!</li>
+<li>it isn't verbose: tests can be read as documented code examples</li>
+</ul><p>Give it a try!</p>
+        </div>
+
+        <footer class="next-previous row">
+                                    <div class="col-md-6">
+                <a class="btn btn-lg btn-default btn-block" href="../../../2015/08/02/sf-differently-part-3-conclusion.html" role="button">Previous: Symfony Differently - part 3: Conclusion</a>
+            </div>
+            
+                                </footer>
+    </article>
+          </div>
+        
+                  <div class="row comments">
+          <div class="span10 offset1 content">
+              <div id="disqus_thread"></div>
+          </div>
+      </div>
+                  <footer>
+            <p class="text-center">
+              &copy;
+                              <a href="http://gnugat.github.io">
+                  Loïc Chardonnet
+                </a>
+                            2015
+              <small>
+                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
+              </small>
+            </p>
+          </footer>
+        
+      </div>
+    
+    
+                  <script src="../../../js/jquery-2.1.0.min.js"></script>
+      <script src="../../../js/bootstrap.min.js"></script>
+      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-47822314-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+
+            <script type="text/javascript">
+            var disqus_shortname = 'gnugatgithubio';
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+      </body>
+</html>
