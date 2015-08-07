@@ -5,8 +5,101 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2015-08-06T00:00:00+01:00</updated>
+            <updated>2015-08-07T00:00:00+01:00</updated>
             <entry>
+        <title>Diactoros (PSR-7)</title>
+                <id>http://gnugat.github.io/2015/08/07/diactoros-psr7.html</id>
+                <updated>2015-08-07T00:00:00+01:00</updated>
+        <author>
+            <name>Loïc Chardonnet</name>
+            <email>loic.chardonnet@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/08/07/diactoros-psr7.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p><a href="https://github.com/zendframework/zend-diactoros">Zend Diactoros</a> is a lightweight
+library providing implementations for <a href="http://www.php-fig.org/psr/psr-7/">PSR-7 interfaces</a>.</p>
+<p>It can be installed using <a href="https://getcomposer.org/download/">Composer</a>:</p>
+<pre><code>composer require zendframework/zend-diactoros:^1.0</code></pre>
+<h2 id="example">Example<a href="#example" class="anchor">#</a></h2>
+<p>We'd like to retrieve data from remote endpoints, using our internal <code>RequestHandler</code>:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project;
+
+use Psr\Http\Message\RequestInterface;
+
+interface RequestHandler
+{
+    // @return \Psr\Http\Message\ResponseInterface
+    public function handle(RequestInterface $request);
+}</code></pre>
+<blockquote>
+<p><strong>Note</strong>: For the sake of our example we use this interface, but in your application
+you'd use an actual HTTP client (e.g. <a href="http://guzzle.readthedocs.org/en/latest/">Guzzle</a>).</p>
+</blockquote>
+<p><code>RequestHandler</code> expects a <code>Request</code> parameter, so we're going to build it:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project;
+
+use Zend\Diactoros\Request;
+use Zend\Diactoros\Stream;
+
+class MemberGateway
+{
+    private $requestHandler;
+    private $username;
+    private $password;
+
+    public function __construct(RequestHandler $requestHandler, $username, $password)
+    {
+        $this-&gt;requestHandler = $requestHandler;
+        $this-&gt;username = $username;
+        $this-&gt;password = $password;
+    }
+
+    public function findOne($id)
+    {
+        $request = new Request('http://example.com/members/'.$id, 'GET', 'php://memory', array(
+            'Authorization' =&gt; 'Basic '.base64_encode($this-&gt;username.':'.$this-&gt;password),
+        ));
+        $item = json_decode($this-&gt;requestHandler-&gt;handle($request)-&gt;getBody()-&gt;__toString(), true);
+
+        return array(
+            'id' =&gt; $item['id'],
+            'name' =&gt; $item['name'],
+            'description' =&gt; $item['description'],
+        );
+    }
+
+    public function createOne($name, $description)
+    {
+        $body = new Stream('php://memory', 'w');
+        $body-&gt;write(json_encode(array(
+            'name' =&gt; $name,
+            'description' =&gt; $description,
+        )));
+        $request = new Request('http://example.com/members/'.$id, 'GET', $body, array(
+            'Authorization' =&gt; 'Basic '.base64_encode($this-&gt;username.':'.$this-&gt;password),
+        ));
+        $item = json_decode($this-&gt;requestHandler-&gt;handle($request)-&gt;getBody()-&gt;__toString(), true);
+
+        return array(
+            'id' =&gt; $item['id'],
+            'name' =&gt; $item['name'],
+            'description' =&gt; $item['description'],
+        );
+    }
+}</code></pre>
+<p>The body of <code>Request</code> and <code>Response</code> is wrapped in a <code>Stream</code> (as specified in PSR-7).</p>
+<h2 id="tips">Tips<a href="#tips" class="anchor">#</a></h2>
+<p>If the <code>Request</code> body should be empty, simply pass <code>php://memory</code>.</p>
+<p>If the <code>Response</code> has a body, we can convert the <code>Stream</code> into a string using <code>__toString</code>.</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Zend Diactoros is becoming the de facto PSR-7 implementation, for example it's
+used in <a href="http://symfony.com/blog/psr-7-support-in-symfony-is-here">Symfony</a>.</p>
+<p>You should give it a try!</p>]]></content>
+    </entry>
+        <entry>
         <title>Pomm Foundation</title>
                 <id>http://gnugat.github.io/2015/08/06/pomm-foundation.html</id>
                 <updated>2015-08-06T00:00:00+01:00</updated>
