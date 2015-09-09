@@ -5,14 +5,121 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2015-08-25T00:00:00+01:00</updated>
+            <updated>2015-09-09T00:00:00+01:00</updated>
             <entry>
+        <title>Tactician</title>
+                <id>http://gnugat.github.io/2015/09/09/tactician.html</id>
+                <updated>2015-09-09T00:00:00+01:00</updated>
+        <author>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/09/09/tactician.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>Just like <a href="../../../2015/08/04/simple-bus.html">SimpleBus</a>,
+<a href="https://tactician.thephpleague.com/">Tactician</a> is a lightweight library created by
+<a href="http://rosstuck.com/">Ross Tuck</a> allowing you to use the Command Bus design pattern
+in your applications.</p>
+<blockquote>
+<p><strong>Note</strong>: Command Bus is often used to comply to <a href="../../../2015/08/25/cqrs.html">CQRS</a>, but not only.</p>
+</blockquote>
+<h2 id="usage-example">Usage example<a href="#usage-example" class="anchor">#</a></h2>
+<p>Here's how to install Tactician:</p>
+<pre><code>composer require league/tactician:^0.6</code></pre>
+<p>Then we have to associate a Command to a CommandHandler:</p>
+<pre><code class="language-php">&lt;?php
+
+use League\Tactician\Setup\QuickStart;
+
+require __DIR__.'/vendor/autoload.php';
+
+$commandBus = QuickStart::create(array(
+    'Vendor\Project\Member\RegisterMember' =&gt; new Vendor\Project\Member\RegisterMemberHandler(),
+));</code></pre>
+<p>It provides many framework integrations, including one for <a href="http://symfony.com/">Symfony</a>:</p>
+<pre><code>composer require league/tactician-bundle:^3.0
+# Don't forget to register `League\Tactician\Bundle\TacticianBundle` in `AppKernel`</code></pre>
+<p>Then we just have to use the <code>tactician.commandBus</code> service. To register Command Handler, we
+need to tag service definitions as follow:</p>
+<pre><code>services:
+    register_member_handler:
+        class: Vendor\Project\Member\RegisterMemberHandler
+        tags:
+        - { name: tactician.handler, command: Vendor\Project\Member\RegisterMember }</code></pre>
+<p>Now that the configuration is settled, here's a usage example:</p>
+<pre><code class="language-php">$username = isset($argv[1]) ? $argv[1] : null;
+$commandBus-&gt;handle(new RegisterMember($username));</code></pre>
+<p>The command would look like this:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project\Member;
+
+class RegisterMember
+{
+    private $username;
+
+    public function __construct($username)
+    {
+        if (null === $username) {
+            throw new \InvalidArgumentException('Missing required "username" parameter');
+        }
+        $this-&gt;username = $username;
+    }
+
+    public function getUsername()
+    {
+        return $this-&gt;username;
+    }
+}</code></pre>
+<blockquote>
+<p><strong>Note</strong>: Commands validate simple input logic (required parameters, parameter type, etc).</p>
+</blockquote>
+<p>The Command Handler could look like this:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project\Member;
+
+class RegisterMember
+{
+    private $memberRepository;
+
+    public function __construct(MemberRespository $memberRepository)
+    {
+        $this-&gt;memberRepository = $memberRepository;
+    }
+
+    public function handle(RegisterMember $registerMember)
+    {
+        $username = $registerMember-&gt;getUsername();
+        if ($memberRepository-&gt;has($username)) {
+            throw new \DomainException(sprintf('Given username "%s" already exists, and duplicates are not allowed', $username));
+        }
+        $memberRepository-&gt;register($registerMember);
+    }
+}</code></pre>
+<p>The Command Handler validates more complex logic (member username duplication, etc).</p>
+<p>Here's a nice reference about command validation: <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command, and Model Validation</a>.</p>
+<h2 id="tips">Tips<a href="#tips" class="anchor">#</a></h2>
+<p>Here are some personal tips!</p>
+<p>CommandBus is able to return the value of the executed CommandHandler.
+While this isn't advised in asynchronous applications (think messaging queues, like RabbitMQ)
+it can be useful in simple applications.</p>
+<p>Because Commands also contain simple input validation you can write unit test for them,
+but since they're mainly DTOs it might not be too important.</p>
+<p>CommandHandlers on the other way are good candidates for unit tests.</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Remember when people said that controllers shouldn't have any logic in it?
+With the Command Bus pattern this becomes possible.
+It also makes this kind of logic reusable and testable.</p>
+<p>Tactician is a nice library for this: it doesn't get in our way and allows you to choose between
+the "good" way or the "pragmatic" way (if you don't choose wisely, then shame on you).</p>]]></content>
+    </entry>
+        <entry>
         <title>Command/Query Responsibility Segregation</title>
                 <id>http://gnugat.github.io/2015/08/25/cqrs.html</id>
                 <updated>2015-08-25T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/08/25/cqrs.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -159,8 +266,8 @@ even if, like every principles, it cannot be applied everywhere.</p>
                 <id>http://gnugat.github.io/2015/08/07/diactoros-psr7.html</id>
                 <updated>2015-08-07T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/08/07/diactoros-psr7.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="https://github.com/zendframework/zend-diactoros">Zend Diactoros</a> is a lightweight
@@ -252,8 +359,8 @@ used in <a href="http://symfony.com/blog/psr-7-support-in-symfony-is-here">Symfo
                 <id>http://gnugat.github.io/2015/08/06/pomm-foundation.html</id>
                 <updated>2015-08-06T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/08/06/pomm-foundation.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="http://www.pomm-project.org/">Pomm</a> is an interresting alternative to Doctrine
@@ -308,8 +415,8 @@ so if you're using PostgresSQL and don't need an ORM, you can give it a try!</p>
                 <id>http://gnugat.github.io/2015/08/05/phinx.html</id>
                 <updated>2015-08-05T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/08/05/phinx.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="https://phinx.org/">phinx</a> is a lightweight migration library, completly decoupled
@@ -417,8 +524,8 @@ coupled to any framework and it doesn't require any integration.</p>
                 <id>http://gnugat.github.io/2015/08/04/simple-bus.html</id>
                 <updated>2015-08-04T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/08/04/simple-bus.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="http://simplebus.github.io/MessageBus/">Simple Bus</a> is a lightweight library
@@ -559,8 +666,8 @@ about CQRS: <a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avo
                 <id>http://gnugat.github.io/2015/08/03/phpspec.html</id>
                 <updated>2015-08-03T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/08/03/phpspec.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="http://www.phpspec.net">phpspec</a> is a highly opinionated unit test framework:
@@ -834,8 +941,8 @@ it to a collaborator you have two choices:</p>
                 <id>http://gnugat.github.io/2015/08/02/sf-differently-part-3-conclusion.html</id>
                 <updated>2015-08-02T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/08/02/sf-differently-part-3-conclusion.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This series isn't really working for me, so I've decided to conclude it prematurely.
@@ -888,8 +995,8 @@ called.</p>
                 <id>http://gnugat.github.io/2015/06/10/sf-differently-part-2-bootstrap.html</id>
                 <updated>2015-06-10T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/06/10/sf-differently-part-2-bootstrap.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the second article of the <a href="https://symfony.com">Symfony</a> Differently series,
@@ -1219,8 +1326,8 @@ application in the future, we've chosen to stay consistent with the rest.</p>
                 <id>http://gnugat.github.io/2015/06/03/sf-differently-part-1-introduction.html</id>
                 <updated>2015-06-03T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/06/03/sf-differently-part-1-introduction.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="https://symfony.com">Symfony</a> is an amazing HTTP framework which powers
@@ -1315,8 +1422,8 @@ want to read <a href="http://martinfowler.com/bliki/MonolithFirst.html">the foll
                 <id>http://gnugat.github.io/2015/05/28/spec-gen-0-3.html</id>
                 <updated>2015-05-28T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/05/28/spec-gen-0-3.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -1439,8 +1546,8 @@ probably be about using it for collaborators.</p>
                 <id>http://gnugat.github.io/2015/05/20/spec-gen-0-2.html</id>
                 <updated>2015-05-20T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/05/20/spec-gen-0-2.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -1584,8 +1691,8 @@ of a new generator: insertion of properties when the method is a constructor.</p
                 <id>http://gnugat.github.io/2015/05/13/memio-spec-gen.html</id>
                 <updated>2015-05-13T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/05/13/memio-spec-gen.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -1817,8 +1924,8 @@ generation.</p>]]></content>
                 <id>http://gnugat.github.io/2015/05/06/memio.html</id>
                 <updated>2015-05-06T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/05/06/memio.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -1952,8 +2059,8 @@ code generator.</p>]]></content>
                 <id>http://gnugat.github.io/2015/04/29/memio-pretty-printer.html</id>
                 <updated>2015-04-29T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/04/29/memio-pretty-printer.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -2098,8 +2205,8 @@ but we can install Memio's TwigTemplateEngine package .</p>]]></content>
                 <id>http://gnugat.github.io/2015/04/22/memio-validator-linter.html</id>
                 <updated>2015-04-22T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/04/22/memio-validator-linter.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -2225,8 +2332,8 @@ are valid. Linter is a set of constraints ready to use, allowing to prevent synt
                 <id>http://gnugat.github.io/2015/04/15/memio-models.html</id>
                 <updated>2015-04-15T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/04/15/memio-models.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -2333,8 +2440,8 @@ function phpspec_generator($methodName, array $arguments) {
                 <id>http://gnugat.github.io/2015/04/08/introducing-memio-code-generator.html</id>
                 <updated>2015-04-08T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/04/08/introducing-memio-code-generator.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -2414,8 +2521,8 @@ by <a href="https://github.com/webmozart">webmozart</a>).</p>
                 <id>http://gnugat.github.io/2015/04/01/hello-world-best-practices.html</id>
                 <updated>2015-04-01T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/04/01/hello-world-best-practices.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -2462,8 +2569,8 @@ to change it afterwards, if the need comes (and it usually will: requirements ar
                 <id>http://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html</id>
                 <updated>2015-03-25T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the seventh article of the series on managing Web Services in a
@@ -2738,8 +2845,8 @@ those should each have their own series of article :) .</p>]]></content>
                 <id>http://gnugat.github.io/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html</id>
                 <updated>2015-03-18T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the sixth article of the series on managing Web Services in a
@@ -3137,8 +3244,8 @@ really need.</p>
                 <id>http://gnugat.github.io/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html</id>
                 <updated>2015-03-11T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the fifth article of the series on managing Web Services in a
@@ -3416,8 +3523,8 @@ implementations (yes, more than one!).</p>]]></content>
                 <id>http://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html</id>
                 <updated>2015-03-04T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the fourth article of the series on managing Web Services in a
@@ -3904,8 +4011,8 @@ who'd like to practice:</p>
                 <id>http://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html</id>
                 <updated>2015-01-28T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the third article of the series on managing Web Services in a
@@ -4447,8 +4554,8 @@ where everything is hard to read, impossible to test and expensive to change.</p
                 <id>http://gnugat.github.io/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html</id>
                 <updated>2015-01-21T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the second article of the series on managing Web Services in a
@@ -4736,8 +4843,8 @@ we'll create the first endpoint, the creation of profiles, using a pragmatic app
                 <id>http://gnugat.github.io/2015/01/14/sf-ws-part-1-introduction.html</id>
                 <updated>2015-01-14T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/01/14/sf-ws-part-1-introduction.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>Welcome to this new series of articles on managing Web Services in a
@@ -4802,8 +4909,8 @@ we'll see how to build such web service.</p>]]></content>
                 <id>http://gnugat.github.io/2015/01/07/links-from-2014.html</id>
                 <updated>2015-01-07T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/01/07/links-from-2014.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -5016,8 +5123,8 @@ in a quick and dirty way 3. refactor <a href="https://twitter.com/epiloic/status
                 <id>http://gnugat.github.io/2014/12/17/semantic-versioning.html</id>
                 <updated>2014-12-17T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/12/17/semantic-versioning.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -5116,8 +5223,8 @@ API is sufficient.</p>
                 <id>http://gnugat.github.io/2014/12/10/keep-it-simple-and-git.html</id>
                 <updated>2014-12-10T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/12/10/keep-it-simple-and-git.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -5184,8 +5291,8 @@ git push --tags</code></pre>
                 <id>http://gnugat.github.io/2014/12/03/lightweight-console-lib.html</id>
                 <updated>2014-12-03T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/12/03/lightweight-console-lib.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -5403,8 +5510,8 @@ from an array could improve the situation.</p>]]></content>
                 <id>http://gnugat.github.io/2014/11/26/find-all-available-fqcn.html</id>
                 <updated>2014-11-26T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/11/26/find-all-available-fqcn.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -5505,8 +5612,8 @@ provides you with a package, so you don't have to copy paste anything :) .</p>]]
                 <id>http://gnugat.github.io/2014/11/21/read-it-later.html</id>
                 <updated>2014-11-21T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/11/21/read-it-later.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -5567,8 +5674,8 @@ questions/comments if you have nay :) .</p>]]></content>
                 <id>http://gnugat.github.io/2014/11/15/sf2-quick-functional-tests.html</id>
                 <updated>2014-11-15T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/11/15/sf2-quick-functional-tests.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -5721,8 +5828,8 @@ write functional tests without any effort.</p>
                 <id>http://gnugat.github.io/2014/11/06/redaktilo-1-3.html</id>
                 <updated>2014-11-06T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/11/06/redaktilo-1-3.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -5904,8 +6011,8 @@ maturity point.</p>
                 <id>http://gnugat.github.io/2014/10/29/sf2-bundle-standalone.html</id>
                 <updated>2014-10-29T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/10/29/sf2-bundle-standalone.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -6243,8 +6350,8 @@ many advantages as it enables demonstrations and simple automated tests.</p>
                 <id>http://gnugat.github.io/2014/10/15/php-array-manipulation.html</id>
                 <updated>2014-10-15T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/10/15/php-array-manipulation.html"/>
         <content type="html" xml:lang="en"><![CDATA[<blockquote>
@@ -6632,8 +6739,8 @@ you.</p>
                 <id>http://gnugat.github.io/2014/10/08/master-sf2-conclusion.html</id>
                 <updated>2014-10-08T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/10/08/master-sf2-conclusion.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the conclusion of the series on mastering the
@@ -6700,8 +6807,8 @@ before anything else. Here's a short selection of its available components:</p>
                 <id>http://gnugat.github.io/2014/09/10/master-sf2-part-6-annotations.html</id>
                 <updated>2014-09-10T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/09/10/master-sf2-part-6-annotations.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the sixth article of the series on mastering the
@@ -6925,8 +7032,8 @@ research on the subject to make your own opinion.</p>
                 <id>http://gnugat.github.io/2014/09/03/master-sf2-part-5-events.html</id>
                 <updated>2014-09-03T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/09/03/master-sf2-part-5-events.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the fifth article of the series on mastering the
@@ -7215,8 +7322,8 @@ code we cannot know that submitted JSON has been handled, we lose explicitness.<
                 <id>http://gnugat.github.io/2014/08/27/master-sf2-part-4-doctrine.html</id>
                 <updated>2014-08-27T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/08/27/master-sf2-part-4-doctrine.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the fourth article of the series on mastering the
@@ -7585,8 +7692,8 @@ a standalone library allowing you to deploy database changes, it even has
                 <id>http://gnugat.github.io/2014/08/22/master-sf2-part-3-services.html</id>
                 <updated>2014-08-22T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/08/22/master-sf2-part-3-services.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the third article of the series on mastering the
@@ -8054,8 +8161,8 @@ that "Dependency Injection" is just a fancy term for "passing arguments".</p>
                 <id>http://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html</id>
                 <updated>2014-08-13T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the second article of the series on mastering the
@@ -8264,8 +8371,8 @@ demonstrated how quick and simple it is to implement the first User Story
                 <id>http://gnugat.github.io/2014/08/05/master-sf2-part-1-bootstraping.html</id>
                 <updated>2014-08-05T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/08/05/master-sf2-part-1-bootstraping.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>You know the basics of the <a href="http://symfony.com/">Symfony2</a> framework
@@ -8443,8 +8550,8 @@ quickest way to bootstrap a project.</p>
                 <id>http://gnugat.github.io/2014/07/23/learn-sf2-conclusion.html</id>
                 <updated>2014-07-23T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/07/23/learn-sf2-conclusion.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the conclusion of the series on learning
@@ -8720,8 +8827,8 @@ series of articles!</p>
                 <id>http://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html</id>
                 <updated>2014-07-20T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the fifth article of the series on learning
@@ -9021,8 +9128,8 @@ need to check the precise HTTP response's status code).</p>
                 <id>http://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html</id>
                 <updated>2014-07-12T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the fourth article of the series on learning
@@ -9283,8 +9390,8 @@ git commit -m 'Created Ni route and controller'</code></pre>
                 <id>http://gnugat.github.io/2014/07/02/learn-sf2-bundles-part-3.html</id>
                 <updated>2014-07-02T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/07/02/learn-sf2-bundles-part-3.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the third article of the series on learning
@@ -9471,8 +9578,8 @@ makes too much fuss to no avail (that's my humble opinion anyway).</p>]]></conte
                 <id>http://gnugat.github.io/2014/06/25/learn-sf2-empty-app-part-2.html</id>
                 <updated>2014-06-25T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/06/25/learn-sf2-empty-app-part-2.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This is the second article of the series on learning
@@ -9633,8 +9740,8 @@ to a controller which takes a HTTP request and returns a HTTP response.</p>
                 <id>http://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html</id>
                 <updated>2014-06-18T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>You don't know anything about the <a href="http://symfony.com/">Symfony2</a> framework,
@@ -9751,8 +9858,8 @@ git commit -m 'Installed Symfony2'</code></pre>
                 <id>http://gnugat.github.io/2014/06/04/php-tokenizer.html</id>
                 <updated>2014-06-04T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/06/04/php-tokenizer.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>The <a href="http://www.php.net/manual/en/book.tokenizer.php">PHP Tokenizer documentation</a>
@@ -9879,8 +9986,8 @@ use <code>token_name($token)</code>.</p>
                 <id>http://gnugat.github.io/2014/05/27/redaktilo-0-7.html</id>
                 <updated>2014-05-27T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/05/27/redaktilo-0-7.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -10001,8 +10108,8 @@ start a discussion here.</p>]]></content>
                 <id>http://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html</id>
                 <updated>2014-05-21T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -10080,8 +10187,8 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
                 <id>http://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html</id>
                 <updated>2014-05-14T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -10296,8 +10403,8 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
                 <id>http://gnugat.github.io/2014/05/09/redaktilo.html</id>
                 <updated>2014-05-09T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/05/09/redaktilo.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -10485,8 +10592,8 @@ to manipulate files, through the editor metaphor:</p>
                 <id>http://gnugat.github.io/2014/04/30/php-generators-and-coroutines.html</id>
                 <updated>2014-04-30T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/04/30/php-generators-and-coroutines.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -10582,8 +10689,8 @@ it!</p>
                 <id>http://gnugat.github.io/2014/04/23/sf2-sessions-introduction.html</id>
                 <updated>2014-04-23T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/04/23/sf2-sessions-introduction.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -10895,8 +11002,8 @@ questions don't be shy and drop me a line on
                 <id>http://gnugat.github.io/2014/04/16/pomodoro-manage-your-breaks-improve-your-focus.html</id>
                 <updated>2014-04-16T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/04/16/pomodoro-manage-your-breaks-improve-your-focus.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -10934,8 +11041,8 @@ questions, don't be shy and drop me line on
                 <id>http://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html</id>
                 <updated>2014-04-09T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -11444,8 +11551,8 @@ if you have any feedbacks/questions, be sure to contact me on
                 <id>http://gnugat.github.io/2014/04/02/tests-cheat-sheet.html</id>
                 <updated>2014-04-02T00:00:00+01:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/04/02/tests-cheat-sheet.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -11592,8 +11699,8 @@ to you?</p>]]></content>
                 <id>http://gnugat.github.io/2014/03/26/behat-quick-tour.html</id>
                 <updated>2014-03-26T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/03/26/behat-quick-tour.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -11775,8 +11882,8 @@ here's a list of references:</p>
                 <id>http://gnugat.github.io/2014/03/19/behavior-driven-development-story-bdd.html</id>
                 <updated>2014-03-19T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/03/19/behavior-driven-development-story-bdd.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -11864,8 +11971,8 @@ help you on story BDD:</p>
                 <id>http://gnugat.github.io/2014/03/11/phpspec-quick-tour.html</id>
                 <updated>2014-03-11T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/03/11/phpspec-quick-tour.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -11933,8 +12040,8 @@ provides a non verbose API. Even its documentations is complete and small!</p>
                 <id>http://gnugat.github.io/2014/03/05/spec-bdd.html</id>
                 <updated>2014-03-05T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/03/05/spec-bdd.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
@@ -11999,8 +12106,8 @@ we'll switch to the technical mode and see some <a href="http://www.phpspec.net/
                 <id>http://gnugat.github.io/2014/02/26/tdd-just-do-it.html</id>
                 <updated>2014-02-26T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/02/26/tdd-just-do-it.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This article is part of a series on Tests in general and on how to practice
@@ -12036,8 +12143,8 @@ don't have someone to pair with, you can always read this
                 <id>http://gnugat.github.io/2014/02/19/test-driven-development.html</id>
                 <updated>2014-02-19T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/02/19/test-driven-development.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This article is part of a series on Tests in general and on how to practice
@@ -12143,8 +12250,8 @@ misconceptions. If you're part of the sceptics,
                 <id>http://gnugat.github.io/2014/02/12/tests-tools-overview.html</id>
                 <updated>2014-02-12T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/02/12/tests-tools-overview.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This article is part of a series on Tests in general and on how to practice
@@ -12530,8 +12637,8 @@ if you want to give me your opinion, be sure to do so on
                 <id>http://gnugat.github.io/2014/02/05/tests-introduction.html</id>
                 <updated>2014-02-05T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/02/05/tests-introduction.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>This article is part of a series on Tests in general and on how to practice
@@ -12760,8 +12867,8 @@ critical parts of your system...</p>
                 <id>http://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html</id>
                 <updated>2014-01-29T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>In <a href="../../../2014/01/22/ioc-di-and-service-locator.html">the previous article</a>
@@ -13132,8 +13239,8 @@ Locator is a unjustified decision ;) .</p>]]></content>
                 <id>http://gnugat.github.io/2014/01/22/ioc-di-and-service-locator.html</id>
                 <updated>2014-01-22T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/22/ioc-di-and-service-locator.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>If you don't want to read this article, just jump to the <a href="#conclusion">conclusion</a>
@@ -13553,8 +13660,8 @@ Fabien Potencier's series on <a href="http://fabien.potencier.org/article/11/wha
                 <id>http://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html</id>
                 <updated>2014-01-15T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>The one thing that will make developers use your Free or Open Source Software
@@ -13718,8 +13825,8 @@ documentation so everyone can see how awesome your work is!</p>
                 <id>http://gnugat.github.io/2014/01/08/technology-scouting.html</id>
                 <updated>2014-01-08T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/08/technology-scouting.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>As a curious person I'm constantly trying to learn new practices and to discover
@@ -13782,8 +13889,8 @@ actually) and new trending tools.</p>
                 <id>http://gnugat.github.io/2014/01/01/carew-static-site-generator.html</id>
                 <updated>2014-01-01T00:00:00+00:00</updated>
         <author>
-            <name>Loïc Chardonnet</name>
-            <email>loic.chardonnet@gmail.com</email>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
         </author>
         <link rel="alternate" type="text/html" href="http://gnugat.github.io/2014/01/01/carew-static-site-generator.html"/>
         <content type="html" xml:lang="en"><![CDATA[<p>Frameworks are a real help when building web applications which serve business

@@ -3,8 +3,8 @@ title: About me
 navigations: main
 ---
 
-Hi! My name is Loïc (pronounced "Low-ic") Chardonnet, I'm developer and I
-frequently use the following tools/practices:
+Hi! My name is Loïc (pronounced "Low-ic") Faugeron (pronounced "Fow-ge-ron"),
+I'm a developer and I frequently use the following tools/practices:
 
 * TDD / BDD
 * Symfony2
@@ -37,7 +37,6 @@ frequently use the following tools/practices:
 * [Twitter (@epiloic)](https://twitter.com/epiloic)
 * [Google+](https://plus.google.com/u/1/+Lo%C3%AFcChardonnet/posts)
 * [LinkedIn](http://www.linkedin.com/pub/lo%C3%AFc-chardonnet/1a/a92/124)
-* [Viadeo](http://www.viadeo.com/profile/00214p4mlcspdnz2)
 
 ## Github
 

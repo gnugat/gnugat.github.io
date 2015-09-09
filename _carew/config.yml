@@ -1,8 +1,8 @@
 site:
     title: Articles
     description: "Talks about Symfony2, git and other developer stuff"
-    author_name:  Loïc Chardonnet
-    author_email: loic.chardonnet@gmail.com
+    author_name:  Loïc Faugeron
+    author_email: faugeron.loic@gmail.com
     author_url: http://gnugat.github.io
     url_absolute: http://gnugat.github.io
     disqus_shortname: gnugatgithubio

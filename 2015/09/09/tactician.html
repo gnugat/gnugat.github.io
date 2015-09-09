@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Tactician</title>
+
+    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
+    <meta name="author" content="Loïc Faugeron">
+    <meta name="viewport" content="width=device-width">
+
+    
+    <link rel="canonical" href="http://gnugat.github.io/2015/09/09/tactician.html"/>
+              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
+      
+    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+
+  <body>
+          <div class="container">
+            <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="../../..">Articles</a>
+            </div>
+
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav navbar-right">
+                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
+                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
+                                                                                        </ul>
+                            </div>
+        </div>
+    </nav>
+
+                  <div class="content">
+                                          <h1>
+                  Tactician</h1>
+                          
+                <article>
+        <ul class="list-inline">
+            <li>
+                09/09/2015
+            </li>
+                        <li>
+                <a href="../../../tags/introducing-library.html"><span class="label label-primary">Introducing Library</span></a>
+            </li>
+                        <li>
+                <a href="../../../tags/tactician.html"><span class="label label-primary">Tactician</span></a>
+            </li>
+                    </ul>
+        <hr />
+        <div class="body">
+            <p>Just like <a href="../../../2015/08/04/simple-bus.html">SimpleBus</a>,
+<a href="https://tactician.thephpleague.com/">Tactician</a> is a lightweight library created by
+<a href="http://rosstuck.com/">Ross Tuck</a> allowing you to use the Command Bus design pattern
+in your applications.</p>
+<blockquote>
+<p><strong>Note</strong>: Command Bus is often used to comply to <a href="../../../2015/08/25/cqrs.html">CQRS</a>, but not only.</p>
+</blockquote>
+<h2 id="usage-example">Usage example<a href="#usage-example" class="anchor">#</a></h2>
+<p>Here's how to install Tactician:</p>
+<pre><code>composer require league/tactician:^0.6</code></pre>
+<p>Then we have to associate a Command to a CommandHandler:</p>
+<pre><code class="language-php">&lt;?php
+
+use League\Tactician\Setup\QuickStart;
+
+require __DIR__.'/vendor/autoload.php';
+
+$commandBus = QuickStart::create(array(
+    'Vendor\Project\Member\RegisterMember' =&gt; new Vendor\Project\Member\RegisterMemberHandler(),
+));</code></pre>
+<p>It provides many framework integrations, including one for <a href="http://symfony.com/">Symfony</a>:</p>
+<pre><code>composer require league/tactician-bundle:^3.0
+# Don't forget to register `League\Tactician\Bundle\TacticianBundle` in `AppKernel`</code></pre>
+<p>Then we just have to use the <code>tactician.commandBus</code> service. To register Command Handler, we
+need to tag service definitions as follow:</p>
+<pre><code>services:
+    register_member_handler:
+        class: Vendor\Project\Member\RegisterMemberHandler
+        tags:
+        - { name: tactician.handler, command: Vendor\Project\Member\RegisterMember }</code></pre>
+<p>Now that the configuration is settled, here's a usage example:</p>
+<pre><code class="language-php">$username = isset($argv[1]) ? $argv[1] : null;
+$commandBus-&gt;handle(new RegisterMember($username));</code></pre>
+<p>The command would look like this:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project\Member;
+
+class RegisterMember
+{
+    private $username;
+
+    public function __construct($username)
+    {
+        if (null === $username) {
+            throw new \InvalidArgumentException('Missing required "username" parameter');
+        }
+        $this-&gt;username = $username;
+    }
+
+    public function getUsername()
+    {
+        return $this-&gt;username;
+    }
+}</code></pre>
+<blockquote>
+<p><strong>Note</strong>: Commands validate simple input logic (required parameters, parameter type, etc).</p>
+</blockquote>
+<p>The Command Handler could look like this:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project\Member;
+
+class RegisterMember
+{
+    private $memberRepository;
+
+    public function __construct(MemberRespository $memberRepository)
+    {
+        $this-&gt;memberRepository = $memberRepository;
+    }
+
+    public function handle(RegisterMember $registerMember)
+    {
+        $username = $registerMember-&gt;getUsername();
+        if ($memberRepository-&gt;has($username)) {
+            throw new \DomainException(sprintf('Given username "%s" already exists, and duplicates are not allowed', $username));
+        }
+        $memberRepository-&gt;register($registerMember);
+    }
+}</code></pre>
+<p>The Command Handler validates more complex logic (member username duplication, etc).</p>
+<p>Here's a nice reference about command validation: <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command, and Model Validation</a>.</p>
+<h2 id="tips">Tips<a href="#tips" class="anchor">#</a></h2>
+<p>Here are some personal tips!</p>
+<p>CommandBus is able to return the value of the executed CommandHandler.
+While this isn't advised in asynchronous applications (think messaging queues, like RabbitMQ)
+it can be useful in simple applications.</p>
+<p>Because Commands also contain simple input validation you can write unit test for them,
+but since they're mainly DTOs it might not be too important.</p>
+<p>CommandHandlers on the other way are good candidates for unit tests.</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Remember when people said that controllers shouldn't have any logic in it?
+With the Command Bus pattern this becomes possible.
+It also makes this kind of logic reusable and testable.</p>
+<p>Tactician is a nice library for this: it doesn't get in our way and allows you to choose between
+the "good" way or the "pragmatic" way (if you don't choose wisely, then shame on you).</p>
+        </div>
+
+        <footer class="next-previous row">
+                                    <div class="col-md-6">
+                <a class="btn btn-lg btn-default btn-block" href="../../../2015/08/25/cqrs.html" role="button">Previous: Command/Query Responsibility Segregation</a>
+            </div>
+            
+                                </footer>
+    </article>
+          </div>
+        
+                  <div class="row comments">
+          <div class="span10 offset1 content">
+              <div id="disqus_thread"></div>
+          </div>
+      </div>
+                  <footer>
+            <p class="text-center">
+              &copy;
+                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
+                            2015
+              <small>
+                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
+              </small>
+            </p>
+          </footer>
+        
+      </div>
+    
+    
+                  <script src="../../../js/jquery-2.1.0.min.js"></script>
+      <script src="../../../js/bootstrap.min.js"></script>
+      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-47822314-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+
+            <script type="text/javascript">
+            var disqus_shortname = 'gnugatgithubio';
+            (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+      </body>
+</html>
