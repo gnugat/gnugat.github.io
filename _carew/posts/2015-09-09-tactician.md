@@ -91,7 +91,7 @@ The Command Handler could look like this:
 
 namespace Vendor\Project\Member;
 
-class RegisterMember
+class RegisterMemberHandler
 {
     private $memberRepository;
 
