@@ -35,7 +35,7 @@ $commandBus = QuickStart::create(array(
 
 It provides many framework integrations, including one for [Symfony](http://symfony.com/):
 
-    composer require league/tactician-bundle:^3.0
+    composer require league/tactician-bundle:^0.3
     # Don't forget to register `League\Tactician\Bundle\TacticianBundle` in `AppKernel`
 
 Then we just have to use the `tactician.commandBus` service. To register Command Handler, we
@@ -46,7 +46,7 @@ services:
     register_member_handler:
         class: Vendor\Project\Member\RegisterMemberHandler
         tags:
-        - { name: tactician.handler, command: Vendor\Project\Member\RegisterMember }
+            - { name: tactician.handler, command: Vendor\Project\Member\RegisterMember }
 ```
 
 Now that the configuration is settled, here's a usage example:
