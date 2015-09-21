@@ -5,8 +5,253 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2015-09-09T00:00:00+01:00</updated>
+            <updated>2015-09-23T00:00:00+01:00</updated>
             <entry>
+        <title>PHPUnit with phpspec</title>
+                <id>http://gnugat.github.io/2015/09/23/phpunit-with-phpspec.html</id>
+                <updated>2015-09-23T00:00:00+01:00</updated>
+        <author>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/09/23/phpunit-with-phpspec.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p><a href="https://phpunit.de/">PHPUnit</a> is a port of <a href="http://junit.org/">jUnit</a>, its name
+might be deceptive: it allows you to write any type of tests (unit, but also functional,
+system, integration, end to end, acceptance, etc).</p>
+<p><a href="http://www.phpspec.net">phpspec</a> was at first a port of <a href="http://rspec.info/">rspec</a>,
+it can be considered as a unit test framework that enforces practices it considers best.</p>
+<blockquote>
+<p><strong>Note</strong>: <a href="../../../2015/08/03/phpspec.html">read more about phpspec</a>.</p>
+</blockquote>
+<p>In this article, we'll see how to use both tools together in a same project.</p>
+<h2 id="fortune-our-example">Fortune: our example<a href="#fortune-our-example" class="anchor">#</a></h2>
+<p>We're going to build part of a <a href="https://en.wikipedia.org/wiki/Fortune_%28Unix%29">fortune</a>
+application for our example, more precisely we're going to build a CLI allowing us to save quotes.</p>
+<p>To do so, we'll bootstrap a symfony application using the <a href="https://github.com/gnugat/symfony-empty-edition">Empty Edition</a>:</p>
+<pre><code>composer create-project gnugat/symfony-empty-edition fortune
+cd fortune</code></pre>
+<p>We'll need to install our test frameworks:</p>
+<pre><code>composer require --dev phpunit/phpunit
+composer require --dev phpspec/phpspec</code></pre>
+<p>Finally we'll configure PHPUnit:</p>
+<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- phpunit.xml.dist --&gt;
+&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
+&lt;phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="app/bootstrap.php"&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="System Tests"&gt;
+            &lt;directory&gt;tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;</code></pre>
+<h2 id="the-command">The command<a href="#the-command" class="anchor">#</a></h2>
+<p>Our first step will be to write a <strong>system test</strong> describing the command:</p>
+<pre><code class="language-php">&lt;?php
+// tests/Command/SaveQuoteCommandTest.php
+
+namespace AppBundle\Tests\Command;
+
+use AppKernel;
+use PHPUnit_Framework_TestCase;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Tester\ApplicationTester;
+
+class SaveQuoteCommandTest extends PHPUnit_Framework_TestCase
+{
+    const EXIT_SUCCESS = 0;
+
+    private $app;
+
+    protected function setUp()
+    {
+        $kernel = new AppKernel('test', false);
+        $application = new Application($kernel);
+        $application-&gt;setAutoExit(false);
+        $this-&gt;app = new ApplicationTester($application);
+    }
+
+    /**
+     * @test
+     */
+    public function it_saves_a_new_quote()
+    {
+        $exitCode = $this-&gt;app-&gt;run(array(
+            'quote:save',
+            'quote' =&gt; 'Nobody expects the spanish inquisition',
+        ));
+
+        self::assertSame(self::EXIT_SUCCESS, $exitCode, $this-&gt;app-&gt;getDisplay());
+    }
+}</code></pre>
+<blockquote>
+<p><strong>Note</strong>: Testing only the exit code is called "Smoke Testing" and is a very
+efficient way to check if the application is broken.
+Testing the output would be tedious and would make our test fragile as it might change often.</p>
+</blockquote>
+<p>Let's run it:</p>
+<pre><code>vendor/bin/phpunit</code></pre>
+<p>The tests fails because the command doesn't exist. Let's fix that:</p>
+<pre><code class="language-php">&lt;?php
+// src/AppBundle/Command/SaveQuoteCommand.php
+
+namespace AppBundle\Command;
+
+use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class SaveQuoteCommand extends ContainerAwareCommand
+{
+    protected function configure()
+    {
+        $this-&gt;setName('quote:save');
+        $this-&gt;addArgument('quote', InputArgument::REQUIRED);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $output-&gt;writeln('');
+        $output-&gt;writeln('// Saving quote');
+
+        $this-&gt;getContainer()-&gt;get('app.save_new_quote')-&gt;save(
+            $input-&gt;getArgument('quote')
+        );
+
+        $output-&gt;writeln('');
+        $output-&gt;writeln(' [OK] Quote saved');
+        $output-&gt;writeln('');
+    }
+}</code></pre>
+<p>Then run the test again:</p>
+<pre><code>vendor/bin/phpunit</code></pre>
+<p>It now fails for a different reason: the service used doesn't exist.</p>
+<h2 id="the-service">The service<a href="#the-service" class="anchor">#</a></h2>
+<p>The second step is to write the unit test for the service. With phpspec we can
+first bootstrap it:</p>
+<pre><code>vendor/bin/phpspec describe 'AppBundle\Service\SaveNewQuote'</code></pre>
+<p>Then we need to edit it:</p>
+<pre><code class="language-php">&lt;?php
+// spec/AppBundle/Service/SaveNewQuoteSpec.php
+
+namespace spec\AppBundle\Service;
+
+use PhpSpec\ObjectBehavior;
+use Symfony\Component\Filesystem\Filesystem;
+
+class SaveNewQuoteSpec extends ObjectBehavior
+{
+    const FILENAME = '/tmp/quotes.txt';
+    const QUOTE = 'Nobody expects the spanish inquisition!';
+
+    function let(Filesystem $filesystem)
+    {
+        $this-&gt;beConstructedWith($filesystem, self::FILENAME);
+    }
+
+    function it_saves_new_quote(Filesystem $filesystem)
+    {
+        $filesystem-&gt;dumpFile(self::FILENAME, self::QUOTE)-&gt;shouldBeCalled();
+
+        $this-&gt;save(self::QUOTE);
+    }
+}</code></pre>
+<p>Time to run the suite:</p>
+<pre><code>vendor/bin/phpspec run</code></pre>
+<p>phpspec will detect that the tested class doesn't exist and will bootstrap it for us,
+so we just have to edit it:</p>
+<pre><code class="language-php">&lt;?php
+// src/AppBundle/Service/SaveNewQuote.php
+
+namespace AppBundle\Service;
+
+use Symfony\Component\Filesystem\Filesystem;
+
+class SaveNewQuote
+{
+    private $filesystem;
+    private $filename;
+
+    public function __construct(Filesystem $filesystem, $filename)
+    {
+        $this-&gt;filesystem = $filesystem;
+        $this-&gt;filename = $filename;
+    }
+
+    public function save($quote)
+    {
+        $this-&gt;filesystem-&gt;dumpFile($this-&gt;filename, $quote);
+    }
+}</code></pre>
+<p>Again, we're going to run our unit test:</p>
+<pre><code>vendor/bin/phpspec run</code></pre>
+<p>It's finally green! Our final step will be to define our service in the Dependency Injection
+Container:</p>
+<pre><code># app/config/config.yml
+
+imports:
+    - { resource: parameters.yml }
+    - { resource: importer.php }
+
+framework:
+    secret: "%secret%"
+
+services:
+    app.save_new_quote:
+        class: AppBundle\Service\SaveNewQuote
+        arguments:
+            - "@filesystem"
+            - "%kernel.root_dir%/cache/quotes"</code></pre>
+<p>To make sure everything is fine, let's clear the cache and run the test:</p>
+<pre><code>rm -rf app/cache/*
+vendor/bin/phpunit</code></pre>
+<p>It's <a href="https://www.youtube.com/watch?v=lFeLDc2CzOs">Super Green</a>!</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>As we can see, PHPUnit and phpspec can work perfectly well together.</p>
+<p>Of course we could write our unit test in a similar manner with PHPUnit:</p>
+<pre><code>&lt;?php
+// tests/Service/SaveNewQuoteTest.php
+
+namespace AppBundle\Tests\Service;
+
+use AppBundle\Service\SaveNewQuote;
+use PHPUnit_Framework_TestCase;
+
+class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
+{
+    const FILENAME = '/tmp/quotes.txt';
+    const QUOTE = 'Nobody expects the spanish inquisition!';
+
+    private $filesystem;
+    private $saveNewQuote;
+
+    protected function setUp()
+    {
+        $this-&gt;filesystem = $this-&gt;prophesize('Symfony\Component\Filesystem\Filesystem');
+        $this-&gt;saveNewQuote = new SaveNewQuote($this-&gt;filesystem-&gt;reveal(), self::FILENAME);
+    }
+
+    /**
+     * @test
+     * @group unit
+     */
+    public function it_saves_new_quote()
+    {
+        $this-&gt;filesystem-&gt;dumpFile(self::FILENAME, self::QUOTE)-&gt;shouldBeCalled();
+
+        $this-&gt;saveNewQuote-&gt;save(self::QUOTE);
+    }
+}</code></pre>
+<p>And run it separately:</p>
+<pre><code>vendor/bin/phpunit --group=unit</code></pre>
+<p>But then we would lose all the advantages of phpspec:</p>
+<ul><li>it adds less overhead (this same test runs in ~20ms with phpspec, and ~80ms with PHPUnit)</li>
+<li>it tells you when it thinks you're doing something wrong (typically by making it harder/impossible for you to do it)</li>
+<li>it bootstraps things for you if you follow the TDD workflow (test first, then code)</li>
+</ul>]]></content>
+    </entry>
+        <entry>
         <title>Tactician</title>
                 <id>http://gnugat.github.io/2015/09/09/tactician.html</id>
                 <updated>2015-09-09T00:00:00+01:00</updated>
@@ -36,7 +281,7 @@ $commandBus = QuickStart::create(array(
     'Vendor\Project\Member\RegisterMember' =&gt; new Vendor\Project\Member\RegisterMemberHandler(),
 ));</code></pre>
 <p>It provides many framework integrations, including one for <a href="http://symfony.com/">Symfony</a>:</p>
-<pre><code>composer require league/tactician-bundle:^3.0
+<pre><code>composer require league/tactician-bundle:^0.3
 # Don't forget to register `League\Tactician\Bundle\TacticianBundle` in `AppKernel`</code></pre>
 <p>Then we just have to use the <code>tactician.commandBus</code> service. To register Command Handler, we
 need to tag service definitions as follow:</p>
@@ -44,7 +289,7 @@ need to tag service definitions as follow:</p>
     register_member_handler:
         class: Vendor\Project\Member\RegisterMemberHandler
         tags:
-        - { name: tactician.handler, command: Vendor\Project\Member\RegisterMember }</code></pre>
+            - { name: tactician.handler, command: Vendor\Project\Member\RegisterMember }</code></pre>
 <p>Now that the configuration is settled, here's a usage example:</p>
 <pre><code class="language-php">$username = isset($argv[1]) ? $argv[1] : null;
 $commandBus-&gt;handle(new RegisterMember($username));</code></pre>
@@ -78,7 +323,7 @@ class RegisterMember
 
 namespace Vendor\Project\Member;
 
-class RegisterMember
+class RegisterMemberHandler
 {
     private $memberRepository;
 
