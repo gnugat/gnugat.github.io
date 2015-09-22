@@ -1,197 +1,54 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Behavior Driven Development: story BDD</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Behavior Driven Development: story BDD</title>
-
-    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
-    <meta name="author" content="Loïc Faugeron">
-    <meta name="viewport" content="width=device-width">
-
-    
     <link rel="canonical" href="http://gnugat.github.io/2014/03/19/behavior-driven-development-story-bdd.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
-      
-    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-  <body>
-          <div class="container">
-            <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="../../..">Articles</a>
-            </div>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                        </ul>
-                            </div>
-        </div>
-    </nav>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
 
-                  <div class="content">
-                                          <h1>
-                  Behavior Driven Development: story BDD</h1>
-                          
-                <article>
-        <ul class="list-inline">
-            <li>
-                19/03/2014
-            </li>
-                        <li>
-                <a href="../../../tags/tests-series.html"><span class="label label-primary">Tests Series</span></a>
-            </li>
-                    </ul>
-        <hr />
-        <div class="body">
-            <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
-<p>This article is part of a series on Tests in general and on how to practice
-them:</p>
-<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
-<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
-<li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
-<li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
-<li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
-<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
-<li><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
-<li><a href="../../../2014/03/26/behat-quick-tour.html">Behat: a quick tour</a></li>
-<li><a href="../../../2014/04/02/tests-cheat-sheet.html">Conclusion</a></li>
-</ol><p>In this article, we'll talk about Behavior Driven Development (BDD), again.
-There's no special skills required to read on, although some notions on
-<a href="../../../2014/02/05/tests-introduction.html">tests</a> and
-<a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a>
-(TDD) would be a plus.</p>
-<h2 id="from-spec-bdd-to-story-bdd">From spec BDD to story BDD<a href="#from-spec-bdd-to-story-bdd" class="anchor">#</a></h2>
-<p>So TDD has 3 simple rules:</p>
-<ol><li>write the test first</li>
-<li>then write as quickly as possible the code to make it pass</li>
-<li>finally refactor, without changing the tests (and still making them pass)</li>
-</ol><p>Like many TDD oficionados, <a href="http://dannorth.net/about/">Dan North</a> felt that it
-was missing some guidelines. To fix this, he created spec BDD, which adds the
-following rules to TDD:</p>
-<ul><li>test methods should be sentences (prefix them with <code>it_should</code> instead of <code>test</code>)</li>
-<li>tests should specify the behavior of the System Under Test (SUT)</li>
-</ul><p>One of his colleagues, Chris Matts, suggested to take BDD a step further: why
-not making sure the business value was met? And that's how story BDD was
-created.</p>
-<h2 id="acceptance-tests">Acceptance tests<a href="#acceptance-tests" class="anchor">#</a></h2>
-<p>If you're working with agile methodologies, you should be familiar with user
-stories. Those are simple cards which describe what to do in 3 lines:</p>
-<pre><code>In order to attain a business value
-As an actor
-I need to meet some requirements</code></pre>
-<p>They've also some acceptance criteria, which follow approximately this template:</p>
-<pre><code>Given a context
-When an event happens
-Then an outcome should occur</code></pre>
-<p>If the system fulfills the acceptance test, then it behaves correctly. By making
-them executable, you can test the business behavior of your system! That's what
-story BDD is all about.</p>
-<p>Technically, this means parsing the acceptance tests and match each line with
-a chunk of code. But don't worry about implementation details, we'll see them
-in the next article.</p>
-<h2 id="misconceptions">Misconceptions<a href="#misconceptions" class="anchor">#</a></h2>
-<p>Somehow, a surprising number of people started to think that BDD was all about
-integration tests. For example in a web application, they would write:</p>
-<pre><code>Given I am on "/home"
-When I click on "form#name_form input[name=submit]"
-And I wait until the page is fully loaded
-Then the "form#name_form input[name=first_name]" form field should contain "value"</code></pre>
-<p>What's wrong with it? Well:</p>
-<ul><li>it's not human friendly (usage of xpath)</li>
-<li>it's completely coupled to your routing (usage of URL)</li>
-<li>it's entirely coupled to the web implementation (usage of web vocabulary)</li>
-<li>it's thoroughly coupled to the HTML integration (again, usage of xpath)</li>
-<li>it's fully coupled to the test tool (the waiting line is a hack)</li>
-<li>and mostly: it doesn't describe your business need</li>
-</ul><p>Here's a better approach:</p>
-<pre><code>Given the opportunity to introduce myself
-When I give my name
-Then I should be greeted</code></pre>
-<p>Yep, that's the story BDD example of "Hello World", in case you didn't recognize
-it ;) .</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>If you make a user story's acceptance tests executable, then you're doing story
-BDD. It helps you to make sure that your application meets your business needs.</p>
-<p>Hopefully this article helped you a little. If you have any questions, rants or
-praises, feel free to send them to me on <a href="https://twitter.com/epiloic">Twitter</a>.</p>
-<p>Tests are hard. TDD is harder. BDD even more! Here's some good references to
-help you on story BDD:</p>
-<ul><li><a href="http://dannorth.net/introducing-bdd/">Introducing BDD, by Dan North</a></li>
-<li><a href="http://dannorth.net/2011/01/31/whose-domain-is-it-anyway/">Whose domain is it anyway? By Dan North</a></li>
-<li><a href="http://slideshare.net/lunivore/behavior-driven-development-11754474">BDD slides by Liz Keogh</a></li>
-<li><a href="http://www.wekeroad.com/2013/08/28/how-behavioral-is-your-bdd/">Are you really doing BDD? By Rob Conery</a></li>
-<li><a href="http://ht.ly/pfNW5">A.T. Fail! By Robert C. Martin</a></li>
-</ul>
-        </div>
-
-        <footer class="next-previous row">
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/03/11/phpspec-quick-tour.html" role="button">Previous: phpspec: a quick tour</a>
-            </div>
-            
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/03/26/behat-quick-tour.html" role="button">Next: Behat: a quick tour</a>
-            </div>
-                    </footer>
-    </article>
-          </div>
         
-                  <div class="row comments">
-          <div class="span10 offset1 content">
-              <div id="disqus_thread"></div>
-          </div>
-      </div>
-                  <footer>
-            <p class="text-center">
-              &copy;
-                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
-                            2015
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
-      </div>
-    
-    
-                  <script src="../../../js/jquery-2.1.0.min.js"></script>
-      <script src="../../../js/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script>
-    
+        <footer>
+            <nav>
+                <a class="button three columns" href="/about.html">About</a>
+                <a class="button three columns" href="/archive">Archive</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-47822314-1']);
-    _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
     </script>
-
-            <script type="text/javascript">
-            var disqus_shortname = 'gnugatgithubio';
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-      </body>
+</body>
 </html>

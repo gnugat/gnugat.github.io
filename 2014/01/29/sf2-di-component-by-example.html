@@ -1,483 +1,54 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Symfony2 Dependency Injection component, by example</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Symfony2 Dependency Injection component, by example</title>
-
-    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
-    <meta name="author" content="Loïc Faugeron">
-    <meta name="viewport" content="width=device-width">
-
-    
     <link rel="canonical" href="http://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
-      
-    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-  <body>
-          <div class="container">
-            <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="../../..">Articles</a>
-            </div>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                        </ul>
-                            </div>
-        </div>
-    </nav>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
 
-                  <div class="content">
-                                          <h1>
-                  Symfony2 Dependency Injection component, by example</h1>
-                          
-                <article>
-        <ul class="list-inline">
-            <li>
-                29/01/2014
-            </li>
-                        <li>
-                <a href="../../../tags/introducing-library.html"><span class="label label-primary">Introducing Library</span></a>
-            </li>
-                        <li>
-                <a href="../../../tags/symfony.html"><span class="label label-primary">Symfony</span></a>
-            </li>
-                    </ul>
-        <hr />
-        <div class="body">
-            <p>In <a href="../../../2014/01/22/ioc-di-and-service-locator.html">the previous article</a>
-we've seen among other things the definition of Dependency Injection (DI) and of
-the Dependency Injection Container (DIC).</p>
-<p>In this article we'll see the Symfony2's DI component which provides a powerful
-DIC. Here's the summary:</p>
-<ul><li>putting the construction of your services into configuration</li>
-<li>how to use it to wire your application</li>
-</ul><p>You don't use Symfony2? Don't worry, this article is all about using this
-component as a standalone library (you can use it in your
-CakePHP/Zend/Home-made-framework application).</p>
-<h2 id="construction-configuration">Construction configuration<a href="#construction-configuration" class="anchor">#</a></h2>
-<p>DI is all about passing arguments to the constructor of an object. Because
-constructing all those object might become a burden, the DIC is here to
-take this responsibility and centralize it.</p>
-<p>Let's replace <a href="http://pimple.sensiolabs.org/">Pimple</a> by
-<a href="http://symfony.com/doc/current/components/dependency_injection/index.html">Symfony2 DI component</a>
-in the code sample from the previous article:</p>
-<pre><code>&lt;?php
-
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-
-$container = new ContainerBuilder();
-
-// This is a parameter definition
-$container-&gt;setParameter('verbosity_level_map', array(
-    OutputInterface::VERBOSITY_NORMAL =&gt; Logger::NOTICE,
-    OutputInterface::VERBOSITY_VERBOSE =&gt; Logger::INFO,
-    OutputInterface::VERBOSITY_VERY_VERBOSE =&gt; Logger::DEBUG,
-    OutputInterface::VERBOSITY_DEBUG =&gt; Logger::DEBUG,
-);
-
-// register takes the service name, and then its fully qualified classname as a string
-$container-&gt;register(
-    'console_output',
-    'Symfony\Component\Console\Output\ConsoleOutput'
-);
-$container-&gt;register(
-    'output_formatter',
-    'Gnugat\Fossil\ApplicationLayer\OutputFormatter'
-);
-
-// You can inject:
-// * dependencies which have been declared previously
-// * arguments
-// * parameters which have been declared previously
-// * setter dependencies
-$container
-    -&gt;register('console_handler', 'Symfony\Bridge\Monolog\Handler\ConsoleHandler')
-    -&gt;addArgument(new Reference('console_output'))
-    -&gt;addArgument(true)
-    -&gt;addArgument('%verbosity_level_map%')
-    -&gt;addMethodCall('setFormatter', array(new Reference('output_formatter')));
-;
-
-$container
-    -&gt;register('logger', 'Monolog\Logger')
-    -&gt;addArgument('default.logger')
-    -&gt;addMethodCall('pushHandler', array(new Reference('console_handler')));
-;
-
-$container-&gt;register('filesystem', 'Symfony\Component\Filesystem\Filesystem');
-
-$container
-    -&gt;register('documentation_writer', 'Gnugat\Fossil\MarkdownFile\DocumentationWriter')
-    -&gt;addArgument(new Reference('filesystem'))
-    -&gt;addArgument(new Reference('logger'))
-;</code></pre>
-<p>If you think about it, the construction of objects is a configuration thing:
-you need to define for each object their dependencies. Symfony2's DI component
-allows you to put all those definition inside a configuration file:</p>
-<pre><code>&lt;?xml version="1.0" ?&gt;
-&lt;!-- File: dic_config.xml --&gt;
-
-&lt;container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
-    &lt;parameters&gt;
-        &lt;parameter key="verbosity_Level_map" type="collection"&gt;
-            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_NORMAL"&gt;Monolog\Logger::NOTICE&lt;/parameter&gt;
-            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERBOSE"&gt;Monolog\Logger::INFO&lt;/parameter&gt;
-            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERY_VERBOSE"&gt;Monolog\Logger::DEBUG&lt;/parameter&gt;
-            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_DEBUG"&gt;Monolog\Logger::DEBUG&lt;/parameter&gt;
-        &lt;/parameter&gt;
-    &lt;/parameters&gt;
-
-    &lt;services&gt;
-        &lt;service id="console_output"
-            class="Symfony\Component\Console\Output\ConsoleOutput"&gt;
-        &lt;/service&gt;
-
-        &lt;service id="output_formatter"
-            class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"&gt;
-        &lt;/service&gt;
-
-        &lt;service id="console_handler"
-            class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"&gt;
-            &lt;argument type="service" id="console.output" /&gt;
-            &lt;argument key="bubble"&gt;true&lt;/argument&gt;
-            &lt;argument&gt;%verbosity_Level_map%&lt;/argument&gt;
-            &lt;call method="setFormatter"&gt;
-                 &lt;argument type="service" id="output_formatter" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
-
-        &lt;service id="logger" class="Monolog\Logger"&gt;
-            &lt;argument&gt;default.logger&lt;/argument&gt;
-            &lt;call method="pushHandler"&gt;
-                 &lt;argument type="service" id="console_handler" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
-
-        &lt;service id="filesystem"
-            class="Symfony\Component\Filesystem\Filesystem"&gt;
-        &lt;/service&gt;
-
-        &lt;service id="documentation_writer"
-            class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"&gt;
-            &lt;argument type="service" id="filesystem" /&gt;
-            &lt;argument type="service" id="logger" /&gt;
-        &lt;/service&gt;
-    &lt;/services&gt;
-&lt;/container&gt;</code></pre>
-<p>And here's the code sample allowing you to feed the DIC with this configuration:</p>
-<pre><code>&lt;?php
-
-// File: front_controller.php
-
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
-
-$container = new ContainerBuilder();
-$configurationDirectory = new FileLocator(__DIR__);
-
-$loader = new XmlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('dic_config.xml');
-
-$documentationWriter = $container-&gt;get('documentation_writer');
-$documentationWriter-&gt;write('/tmp/example.txt', 'Hello world');</code></pre>
-<p>The construction of our objects has been completely removed from the code and
-has been put into a configuration file. Actually, we've replaced object
-constructions by container initialization, which is way more concise.</p>
-<h3 id="configuration-format">Configuration format<a href="#configuration-format" class="anchor">#</a></h3>
-<p>The Symfony2's DI component <a href="http://symfony.com/doc/current/components/dependency_injection/configurators.html">allows many configuration formats</a>:</p>
-<ul><li>plain PHP (like in our first code sample)</li>
-<li>XML (like in our second code sample)</li>
-<li><a href="http://www.yaml.org/">YAML</a></li>
-</ul><p>I wouldn't advise you to use YAML format, as it needs to introduce
-<a href="http://symfony.com/doc/current/components/dependency_injection/parameters.html#yaml">special formating in order to support advanced options</a>
-like:</p>
-<ul><li>prefixing services ID's with <code>@</code></li>
-<li>prefixing services ID's which aren't mandatory with <code>@?</code></li>
-<li>prefixing <code>@</code> with <code>@</code> in order to escape them</li>
-<li><a href="http://symfony.com/doc/current/book/service_container.html#using-the-expression-language">prefixing expressions with <code>@=</code></a></li>
-</ul><p>Not to mention the fact that it doesn't support every options (for instance
-<a href="http://symfony.com/doc/current/components/dependency_injection/parameters.html#constants-as-parameters">you cannot declare constants as parameters</a>)</p>
-<p>On the other hand, the only thing XML doesn't support is concatenation:</p>
-<pre><code>&lt;?php
-
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-
-$container = new ContainerBuilder();
-// Needs to be done in plain PHP
-$container-&gt;setParameter('skeletons_path', __DIR__.'/skeletons');</code></pre>
-<p>XML can be easily validated and it also can be read by many software like IDE's
-which can use it in order to provide you with blissful autocompletion.</p>
-<p>If you're concerned about performances (reading XML might be slower than
-requiring directly plain PHP), Symfony2's DI component allows you to convert it
-into plain PHP and dump it into a cache file which you can then include in
-your application: <a href="http://symfony.com/doc/current/components/dependency_injection/compilation.html#dumping-the-configuration-for-performance">take a look at the documentation</a>.</p>
-<h2 id="wiring-your-application">Wiring your application<a href="#wiring-your-application" class="anchor">#</a></h2>
-<p>There's a fantastic conclusion we can deduce from the above section: we can
-reduce the lines of codes of our projects simply by extracting object
-construction and putting it into configuration files.</p>
-<p>Object construction is part of the "wiring layer" of your application: it
-doesn't solve your "business problem", nor does it solve your
-"application problem". It simply is the boilerplate code necessary to write
-those.</p>
-<p>Let's explore the impact of wiring your application using Symfony2's DI
-component. You might not have noticed it, but the code samples used in the
-previous article as well as in this one all come from <a href="https://github.com/gnugat/fossil">fossil</a>,
-a command which allows you to bootstrap markdown files of your projects
-(<a href="../../../2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html">cf this article</a>).
-It uses Symfony2's Console component which requires some boilerplate code in
-order to create the application:</p>
-<pre><code>&lt;?php
-
-// This is the front controller of the application
-// File: fossil
-
-use Gnugat\Fossil\DocCommand;
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\Console\Application;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
-
-$container = new ContainerBuilder();
-$configurationDirectory = new FileLocator(__DIR__);
-
-$loader = new XmlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('dic_config.xml');
-
-$documentationWriter = $container-&gt;get('documentation_writer');
-
-$docCommand = new DocCommand($documentationWriter);
-
-$application = new Application('Fossil', '2.0.0');
-$application-&gt;add($docCommand);
-
-$output = $container-&gt;get('console_output');
-
-$application-&gt;run(null, $output);</code></pre>
-<p>Can you imagine what this front controller can become if we were to add more
-commands? You'd rather not? Me neither, that's why I advise you to put all this
-boilerplate code into a configuration file:</p>
-<pre><code>&lt;?xml version="1.0" ?&gt;
-
-&lt;!-- File: dic_config.xml --&gt;
-
-&lt;container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
-    &lt;services&gt;
-        &lt;service id="console_output"
-            class="Symfony\Component\Console\Output\ConsoleOutput"&gt;
-        &lt;/service&gt;
-
-        &lt;service id="output_formatter"
-            class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"
-        &lt;/service&gt;
-
-        &lt;service id="console_handler"
-            class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"
-            &lt;argument type="service" id="console.output" /&gt;
-            &lt;argument key="bubble"&gt;true&lt;/argument&gt;
-            &lt;argument&gt;%verbosity_Level_map%&lt;/argument&gt;
-            &lt;call method="setFormatter"&gt;
-                 &lt;argument type="service" id="output_formatter" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
-
-        &lt;service id="logger" class="Monolog\Logger"&gt;
-            &lt;argument&gt;default.logger&lt;/argument&gt;
-            &lt;call method="pushHandler"&gt;
-                 &lt;argument type="service" id="console_handler" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
-
-        &lt;service id="filesystem"
-            class="Symfony\Component\Filesystem\Filesystem"
-        &lt;/service&gt;
-
-        &lt;service id="documentation_writer"
-            class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"
-            &lt;argument type="service" id="filesystem" /&gt;
-            &lt;argument type="service" id="logger" /&gt;
-        &lt;/service&gt;
-
-        &lt;service id="doc_command" class="Gnugat\Fossil\DocCommand"&gt;
-            &lt;argument type="service" id="documentation_writer" /&gt;
-        &lt;/service&gt;
-
-        &lt;service id="application"
-            class="Symfony\Component\Console\Application"&gt;
-            &lt;argument key="name"&gt;Fossil&lt;/argument&gt;
-            &lt;argument key="version"&gt;2.0.0&lt;/argument&gt;
-            &lt;call method="add"&gt;
-                 &lt;argument type="service" id="doc_command" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
-    &lt;/services&gt;
-&lt;/container&gt;</code></pre>
-<p>Which allows us to reduce our front controller:</p>
-<pre><code>&lt;?php
-
-// This is the front controller of the application
-// File: fossil
-
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
-
-$container = new ContainerBuilder();
-$configurationDirectory = new FileLocator(__DIR__);
-
-$loader = new XmlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('dic_config.xml');
-
-$application = $container-&gt;get('application');
-
-$output = $container-&gt;get('console_output');
-
-$application-&gt;run(null, $output);</code></pre>
-<p>Now our concern is the size of the <code>dic_config.xml</code> file which will keep growing
-each time we create new services. Don't panic! You can split it into many files
-using the <code>imports</code> tag:</p>
-<pre><code>&lt;?xml version="1.0" ?&gt;
-
-&lt;!-- File: config/dic.xml --&gt;
-
-&lt;container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
-    &lt;imports&gt;
-        &lt;import resource="01-application.xml" /&gt;
-        &lt;import resource="02-documentation_writer.xml" /&gt;
-    &lt;/imports&gt;
-&lt;/container&gt;</code></pre>
-<p>We created a <code>config</code> directory to put all those XML files, which means we
-should change our front controller to:</p>
-<pre><code>&lt;?php
-
-// This is the front controller of the application
-// File: fossil
-
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
-
-$container = new ContainerBuilder();
-$configurationDirectory = new FileLocator(__DIR__.'/config');
-
-$loader = new XmlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('dic.xml');
-
-$application = $container-&gt;get('application');
-
-$output = $container-&gt;get('console_output');
-
-$application-&gt;run(null, $output);</code></pre>
-<p>The creation of the <code>config/01-application.xml</code> and
-<code>config/02-documentation_writer.xml</code> files is left as an exercise for the
-reader.</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>The Symfony2's Dependency Injection component can be used outside of a Symfony2
-application. It provides a powerful DIC which can be initialized using
-configuration files. This means that boilerplate code (also called "wiring
-layer") can be removed from your code and put in configuration files, hooray!</p>
-<p>I hope you enjoyed this article, be sure to
-<a href="https://twitter.com/epiloic">tweet me what you think about it</a> ;) .</p>
-<h3 id="nota-bene">Nota bene<a href="#nota-bene" class="anchor">#</a></h3>
-<p>We've used the component as a standalone library, but everything we've done
-here is possible inside a Symfony2 fullstack application.</p>
-<p>There's also some tips I'd like to share with you:</p>
-<h3 id="doctrine-repositories-as-services">Doctrine repositories as services<a href="#doctrine-repositories-as-services" class="anchor">#</a></h3>
-<p>The construction of Doctrine repositories is fully handled by the EntityManager,
-which means:</p>
-<ol><li>you cannot inject them as dependencies in your own services</li>
-<li>you cannot inject dependencies into them</li>
-</ol><p><a href="https://gist.github.com/gnugat/8314217">Or can you?</a></p>
-<h3 id="service-locator">Service locator<a href="#service-locator" class="anchor">#</a></h3>
-<p><a href="../../../2014/01/22/ioc-di-and-service-locator.html">The previous article</a>
-spoke about service locator, which is all about using DIC as a dependency. If
-you still don't see what it means, take a look at <a href="https://github.com/symfony/symfony/blob/master/src/Symfony/Component/DependencyInjection/ContainerAware.php">Symfony2 ContainerAware classes</a>.</p>
-<p>For example, a <a href="https://github.com/symfony/symfony/blob/master/src/Symfony/Bundle/FrameworkBundle/Controller/Controller.php">Symfony2 controller</a>
-uses the DIC as a Service Locator. In this specific case it might be justified,
-as the controller shouldn't contain any logic: its purpose is to pass the
-request's parameters to some services, and to feed their return values as the
-response's parameters.</p>
-<p>Keep in mind that in your own code, there's a 99.99% chance that using Service
-Locator is a unjustified decision ;) .</p>
-        </div>
-
-        <footer class="next-previous row">
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/01/22/ioc-di-and-service-locator.html" role="button">Previous: Inversion of Control, Dependency Injection, Dependency Injection Container and Service Locator</a>
-            </div>
-            
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/02/05/tests-introduction.html" role="button">Next: Tests: Introduction</a>
-            </div>
-                    </footer>
-    </article>
-          </div>
         
-                  <div class="row comments">
-          <div class="span10 offset1 content">
-              <div id="disqus_thread"></div>
-          </div>
-      </div>
-                  <footer>
-            <p class="text-center">
-              &copy;
-                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
-                            2015
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
-      </div>
-    
-    
-                  <script src="../../../js/jquery-2.1.0.min.js"></script>
-      <script src="../../../js/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script>
-    
+        <footer>
+            <nav>
+                <a class="button three columns" href="/about.html">About</a>
+                <a class="button three columns" href="/archive">Archive</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-47822314-1']);
-    _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
     </script>
-
-            <script type="text/javascript">
-            var disqus_shortname = 'gnugatgithubio';
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-      </body>
+</body>
 </html>

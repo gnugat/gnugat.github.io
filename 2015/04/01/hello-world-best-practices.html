@@ -1,156 +1,54 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Hello World, best practices - part 1.1.1</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Hello World, best practices - part 1.1.1</title>
-
-    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
-    <meta name="author" content="Loïc Faugeron">
-    <meta name="viewport" content="width=device-width">
-
-    
     <link rel="canonical" href="http://gnugat.github.io/2015/04/01/hello-world-best-practices.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
-      
-    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-  <body>
-          <div class="container">
-            <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="../../..">Articles</a>
-            </div>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                        </ul>
-                            </div>
-        </div>
-    </nav>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
 
-                  <div class="content">
-                                          <h1>
-                  Hello World, best practices - part 1.1.1</h1>
-                          
-                <article>
-        <ul class="list-inline">
-            <li>
-                01/04/2015
-            </li>
-                        <li>
-                <a href="../../../tags/april-fool.html"><span class="label label-primary">April Fool</span></a>
-            </li>
-                    </ul>
-        <hr />
-        <div class="body">
-            <blockquote>
-<p><strong>TL;DR</strong>: Happy April Fool joke!</p>
-</blockquote>
-<p>Hello World applications are often used to showcase framework capabilities, but
-they usually fail to do so! This is because real world applications are never that simple.</p>
-<p>In this series of articles, we will demonstrate how to build a real world Hello World application.</p>
-<p>The first part will include the following standard technologies:</p>
-<ul><li>AngularJs, to write the frontend</li>
-<li><a href="http://www.pomm-project.org/">PostgreSQL</a>, for the database</li>
-<li><a href="http://labs.octivi.com/handling-1-billion-requests-a-week-with-symfony2/">Redis</a>, a cache to reduce the high cost of querying the database</li>
-<li>IIS, as a web server</li>
-<li><a href="http://odolbeau.fr/blog/when-monolog-meet-elk.html">Logstash/Elasticsearch/Kibana</a>, to monitor our application</li>
-</ul><p>In the second part, we'll take things to the advanced level:</p>
-<ul><li><a href="http://williamdurand.fr/2012/08/02/rest-apis-with-symfony2-the-right-way/">FOSRestBundle</a> to create a HATEOS compliant API with Symfony</li>
-<li><a href="http://homakov.blogspot.fr/2013/03/oauth1-oauth2-oauth.html">OAuth2</a> to manage authentication</li>
-<li><a href="http://www.slideshare.net/cakper/2014-0821-symfony-uk-meetup-scaling-symfony2-apps-with-rabbit-mq?related=1">Oldsound/RabbitMQBundle</a>, to keep our database and cache up to date</li>
-<li><a href="https://twitter.com/m_lukaszewski/status/583143784394985473">Laravel 5</a> to create a backend</li>
-</ul><p>In the conlusion we'll explore Docker, <a href="http://www.slideshare.net/giorrrgio/import-golang-struct-microservice">Go Martini</a> (for faster GET endpoints),
-<a href="http://www.crummy.com/software/BeautifulSoup/">Python beautiful soup</a> (for web crawling) and NodeJs (to monitor our queues).</p>
-<p>Of course we're going to use <a href="https://cukes.info/blog/2015/03/24/single-source-of-truth">full stack BDD</a> all along!</p>
-<p>Get ready for the best "Hello World" application you've ever seen!</p>
-<h2 id="april-fool">April Fool<a href="#april-fool" class="anchor">#</a></h2>
-<p>This was my April Fool joke, no let's get serious and build  what I think is the best
-Hello World application:</p>
-<pre><code class="language-php">&lt;?php
-
-echo 'Hello world';</code></pre>
-<p>Note that there's no symfony, no RabbitMQ, no nothing involved. That's because
-a Hello World application doesn't require anything else, those tools were design
-to solve issues that we don't have here.</p>
-<p>If you're concerned about our Hello World application's performance, well you shouldn't be.
-First of all, it's a Hello World application... As far as I'm concerned it prints
-pretty much instantly this way.</p>
-<p>Second of all, you shouldn't worry about performance when building an application.
-This is something you should start worrying only when you have performance issues.
-The best thing you could do, is build the application in a way that will allow you
-to change it afterwards, if the need comes (and it usually will: requirements are changing by nature).</p>
-<p>I hope you enjoyed it :) .</p>
-        </div>
-
-        <footer class="next-previous row">
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2015/03/25/sf-ws-part-3-3-consuming-remote.html" role="button">Previous: Symfony / Web Services - part 3.3: Consuming, remote calls</a>
-            </div>
-            
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2015/04/08/introducing-memio-code-generator.html" role="button">Next: Introducing Memio, code generator</a>
-            </div>
-                    </footer>
-    </article>
-          </div>
         
-                  <div class="row comments">
-          <div class="span10 offset1 content">
-              <div id="disqus_thread"></div>
-          </div>
-      </div>
-                  <footer>
-            <p class="text-center">
-              &copy;
-                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
-                            2015
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
-      </div>
-    
-    
-                  <script src="../../../js/jquery-2.1.0.min.js"></script>
-      <script src="../../../js/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script>
-    
+        <footer>
+            <nav>
+                <a class="button three columns" href="/about.html">About</a>
+                <a class="button three columns" href="/archive">Archive</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-47822314-1']);
-    _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
     </script>
-
-            <script type="text/javascript">
-            var disqus_shortname = 'gnugatgithubio';
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-      </body>
+</body>
 </html>

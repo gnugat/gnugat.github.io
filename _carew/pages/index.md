@@ -1,10 +1,8 @@
 ---
-title: Loïc's blog
+layout: skeleton
 ---
 
-<a class="btn btn-default" href="http://gnugat.github.io/feed/atom.xml" role="button">RSS</a>
-<a class="btn btn-default" href="https://github.com/gnugat/gnugat.github.io" role="button">Sources</a>
-
+{% block content %}
 <div class="homepage">
     {% for article in carew.posts|reverse %}
     <article class="article">
@@ -26,3 +24,4 @@ title: Loïc's blog
     </article>
     {% endfor %}
 </div>
+{% endblock %}

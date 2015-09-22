@@ -1,412 +1,54 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Learn Symfony2 - part 5: Tests</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Learn Symfony2 - part 5: Tests</title>
-
-    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
-    <meta name="author" content="Loïc Faugeron">
-    <meta name="viewport" content="width=device-width">
-
-    
     <link rel="canonical" href="http://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
-      
-    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-  <body>
-          <div class="container">
-            <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="../../..">Articles</a>
-            </div>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                        </ul>
-                            </div>
-        </div>
-    </nav>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
 
-                  <div class="content">
-                                          <h1>
-                  Learn Symfony2 - part 5: Tests</h1>
-                          
-                <article>
-        <ul class="list-inline">
-            <li>
-                20/07/2014
-            </li>
-                        <li>
-                <a href="../../../tags/symfony.html"><span class="label label-primary">Symfony</span></a>
-            </li>
-                        <li>
-                <a href="../../../tags/learn-symfony2-series.html"><span class="label label-primary">Learn Symfony2 Series</span></a>
-            </li>
-                    </ul>
-        <hr />
-        <div class="body">
-            <p>This is the fifth article of the series on learning
-<a href="http://symfony.com/">the Symfony2 framework</a>.
-Have a look at the four first ones:</p>
-<ol><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">Composer</a></li>
-<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">Empty application</a></li>
-<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">Bundles</a></li>
-<li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">Controllers</a></li>
-</ol><p>In the previous articles we created an application for the Knight of Ni with the
-following files:</p>
-<pre><code>.
-&#9500;&#9472;&#9472; app
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; logs
-&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; .gitkeep
-&#9500;&#9472;&#9472; composer.json
-&#9500;&#9472;&#9472; composer.lock
-&#9500;&#9472;&#9472; src
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Knight
-&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Controller
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; ApiController.php
-&#9474;&nbsp;&nbsp;         &#9492;&#9472;&#9472; KnightApplicationBundle.php
-&#9500;&#9472;&#9472; .gitignore
-&#9492;&#9472;&#9472; web
-    &#9492;&#9472;&#9472; app.php</code></pre>
-<p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
-with git.</p>
-<p>Here's the <a href="https://github.com/gnugat/learning-symfony2/tree/4-controllers">repository where you can find the actual code</a>.</p>
-<p>In this article, we'll create functional tests using PHPUnit.</p>
-<h2 id="installing-phpunit">Installing PHPUnit<a href="#installing-phpunit" class="anchor">#</a></h2>
-<p><a href="http://phpunit.de/">PHPUnit</a> is a popular test framework.
-Its name is deceptive: you can write any kind of test with it (unit, functional,
-end to end, anything).</p>
-<p>Let's install it in our project:</p>
-<pre><code>composer require --dev "phpunit/phpunit:~4.1"</code></pre>
-<p>The <code>--dev</code> options will prevent Composer from installing PHPUnit when running
-<code>composer install --no-dev</code>: this is use in production (download is costly).</p>
-<p>We will need to create a configuration file to tell PHPUnit to execute the tests
-found in <code>src/Knight/ApplicationBundle/Tests</code>, and to use Composer as an
-autoloader:</p>
-<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;!-- File: app/phpunit.xml.dist --&gt;
-
-&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
-&lt;phpunit
-    backupGlobals="false"
-    colors="true"
-    syntaxCheck="false"
-    bootstrap="../vendor/autoload.php"&gt;
-
-    &lt;testsuites&gt;
-        &lt;testsuite name="Functional Test Suite"&gt;
-            &lt;directory&gt;../src/Knight/ApplicationBundle/Tests&lt;/directory&gt;
-        &lt;/testsuite&gt;
-    &lt;/testsuites&gt;
-
-&lt;/phpunit&gt;</code></pre>
-<p><em>Note</em>: <a href="http://symfony.com/doc/current/cookbook/bundles/best_practices.html#directory-structure">By convention</a>
-you should put your tests in <code>src/Knight/ApplicationBundle/Tests</code>. It's not hard
-coded though, but if you want people to find things where they expect them to be
-you better follow them ;) .</p>
-<p>This file is suffixed with <code>.dist</code> because we intend to allow developer to
-override the configuration by creating a <code>app/phpunit.xml</code> file. Only the
-distribution file should be commited, though:</p>
-<pre><code>echo '/app/phpunit.xml' &gt;&gt; .gitignore
-git add -A
-git commit -m 'Installed PHPUnit'</code></pre>
-<h2 id="environments">Environments<a href="#environments" class="anchor">#</a></h2>
-<p>For our functional tests, we will be using the <code>WebTestCase</code> class: it
-instanciates our <code>AppKernel</code> with the <code>test</code> environment. It also uses a
-<code>test.client</code> service, which is disabled by default.</p>
-<p>In order to enable this service, we must change the configuration:</p>
-<pre><code># File: app/config/config.yml
-framework:
-    secret: "Three can keep a secret, if two of them are dead."
-    router:
-        resource: %kernel.root_dir%/config/routing.yml
-
-    # test: ~</code></pre>
-<p>Sometimes, you don't want your configuration to be the same for your tests and
-your production server. That's what environments are for. Let's put this test
-specific configuration in a different file:</p>
-<pre><code># File: app/config/config_test.yml
-imports:
-    - { resource: config.yml }
-
-framework:
-    test: ~</code></pre>
-<p><em>Note</em>: the <code>imports</code> parameter allows you to include other configuration files.
-You can then overwrite the included parameters, or add new ones.</p>
-<p>We should also change the <code>registerContainerConfiguration</code> method of the
-<code>AppKernel</code> class in order to load the test configuration, depending on the
-environment:</p>
-<pre><code>&lt;?php
-// File: app/AppKernel.php
-
-use Symfony\Component\HttpKernel\Kernel;
-use Symfony\Component\Config\Loader\LoaderInterface;
-
-class AppKernel extends Kernel
-{
-    public function registerBundles()
-    {
-        return array(
-            new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
-            new Knight\ApplicationBundle\KnightApplicationBundle(),
-        );
-    }
-
-    public function registerContainerConfiguration(LoaderInterface $loader)
-    {
-        $file = 'config';
-        if ('test' === $this-&gt;getEnvironment()) {
-            $file .= '_test';
-        }
-        $loader-&gt;load(__DIR__."/config/$file.yml");
-    }
-}</code></pre>
-<p>Let's commit our work:</p>
-<pre><code>git add -A
-git commit -m 'Added test configuration'</code></pre>
-<h2 id="functional-tests">Functional tests<a href="#functional-tests" class="anchor">#</a></h2>
-<p>Our test must check that the application behaves as expected. We won't be
-checking that it actually fulfills our business expectations. This means that
-checking the HTTP status code is entirely sufficient.</p>
-<p>Let's create the directory:</p>
-<pre><code>mkdir -p src/Knight/ApplicationBundle/Tests/Controller</code></pre>
-<p><em>Note</em>: Again, <a href="http://symfony.com/doc/current/book/testing.html#unit-tests">by convention</a>,
-your test directory structure must mirror the one found in the bundle.</p>
-<p>And then our first functional test:</p>
-<pre><code>&lt;?php
-// File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
-
-namespace Knight/ApplicationBundle/Tests/Controller;
-
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-
-class ApiControllerTest extends WebTestCase
-{
-    public function testOfferingTheRightThing()
-    {
-        $method = 'POST';
-        $uri = '/api/ni';
-        $parameters = array();
-        $files = array();
-        $server = array();
-        $content = json_encode(array(
-            'offering' =&gt; 'shrubbery',
-        ));
-
-        $client = static::createClient();
-        $client-&gt;request($method, $uri, $parameters, $files, $server, $content);
-        $response = $client-&gt;getResponse();
-
-        $this-&gt;assertTrue($response-&gt;isSuccessful());
-    }
-}</code></pre>
-<p>To make sure the test pass, run the following command:</p>
-<pre><code>./vendor/bin/phpunit -c app</code></pre>
-<p>Composer has installed a binary in <code>vendor/bin</code>, and the <code>-c</code> option allows you
-to tell PHPUnit where the configuration is (in <code>./app</code>).</p>
-<p>This looks a bit long because of the content parameter... We can improve this
-with helper methods:</p>
-<pre><code>&lt;?php
-// File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
-
-namespace Knight/ApplicationBundle/Tests/Controller;
-
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-
-class ApiControllerTest extends WebTestCase
-{
-    private function post($uri, array $data)
-    {
-        $content = json_encode($data);
-        $client = static::createClient();
-        $client-&gt;request('POST', $uri, array(), array(), array(), $content);
-
-        return $client-&gt;getResponse();
-    }
-
-    public function testOfferingTheRightThing()
-    {
-        $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'shrubbery'));
-
-        $this-&gt;assertTrue($response-&gt;isSuccessful());
-    }
-}</code></pre>
-<p>Make sure the test still pass:</p>
-<pre><code>./vendor/bin/phpunit -c app</code></pre>
-<p>The Response's <code>isSuccessful</code> method only checks that the status code is 200ish.</p>
-<p>Here's a test for failure cases:</p>
-<pre><code>&lt;?php
-// File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
-
-namespace Knight/ApplicationBundle/Tests/Controller;
-
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-
-class ApiControllerTest extends WebTestCase
-{
-    private function post($uri, array $data)
-    {
-        $content = json_encode($data);
-        $client = static::createClient();
-        $client-&gt;request('POST', $uri, array(), array(), array(), $content);
-
-        return $client-&gt;getResponse();
-    }
-
-    public function testOfferingTheRightThing()
-    {
-        $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'shrubbery'));
-
-        $this-&gt;assertTrue($response-&gt;isSuccessful());
-    }
-
-    public function testOfferingTheWrongThing()
-    {
-        $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'hareng'));
-
-        $this-&gt;assertFalse($response-&gt;isSuccessful());
-    }
-}</code></pre>
-<p>Run the tests:</p>
-<pre><code>./vendor/bin/phpunit -c app</code></pre>
-<p><em>Note</em>: At this point running the tests should become a habit. Make sure to run
-them whenever you finish a change, and to run them before commiting anything.</p>
-<h2 id="rest-api-functional-tests">Rest API functional tests<a href="#rest-api-functional-tests" class="anchor">#</a></h2>
-<p>In my humble opinion, checking if the status code is 200ish and not checking the
-response content is entirely sufficient for functional tests.</p>
-<p>When creating REST API, it can prove useful to test more precisely the status
-code. Our application is a REST API, so let's do this:</p>
-<pre><code>&lt;?php
-// File: src/Knight/ApplicationBundle/Tests/Controller/ApiControllerTest.php
-
-namespace Knight/ApplicationBundle/Tests/Controller;
-
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpFoundation\Response;
-
-class ApiControllerTest extends WebTestCase
-{
-    private function post($uri, array $data)
-    {
-        $content = json_encode($data);
-        $client = static::createClient();
-        $client-&gt;request('POST', $uri, array(), array(), array(), $content);
-
-        return $client-&gt;getResponse();
-    }
-
-    public function testOfferingTheRightThing()
-    {
-        $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'shrubbery'));
-
-        $this-&gt;assertSame(Response::HTTP_OK , $response-&gt;getStatusCode());
-    }
-
-    public function testOfferingTheWrongThing()
-    {
-        $response = $this-&gt;post('/api/ni', array('offering' =&gt; 'hareng'));
-
-        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY , $response-&gt;getStatusCode());
-    }
-}</code></pre>
-<p>Run the tests:</p>
-<pre><code>./vendor/bin/phpunit -c app</code></pre>
-<p>All green! That's comforting enough for us to commit our work and call it a day!</p>
-<pre><code>git add -A
-git commit -m 'Added tests'</code></pre>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>Running <code>./vendor/bin/phpunit -c app</code> is less cumbersome than having to run
-manually HTTPie (like in the previous article)!</p>
-<p>Writing functional tests is easy and quick, the only thing you need to do is
-check if the HTTP response's status code is successful (and for REST API you
-need to check the precise HTTP response's status code).</p>
-<p>The next article will be the conclusion of this series, I hope you enjoyed it!</p>
-<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
-<ul><li><a href="../../../2014/07/23/learn-sf2-conclusion.html">Conclusion</a></li>
-</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
-<ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
-<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
-<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
-<li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
-</ul>
-        </div>
-
-        <footer class="next-previous row">
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/07/12/learn-sf2-controllers-part-4.html" role="button">Previous: Learn Symfony2 - part 4: Controllers</a>
-            </div>
-            
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/07/23/learn-sf2-conclusion.html" role="button">Next: Learn Symfony2 - Conclusion</a>
-            </div>
-                    </footer>
-    </article>
-          </div>
         
-                  <div class="row comments">
-          <div class="span10 offset1 content">
-              <div id="disqus_thread"></div>
-          </div>
-      </div>
-                  <footer>
-            <p class="text-center">
-              &copy;
-                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
-                            2015
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
-      </div>
-    
-    
-                  <script src="../../../js/jquery-2.1.0.min.js"></script>
-      <script src="../../../js/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script>
-    
+        <footer>
+            <nav>
+                <a class="button three columns" href="/about.html">About</a>
+                <a class="button three columns" href="/archive">Archive</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-47822314-1']);
-    _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
     </script>
-
-            <script type="text/javascript">
-            var disqus_shortname = 'gnugatgithubio';
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-      </body>
+</body>
 </html>

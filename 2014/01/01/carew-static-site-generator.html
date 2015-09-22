@@ -1,180 +1,54 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Carew, the static site generator</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Carew, the static site generator</title>
-
-    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
-    <meta name="author" content="Loïc Faugeron">
-    <meta name="viewport" content="width=device-width">
-
-    
     <link rel="canonical" href="http://gnugat.github.io/2014/01/01/carew-static-site-generator.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
-      
-    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-  <body>
-          <div class="container">
-            <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="../../..">Articles</a>
-            </div>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                        </ul>
-                            </div>
-        </div>
-    </nav>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
 
-                  <div class="content">
-                                          <h1>
-                  Carew, the static site generator</h1>
-                          
-                <article>
-        <ul class="list-inline">
-            <li>
-                01/01/2014
-            </li>
-                        <li>
-                <a href="../../../tags/introducing-tool.html"><span class="label label-primary">Introducing Tool</span></a>
-            </li>
-                    </ul>
-        <hr />
-        <div class="body">
-            <p>Frameworks are a real help when building web applications which serve business
-logic. But what about static websites?</p>
-<p>Those only contain pages which could be directly written in HTML. The only
-problem with this approach is that HTML isn't writter friendly compared to
-Markdown.</p>
-<p>Also, we could say that static websites like blogs do have some logic behind the
-scenes:</p>
-<ul><li>posts can have a state (is it published yet?)</li>
-<li>posts can be tagged, in order to make them easier to find</li>
-</ul><p>But still, a framework might be too much for this task.</p>
-<p>Static site generators are a way to solve this problem:</p>
-<ol><li>simply write your pages in markdown</li>
-<li>launch a command to generate HTML from it</li>
-</ol><p><a href="http://carew.github.io/">Carew</a> is one of them (among
-<a href="http://jekyllrb.com/">Jekyll</a>,
-<a href="http://hyde.github.io/">Hyde</a>,
-<a href="https://github.com/obensonne/poole">Poole</a>
-and <a href="https://github.com/spjwebster/lanyon">Lanyon</a>):
-it is written in PHP, allows you to use the template engine
-<a href="http://twig.sensiolabs.org/">Twig</a> in your markdown and it provides a theme
-using <a href="http://getbootstrap.com/2.3.2/">Bootstrap</a>.</p>
-<p>This blog post will focus on Carew, as
-<a href="https://github.com/gnugat/gnugat.github.io">this very blog is written with it</a>.</p>
-<h2 id="carew-and-github">Carew and Github<a href="#carew-and-github" class="anchor">#</a></h2>
-<p>A common way to quickly publish static sites is to use
-<a href="http://pages.github.com/">Github Pages</a> which works as follow:</p>
-<ol><li>create a repository, the name should follow this format: <code>&lt;username&gt;.github.io</code></li>
-<li>add, commit and push the content of the <code>web</code> directory directly at the
-root of your repo</li>
-<li>the site is now available at this address: <code>http://&lt;username&gt;.github.io</code></li>
-</ol><p><a href="http://carew.github.io/cookbook/hosting.html">Learn more about hosting a website built with Carew on the official website</a>.</p>
-<h2 id="creation">Creation<a href="#creation" class="anchor">#</a></h2>
-<p>Creating your site using Carew is very simple, just follow these steps:</p>
-<pre><code>$ php composer.phar create-project carew/boilerplate &lt;project&gt; -s dev
-$ cd &lt;project&gt;
-$ bin/carew build</code></pre>
-<p>Examples pages (which sources are located in <code>pages</code> and <code>posts</code>) are converted
-from markdown to HTML in the <code>web</code> directory.</p>
-<h2 id="customization">Customization<a href="#customization" class="anchor">#</a></h2>
-<p>Before writing any page or post, edit the configuration wich is located inside
-the <code>config.yml</code> file.</p>
-<p>Then edit the <code>pages/index.md</code> and <code>pages/about.md</code> pages with your own content.</p>
-<p>Finally, remove the content of the <code>posts</code> folder and create your first blog
-post using this command:</p>
-<pre><code>$ bin/carew generate:post [--date='YYYY-MM-DD'] title</code></pre>
-<p><a href="http://carew.github.io/cookbook/configuration.html">See the configuration documentation on the official website</a>.</p>
-<h2 id="front-matters">Front matters<a href="#front-matters" class="anchor">#</a></h2>
-<p>Each markdown file starts with a header:</p>
-<pre><code>---
-layout: post # no need for this line when writing a regular page
-title: Will be used by `&lt;title&gt;&lt;/title&gt;` and `&lt;h1&gt;&lt;/h1&gt;`
-tags:
-    - first tag
-    - carew
----</code></pre>
-<p>Carew generates a page listing all existing tags. You can create a link to this
-page with the following snippet:</p>
-<pre><code>{{ link('tags', 'The page with all the tags') }}.</code></pre>
-<p><a href="http://carew.github.io/documentation.html#front-matter">Learn more about Front matters on the official website</a>.</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>Carew is really simple to use, in this article we've covered the minimum you
-should know to create pages, blog posts and tags.</p>
-<p>I hope you enjoyed this article and that it helped you a little.</p>
-<p>If you want to learn more, for example to customize its behaviour or its theme,
-please refer to <a href="http://carew.github.io/documentation.html">the official documentation</a>.</p>
-        </div>
-
-        <footer class="next-previous row">
-                        
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/01/08/technology-scouting.html" role="button">Next: Technology scouting</a>
-            </div>
-                    </footer>
-    </article>
-          </div>
         
-                  <div class="row comments">
-          <div class="span10 offset1 content">
-              <div id="disqus_thread"></div>
-          </div>
-      </div>
-                  <footer>
-            <p class="text-center">
-              &copy;
-                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
-                            2015
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
-      </div>
-    
-    
-                  <script src="../../../js/jquery-2.1.0.min.js"></script>
-      <script src="../../../js/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script>
-    
+        <footer>
+            <nav>
+                <a class="button three columns" href="/about.html">About</a>
+                <a class="button three columns" href="/archive">Archive</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-47822314-1']);
-    _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
     </script>
-
-            <script type="text/javascript">
-            var disqus_shortname = 'gnugatgithubio';
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-      </body>
+</body>
 </html>

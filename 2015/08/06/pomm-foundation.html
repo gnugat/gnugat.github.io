@@ -1,167 +1,54 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Pomm Foundation</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Pomm Foundation</title>
-
-    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
-    <meta name="author" content="Loïc Faugeron">
-    <meta name="viewport" content="width=device-width">
-
-    
     <link rel="canonical" href="http://gnugat.github.io/2015/08/06/pomm-foundation.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
-      
-    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-  <body>
-          <div class="container">
-            <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="../../..">Articles</a>
-            </div>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                        </ul>
-                            </div>
-        </div>
-    </nav>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
 
-                  <div class="content">
-                                          <h1>
-                  Pomm Foundation</h1>
-                          
-                <article>
-        <ul class="list-inline">
-            <li>
-                06/08/2015
-            </li>
-                        <li>
-                <a href="../../../tags/introducing-library.html"><span class="label label-primary">Introducing Library</span></a>
-            </li>
-                        <li>
-                <a href="../../../tags/pomm.html"><span class="label label-primary">Pomm</span></a>
-            </li>
-                    </ul>
-        <hr />
-        <div class="body">
-            <p><a href="http://www.pomm-project.org/">Pomm</a> is an interresting alternative to Doctrine
-(<a href="http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/introduction.html">DBAL</a>
-or <a href="http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/tutorials/getting-started.html">ORM</a>), it specializes in one database vendor: <a href="http://www.postgresql.org/docs/9.4/static/intro-whatis.html">PostgreSQL</a>.</p>
-<p>In this article we'll quickly have a look at <a href="https://github.com/pomm-project/Foundation#foundation">Pomm Foundation</a>.</p>
-<h2 id="installation">Installation<a href="#installation" class="anchor">#</a></h2>
-<p>Pomm can be installed using <a href="https://getcomposer.org/download/">Composer</a>:</p>
-<pre><code>composer require pomm-project/foundation:^2.0@rc</code></pre>
-<p>Then we need to create a <code>QueryManager</code>:</p>
-<pre><code class="language-php">&lt;?php
-
-require __DIR__.'/vendor/autoload.php';
-
-$pomm = new PommProject\Foundation\Pomm(
-    'database_name' =&gt; array(
-        'dsn' =&gt; 'pgsql://database_user:database_pass@database_host:database_port/database_name',
-        'class:session_builder' =&gt; '\PommProject\Foundation\SessionBuilder',
-    ),
-);
-
-/**
- * @var PommProject\Foundation\QueryManager\QueryManagerInterface
- */
-$queryManager = $pomm-&gt;getDefaultSession()-&gt;getQueryManager();</code></pre>
-<h2 id="usage">Usage<a href="#usage" class="anchor">#</a></h2>
-<p>The <code>QueryManager</code> allows us to send query to our database:</p>
-<pre><code class="language-php">$items = $queryManager-&gt;query('SELECT * FROM item WHERE name = $1 AND description = $2', array(
-    'Arthur Dent',
-    'Nobody expects the Spanish Inquisition!',
-));</code></pre>
-<blockquote>
-<p><strong>Note</strong>: <a href="https://twitter.com/mvrhov/status/573098943321653248">Named parameters are not supported</a>.</p>
-</blockquote>
-<p>The returned value is an iterator, each element is a row (an associative array):</p>
-<pre><code class="language-php">foreach ($items as $item) {
-    echo $item['description'];
-}</code></pre>
-<p>If you'd rather get all elements as an array, you can use <code>iterator_to_array</code>:</p>
-<pre><code class="language-php">$arrayItems = iterator_to_array($items);</code></pre>
-<blockquote>
-<p><strong>Note</strong>: Behind the scene the result is stored in a <code>resource</code>, which is usually more efficient than a PHP array.
-The iterator allows to get the rows from the <code>resource</code> one by one, which can save memory.</p>
-</blockquote>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>Pomm Foundation provides an efficient abstraction over <code>pg_*</code> functions.</p>
-<p>In comparison Doctrine DBAL uses <code>PDO</code> and tries to abstract vendor features,
-so if you're using PostgresSQL and don't need an ORM, you can give it a try!</p>
-        </div>
-
-        <footer class="next-previous row">
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2015/08/05/phinx.html" role="button">Previous: phinx</a>
-            </div>
-            
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2015/08/07/diactoros-psr7.html" role="button">Next: Diactoros (PSR-7)</a>
-            </div>
-                    </footer>
-    </article>
-          </div>
         
-                  <div class="row comments">
-          <div class="span10 offset1 content">
-              <div id="disqus_thread"></div>
-          </div>
-      </div>
-                  <footer>
-            <p class="text-center">
-              &copy;
-                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
-                            2015
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
-      </div>
-    
-    
-                  <script src="../../../js/jquery-2.1.0.min.js"></script>
-      <script src="../../../js/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script>
-    
+        <footer>
+            <nav>
+                <a class="button three columns" href="/about.html">About</a>
+                <a class="button three columns" href="/archive">Archive</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-47822314-1']);
-    _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
     </script>
-
-            <script type="text/javascript">
-            var disqus_shortname = 'gnugatgithubio';
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-      </body>
+</body>
 </html>

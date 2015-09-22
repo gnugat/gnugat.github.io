@@ -1,233 +1,54 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Redaktilo v0.7</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Redaktilo v0.7</title>
-
-    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
-    <meta name="author" content="Loïc Faugeron">
-    <meta name="viewport" content="width=device-width">
-
-    
     <link rel="canonical" href="http://gnugat.github.io/2014/05/27/redaktilo-0-7.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
-      
-    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-  <body>
-          <div class="container">
-            <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="../../..">Articles</a>
-            </div>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                        </ul>
-                            </div>
-        </div>
-    </nav>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
 
-                  <div class="content">
-                                          <h1>
-                  Redaktilo v0.7</h1>
-                          
-                <article>
-        <ul class="list-inline">
-            <li>
-                27/05/2014
-            </li>
-                        <li>
-                <a href="../../../tags/redaktilo.html"><span class="label label-primary">Redaktilo</span></a>
-            </li>
-                        <li>
-                <a href="../../../tags/pet-project.html"><span class="label label-primary">Pet Project</span></a>
-            </li>
-                    </ul>
-        <hr />
-        <div class="body">
-            <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
-<p>Since the announcement of <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> on
-this blog, this silly library has jumped from 164 lines of code in v0.3 to 571
-in v0.7.</p>
-<p>In this article:</p>
-<ol><li>we'll quickly oversee <a href="#changes-done">the changes done</a></li>
-<li>then we'll have some insight on <a href="#upcoming-changes">the upcoming changes</a></li>
-<li>finally I'll list <a href="#remaining-unresolved-questions">the remaining unresolved questions</a></li>
-</ol><h2 id="changes-done">Changes done<a href="#changes-done" class="anchor">#</a></h2>
-<p>Thanks to <a href="https://github.com/gnugat/redaktilo/commits?author=WouterJ">WouterJ</a>
-you can now:</p>
-<ul><li>remove the current line: <code>$editor-&gt;remove($file);</code></li>
-<li>replace the current line: <code>$editor-&gt;changeTo($file, $replacement);</code></li>
-<li>replace all occurences: <code>$editor-&gt;replaceWith($file, $regex, $callback);</code></li>
-<li>check line presence: <code>$editor-&gt;has($file, $pattern);</code></li>
-</ul><p>I've updated to documentation to make the library easier to learn with:</p>
-<ul><li>a <a href="https://github.com/gnugat/redaktilo/blob/master/doc/01-tutorial.md">tutorial</a></li>
-<li>a <a href="https://github.com/gnugat/redaktilo/blob/master/doc/03-reference.md">code reference</a></li>
-</ul><p><strong>Redaktilo</strong> has been created to fulfill actual needs. To make sure it keeps
-this promise, I've added executable
-<a href="https://github.com/gnugat/redaktilo/tree/master/tests/example">examples using PHPUnit tests</a>.</p>
-<p>The major changes have been massive refactorings to allow the library to be
-extended:</p>
-<ul><li><a href="https://github.com/gnugat/redaktilo/tree/master/src/Gnugat/Redaktilo/Search">you can add search strategies</a></li>
-<li><a href="https://github.com/gnugat/redaktilo/tree/master/src/Gnugat/Redaktilo/Converter">you can convert the file's content</a></li>
-</ul><p>As highlited by <a href="https://twitter.com/clemherreman/status/466497340824911872">Cl&eacute;ment Herreman</a>,
-those refactorings have introduced a more complex construction schema.
-To make things easier, a
-<a href="https://github.com/gnugat/redaktilo/blob/master/src/Gnugat/Redaktilo/DependencyInjection/StaticContainer.php">static Dependency Injection Container</a>
-has been created.</p>
-<h2 id="upcoming-changes">Upcoming changes<a href="#upcoming-changes" class="anchor">#</a></h2>
-<p><a href="http://www.sublimetext.com/">Sublime Text's go to anything</a> feature is
-really awesome, which is why I'd like to implement something similar:</p>
-<ul><li>go to the previous/next line (<code>array_search</code>)</li>
-<li>go to x lines above/under</li>
-<li>go to the previous/next substring match (<code>strpos</code>)</li>
-<li>go to the previous/next regex match (<code>preg_grep</code>)</li>
-<li>go to the previous/next PHP class/method/function (<code>token_get_all</code>)</li>
-</ul><p>The two first ones are already available, so the other one still have to be
-implemented (the last one might be done by
-<a href="https://github.com/gnugat/redaktilo/issues/6#issuecomment-44005931">Loick Piera</a>).</p>
-<p>The methods allowing this throw exception when nothing is found. Adding a
-relative check (<code>hasBefore</code> and <code>hasAfter</code>) might make things easier.</p>
-<p>Moving relatively isn't always sufficient. To go to an absolute line number
-you have to use directly <code>File</code>, maybe it would be nicer to add a new method
-to <code>Editor</code> (<code>jumpToFirst</code>).</p>
-<p>Finally, the editor should allow insertion, replacement and removal in any
-locations, not just on the current line.</p>
-<p>Once these features added, more refactoring should take place: since the
-creation of <strong>Redaktilo</strong>, <a href="https://github.com/jfsimon">Jean-Fran&ccedil;ois Simon</a>
-advised me to use the command and memento patterns, which would allow the
-undo/redo feature.
-While I now think that <code>Command</code> is indeed more suitable than <code>ReplaceStrategy</code>
-for insertion, replacement and removal, I'm not sure the versioning feature
-is actually needed... For now.</p>
-<p>And that should bring us near an alpha version :) .</p>
-<p>A lot of renaming should happen at this stage:</p>
-<ul><li><code>changeTo</code> to <code>replace</code></li>
-<li><code>replaceWith</code> to <code>replaceAll</code></li>
-<li><code>NotSupportedException</code> to <code>NotFoundEsception</code></li>
-</ul><p>And perhaps some other methods or class names.</p>
-<p>Once the heavy renaming done, beta versions can begin, with a main focus on
-making every thing safer (argument checking, exception handling).</p>
-<h2 id="remaining-unresolved-questions">Remaining unresolved questions<a href="#remaining-unresolved-questions" class="anchor">#</a></h2>
-<p>I'm still not fully sure of what Redaktilo v1.0 will look like. Mainly because
-I still haven't anwsered this by question (which have been in my mind since the
-begining):</p>
-<p>Should <strong>Redaktilo</strong> handle different kinds of files?</p>
-<p>Sometimes I think it should, which is why the project has seen:</p>
-<ul><li><a href="https://github.com/gnugat/redaktilo/tree/v0.1.0/src/Gnugat/Redaktilo/Editor">Editor interface</a></li>
-<li><a href="https://github.com/gnugat/redaktilo/tree/v0.1.0/src/Gnugat/Redaktilo/File">File interface</a></li>
-<li><a href="https://github.com/gnugat/redaktilo/tree/v0.6.1/src/Gnugat/Redaktilo">a premature ReplaceEngine/ReploaceStrategy</a></li>
-<li><a href="https://github.com/gnugat/redaktilo/tree/v0.7.0/src/Gnugat/Redaktilo/Converter">ContentConverter interface</a></li>
-</ul><p>The motives behind this is the JSON use case: you can currently edit JSON
-files, but it's tedious.</p>
-<p>Let's take the <code>composer.json</code> example. What if you need to
-<a href="https://getcomposer.org/doc/articles/scripts.md">add a script</a> when:</p>
-<ul><li>there's no <code>scripts</code> section yet?</li>
-<li>there's no subsection in <code>script</code> yet?</li>
-<li>there's already a script, but not in an array</li>
-<li>there's already some scripts</li>
-</ul><p>Another example would be the addition of a new element in an array: you
-currently have to manually a trailing comma to the previous entry...</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p><strong>Redaktilo</strong> fulfills 98% of my use cases (inserting new lines in a YAML
-configuration file, editing PHP files and replacing bits in a documentation
-file) and is now extensible.</p>
-<p>Some search strategies will be added to make it similar to the
-<a href="http://www.sublimetext.com/">Sublime Text's go to anything</a>, and some
-refactoring are still necessary before an alpha version.</p>
-<p>There's still some unresolved questions (JSON edition is the 2% use case left),
-but I'm sure they'll be answered during the development.</p>
-<p>In the end <code>Editor</code> should have the following methods (no guaranty on the
-names):</p>
-<ul><li>filesystem operations: open/save</li>
-<li>checking line presence: has/hasBefore/hasAfter</li>
-<li>content navigation: jumpTo/jumpUpTo/jumpDownTo</li>
-<li>content manipulation: insert/remove/replace (on the current line or at the
-given location)</li>
-<li>global manipulation: replaceAll</li>
-</ul><p>I'd like to thank the early contributors:</p>
-<ul><li><a href="https://github.com/jfsimon">Jean-Fran&ccedil;ois Simon</a></li>
-<li><a href="https://github.com/gnugat/redaktilo/commits?author=WouterJ">WouterJ</a></li>
-<li><a href="https://github.com/gnugat/redaktilo/commit/7c8da2d94e1d659318e9bb1745c8cc19435cb3af#commitcomment-6279956">Cl&eacute;ment Debiaune</a></li>
-<li><a href="https://twitter.com/clemherreman/status/466497340824911872">Cl&eacute;ment Herreman</a></li>
-<li><a href="https://github.com/gnugat/redaktilo/issues/6#issuecomment-44005931">Loick Piera</a></li>
-</ul><p>Any help is appreciated, whether it's some code review, typo fixing or
-code/documentation contribution. But the biggest help you could give me:
-provide me with some feedback on Redaktilo's usage :) .</p>
-<p>If you have any questions, remarks, please feel free to
-<a href="https://github.com/gnugat/redaktilo/issues?state=open">open an issue</a> and
-start a discussion here.</p>
-        </div>
-
-        <footer class="next-previous row">
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/05/21/facade-design-pattern-by-example.html" role="button">Previous: Facade design pattern, by example</a>
-            </div>
-            
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/06/04/php-tokenizer.html" role="button">Next: PHP Tokenizer</a>
-            </div>
-                    </footer>
-    </article>
-          </div>
         
-                  <div class="row comments">
-          <div class="span10 offset1 content">
-              <div id="disqus_thread"></div>
-          </div>
-      </div>
-                  <footer>
-            <p class="text-center">
-              &copy;
-                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
-                            2015
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
-      </div>
-    
-    
-                  <script src="../../../js/jquery-2.1.0.min.js"></script>
-      <script src="../../../js/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script>
-    
+        <footer>
+            <nav>
+                <a class="button three columns" href="/about.html">About</a>
+                <a class="button three columns" href="/archive">Archive</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-47822314-1']);
-    _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
     </script>
-
-            <script type="text/javascript">
-            var disqus_shortname = 'gnugatgithubio';
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-      </body>
+</body>
 </html>

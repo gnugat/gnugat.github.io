@@ -1,353 +1,54 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Memio SpecGen v0.1</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Memio SpecGen v0.1</title>
-
-    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
-    <meta name="author" content="Loïc Faugeron">
-    <meta name="viewport" content="width=device-width">
-
-    
     <link rel="canonical" href="http://gnugat.github.io/2015/05/13/memio-spec-gen.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
-      
-    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-  <body>
-          <div class="container">
-            <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="../../..">Articles</a>
-            </div>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                        </ul>
-                            </div>
-        </div>
-    </nav>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
 
-                  <div class="content">
-                                          <h1>
-                  Memio SpecGen v0.1</h1>
-                          
-                <article>
-        <ul class="list-inline">
-            <li>
-                13/05/2015
-            </li>
-                        <li>
-                <a href="../../../tags/memio.html"><span class="label label-primary">Memio</span></a>
-            </li>
-                        <li>
-                <a href="../../../tags/specgen.html"><span class="label label-primary">Specgen</span></a>
-            </li>
-                        <li>
-                <a href="../../../tags/phpspec.html"><span class="label label-primary">Phpspec</span></a>
-            </li>
-                        <li>
-                <a href="../../../tags/pet-project.html"><span class="label label-primary">Pet Project</span></a>
-            </li>
-                        <li>
-                <a href="../../../tags/introducing-library.html"><span class="label label-primary">Introducing Library</span></a>
-            </li>
-                    </ul>
-        <hr />
-        <div class="body">
-            <blockquote>
-<p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> is a <a href="http://phpspec.net">phpspec</a>
-extension that improves its code generator. Currently available: type hinted method arguments.</p>
-</blockquote>
-<p>With <a href="http://memio.github.io/memio">Memio v1.0 released</a>, it is now possible to
-create powerful code generators without re-inventing the wheel.
-<a href="http://github.com/memio/spec-gen">SpecGen</a> is the first project to use this library, let's
-see what it can do for us.</p>
-<h2 id="phpspec">phpspec<a href="#phpspec" class="anchor">#</a></h2>
-<p>First of all we'll talk about <a href="http://phpspec.net">phpspec</a>, which is an exciting
-project that provides many benefits:</p>
-<ul><li>a testing tool (allows to write specifications, which are kind of unit tests)</li>
-<li>a "best practice" enforcer (for e.g. cannot test private methods to force us to split code into smaller public APIs)</li>
-<li>a time saver (bootstraps tests and code)</li>
-</ul><blockquote>
-<p><strong>Note</strong>: See <a href="http://techportal.inviqa.com/2014/09/11/my-top-ten-favourite-phpspec-limitations/">My top 10 favourite phpsepc limitations</a>.</p>
-</blockquote>
-<p>It makes Test Driven Development cycles even more meaningful:</p>
-<ol><li>bootstrap test by thinking on a class name</li>
-<li>write a test by thinking how the class should behave</li>
-<li>bootstrap the corresponding code by running the whole test suite</li>
-<li>write code as quick as possible without thinking about best practices or design patterns (be pragmatic)</li>
-<li>run the test suite to check if the code fulfills the test's specifications</li>
-<li>refactor the code (manage the technical debt)</li>
-<li>run the test suite to check for regressions</li>
-<li>repeat!</li>
-</ol><p>phpspec's code generator is a big part of its value. Let's see if we can improve it.</p>
-<h2 id="phpspec-example">phpspec example<a href="#phpspec-example" class="anchor">#</a></h2>
-<p>Let's have a look at how phpspec works. For this we'll need to have a project configured with
-<a href="https://getcomposer.org/download">Composer</a>:</p>
-<pre><code>{
-    "name": "vendor/project",
-    "autoload": {
-        "psr-4": {
-            "Vendor\\Project\\": "src/Vendor/Project"
-        }
-    },
-    "require": {},
-    "require-dev": {}
-}</code></pre>
-<p>We can install phpspec with the following:</p>
-<pre><code>composer require --dev phpspec/phpspec:~2.2</code></pre>
-<p>Let's say we want to create a class that handles requests, conforming to the HTTP protocol
-(take a <code>Request</code>, return a <code>Response</code>). We can call this class <code>RequestHandler</code>:</p>
-<pre><code>phpspec describe 'Vendor\Project\RequestHandler'</code></pre>
-<blockquote>
-<p><strong>Tip</strong>: make your vendor's binaries available by adding <code>vendor/bin</code> to your <code>$PATH</code>.
-<code>export PATH="vendor/bin:$PATH"</code>.</p>
-</blockquote>
-<p>We should now have the <code>spec/Vendor/Project/RequestHandlerSpec.php</code> file, bootstraped
-for us by phpspec:</p>
-<pre><code class="language-php">&lt;?php
-
-namespace spec\Vendor\Project;
-
-use PhpSpec\ObjectBehavior;
-use Prophecy\Argument;
-
-class RequestHandlerSpec extends ObjectBehavior
-{
-    function it_is_initializable()
-    {
-        $this-&gt;shouldHaveType('Vendor\Project\RequestHandler');
-    }
-}</code></pre>
-<p>We can directly start by writing our first specification (test method) in it:</p>
-<pre><code class="language-php">&lt;?php
-// File: spec/Vendor/Project/RequestHandlerSpec.php
-
-namespace spec\Vendor\Project;
-
-use PhpSpec\ObjectBehavior;
-use Vendor\Project\Request;
-
-class RequestHandlerSpec extends ObjectBehavior
-{
-    function it_takes_arequest_and_returns_a_response(Request $request)
-    {
-        $this-&gt;handle($request)-&gt;shouldHaveType('Vendor\Project\Response');
-    }
-}</code></pre>
-<blockquote>
-<p><strong>Note</strong>: We tried to make the test method as descriptive as possible (e.g. not <code>testHandler()</code>).
-This is the whole point of specBDD (specification Behavior Driven Development).</p>
-</blockquote>
-<p>With this we can start to boostrap the code by simply running the test suite:</p>
-<pre><code>phpspec run</code></pre>
-<p>It will ask the following 3 questions:</p>
-<ol><li>Would you like me to generate an interface <code>Vendor\Project\Request</code> for you?</li>
-<li>Do you want me to create <code>Vendor\Project\RequestHandler</code> for you?</li>
-<li>Do you want me to create <code>Vendor\Project\RequestHandler::handle()</code> for you?</li>
-</ol><p>By accepting everytime, phpspec will bootstrap the following
-<code>src/Vendor/Project/Vendor/RequestHandler.php</code> file:</p>
-<pre><code class="language-php">&lt;?php
-
-namespace Vendor\Project;
-
-class RequestHandler
-{
-
-    public function handle($argument1)
-    {
-        // TODO: write logic here
-    }
-}</code></pre>
-<p>In our specification, we make use of a non existing <code>Request</code> class, and phpspec
-also bootstraped it for us in <code>src/Vendor/Project/Vendor/Request.php</code>:</p>
-<pre><code class="language-php">&lt;?php
-
-namespace Vendor\Project;
-
-interface Request
-{
-}</code></pre>
-<p>This is extremely usefull to kickstart our TDD cycle!</p>
-<h2 id="memio-specgen">Memio SpecGen<a href="#memio-specgen" class="anchor">#</a></h2>
-<p>SpecGen is a phpspec extension, it makes use of Memio (the PHP code generator library)
-to make the above bootstraping even more awesome.</p>
-<p>Here's how to install it:</p>
-<pre><code>composer require --dev memio/spec-gen:~0.1</code></pre>
-<p>We also need to register it as a phpspec extension by writing the following <code>phpspec.yml</code> file:</p>
-<pre><code>extensions:
-  - Memio\SpecGen\MemioSpecGenExtension</code></pre>
-<p>Its first release, v0.1 (unstable for now), improves the method generation with:</p>
-<ul><li>type hinted arguments</li>
-<li>object arguments named after their type</li>
-<li>putting each arguments on their own lines if the inline alternative would have been longer than 120 characters</li>
-</ul><p>To be fair, this is exactly what already <a href="https://ciaranmcnulty.com/">Ciaran McNulty</a>'s
-<a href="https://github.com/ciaranmcnulty/phpspec-typehintedmethods">Typehinted Methods extension</a>
-provides, so why would we choose SpecGen? Well simply because it intends to do much more:</p>
-<ul><li>insertion of <code>use</code> statements</li>
-<li>constructor generation (each argument will have a corresponding property and a property initialization)</li>
-<li>PHPdoc</li>
-<li>???</li>
-<li>profit!</li>
-</ul><h2 id="memio-specgen-example">Memio SpecGen example<a href="#memio-specgen-example" class="anchor">#</a></h2>
-<p>Let's give it a try by first removing the code we boostrapped until now:</p>
-<pre><code>rm -rf src</code></pre>
-<p>In order to demonstrate more type hints, we'll add more arguments:</p>
-<pre><code class="language-php">&lt;?php
-// File: spec/Vendor/Project/RequestHandlerSpec.php
-
-namespace spec\Vendor\Project;
-
-use PhpSpec\ObjectBehavior;
-use Vendor\Project\Request;
-
-class RequestHandlerSpec extends ObjectBehavior
-{
-    function it_takes_arequest_and_returns_a_response(Request $request)
-    {
-        $parameters = array();
-        $isEnabled = true;
-        $this-&gt;handle($request, $parameters, $isEnabled)-&gt;shouldHaveType('Vendor\Project\Response');
-    }
-}</code></pre>
-<p>We can now run the test suite to bootstrap the code:</p>
-<pre><code>phpspec run</code></pre>
-<p>This should create the following <code>src/Vendor/Project/RequestHandler.php</code> file:</p>
-<pre><code class="language-php">&lt;?php
-
-namespace Vendor\Project;
-
-class RequestHandler
-{
-    public function handle(Request $request, array $argument1, $argument2)
-    {
-    }
-}</code></pre>
-<blockquote>
-<p><strong>Note</strong>: for now <code>use</code> statements aren't generated. In our example it doesn't
-matter since <code>Request</code> is in the same namespace as <code>RequestHandler</code>.</p>
-</blockquote>
-<p>Let's remove again the generated code:</p>
-<pre><code>rm -rf src</code></pre>
-<p>Now we'd like to see this multiline feature by adding many arguments to our specifiction:</p>
-<pre><code class="language-php">&lt;?php
-// File: spec/Vendor/Project/RequestHandlerSpec.php
-
-namespace spec\Vendor\Project;
-
-use PhpSpec\ObjectBehavior;
-
-class RequestHandlerSpec extends ObjectBehavior
-{
-    function it_takes_arequest_and_returns_a_response()
-    {
-        $this-&gt;myMethod(1, 2, 3, 4, 5, 6, 7, 8);
-    }
-}</code></pre>
-<p>Again, we run the test suite:</p>
-<pre><code>phpspec run</code></pre>
-<p>This should bootstrap the following <code>src/Vendor/Project/RequestHandler.php</code> file:</p>
-<pre><code class="language-php">&lt;?php
-
-namespace Vendor\Project;
-
-class RequestHandler
-{
-    public function myMethod(
-        $argument1,
-        $argument2,
-        $argument3,
-        $argument4,
-        $argument5,
-        $argument6,
-        $argument7,
-        $argument8
-    )
-    {
-    }
-}</code></pre>
-<p>And that's it!</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>Memio SpecGen improves phpspec's generator by adding better named, type hinted
-and PSR-2 compliant method arguments.</p>
-<p>Note that this kind of improvement has to be done in extension. They cannot be
-done directly in phpspec because it tries to enforce best practices, and one of
-them is to type hint only against interfaces. As it happens, the current extensions
-can also type hint against implementations, depending on how the developers write
-their specifications.</p>
-<p>The next versions will bring even more exciting features, such as constructor and PHPdoc
-generation.</p>
-        </div>
-
-        <footer class="next-previous row">
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2015/05/06/memio.html" role="button">Previous: Memio v1.0</a>
-            </div>
-            
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2015/05/20/spec-gen-0-2.html" role="button">Next: SpecGen v0.2</a>
-            </div>
-                    </footer>
-    </article>
-          </div>
         
-                  <div class="row comments">
-          <div class="span10 offset1 content">
-              <div id="disqus_thread"></div>
-          </div>
-      </div>
-                  <footer>
-            <p class="text-center">
-              &copy;
-                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
-                            2015
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
-      </div>
-    
-    
-                  <script src="../../../js/jquery-2.1.0.min.js"></script>
-      <script src="../../../js/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script>
-    
+        <footer>
+            <nav>
+                <a class="button three columns" href="/about.html">About</a>
+                <a class="button three columns" href="/archive">Archive</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-47822314-1']);
-    _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
     </script>
-
-            <script type="text/javascript">
-            var disqus_shortname = 'gnugatgithubio';
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-      </body>
+</body>
 </html>

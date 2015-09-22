@@ -1,424 +1,54 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Symfony2 Sessions introduction</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Symfony2 Sessions introduction</title>
-
-    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
-    <meta name="author" content="Loïc Faugeron">
-    <meta name="viewport" content="width=device-width">
-
-    
     <link rel="canonical" href="http://gnugat.github.io/2014/04/23/sf2-sessions-introduction.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
-      
-    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-  <body>
-          <div class="container">
-            <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="../../..">Articles</a>
-            </div>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                        </ul>
-                            </div>
-        </div>
-    </nav>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
 
-                  <div class="content">
-                                          <h1>
-                  Symfony2 Sessions introduction</h1>
-                          
-                <article>
-        <ul class="list-inline">
-            <li>
-                23/04/2014
-            </li>
-                        <li>
-                <a href="../../../tags/symfony.html"><span class="label label-primary">Symfony</span></a>
-            </li>
-                        <li>
-                <a href="../../../tags/introducing-library.html"><span class="label label-primary">Introducing Library</span></a>
-            </li>
-                    </ul>
-        <hr />
-        <div class="body">
-            <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
-<p>The <a href="http://symfony.com/doc/current/components/http_foundation/introduction.html">Symfony2 HttpFoundation component</a>
-is a library which provides an Object Oriented implementation of the HTTP
-protocol: it wraps PHP's variable superglobals (<code>$_POST</code>, <code>$_GET</code>, <code>$_SERVER</code>,
-etc) inside objects (<code>Request</code>, <code>Response</code>, <code>Session</code>, etc).</p>
-<p>The idea behind it: web applications should receive a Request and return a
-Response.</p>
-<p>In this article, we'll focus on the Session management which solves many issues
-(for example the <a href="https://www.google.com/search?q=php+session+already+started+error">PHP session already started error</a>
-nightmare).</p>
-<p>This introduction will show you how to use it in a "non-symfony" project:</p>
-<ol><li><a href="#basics">Basics</a></li>
-<li><a href="#examples">Examples</a>
-<ul><li><a href="#simple-attributes">Simple attributes</a></li>
-<li><a href="#deep-attributes">Deep attributes</a></li>
-</ul></li>
-<li><a href="#going-further">Going further</a>
-<ul><li><a href="#root-attributes">Root attributes</a></li>
-<li><a href="#documentation">Documentation</a></li>
-<li><a href="#troubleshooting">Troubleshooting</a></li>
-</ul></li>
-</ol><h2 id="basics">Basics<a href="#basics" class="anchor">#</a></h2>
-<p>In almost any cases, you'll only deal with the following three methods of the
-<code>Session</code> object:</p>
-<pre><code>&lt;?php
-
-namespace Symfony\Component\HttpFoundation\Session;
-
-use Symfony\Component\HttpFoundation\Session\SessionBagInterface;
-
-class Session implements SessionInterface, \IteratorAggregate, \Countable
-{
-    public function registerBag(SessionBagInterface $bag);
-    public function start();
-    public function getBag($name);
-}</code></pre>
-<p>A <code>Bag</code> is a group of attributes stored in the session. Again, in most cases
-you'll only deal with the following four methods of the <code>AttributeBag</code> object:</p>
-<pre><code>&lt;?php
-
-namespace Symfony\Component\HttpFoundation\Session\Attribute;
-
-class AttributeBag implements AttributeBagInterface, \IteratorAggregate, \Countable
-{
-    public function __construct($storageKey = '_sf2_attributes');
-    public function setName($name);
-    public function get($name, $default = null);
-    public function set($name, $value);
-}</code></pre>
-<p>When using the sessions, you'll generally need to bootstrap things up as follows:</p>
-<pre><code>&lt;?php
-
-$session = new Session();
-
-$myAttributeBag = new AttributeBag('my_storage_key');
-$myAttributeBag-&gt;setName('some_descriptive_name');
-$session-&gt;registerBag($myAttributeBag);
-
-$session-&gt;start();</code></pre>
-<p>The session <strong>MUST</strong> be started by Symfony2, and it <em>SHOULD</em> be started after
-the bag registrations.</p>
-<h2 id="examples">Examples<a href="#examples" class="anchor">#</a></h2>
-<p>Here's some code samples to make things clear.</p>
-<h3 id="simple-attributes">Simple attributes<a href="#simple-attributes" class="anchor">#</a></h3>
-<p>Let's assume that our session looks like this:</p>
-<pre><code>&lt;?php
-
-$_SESSION = array(
-    'user' =&gt; array(
-        'first_name' =&gt; 'Arthur',
-        'last_name' =&gt; 'Dent',
-    ),
-);</code></pre>
-<p>Here's the bootstrap code we need:</p>
-<pre><code>&lt;?php
-
-$session = new Session();
-
-$userAttributeBag = new AttributeBag('user');
-$session-&gt;registerBag($userAttributeBag);
-
-$session-&gt;start();</code></pre>
-<p>The equivalent to:</p>
-<pre><code>&lt;?php
-
-$firstName = 'Ford';
-if (isset($_SESSION['user']['first_name'])) {
-    $firstName = $_SESSION['user']['first_name'];
-}
-$_SESSION['user']['last_name'] = 'Prefect';</code></pre>
-<p>Would be:</p>
-<pre><code>&lt;?php
-
-$userAttributeBag = $session-&gt;getBag('user');
-
-$firstName = $userAttributeBag-&gt;get('first_name', 'Ford');
-$userAttributeBag-&gt;set('last_name', 'Prefect');</code></pre>
-<h3 id="deep-attributes">Deep attributes<a href="#deep-attributes" class="anchor">#</a></h3>
-<p>Now, let's assume we have a session which has deep attributes:</p>
-<pre><code>&lt;?php
-
-$_SESSION = array(
-    'authentication' =&gt; array(
-        'tokens' =&gt; array(
-            'github' =&gt; 'A45E96F',
-            'twitter' =&gt; '11AEBC980D456E4EF',
-        ),
-    ),
-);</code></pre>
-<p>Here's the bootstrap code we need:</p>
-<pre><code>&lt;?php
-
-$session = new Session();
-
-$authenticationAttributeBag = new NamespacedAttributeBag('authentication');
-$session-&gt;registerBag($authenticationAttributeBag);
-
-$session-&gt;start();</code></pre>
-<p>The equivalent to:</p>
-<pre><code>&lt;?php
-
-$_SESSION['authentication']['tokens']['github'] = 'AEB558F02C3B346';</code></pre>
-<p>Would be:</p>
-<pre><code>&lt;?php
-
-$authenticationAttributeBag = $session-&gt;getBag($authenticationAttributeBag);
-
-$authenticationAttributeBag-&gt;set('tokens/github', 'AEB558F02C3B346');</code></pre>
-<h2 id="going-further">Going further<a href="#going-further" class="anchor">#</a></h2>
-<p>The <code>Session</code> has been designed to contain a group of attribute bags. But when
-working with legacy sessions, you might have to access attributes which are
-located at the root of the session. Here's how to extend the <code>Session</code> to allow
-this.</p>
-<h3 id="root-attributes">Root attributes<a href="#root-attributes" class="anchor">#</a></h3>
-<p>A root attribute might look like:</p>
-<pre><code>&lt;?php
-
-$_SESSION = array(
-    'attribute' =&gt; 'value',
-);</code></pre>
-<p>You need to create your own kind of <code>Bag</code>:</p>
-<pre><code>&lt;?php
-
-namespace Acme\Session;
-
-use Symfony\Component\HttpFoundation\Session\SessionBagInterface;
-
-class RootAttributeBag implements SessionBagInterface
-{
-    private $name = 'single_attribute';
-
-    /** @var string */
-    private $storageKey;
-
-    /** @var mixed */
-    private $attribute;
-
-    public function __construct($storageKey)
-    {
-        $this-&gt;storageKey = $storageKey;
-    }
-
-    /** {@inheritdoc} */
-    public function getName()
-    {
-        return $this-&gt;name;
-    }
-
-    public function setName($name)
-    {
-        $this-&gt;name = $name;
-    }
-
-    /** {@inheritdoc} */
-    public function initialize(array &amp;$array)
-    {
-        $attribute = !empty($array) ? $array[0] : null;
-        $this-&gt;attribute = &amp;$attribute;
-    }
-
-    /** {@inheritdoc} */
-    public function getStorageKey()
-    {
-        return $this-&gt;storageKey;
-    }
-
-    /** {@inheritdoc} */
-    public function clear()
-    {
-        $this-&gt;attribute = null;
-    }
-
-    public function get()
-    {
-        return $this-&gt;attribute;
-    }
-
-    public function set($value)
-    {
-        $this-&gt;attribute = $value;
-    }
-}</code></pre>
-<p>The <code>storage key</code> will be directly the attribute's key.</p>
-<p>We also need to hack a <code>Storage</code> class which supports our <code>Bag</code>:</p>
-<pre><code>&lt;?php
-
-namespace Acme\Session;
-
-use Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage;
-
-class LegacySessionStorage extends NativeSessionStorage
-{
-    /** {@inheritdoc} */
-    protected function loadSession(array &amp;$session = null)
-    {
-        if (null === $session) {
-            $session = &amp;$_SESSION;
-        }
-
-        $bags = array_merge($this-&gt;bags, array($this-&gt;metadataBag));
-
-        foreach ($bags as $bag) {
-            $key = $bag-&gt;getStorageKey();
-            // We cast $_SESSION[$key] to an array, because of the SessionBagInterface::initialize() signature
-            $session[$key] = isset($session[$key]) ? (array) $session[$key] : array();
-            $bag-&gt;initialize($session[$key]);
-        }
-
-        $this-&gt;started = true;
-        $this-&gt;closed = false;
-    }
-}</code></pre>
-<p>Finally, we'll need the following bootstrap code:</p>
-<pre><code>&lt;?php
-
-use Acme\Session\LegacySessionStorage;
-use Acme\Session\RootAttributeBag;
-use Symfony\Component\HttpFoundation\Session\Session;
-
-$sessionStorage = new LegacySessionStorage();
-$session = new Session($sessionStorage);
-
-// before: $_SESSION['attribute']
-$legacyBag = new RootAttributeBag('attribute');
-$legacyBag-&gt;setName('legacy');
-
-// after: $session-&gt;getBag('legacy')-&gt;get()
-$session-&gt;registerBag($legacyBag);</code></pre>
-<h3 id="documentation">Documentation<a href="#documentation" class="anchor">#</a></h3>
-<p><a href="http://symfony.com/doc/current/components/http_foundation/sessions.html">The official documentation</a>
-provides useful information about how the session use it.
-For example it explains <a href="http://symfony.com/doc/current/components/http_foundation/sessions.html#flash-messages">how to manage flash messages</a>.</p>
-<p>It also explains <a href="http://symfony.com/doc/current/components/http_foundation/session_configuration.html">how the session works behind the scene</a>
-with useful tips on how to write the session in a database.</p>
-<p><a href="http://symfony.com/doc/current/cookbook/session/index.html">Some cookbooks</a> are
-also available.
-You can find for instance one describing how to use
-<a href="http://symfony.com/doc/current/cookbook/session/proxy_examples.html">session proxy</a>
-which is useful if you want to encrypt the session data or to make it read
-only.</p>
-<h3 id="troubleshooting">Troubleshooting<a href="#troubleshooting" class="anchor">#</a></h3>
-<p>The common cases of problems encountered are due to the fact that the session
-was started before Symfony2 did.</p>
-<p>To fix this, check in your <code>php.ini</code> that the <code>session.auto_start</code> option is set
-to <code>0</code> (its default value).</p>
-<p>If the session isn't auto started, it means that the application is starting the
-session itself. If you cannot prevent this, use
-<a href="https://github.com/symfony/HttpFoundation/blob/master/Session/Storage/PhpBridgeSessionStorage.php"><code>PhpBridgeSessionStorage</code></a>
-with
-<a href="https://github.com/symfony/HttpFoundation/blob/master/Session/Storage/Handler/NativeFileSessionHandler.php"><code>NativeFileSessionHandler</code></a>:</p>
-<pre><code>&lt;?php
-
-use Symfony\Component\HttpFoundation\Session\Session;
-use Symfony\Component\HttpFoundation\Session\Storage\Handler\NativeFileSessionHandler;
-use Symfony\Component\HttpFoundation\Session\Storage\PhpBridgeSessionStorage;
-
-$sessionHandler = new NativeFileSessionHandler();
-$sessionStorage = new PhpBridgeSessionStorage($sessionHandler);
-$session = new Session($sessionStorage);</code></pre>
-<p>Another trouble you can encounter: you register some bags but they're always
-empty, even though the <code>$_SESSION</code> contains the targeted values.
-This would be because you register your bags after starting the session: if you
-can't do otherwise then simply call <code>$session-&gt;migrate()</code> after your bag
-registration, this will reload the values.</p>
-<p>Finally when doing AJAX request you might notice slow performances, or non
-persistence of the data. This might be caused by a
-<a href="http://blog.alterphp.com/2012/08/how-to-deal-with-asynchronous-request.html">session locking mechanism</a>
-which can be solved like this by saving manually the session:</p>
-<pre><code>&lt;?php
-
-$session-&gt;save();
-session_write_close();</code></pre>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>By wrapping <code>$_SESSION</code> and <code>session_*()</code> functions, <code>Session</code> allows you to
-make your code more testable
-(<a href="http://symfony.com/doc/current/components/http_foundation/session_testing.html">you can mock it</a>)
-and to solve starting session issues (just make sure to be the first to start
-it).</p>
-<p>It's divided into <code>AttributeBag</code> which are arrays of parameters: this allows you
-to organize your session by namespaces.</p>
-<p>I hope you found some useful tips in this article, if you have any comments or
-questions don't be shy and drop me a line on
-<a href="https://twitter.com/epiloic">Twitter</a>.</p>
-        </div>
-
-        <footer class="next-previous row">
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/04/16/pomodoro-manage-your-breaks-improve-your-focus.html" role="button">Previous: Pomodoro: manage your breaks, improve your focus</a>
-            </div>
-            
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/04/30/php-generators-and-coroutines.html" role="button">Next: PHP generators and coroutines</a>
-            </div>
-                    </footer>
-    </article>
-          </div>
         
-                  <div class="row comments">
-          <div class="span10 offset1 content">
-              <div id="disqus_thread"></div>
-          </div>
-      </div>
-                  <footer>
-            <p class="text-center">
-              &copy;
-                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
-                            2015
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
-      </div>
-    
-    
-                  <script src="../../../js/jquery-2.1.0.min.js"></script>
-      <script src="../../../js/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script>
-    
+        <footer>
+            <nav>
+                <a class="button three columns" href="/about.html">About</a>
+                <a class="button three columns" href="/archive">Archive</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-47822314-1']);
-    _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
     </script>
-
-            <script type="text/javascript">
-            var disqus_shortname = 'gnugatgithubio';
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-      </body>
+</body>
 </html>

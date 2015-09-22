@@ -1,172 +1,54 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Technology scouting</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Technology scouting</title>
-
-    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
-    <meta name="author" content="Loïc Faugeron">
-    <meta name="viewport" content="width=device-width">
-
-    
     <link rel="canonical" href="http://gnugat.github.io/2014/01/08/technology-scouting.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
-      
-    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-  <body>
-          <div class="container">
-            <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="../../..">Articles</a>
-            </div>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                        </ul>
-                            </div>
-        </div>
-    </nav>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
 
-                  <div class="content">
-                                          <h1>
-                  Technology scouting</h1>
-                          
-                <article>
-        <ul class="list-inline">
-            <li>
-                08/01/2014
-            </li>
-                        <li>
-                <a href="../../../tags/introducing-methodology.html"><span class="label label-primary">Introducing Methodology</span></a>
-            </li>
-                    </ul>
-        <hr />
-        <div class="body">
-            <p>As a curious person I'm constantly trying to learn new practices and to discover
-tools which might help me, by collecting information via technology scouting and
-then reading it.</p>
-<p>In this article, I will present how to do so effectively.</p>
-<h2 id="collecting-information">Collecting information<a href="#collecting-information" class="anchor">#</a></h2>
-<p>Whenever you find an interesting link, send it to <a href="http://getpocket.com/">Pocket</a>
-so you can read it later.</p>
-<h3 id="blogs">Blogs<a href="#blogs" class="anchor">#</a></h3>
-<p>To find interesting links subscribe to blog RSS feeds using
-<a href="https://ifttt.com/">If This Then That</a>: it will send new entries directly to
-pocket.</p>
-<p>Here are some blogs I personnally follow (caution, they're not really sorted):</p>
-<ul><li><a href="http://williamdurand.fr/">William Durand's blog</a></li>
-<li><a href="http://www.mountaingoatsoftware.com/blog">Mountain Goat Software</a></li>
-<li><a href="http://blog.karolsojko.com/">Karol S&oacute;jko's blog</a></li>
-<li><a href="http://blog.8thlight.com/">8th light</a></li>
-<li><a href="http://richardmiller.co.uk/">Richard Miller's blog</a></li>
-<li><a href="http://verraes.net/#blog">Mathias Verraes's blog</a></li>
-<li><a href="http://www.whitewashing.de/">Benjamin Eberlei's blog</a></li>
-<li><a href="http://nedroid.com/">Nedroid</a></li>
-<li><a href="https://igor.io/">Igor Wiedler's blog</a></li>
-</ul><h3 id="twitter">Twitter<a href="#twitter" class="anchor">#</a></h3>
-<p>You can also use <a href="https://twitter.com/">Twitter</a>:</p>
-<ol><li>create a private list which will serve as a pool</li>
-<li>add any author which might post interresting messages</li>
-<li>after a week or so, add the author to a public list</li>
-</ol><p>The lists only show messages (not retweets) and conversations between people
-you follow. They also allow you to create categories.</p>
-<p>If you want, you can have a look at
-<a href="https://twitter.com/epiloic/lists/">my own public lists</a>.</p>
-<h3 id="github">Github<a href="#github" class="anchor">#</a></h3>
-<p>Last but not least, <a href="https://github.com/">Github</a> can also be a great source of
-discoveries: by following someone which stars or watch a lot of projects you
-will have them listed on your homepage.</p>
-<p>Here's my advice: <a href="https://github.com/pborreli">Pascal Borreli</a> contributes to
-many repositories, you should start to follow him.</p>
-<h2 id="reading-it">Reading it<a href="#reading-it" class="anchor">#</a></h2>
-<p>Collecting resources is a thing, getting it read is another one. Just like
-<a href="http://verraes.net/2012/12/how-to-read-more-books/">Mathias Verraes advised it</a>,
-you should get an e-reader: you can send the pages you gathered on Pocket and
-then read them everywhere.</p>
-<p>Pocket allows you to remove the articles you found not so interresting after
-all, it also allows you to archive the good ones and to favorite the great ones.</p>
-<p>Speaking of reading and e-readers, books are another good way of discovering new
-things. Do not underestimate them. Here's a list of books I'd recommend:</p>
-<ul><li><a href="http://git-scm.com/book">Pro Git</a></li>
-<li>Clean Code, by Robert C. Martin</li>
-<li>Agile Software Development, Principles, Patterns, and Practices, by Robert C. Martin</li>
-</ul><h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>The point is: current tools won't last and there's a lot of practices you're
-not aware of. If you want to improve yourself and keep up with other developers,
-you have to try your best to discover new practices (which might be rather old
-actually) and new trending tools.</p>
-<p>I hope you found this article enjoyable and helpful.</p>
-        </div>
-
-        <footer class="next-previous row">
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/01/01/carew-static-site-generator.html" role="button">Previous: Carew, the static site generator</a>
-            </div>
-            
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html" role="button">Next: Bootstrap the markdown files of your FOSS project</a>
-            </div>
-                    </footer>
-    </article>
-          </div>
         
-                  <div class="row comments">
-          <div class="span10 offset1 content">
-              <div id="disqus_thread"></div>
-          </div>
-      </div>
-                  <footer>
-            <p class="text-center">
-              &copy;
-                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
-                            2015
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
-      </div>
-    
-    
-                  <script src="../../../js/jquery-2.1.0.min.js"></script>
-      <script src="../../../js/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script>
-    
+        <footer>
+            <nav>
+                <a class="button three columns" href="/about.html">About</a>
+                <a class="button three columns" href="/archive">Archive</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-47822314-1']);
-    _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
     </script>
-
-            <script type="text/javascript">
-            var disqus_shortname = 'gnugatgithubio';
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-      </body>
+</body>
 </html>

@@ -1,220 +1,54 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>phinx</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>phinx</title>
-
-    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
-    <meta name="author" content="Loïc Faugeron">
-    <meta name="viewport" content="width=device-width">
-
-    
     <link rel="canonical" href="http://gnugat.github.io/2015/08/05/phinx.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
-      
-    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-  <body>
-          <div class="container">
-            <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="../../..">Articles</a>
-            </div>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                        </ul>
-                            </div>
-        </div>
-    </nav>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
 
-                  <div class="content">
-                                          <h1>
-                  phinx</h1>
-                          
-                <article>
-        <ul class="list-inline">
-            <li>
-                05/08/2015
-            </li>
-                        <li>
-                <a href="../../../tags/introducing-library.html"><span class="label label-primary">Introducing Library</span></a>
-            </li>
-                        <li>
-                <a href="../../../tags/phinx.html"><span class="label label-primary">Phinx</span></a>
-            </li>
-                    </ul>
-        <hr />
-        <div class="body">
-            <p><a href="https://phinx.org/">phinx</a> is a lightweight migration library, completly decoupled
-from any framework and libraries. In its most simple form, it allows you to write SQL
-statements to upgrade and downgrade your schema, or insert / delete data.</p>
-<h2 id="installation">Installation<a href="#installation" class="anchor">#</a></h2>
-<p>First of all, we need to install it using <a href="https://getcomposer.org/download/">Composer</a>:</p>
-<pre><code>composer require robmorgan/phinx:^0.4</code></pre>
-<p>With this we get a phar that can be run:</p>
-<pre><code>phinx</code></pre>
-<blockquote>
-<p><strong>Tip</strong>: make your vendor's binaries available by adding <code>vendor/bin</code> to your <code>$PATH</code>.
-<code>export PATH="vendor/bin:$PATH"</code>.</p>
-</blockquote>
-<p>Then we need to configure the settings:</p>
-<pre><code class="language-php">&lt;?php
-// File: phinx.php
-
-$parameters = \Symfony\Component\Yaml\Yaml::parse(file_get_contents(__DIR__.'/app/config/parameters.yml'));
-
-return array(
-    'paths' =&gt; array(
-        'migrations' =&gt; __DIR__.'/migrations'
-    ),
-    'environments' =&gt; array(
-        'default_migration_table' =&gt; 'migration',
-        'default_database' =&gt; 'prod',
-        'prod' =&gt; array(
-            'adapter' =&gt; 'pgsql', // Could also be "mysql", "sqlite" or "sqlsrv"
-            'host' =&gt; $parameters['parameters']['database_host'],
-            'name' =&gt; $parameters['parameters']['database_name'],
-            'user' =&gt; $parameters['parameters']['database_user'],
-            'pass' =&gt; $parameters['parameters']['database_pass'],
-            'port' =&gt; $parameters['parameters']['database_port'],
-            'charset' =&gt; 'utf8',
-        ),
-        'test' =&gt; array(
-            'adapter' =&gt; 'pgsql',
-            'host' =&gt; $parameters['parameters']['database_host'],
-            'name' =&gt; $parameters['parameters']['database_name'].'_test',
-            'user' =&gt; $parameters['parameters']['database_user'],
-            'pass' =&gt; $parameters['parameters']['database_pass'],
-            'port' =&gt; $parameters['parameters']['database_port'],
-            'charset' =&gt; 'utf8',
-        ),
-    ),
-);</code></pre>
-<p>The configuration could also be written in YAML, here I used PHP to be able to share
-the database configuration with the application's one.</p>
-<h2 id="usage-example">Usage example<a href="#usage-example" class="anchor">#</a></h2>
-<p>Migration files can be bootstrapped using the command:</p>
-<pre><code>phinx create FirstVersion</code></pre>
-<p>Which results in the following file (<code>migrations/20150805201245_first_version.php</code>):</p>
-<pre><code class="language-php">&lt;?php
-
-use Phinx\Migration\AbstractMigration;
-
-class FirstVersion extends AbstractMigration
-{
-    public function change()
-    {
-    }
-}</code></pre>
-<p>In the <code>change</code> method we need to get a <code>Table</code> object using <code>$this-&gt;table('table_name')</code>
-and then use it to describe the changes in the schema: phinx is then able to figure out
-how to reverse them if necessary.</p>
-<p>If you'd rather write SQL queries directly you need to remove <code>change</code> and define
-a <code>up</code> and a <code>down</code> method. In them you can use <code>$this-&gt;query('SQL')</code> to execute
-your queries.</p>
-<p>Example:</p>
-<pre><code class="language-php">&lt;?php
-
-use Phinx\Migration\AbstractMigration;
-
-class FirstVersion extends AbstractMigration
-{
-    public function up()
-    {
-        $this-&gt;query('CREATE TABLE my_table;');
-    }
-
-    public function down()
-    {
-        $this-&gt;query('DROP TABLE my_table;');
-    }
-}</code></pre>
-<p>Migrating an application then becomes as simple as:</p>
-<pre><code>phinx migrate</code></pre>
-<p>And rolling back:</p>
-<pre><code>phinx rollback</code></pre>
-<h2 id="tips">Tips<a href="#tips" class="anchor">#</a></h2>
-<p>Time for the personal tips!</p>
-<p>Using <a href="http://www.doctrine-project.org/projects/migrations.html">Doctrine Migrations</a>
-is fine when using Doctrine ORM, but for the rest (including Doctrine DBAL) I'd rather use phinx.</p>
-<p>While <code>Table</code> allows to write portable migrations and saves you the time of writing the <code>down</code> method,
-I'd advise you to write directly SQL queries: it's a layer less to learn and it will be consistent
-with the migrations where you insert / update data.</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>Migration libraries are all very similar, the nice touch of phinx is that it's not
-coupled to any framework and it doesn't require any integration.</p>
-<p>Give it a try!</p>
-        </div>
-
-        <footer class="next-previous row">
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2015/08/04/simple-bus.html" role="button">Previous: Simple Bus</a>
-            </div>
-            
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2015/08/06/pomm-foundation.html" role="button">Next: Pomm Foundation</a>
-            </div>
-                    </footer>
-    </article>
-          </div>
         
-                  <div class="row comments">
-          <div class="span10 offset1 content">
-              <div id="disqus_thread"></div>
-          </div>
-      </div>
-                  <footer>
-            <p class="text-center">
-              &copy;
-                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
-                            2015
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
-      </div>
-    
-    
-                  <script src="../../../js/jquery-2.1.0.min.js"></script>
-      <script src="../../../js/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script>
-    
+        <footer>
+            <nav>
+                <a class="button three columns" href="/about.html">About</a>
+                <a class="button three columns" href="/archive">Archive</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-47822314-1']);
-    _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
     </script>
-
-            <script type="text/javascript">
-            var disqus_shortname = 'gnugatgithubio';
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-      </body>
+</body>
 </html>

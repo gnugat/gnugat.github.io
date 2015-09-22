@@ -1,177 +1,54 @@
-<!DOCTYPE html>
+<DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Symfony / Web Services - part 1: Introduction</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Symfony / Web Services - part 1: Introduction</title>
-
-    <meta name="description" content="Talks about Symfony2, git and other developer stuff">
-    <meta name="author" content="Loïc Faugeron">
-    <meta name="viewport" content="width=device-width">
-
-    
     <link rel="canonical" href="http://gnugat.github.io/2015/01/14/sf-ws-part-1-introduction.html"/>
-              <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Articles"/>
-      
-    <link rel="stylesheet" href="../../../css/bootstrap.min.css"><link rel="stylesheet" href="../../../css/dop-dop-dop.css"><link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/github.min.css"">  </head>
+    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-  <body>
-          <div class="container">
-            <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="../../..">Articles</a>
-            </div>
+    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-            <div class="collapse navbar-collapse">
-                <ul class="nav navbar-nav navbar-right">
-                                                                                                        <li><a href="../../../about-me.html">About me</a></li>
-                                                            <li><a href="../../../books.html">Books i&#039;ve read</a></li>
-                                                                                        </ul>
-                            </div>
-        </div>
-    </nav>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/skeleton.css">
+    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
 
-                  <div class="content">
-                                          <h1>
-                  Symfony / Web Services - part 1: Introduction</h1>
-                          
-                <article>
-        <ul class="list-inline">
-            <li>
-                14/01/2015
-            </li>
-                        <li>
-                <a href="../../../tags/symfony.html"><span class="label label-primary">Symfony</span></a>
-            </li>
-                        <li>
-                <a href="../../../tags/symfony-web-services-series.html"><span class="label label-primary">Symfony / Web Services Series</span></a>
-            </li>
-                    </ul>
-        <hr />
-        <div class="body">
-            <p>Welcome to this new series of articles on managing Web Services in a
-<a href="https://symfony.com">Symfony</a> environment. Its purpose is to provide an example,
-it doesn't pretend to be the best solution and it requires you to know the basics
-of Symfony (if you know what a service is, you're good) and of web services
-(basically to know that they're a way to provide data remotely).</p>
-<blockquote>
-<p><strong>Spoiler alert</strong>: There won't be much Symfony specific code ;) .</p>
-</blockquote>
-<p>In this post we'll describe the different endpoints of the (fake) web service
-which will be used as a reference thoughout the whole series:</p>
-<ul><li><a href="#json-objects">JSON objects</a></li>
-<li><a href="#authentication">Authentication</a></li>
-<li><a href="#create-a-profile">Create a profile</a></li>
-<li><a href="#delete-a-profile">Delete a profile</a></li>
-<li><a href="#conclusion">Conclusion</a></li>
-</ul><h2 id="json-objects">JSON objects<a href="#json-objects" class="anchor">#</a></h2>
-<p>The posted and returned resources will always be wrapped in a JSON object.</p>
-<h2 id="authentication">Authentication<a href="#authentication" class="anchor">#</a></h2>
-<p>All endpoints require HTTP Basic Authentication with the following credentials:</p>
-<ul><li>user: <code>spanish_inquisition</code></li>
-<li>password: <code>NobodyExpectsIt!</code></li>
-</ul><p>If those credentials are missing or wrong (<code>403 FORBIDDEN</code>), it will return:</p>
-<pre><code>{
-    "error": "The credentials are either missing or incorrect"
-}</code></pre>
-<h2 id="create-a-profile">Create a profile<a href="#create-a-profile" class="anchor">#</a></h2>
-<ul><li><code>POST http://ws.local/api/v1/profiles</code></li>
-</ul><p>The request body should be as follow:</p>
-<pre><code>{
-    "name": "Fawlty Tower"
-}</code></pre>
-<p>In case of success (<code>201 CREATED</code>), it will return:</p>
-<pre><code>{
-    "id": 23,
-    "name": "Fawlty Tower"
-}</code></pre>
-<p>If the request's body contains malformed JSON (<code>400 BAD REQUEST</code>), it will return:</p>
-<pre><code>{
-    "error": "Invalid or malformed JSON"
-}</code></pre>
-<p>If the <code>name</code> parameter is missing from the request's body (<code>422 UNPROCESSABLE ENTITY</code>),
-it will return:</p>
-<pre><code>{
-    "error": "The \"name\" parameter is missing from the request's body"
-}</code></pre>
-<p>If the name already exists (<code>422 UNPROCESSABLE ENTITY</code>), it will return:</p>
-<pre><code>{
-    "error": "The name \"Proven&ccedil;al le Gaulois\" is already taken"
-}</code></pre>
-<h2 id="delete-a-profile">Delete a profile<a href="#delete-a-profile" class="anchor">#</a></h2>
-<ul><li><code>DELETE http://ws.local/api/v1/profiles/{id}</code></li>
-</ul><p>This endpoint will always return an empty body (<code>204 NO CONTENT</code>).</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>So basically we can create and remove profiles, which have an identifier and a name.</p>
-<p>In <a href="../../../2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">next week article</a>
-we'll see how to build such web service.</p>
-        </div>
-
-        <footer class="next-previous row">
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2015/01/07/links-from-2014.html" role="button">Previous: Links from 2014</a>
-            </div>
-            
-                                    <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="../../../2015/01/21/sf-ws-part-2-1-creation-bootstrap.html" role="button">Next: Symfony / Web Services - part 2.1: Creation bootstrap</a>
-            </div>
-                    </footer>
-    </article>
-          </div>
         
-                  <div class="row comments">
-          <div class="span10 offset1 content">
-              <div id="disqus_thread"></div>
-          </div>
-      </div>
-                  <footer>
-            <p class="text-center">
-              &copy;
-                              <a href="http://gnugat.github.io">Loïc Faugeron</a>
-                            2015
-              <small>
-                with help from <a href="http://carew.github.com/" target="_blank">Carew</a>
-              </small>
-            </p>
-          </footer>
-        
-      </div>
-    
-    
-                  <script src="../../../js/jquery-2.1.0.min.js"></script>
-      <script src="../../../js/bootstrap.min.js"></script>
-      <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-      <script>hljs.initHighlightingOnLoad();</script>
-    
+        <footer>
+            <nav>
+                <a class="button three columns" href="/about.html">About</a>
+                <a class="button three columns" href="/archive">Archive</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-47822314-1']);
-    _gaq.push(['_trackPageview']);
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
     </script>
-
-            <script type="text/javascript">
-            var disqus_shortname = 'gnugatgithubio';
-            (function() {
-                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
-                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-            })();
-        </script>
-      </body>
+</body>
 </html>
