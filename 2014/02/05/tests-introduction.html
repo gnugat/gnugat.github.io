@@ -11,34 +11,276 @@
     <link rel="canonical" href="http://gnugat.github.io/2014/02/05/tests-introduction.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="../../../index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
+        <article>
+            <header>
+                <h2>
+    Tests: Introduction    <span class="sub-title">05/02/2014</span>
+</h2>
+                    <nav>
+                        <a class="button" href="../../../tags/tests-series.html">Tests Series</a>
+                    </ul>
+    <hr />
+            </header>
+
+            <p>This article is part of a series on Tests in general and on how to practice
+them:</p>
+<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+<li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+<li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+<li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
+<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
+<li><a href="../../../2014/03/26/behat-quick-tour.html">Behat: a quick tour</a></li>
+<li><a href="../../../2014/04/02/tests-cheat-sheet.html">Conclusion</a></li>
+</ol><p>This introduction can be read by anyone (no special level required) and it
+targets those who've never heard about tests, or those you've never really
+practice them. Here's what we'll cover:</p>
+<ol><li><a href="#what-is-a-test">what is a test</a></li>
+<li><a href="#what-are-the-different-kinds-of-tests">which kinds of tests are around there</a></li>
+<li><a href="#how-to-do-an-isolated-test">how to do an isolated test</a></li>
+</ol><p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<h2 id="what-is-a-test">What is a test?<a href="#what-is-a-test" class="anchor">#</a></h2>
+<p>A test is a way to check if part of the system is working. Let's say you just
+wrote the <code>strlen</code> function: it takes a string as argument and returns its
+length. To make sure it works correctly, you might have created a script file
+which looked like this:</p>
+<pre><code>&lt;?php
+
+echo strlen('We'); // Should print 2
+echo strlen('are'); // Sould print 3
+echo strlen('the knights'); // Should print 11
+echo strlen('who say "Ni"!'); // Should print 13</code></pre>
+<p>This script (which you might have thrown away once satisfied with the printed
+result) is a test. It makes sure your function works correctly by providing it
+with different inputs and comparing its output with the expected one.</p>
+<p>This test is not really efficient, but it does the work. Let's see how to
+improve it in the following sections.</p>
+<h2 id="what-are-the-different-kinds-of-tests">What are the different kinds of tests<a href="#what-are-the-different-kinds-of-tests" class="anchor">#</a></h2>
+<p>Tests can be grouped under 3 categories:</p>
+<ol><li>random manual tests</li>
+<li>scenarized manual tests</li>
+<li>automated tests</li>
+</ol><h3 id="random-manual-tests">Random manual tests<a href="#random-manual-tests" class="anchor">#</a></h3>
+<p>The first one is when you use your software to see if it works correctly. This
+is the worst kind of test because systems can be so complex that some part will
+enventually be forgoten, and therefore not checked.</p>
+<p>Incidentally, this is what happens everyday when users use your product, except
+you're not sure if they'll report the bugs they see (and for each bug discovery
+you can potentially lose them).</p>
+<p>Why do I mention it, if it's so bad? Because it's still usefull to discover bugs
+on parts which haven't been correctly covered by the other kinds of tests.
+Actually this is the kind of tests which are done during beta-tests: you get a
+restricted set of (volunteer) users to use your product and see if everything
+is fine.</p>
+<h3 id="scenarized-manual-tests">Scenarized manual tests<a href="#scenarized-manual-tests" class="anchor">#</a></h3>
+<p>Let's take a scientific approach to the first kind of tests by writing test
+plans which describe use cases with their expected outcome.</p>
+<p>Everytime someone tests the system, they follow the scenario given to them.
+This is an improvement of the previous approach as there's less risk of
+forgoting a step which is written.</p>
+<p>Those tests are generally followed (more or less rigorously) during
+<strong>acceptance testing</strong> at the end of developments by the customer or product
+owner or even better by Quality Assurance (QA).</p>
+<h3 id="automated-tests">Automated tests<a href="#automated-tests" class="anchor">#</a></h3>
+<p>The problem with the two previous categories is that they require humans, and
+<em>to err is human</em>. The software industry was partly created to automate
+repititive tasks, so how about we automate those tests?</p>
+<p>The simplest way of automating test is to use assertions:</p>
+<pre><code>&lt;?php
+
+$input = 'We are no longer the knights who say "Ni"!';
+$expectedOutput = 42;
+
+$output = strlen($input);
+
+echo ($expectedOutput === $output ? 'Test pass' : 'Test fails');</code></pre>
+<p>If you keep this script, you can run it regurarly, which means the risk of
+forgoting a step is almost near zero! I say almost because the test doesn't
+magically cover every use case: human still have to write them, which lets a
+small room for errors to happen, but this is the best we can do.</p>
+<p>As you can see, automated tests are constructed very simply:</p>
+<ol><li>define the input and the expected output</li>
+<li>execute the part of the system which needs to be tested</li>
+<li>compare its output with the expected one</li>
+</ol><h2 id="further-kinds-of-tests">Further kinds of tests<a href="#further-kinds-of-tests" class="anchor">#</a></h2>
+<p>We've seen the 3 big categories of tests. But that's not quite it: whether it's
+automated or not, your tests can target many levels/layers in your application:</p>
+<ul><li>View layer:
+<ul><li>User Interface (UI) tests: HTML and DOM</li>
+</ul></li>
+<li>Application layer:
+<ul><li>functional tests: controllers, HTTP status code, command exit status</li>
+</ul></li>
+<li>Domain layer (the code which solves business needs):
+<ul><li>behavior tests: interaction between classes</li>
+<li>unit tests: services, interfaces, functions</li>
+</ul></li>
+</ul><p><strong>Note</strong>: this classification has been taken from
+<a href="https://speakerdeck.com/halleck/symfony2-un-framework-oriente-domain-driven-design?slide=20">Jean Fran&ccedil;ois L&eacute;pine's slides</a></p>
+<p>Each of those tests can be executed manually, or can be automated.</p>
+<p>There's so many types of tests out there, and so little of us to write them!
+Depending on your team, competences, project and planning, you won't be able to
+write every possible tests.</p>
+<p>I'm afraid you'll have somehow to chose which kind of test is more suitable for
+you project. As a matter of fact, testing everything isn't wise:</p>
+<pre><code>&lt;?php
+
+class User
+{
+    private $name;
+
+    public function __construct($name)
+    {
+        $this-&gt;name = $name;
+    }
+
+    public function getName()
+    {
+        return $this-&gt;name;
+    }
+}
+
+// Is this test really usefull? I think not!
+$input = 'Johann Gambolputty de von Ausfern -schplenden -schlitter -crasscrenbon -fried -digger -dangle -dungle -burstein -von -knacker -thrasher -apple -banger -horowitz -ticolensic -grander -knotty -spelltinkle -grandlich -grumblemeyer -spelterwasser -k&uuml;rstlich -himbleeisen -bahnwagen -gutenabend -bitte -eine -n&uuml;rnburger -bratwustle -gerspurten -mit -zweimache -luber -hundsfut -gumberaber -sh&ouml;nendanker -kalbsfleisch -mittler -raucher von Hautkopft of Ulm.';
+$expectedOutput = $input;
+
+$user = new User($input);
+$output = $user-&gt;getName();
+
+echo ($expectedOutput === $output ? 'Test pass' : 'Test fails');</code></pre>
+<p>In the upper code sample, we're testing if the getter returns a value which
+haven't been modified. Sure you could introduce a typo while sketching the
+class, but once you've manually tested it a first time there's no need to check
+regularly if it still works in the future.</p>
+<p>You may not be able to write every possible tests, but still writing some tests
+will save you time in the future as it will prevent regression: the software
+industry is an industry of changing requirements, which means your code will
+eventually be changed, adapted and sometime completly re-written.</p>
+<p>Tests will allow you to change the code lighthearted, because if your change
+breaks something, you'll know it simply by running your tests.</p>
+<h2 id="how-to-do-an-isolated-test">How to do an isolated test?<a href="#how-to-do-an-isolated-test" class="anchor">#</a></h2>
+<p>Chances are your system is composed of parts which interact with each other:
+your functions call other functions, your classes depend on other classes and
+use external functions, etc.</p>
+<p>What if the part of the system you want to test interracts with a database, the
+filesystem and also use a randomizer? Yep that's right, a randomizer: how can
+you even write the expected output if it's supposed to be unpredictable?</p>
+<p>The solution is quite simple: you should isolate the part you want to test.
+In order to do so, you should use <strong>test doubles</strong> which is the practice of
+replacing the dependencies of this part with objects which will behave the way
+you tell them to.</p>
+<p>There's many kinds of test doubles, fortunately <a href="http://martinfowler.com/articles/mocksArentStubs.html">Martin Fowler has summed it up
+for you</a> as follow:</p>
+<blockquote>
+<ul><li>
+<p>Dummy objects are passed around but never actually used.
+Usually they are just used to fill parameter lists.</p>
+</li>
+<li>
+<p>Fake objects actually have working implementations, but usually take some
+shortcut which makes them not suitable for production (an in memory
+database is a good example).</p>
+</li>
+<li>
+<p>Stubs provide canned answers to calls made during the test, usually not
+responding at all to anything outside what's programmed in for the test.
+Stubs may also record information about calls, such as an email gateway
+stub that remembers the messages it 'sent', or maybe only how many messages
+it 'sent'.</p>
+</li>
+<li>Mocks are what we are talking about here: objects pre-programmed with
+expectations which form a specification of the calls they are expected to
+receive.</li>
+</ul></blockquote>
+<p>In practice you'll use stubs to specify the return value of the dependency, and
+you'll use mocks to check if the dependency's method has been called. The best
+way to create stubs and mocks is to write a class which inherits the targeted
+dependency, and overwrites its public methods.</p>
+<p><strong>Note</strong>: the part you want to test is called the System Under Test (SUT), and
+its dependencies are called collaborators.</p>
+<h3 id="dependency-injection-s-back">Dependency Injection's back!<a href="#dependency-injection-s-back" class="anchor">#</a></h3>
+<p>Did you notice I've used the word dependency in this section? That's because in
+order to make a class <em>testable</em>, you need it to be as decoupled as possible
+from its dependencies.</p>
+<p>You won't be able to easily replace dependencies which are created by the part
+you want to test. The simplest way is to inject them (pass them as arguments)
+to your class, allowing you to decide what should be injected: the real
+dependency, or one of its stub (or mock).</p>
+<p>This is why Dependency Injection is a big deal. If you don't clearly know what
+is this design pattern about, I advise you to
+<a href="../../../2014/01/22/ioc-di-and-service-locator.html">read this article</a></p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Tests allow you to make sure parts of your system work as expected, and they can
+be automated so you can run them regurarly in order to detect any regressions.</p>
+<p>There's a lot of layers which can be tested and you might have to choose what is
+best for you (the wrong answer being "no tests for me, thank you very much").</p>
+<p>Dependency Injection is the right way to go, as it will allow you to use test
+doubles to isolate the part you want to check.</p>
+<p>This article had much theory in it, so the next one will be more practical with
+code samples, case studies and tools which will allow you to test your
+applications: <a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a>.</p>
+<h3 id="a-word-about-test-coverage">A word about test coverage<a href="#a-word-about-test-coverage" class="anchor">#</a></h3>
+<p>I might not have stressed this out enough: <strong>tests won't magically prevent your
+system from failing</strong>. This is all because your test will only cover the part
+you targeted, for the use case you could think of at the time.</p>
+<p>So, how to make sure your tests are enough? At first glance, test coverage might
+be a solution: it's a tool which will mark any line of code executed while the
+test is run and which will produce a report telling you which parts haven't been
+visited.</p>
+<p>The biggest flaw of such a tool is that just because you called a line doesn't
+mean you tested it. The other important weakness is that not every code needs
+to be tested (for example getters of values which are not altered): the report
+will tell you a percentage of code covered, but it won't be able to tell you
+if the covered part is the essential one.</p>
+<p>In order to know if your tests cover the critical parts, mutation testing have
+been invented: a tool will alter random parts of your code and run the tests. If
+your tests fail, then they play well their role of guarding your application
+against regressions.</p>
+<p>However this is not very precise, they're slow and they can't know what are the
+critical parts of your system...</p>
+<p>I guess the best you can do is TDD, which we'll see in a future article ;) .</p>
+<p>If you're interested in this subject, I advise you to read
+<a href="http://codemanship.co.uk/parlezuml/blog/?postid=1202">Jason Gorman's article on code coverage</a>.</p>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="../../../2014/01/29/sf2-di-component-by-example.html">Previous: Symfony2 Dependency Injection component, by example</a>
         
+                        <a class="six columns button" href="../../../2014/02/12/tests-tools-overview.html">Next: Tests: Tools overview</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="../../../about.html">About</a>
+                <a class="button three columns" href="../../../archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

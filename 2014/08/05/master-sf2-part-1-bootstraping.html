@@ -11,34 +11,226 @@
     <link rel="canonical" href="http://gnugat.github.io/2014/08/05/master-sf2-part-1-bootstraping.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="../../../index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
+        <article>
+            <header>
+                <h2>
+    Master Symfony2 - part 1: Bootstraping    <span class="sub-title">05/08/2014</span>
+</h2>
+                    <nav>
+                        <a class="button" href="../../../tags/symfony.html">Symfony</a>
+                <a class="button" href="../../../tags/master-symfony2-series.html">Master Symfony2 Series</a>
+                    </ul>
+    <hr />
+            </header>
+
+            <p>You know the basics of the <a href="http://symfony.com/">Symfony2</a> framework
+(<a href="https://getcomposer.org/">Composer</a>, empty application, bundle, controller and
+functional test with <a href="http://phpunit.de/">PHPUnit</a>) and you want to learn more
+about how to extend it (and understanding what you're doing)?</p>
+<p>Then this series of articles is for you :) .</p>
+<p>If you don't feel confident about the prerequisites, have a look at
+<a href="../../../2014/06/18/learn-sf2-composer-part-1.html">the Learn Symfony2 series</a>.
+Don't worry, we'll start with a bit of practicing before starting to learn
+anything new.</p>
+<p>In the first article of this series, we'll discover our cutomer's needs and
+we'll bootstrap our application.</p>
+<h2 id="our-use-case-creating-a-fortune-application">Our use case: creating a Fortune application<a href="#our-use-case-creating-a-fortune-application" class="anchor">#</a></h2>
+<p>In order to have real world examples, we'll need a use case. The Knight of Ni
+were pretty satisfied with our previous work, and they recommended us to
+Nostradamus!</p>
+<p>Nostradamus is a fortune teller and wants to jump on the internet bandwagon. He
+wants us to create a
+<a href="http://en.wikipedia.org/wiki/Fortune_%28Unix%29">fortune application</a>
+where users can submit quotes.</p>
+<p>Our first task will be to create an empty application so we can start working.
+We could use the <a href="http://symfony.com/distributions">Symfony Standard Edition</a>,
+but in order to understand what really happens behind the scene we'll use an
+emptier distribution.</p>
+<h2 id="installing-symfony2-emptier-edition">Installing Symfony2 Emptier Edition<a href="#installing-symfony2-emptier-edition" class="anchor">#</a></h2>
+<p>First make sure to have the last version of <a href="https://getcomposer.org/">Composer</a>
+installed:</p>
+<pre><code>curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer</code></pre>
+<p>Then ask Composer to create the boilerplate of our application, using the
+<a href="https://github.com/gnugat/sf2-emptier">Symfony2 Emptier Edition</a>:</p>
+<pre><code>composer create-project 'gnugat/sf2-emptier' fortune '0.1.*'
+cd fortune</code></pre>
+<p>This distribution is similar to the empty application we created in the
+<a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">learn Symfony2 series</a>.
+It contains the following files:</p>
+<pre><code>.
+&#9500;&#9472;&#9472; app
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_prod.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_test.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml.dist
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; logs
+&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; phpunit.xml.dist
+&#9500;&#9472;&#9472; composer.json
+&#9500;&#9472;&#9472; LICENSE
+&#9500;&#9472;&#9472; README.md
+&#9492;&#9472;&#9472; web
+    &#9492;&#9472;&#9472; app.php</code></pre>
+<p>Remove the documentation files:</p>
+<pre><code>rm README.md LICENSE</code></pre>
+<p>Change the <code>composer.json</code> information:</p>
+<pre><code>{
+    "name": "nostradamus/fortune",
+    "license": "proprietary",
+    "type": "project",
+    "description": "A collection of quotes",
+    "autoload": {
+        "psr-4": { "": "src/" }
+    },
+    "require": {
+        "php": "&gt;=5.3.17",
+
+        "symfony/symfony": "~2.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.1"
+    }
+}</code></pre>
+<p>Next you'll have to configure the project specific parameters:</p>
+<pre><code>cp app/config/parameters.yml.dist app/config/parameters.yml</code></pre>
+<p>Don't forget to edit <code>app/config/parameters.yml</code> and change the value of the
+secret parameter:</p>
+<pre><code>parameters:
+    secret: hazuZRqYGdRrL8ATdB8kAqBZ</code></pre>
+<p><strong>Tip</strong>: Use <a href="https://www.random.org/passwords/?num=1&amp;len=24&amp;format=html&amp;rnd=new">random.org</a>
+to generate your secret token.</p>
+<p><strong>Note</strong>: For security reason, this parameter file is ignored by git. It means
+that this file should be created on each installation.</p>
+<p>Let's commit our hard work:</p>
+<pre><code>git init
+git add -A
+git add -f app/logs/.gitkeep app/cache/.gitkeep
+git commit -m 'Created a Symfony2 Emptier application'</code></pre>
+<h2 id="creating-the-application-bundle">Creating the Application Bundle<a href="#creating-the-application-bundle" class="anchor">#</a></h2>
+<p>We will also need an Application bundle. First we create the directories:</p>
+<pre><code>mkdir -p src/Fortune/ApplicationBundle</code></pre>
+<p>Then the Bundle class:</p>
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/FortuneApplicationBundle.php
+
+namespace Fortune\ApplicationBundle;
+
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+
+class FortuneApplicationBundle extends Bundle
+{
+}</code></pre>
+<p>And finally register it in the application's kernel:</p>
+<pre><code>&lt;?php
+// File: app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        return array(
+            new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
+            new Fortune\ApplicationBundle\FortuneApplicationBundle(), // &lt;-- Here!
+        );
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader)
+    {
+        $loader-&gt;load(__DIR__.'/config/config_'.$this-&gt;getEnvironment().'.yml');
+    }
+}</code></pre>
+<p>We're now ready to get started with our real concern, so let's commit our work:</p>
+<pre><code>git add -A
+git commit -m 'Created ApplicationBundle'</code></pre>
+<h3 id="apache-configuration">Apache configuration<a href="#apache-configuration" class="anchor">#</a></h3>
+<p>In order for your website to be browsed, you'll need to configure your web
+server. This configuration is well explained
+<a href="http://symfony.com/doc/current/cookbook/configuration/web_server_configuration.html">in the documentation</a>,
+so here's a dump of an apache vhost:</p>
+<pre><code>&lt;VirtualHost *:80&gt;
+    ServerName fortune.local
+
+    DocumentRoot /home/loic.chardonnet/Projects/gnugat/fortune/web
+
+    ErrorLog "/home/loic.chardonnet/Projects/gnugat/fortune/app/logs/apache_errors.log"
+    CustomLog "/home/loic.chardonnet/Projects/gnugat/fortune/app/logs/apache_accesses.log" common
+
+    &lt;Directory /home/loic.chardonnet/Projects/gnugat/fortune/web&gt;
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride None
+        Order allow,deny
+        allow from all
+        &lt;IfModule mod_rewrite.c&gt;
+            RewriteEngine On
+            RewriteCond %{REQUEST_FILENAME} !-f
+            RewriteRule ^(.*)$ /app.php [QSA,L]
+        &lt;/IfModule&gt;
+    &lt;/Directory&gt;
+&lt;/VirtualHost&gt;</code></pre>
+<p>If you run into some permission problem (like writing in <code>cache</code> and <code>logs</code>),
+you might consider to change <code>APACHE_RUN_USER</code> and <code>APACHE_RUN_GROUP</code>
+environment variables present in <code>/etc/apache2/envvars</code> to your own user and
+group.</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Using Composer's <code>create-project</code> command with a Symfony2 Distribution is the
+quickest way to bootstrap a project.</p>
+<p>In the next article, we will start to work on our first User Story.</p>
+<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+<li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
+<li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
+<li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
+<li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
+<li><a href="../../../2014/10/08/master-sf2-conclusion.html">Conclusion</a></li>
+</ul>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="../../../2014/07/23/learn-sf2-conclusion.html">Previous: Learn Symfony2 - Conclusion</a>
         
+                        <a class="six columns button" href="../../../2014/08/13/master-sf2-part-2-tdd.html">Next: Master Symfony2 - part 2: Test Driven Development</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="../../../about.html">About</a>
+                <a class="button three columns" href="../../../archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

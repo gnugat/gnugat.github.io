@@ -11,34 +11,83 @@
     <link rel="canonical" href="http://gnugat.github.io/2014/02/26/tdd-just-do-it.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="../../../index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
+        <article>
+            <header>
+                <h2>
+    TDD: just do it!    <span class="sub-title">26/02/2014</span>
+</h2>
+                    <nav>
+                        <a class="button" href="../../../tags/tests-series.html">Tests Series</a>
+                    </ul>
+    <hr />
+            </header>
+
+            <p>This article is part of a series on Tests in general and on how to practice
+them:</p>
+<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+<li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+<li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+<li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
+<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
+<li><a href="../../../2014/03/26/behat-quick-tour.html">Behat: a quick tour</a></li>
+<li><a href="../../../2014/04/02/tests-cheat-sheet.html">Conclusion</a></li>
+</ol><p>The first two articles didn't require special skills whereas the last one needed
+you to be a little bit used to tests. Well the next ones will require you to be
+a little bit used to Test Driven Develoment (TDD), so this article is here to
+make you practice them!</p>
+<p>I really mean it: reading articles on TDD might feel good, but the only thing to
+do to fully grasp them is to:</p>
+<ol><li>start writting tests before any production code</li>
+<li>then write the code to quickly make them pass (write ugly code if needed)</li>
+<li>finally refactor the mess, without touching the tests</li>
+</ol><p>In other word: just do it! The learning curve is steep, so dive into it as soon
+as possible.</p>
+<p>One of the best way to learn is to pair with someone who's used to it. If you
+don't have someone to pair with, you can always read this
+<a href="http://www.objectmentor.com/resources/articles/xpepisode.htm">Extreme Programming Episode by Robert C. Martin and Robert S. Koss</a>.</p>
+<p>The next article will be about the next level:
+<a href="../../../2014/03/05/spec-bdd.html">Behavior Driven Development</a> (BDD).</p>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="../../../2014/02/19/test-driven-development.html">Previous: Test Driven Development</a>
         
+                        <a class="six columns button" href="../../../2014/03/05/spec-bdd.html">Next: spec BDD</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="../../../about.html">About</a>
+                <a class="button three columns" href="../../../archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

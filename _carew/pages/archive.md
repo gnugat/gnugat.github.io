@@ -4,21 +4,15 @@ navigations: main
 ---
 
 {% for article in carew.posts|reverse %}
-<article class="article">
-    <h2 class="title">
-        <a href="{{ render_document_path(article) }}" class="link">
-            {{ article.title|capitalize }}
-        </a>
-    </h2>
-    <ul class="list-inline">
-        <li>
-            {{ article.metadatas.date|date('d/m/Y') }}
-        </li>
+<article>
+    <h3>
+        <a href="{{ render_document_path(article) }}">{{ article.title|capitalize }}</a>
+        <span class="sub-title">{{ article.metadatas.date|date('d/m/Y') }}</span>
+    </h3>
+    <nav>
         {% for tag in article.tags %}
-        <li>
-            <a class="button" href="{{ path('tags/'~tag) }}">{{ tag|title }}</a>
-        </li>
+        <a class="button" href="{{ path('tags/'~tag) }}">{{ tag|title }}</a>
         {% endfor %}
-    </ul>
+    </nav>
 </article>
 {% endfor %}

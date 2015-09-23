@@ -1,36 +1,33 @@
 {% extends 'layouts/skeleton.html.twig' %}
 
-{% block content_main %}
-    <article>
-        <ul class="list-inline">
-            <li>
-                {{ carew.document.metadatas.date|date('d/m/Y') }}
-            </li>
-            {% for tag in carew.document.tags %}
-            <li>
-                <a href="{{ path('tags/'~tag) }}"><span class="label label-primary">{{ tag|title }}</span></a>
-            </li>
-            {% endfor %}
-        </ul>
-        <hr />
-        <div class="body">
-            {{ carew.document.body|raw }}
-        </div>
+{% block page_title %}
+<h2>
+    {% block post_title %}{{ carew.document.title }}{% endblock %}
+    <span class="sub-title">{% block post_date %}{{ carew.document.metadatas.date|date('d/m/Y') }}{% endblock %}</span>
+</h2>
+{% endblock %}
 
-        <footer class="next-previous row">
-            {% set previous = previous_document(carew.posts, carew.document) %}
-            {% if previous %}
-            <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="{{ render_document_path(previous) }}" role="button">Previous: {{ previous.title }}</a>
-            </div>
-            {% endif %}
+{% block article_header %}
+    <nav>
+        {% block post_tags %}
+        {% for tag in carew.document.tags %}
+        <a class="button" href="{{ path('tags/'~tag) }}">{{ tag|title }}</a>
+        {% endfor %}
+        {% endblock %}
+    </ul>
+    <hr />
+{% endblock %}
 
-            {% set next = next_document(carew.posts, carew.document) %}
-            {% if next %}
-            <div class="col-md-6">
-                <a class="btn btn-lg btn-default btn-block" href="{{ render_document_path(next) }}" role="button">Next: {{ next.title }}</a>
-            </div>
-            {% endif %}
-        </footer>
-    </article>
+{% block article_footer %}
+    <nav class="row">
+        {% set previous = previous_document(carew.posts, carew.document) %}
+        {% if previous %}
+        <a class="six columns button" href="{{ render_document_path(previous) }}">Previous: {{ previous.title }}</a>
+        {% endif %}
+
+        {% set next = next_document(carew.posts, carew.document) %}
+        {% if next %}
+        <a class="six columns button" href="{{ render_document_path(next) }}">Next: {{ next.title }}</a>
+        {% endif %}
+    </nav>
 {% endblock %}

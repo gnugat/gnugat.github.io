@@ -11,34 +11,135 @@
     <link rel="canonical" href="http://gnugat.github.io/2014/03/19/behavior-driven-development-story-bdd.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="../../../index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
+        <article>
+            <header>
+                <h2>
+    Behavior Driven Development: story BDD    <span class="sub-title">19/03/2014</span>
+</h2>
+                    <nav>
+                        <a class="button" href="../../../tags/tests-series.html">Tests Series</a>
+                    </ul>
+    <hr />
+            </header>
+
+            <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<p>This article is part of a series on Tests in general and on how to practice
+them:</p>
+<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+<li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+<li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+<li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
+<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
+<li><a href="../../../2014/03/26/behat-quick-tour.html">Behat: a quick tour</a></li>
+<li><a href="../../../2014/04/02/tests-cheat-sheet.html">Conclusion</a></li>
+</ol><p>In this article, we'll talk about Behavior Driven Development (BDD), again.
+There's no special skills required to read on, although some notions on
+<a href="../../../2014/02/05/tests-introduction.html">tests</a> and
+<a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a>
+(TDD) would be a plus.</p>
+<h2 id="from-spec-bdd-to-story-bdd">From spec BDD to story BDD<a href="#from-spec-bdd-to-story-bdd" class="anchor">#</a></h2>
+<p>So TDD has 3 simple rules:</p>
+<ol><li>write the test first</li>
+<li>then write as quickly as possible the code to make it pass</li>
+<li>finally refactor, without changing the tests (and still making them pass)</li>
+</ol><p>Like many TDD oficionados, <a href="http://dannorth.net/about/">Dan North</a> felt that it
+was missing some guidelines. To fix this, he created spec BDD, which adds the
+following rules to TDD:</p>
+<ul><li>test methods should be sentences (prefix them with <code>it_should</code> instead of <code>test</code>)</li>
+<li>tests should specify the behavior of the System Under Test (SUT)</li>
+</ul><p>One of his colleagues, Chris Matts, suggested to take BDD a step further: why
+not making sure the business value was met? And that's how story BDD was
+created.</p>
+<h2 id="acceptance-tests">Acceptance tests<a href="#acceptance-tests" class="anchor">#</a></h2>
+<p>If you're working with agile methodologies, you should be familiar with user
+stories. Those are simple cards which describe what to do in 3 lines:</p>
+<pre><code>In order to attain a business value
+As an actor
+I need to meet some requirements</code></pre>
+<p>They've also some acceptance criteria, which follow approximately this template:</p>
+<pre><code>Given a context
+When an event happens
+Then an outcome should occur</code></pre>
+<p>If the system fulfills the acceptance test, then it behaves correctly. By making
+them executable, you can test the business behavior of your system! That's what
+story BDD is all about.</p>
+<p>Technically, this means parsing the acceptance tests and match each line with
+a chunk of code. But don't worry about implementation details, we'll see them
+in the next article.</p>
+<h2 id="misconceptions">Misconceptions<a href="#misconceptions" class="anchor">#</a></h2>
+<p>Somehow, a surprising number of people started to think that BDD was all about
+integration tests. For example in a web application, they would write:</p>
+<pre><code>Given I am on "/home"
+When I click on "form#name_form input[name=submit]"
+And I wait until the page is fully loaded
+Then the "form#name_form input[name=first_name]" form field should contain "value"</code></pre>
+<p>What's wrong with it? Well:</p>
+<ul><li>it's not human friendly (usage of xpath)</li>
+<li>it's completely coupled to your routing (usage of URL)</li>
+<li>it's entirely coupled to the web implementation (usage of web vocabulary)</li>
+<li>it's thoroughly coupled to the HTML integration (again, usage of xpath)</li>
+<li>it's fully coupled to the test tool (the waiting line is a hack)</li>
+<li>and mostly: it doesn't describe your business need</li>
+</ul><p>Here's a better approach:</p>
+<pre><code>Given the opportunity to introduce myself
+When I give my name
+Then I should be greeted</code></pre>
+<p>Yep, that's the story BDD example of "Hello World", in case you didn't recognize
+it ;) .</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>If you make a user story's acceptance tests executable, then you're doing story
+BDD. It helps you to make sure that your application meets your business needs.</p>
+<p>Hopefully this article helped you a little. If you have any questions, rants or
+praises, feel free to send them to me on <a href="https://twitter.com/epiloic">Twitter</a>.</p>
+<p>Tests are hard. TDD is harder. BDD even more! Here's some good references to
+help you on story BDD:</p>
+<ul><li><a href="http://dannorth.net/introducing-bdd/">Introducing BDD, by Dan North</a></li>
+<li><a href="http://dannorth.net/2011/01/31/whose-domain-is-it-anyway/">Whose domain is it anyway? By Dan North</a></li>
+<li><a href="http://slideshare.net/lunivore/behavior-driven-development-11754474">BDD slides by Liz Keogh</a></li>
+<li><a href="http://www.wekeroad.com/2013/08/28/how-behavioral-is-your-bdd/">Are you really doing BDD? By Rob Conery</a></li>
+<li><a href="http://ht.ly/pfNW5">A.T. Fail! By Robert C. Martin</a></li>
+</ul>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="../../../2014/03/11/phpspec-quick-tour.html">Previous: phpspec: a quick tour</a>
         
+                        <a class="six columns button" href="../../../2014/03/26/behat-quick-tour.html">Next: Behat: a quick tour</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="../../../about.html">About</a>
+                <a class="button three columns" href="../../../archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

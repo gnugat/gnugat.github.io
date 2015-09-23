@@ -4,129 +4,22 @@
  * Évite les noeuds,
  * DOP !
  *
- * @author Loïc Chardonnet <loic.chardonnet@gmail.com>
+ * @author Loïc Faugeron <faugeron.loic+blog-css@gmail.com>
  */
 
-html, body {
-    font-size: 18px;
-    line-height: 1.61111em;
+.title {
+    text-align: center;
+    margin-top: 60px;
+    margin-bottom: 60px;
+    font-size: 2.3em;
+    line-height: 1.2em;
 }
 
-body {
-    color: #333;
-    background-color: #fafafa;
-    padding: 0;
-}
-
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    margin: 0;
-}
-
-h1 {
-    font-weight: normal;
-    font-size: 2em;
-    line-height: 1.61111em;
-    margin-bottom: 0.80556em;
-}
-
-h2 {
-    font-size: 1.66667em;
-    line-height: 1.93333em;
-    margin-bottom: 0.48333em;
-}
-
-h3 {
-    font-size: 1.33333em;
-    line-height: 1.20833em;
-    margin-bottom: 0.60417em;
-    color: #4d4d4d;
-}
-
-h4 {
-    font-size: 1.11111em;
-    line-height: 1.45em;
-    margin-bottom: 0.725em;
-}
-
-h5 {
-    font-size: 0.88889em;
-    line-height: 1.8125em;
-    margin-bottom: 0.90625em;
-}
-
-ol, ul {
-    padding: 0 0 0 40px;
-}
-
-p code, li code {
-    background-color: #e7e7e7;
-    padding: 0.1em 0.3em;
-    border-radius: 5px;
-    white-space: nowrap;
-}
-
-code, pre {
-    font-family: monospace, serif;
-    font-size: 1em;
-    color: #333;
-}
-
-a, a:link {
-    color: #5191d0;
-    text-decoration: underline;
-}
-
-a:visited {
-    color: #1d446b;
-}
-
-.navbar-default .navbar-nav > li > a {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-weight: bold;
-    font-size: 23px;
-    text-decoration: none;
+.sub-title {
+    font-size: 60%;
+    line-height: 1em;
+    font-weight: 200;
+    letter-spacing: 3px;
+    padding-left: 4px;
     display: block;
-    position: relative;
-    line-height: 1.61111em;
-}
-
-.navbar-default {
-    border: none;
-    background-color: #f5f5f5;
-}
-
-a.navbar-brand, a.navbar-brand:link {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-weight: bold;
-    font-size: 60px;
-    text-decoration: none;
-    padding-top: 20px;
-}
-
-#posts > h5 > a, #posts > h5 > a:link {
-    font-size: 1.33333em;
-    text-decoration: none;
-    line-height: 1.20833em;
-    margin-bottom: 0.60417em;
-    color: #4d4d4d;
-}
-
-.homepage > .article {
-    border-bottom: 1px solid #e5e5e5;
-}
-
-.homepage > .article > .title > .link {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-weight: bold;
-
-}
-
-.next-previous {
-    border-top: 1px solid #e5e5e5;
-}
-
-a.btn, a.btn:link {
-    margin-top: 15px;
-    text-decoration: none;
 }

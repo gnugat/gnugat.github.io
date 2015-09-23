@@ -11,34 +11,195 @@
     <link rel="canonical" href="http://gnugat.github.io/2015/05/20/spec-gen-0-2.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="../../../index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
+        <article>
+            <header>
+                <h2>
+    SpecGen v0.2    <span class="sub-title">20/05/2015</span>
+</h2>
+                    <nav>
+                        <a class="button" href="../../../tags/memio.html">Memio</a>
+                <a class="button" href="../../../tags/specgen.html">Specgen</a>
+                <a class="button" href="../../../tags/phpspec.html">Phpspec</a>
+                <a class="button" href="../../../tags/pet-project.html">Pet Project</a>
+                <a class="button" href="../../../tags/introducing-library.html">Introducing Library</a>
+                    </ul>
+    <hr />
+            </header>
+
+            <blockquote>
+<p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.2 inserts use statements.</p>
+</blockquote>
+<p>SpecGen v0.2 has been released, it introduces a small change: use statement insertion.</p>
+<h2 id="it-inserts-use-statements">It inserts use statements<a href="#it-inserts-use-statements" class="anchor">#</a></h2>
+<p>Let's go back to the sources of the example used in the <a href="../../../2015/05/13/memio-spec-gen.html">previous article</a>
+and clean it a little bit:</p>
+<pre><code>rm -rf src</code></pre>
+<p>Given the following specification:</p>
+<pre><code class="language-php">&lt;?php
+// File: spec/Vendor/Project/RequestHandlerSpec.php
+
+namespace spec\Vendor\Project;
+
+use PhpSpec\ObjectBehavior;
+use Vendor\Project\Message\Request;
+
+class RequestHandlerSpec extends ObjectBehavior
+{
+    function it_takes_a_request_and_returns_a_response(Request $request)
+    {
+        $parameters = array();
+        $isEnabled = true;
+        $this-&gt;handle($request, $parameters, $isEnabled)-&gt;shouldHaveType('Vendor\Project\Message\Response');
+    }
+}</code></pre>
+<p>When we run the test suite:</p>
+<pre><code>phpspec run</code></pre>
+<p>Then we should get the following file, with a use statement:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project;
+
+use Vendor\Project\Message\Request;
+
+class RequestHandler
+{
+    public function handle(Request $request, array $argument1, $argument2)
+    {
+    }
+}</code></pre>
+<h2 id="it-doesn-t-insert-use-statements-twice">It doesn't insert use statements twice<a href="#it-doesn-t-insert-use-statements-twice" class="anchor">#</a></h2>
+<p>Given the following new step in our specification:</p>
+<pre><code class="language-php">&lt;?php
+// File: spec/Vendor/Project/RequestHandlerSpec.php
+
+namespace spec\Vendor\Project;
+
+use PhpSpec\ObjectBehavior;
+use Vendor\Project\Message\Request;
+
+class RequestHandlerSpec extends ObjectBehavior
+{
+    function it_takes_a_request_and_returns_a_response(Request $request)
+    {
+        $parameters = array();
+        $isEnabled = true;
+        $this-&gt;handle($request, $parameters, $isEnabled)-&gt;shouldHaveType('Vendor\Project\Message\Response');
+    }
+
+    function it_supports_request(Request $request)
+    {
+        $this-&gt;supports($request)-&gt;shouldBe(true);
+    }
+}</code></pre>
+<p>When we run the test suite:</p>
+<pre><code>phpspec run</code></pre>
+<p>Then we should get the following file, without new use statements:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project;
+
+use Vendor\Project\Message\Request;
+
+class RequestHandler
+{
+    public function handle(Request $request, array $argument1, $argument2)
+    {
+    }
+
+    public function supports(Request $request)
+    {
+    }
+}</code></pre>
+<h2 id="it-doesn-t-insert-use-statement-for-same-namespace">It doesn't insert use statement for same namespace<a href="#it-doesn-t-insert-use-statement-for-same-namespace" class="anchor">#</a></h2>
+<p>Let's clear everything:</p>
+<pre><code>rm -rf src</code></pre>
+<p>Given the following specification:</p>
+<pre><code class="language-php">&lt;?php
+// File: spec/Vendor/Project/RequestHandlerSpec.php
+
+namespace spec\Vendor\Project;
+
+use PhpSpec\ObjectBehavior;
+use Vendor\Project\Request;
+
+class RequestHandlerSpec extends ObjectBehavior
+{
+    function it_takes_a_request_and_returns_a_response(Request $request)
+    {
+        $parameters = array();
+        $isEnabled = true;
+        $this-&gt;handle($request, $parameters, $isEnabled)-&gt;shouldHaveType('Vendor\Project\Response');
+    }
+}</code></pre>
+<blockquote>
+<p><strong>Note</strong>: <code>Request</code> and <code>RequestHandler</code> are both in the same namespace.</p>
+</blockquote>
+<p>When we run the test suite:</p>
+<pre><code>phpspec run</code></pre>
+<p>Then we should get the following, without any use statements:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project;
+
+class RequestHandler
+{
+    public function handle(Request $request, array $argument1, $argument2)
+    {
+    }
+}</code></pre>
+<h2 id="behind-the-hood">Behind the hood<a href="#behind-the-hood" class="anchor">#</a></h2>
+<p>This small feature was the occasion to refactor SpecGen a bit! This resulted in the
+introduction of <code>CodeEditor</code>, a facade for a home made <code>CommandBus</code> and for
+<a href="http://gnugat.github.io/redaktilo">Redaktilo</a>'s <code>Editor</code>.</p>
+<p>With these, the code to generate a method and insert a use statement looks like this:</p>
+<pre><code class="language-php">$file = $this-&gt;codeEditor-&gt;open($fileName);
+$this-&gt;codeEditor-&gt;handle(new InsertUseStatements($file, $fullyQualifiedNames));
+$this-&gt;codeEditor-&gt;handle(new InsertMethod($file, $method));
+$this-&gt;codeEditor-&gt;save($file);</code></pre>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>While some improvements can still be done (use statements in alphabetical order,
+typehint interfaces only), the version 0.3 will mainly be about the introduction
+of a new generator: insertion of properties when the method is a constructor.</p>
+<p>Stay tuned!</p>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="../../../2015/05/13/memio-spec-gen.html">Previous: Memio SpecGen v0.1</a>
         
+                        <a class="six columns button" href="../../../2015/05/28/spec-gen-0-3.html">Next: SpecGen v0.3</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="../../../about.html">About</a>
+                <a class="button three columns" href="../../../archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

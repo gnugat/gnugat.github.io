@@ -11,34 +11,165 @@
     <link rel="canonical" href="http://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="../../../index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
+        <article>
+            <header>
+                <h2>
+    Learn Symfony2 - part 1: Composer    <span class="sub-title">18/06/2014</span>
+</h2>
+                    <nav>
+                        <a class="button" href="../../../tags/symfony.html">Symfony</a>
+                <a class="button" href="../../../tags/learn-symfony2-series.html">Learn Symfony2 Series</a>
+                    </ul>
+    <hr />
+            </header>
+
+            <p>You don't know anything about the <a href="http://symfony.com/">Symfony2</a> framework,
+and you'd like a quick guide to learn how to use it, and how it works?</p>
+<p>Then this article is for you :) .</p>
+<p>Don't get me wrong: one day or another you'll have to read the
+<a href="http://symfony.com/doc/current/index.html">documentation</a>, and you'll have to
+practice a lot in order to master it. But for now this guide should be a good
+start for you.</p>
+<p>In the first article of this series, you'll learn about
+<a href="https://getcomposer.org/">Composer</a>, which helps you with third party library
+installation and updates.</p>
+<h2 id="creating-the-project">Creating the project<a href="#creating-the-project" class="anchor">#</a></h2>
+<p>In order to understand how Symfony2 works, we won't use the
+<a href="http://symfony.com/distributions">Symfony Standard Edition</a>, but rather start
+from scratch with the bare minimum.</p>
+<p>Let's create our project:</p>
+<pre><code>mkdir knight
+cd knight
+git init</code></pre>
+<h2 id="getting-composer">Getting Composer<a href="#getting-composer" class="anchor">#</a></h2>
+<p>When developing a project the last thing you want is to waste your time
+re-inventing the wheel, so you install third party libraries. Those libraries
+have their own life cycle: they might release some bug fixes and new features
+after you installed them, so you'll need to update them sometimes.</p>
+<p><a href="https://getcomposer.org/">Composer</a> makes these things so easy you'll never
+have to worry again about versions. First download it:</p>
+<pre><code>curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer</code></pre>
+<p>And we're done! If only every project were so easy to install... :)</p>
+<h2 id="installing-and-updating-symfony2">Installing and updating Symfony2<a href="#installing-and-updating-symfony2" class="anchor">#</a></h2>
+<p>Actually, Symfony2 is only a name regrouping many libraries which can be used
+individually (you can even use them in other frameworks, CMS or projects like
+<a href="http://symfony.com/projects/drupal">Drupal</a>,
+<a href="http://symfony.com/projects/phpbb">phpBB</a>,
+<a href="http://symfony.com/projects/laravel">Laravel</a>,
+<a href="http://symfony.com/projects/ezpublish">eZ Publish</a>,
+<a href="http://symfony.com/projects/orocrm">OroCRM</a> and
+<a href="http://symfony.com/projects/piwik">Piwik</a> did).</p>
+<p><em>Note</em>: Symfony2 libraries are called <code>components</code>.</p>
+<p>Composer was made to install libraries, so let's use it:</p>
+<pre><code>composer require 'symfony/symfony:~2.5' # install every single libraries in sf2</code></pre>
+<p>This command will do the following steps:</p>
+<ol><li>create a <code>composer.json</code> configuration file if it doesn't already exist</li>
+<li>add <code>symfony/symfony: ~2.5</code> in it (useful for further <code>composer install</code>)</li>
+<li>actually download symfony inside the <code>vendor/symfony/symfony</code> directory</li>
+<li>create a <code>composer.lock</code> file</li>
+</ol><p>Later on, to update those dependencies you'll just have to run
+<code>composer update</code>.</p>
+<p><em>Note</em>: a library on which you depend upon is called a <code>dependency</code>.</p>
+<p>This will look in the <code>composer.lock</code> file to know which version has been
+installed (e.g. 2.5.0) and then checks if there's any new version available.
+For more information about how Composer handles versions, see
+<a href="https://igor.io/2013/01/07/composer-versioning.html">Igor's article</a>.</p>
+<p>This means that you can totally ignore the <code>vendor</code> directory:</p>
+<pre><code>echo '/vendor/*' &gt;&gt; .gitignore</code></pre>
+<p>If your team wants to install your project, they'll just have to clone your
+repository and then run <code>composer install</code> which runs into the following steps:</p>
+<ol><li>read the <code>composer.json</code> file to see the list of dependencies</li>
+<li>read the <code>composer.lock</code> file to check the version installed by the commiter</li>
+<li>download the dependencies with the version specified in the lock (even if new
+ones are available)</li>
+</ol><p>If a dependency is listed in <code>composer.json</code> but not in <code>composer.lock</code>,
+Composer will download the last matching version and add it to the lock.</p>
+<p>This means that everyone will have the same version installed! If you allow only
+one person to run <code>composer update</code> you can guarantee this.</p>
+<h2 id="autloading">Autloading<a href="#autloading" class="anchor">#</a></h2>
+<p>Because Composer knows where each classes of the installed libraries are, it
+provides a nice feature:
+<a href="http://www.php.net/manual/en/language.oop5.autoload.php">autoloading</a>.</p>
+<p>Simply put, each time a class is called, Composer will automatically include the
+file where it's declared.</p>
+<p>Your own code too can benefit from it. We just need to edit the <code>composer.json</code>
+file:</p>
+<pre><code>{
+    "require": {
+        "symfony/symfony": "~2.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        }
+    }
+}</code></pre>
+<p>And run the following command to take the changes into account:</p>
+<pre><code>composer update</code></pre>
+<p>This tells Composer that we're going to follow the
+<a href="http://www.php-fig.org/psr/psr-4/">PSR-4</a> standard and that we're going to put
+our sources in the <code>src</code> directory.</p>
+<p><em>Note</em>: PSR 4 requires you to:</p>
+<ul><li>create one class per file</li>
+<li>give the same name to your file and your class</li>
+<li>use the path of the class for the namespace</li>
+</ul><p>For example: the file <code>src/Knight/ApplicationBundle/KnightApplicationBundle.php</code>
+contains a class named <code>KnightApplicationBundle</code> located in the namespace
+<code>Knight\ApplicationBundle</code>.</p>
+<p>Don't worry too much about it for now.</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>And that's everything you need to know about Composer for now. Let's commit our
+work:</p>
+<pre><code>git add -A
+git commit -m 'Installed Symfony2'</code></pre>
+<p>I hope this could help you, stay tuned for the next articles!</p>
+<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
+<ul><li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
+<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
+<li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
+<li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
+<li><a href="../../../2014/07/23/learn-sf2-conclusion.html">Conclusion</a></li>
+</ul>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="../../../2014/06/04/php-tokenizer.html">Previous: PHP Tokenizer</a>
         
+                        <a class="six columns button" href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">Next: Learn Symfony2 - part 2: Empty application</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="../../../about.html">About</a>
+                <a class="button three columns" href="../../../archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

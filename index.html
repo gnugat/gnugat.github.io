@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>index.md</title>
+    <title>PHPUnit with phpspec</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
@@ -11,34 +11,292 @@
     <link rel="canonical" href="http://gnugat.github.io/index.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="./css/normalize.css">
+    <link rel="stylesheet" href="./css/skeleton.css">
+    <link rel="stylesheet" href="./css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
-        
+        <article>
+            <header>
+                <h2>
+    PHPUnit with phpspec    <span class="sub-title">23/09/2015</span>
+</h2>
+                    <nav>
+        <a class="button" href="tags/introducing-library.html">Introducing Library</a>
+<a class="button" href="tags/phpspec.html">Phpspec</a>
+<a class="button" href="tags/phpunit.html">Phpunit</a>
+<a class="button" href="tags/tdd.html">Tdd</a>
+    </ul>
+    <hr />
+            </header>
+
+            <p><p><a href="https://phpunit.de/">PHPUnit</a> is a port of <a href="http://junit.org/">jUnit</a>, its name
+might be deceptive: it allows you to write any type of tests (unit, but also functional,
+system, integration, end to end, acceptance, etc).</p>
+<p><a href="http://www.phpspec.net">phpspec</a> was at first a port of <a href="http://rspec.info/">rspec</a>,
+it can be considered as a unit test framework that enforces practices it considers best.</p>
+<blockquote>
+<p><strong>Note</strong>: <a href="../../../2015/08/03/phpspec.html">read more about phpspec</a>.</p>
+</blockquote>
+<p>In this article, we'll see how to use both tools together in a same project.</p>
+<h2 id="fortune-our-example">Fortune: our example<a href="#fortune-our-example" class="anchor">#</a></h2>
+<p>We're going to build part of a <a href="https://en.wikipedia.org/wiki/Fortune_%28Unix%29">fortune</a>
+application for our example, more precisely we're going to build a CLI allowing us to save quotes.</p>
+<p>To do so, we'll bootstrap a symfony application using the <a href="https://github.com/gnugat/symfony-empty-edition">Empty Edition</a>:</p>
+<pre><code>composer create-project gnugat/symfony-empty-edition fortune
+cd fortune</code></pre>
+<p>We'll need to install our test frameworks:</p>
+<pre><code>composer require --dev phpunit/phpunit
+composer require --dev phpspec/phpspec</code></pre>
+<p>Finally we'll configure PHPUnit:</p>
+<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- phpunit.xml.dist --&gt;
+&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
+&lt;phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="app/bootstrap.php"&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="System Tests"&gt;
+            &lt;directory&gt;tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;</code></pre>
+<h2 id="the-command">The command<a href="#the-command" class="anchor">#</a></h2>
+<p>Our first step will be to write a <strong>system test</strong> describing the command:</p>
+<pre><code class="language-php">&lt;?php
+// tests/Command/SaveQuoteCommandTest.php
+
+namespace AppBundle\Tests\Command;
+
+use AppKernel;
+use PHPUnit_Framework_TestCase;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Tester\ApplicationTester;
+
+class SaveQuoteCommandTest extends PHPUnit_Framework_TestCase
+{
+    const EXIT_SUCCESS = 0;
+
+    private $app;
+
+    protected function setUp()
+    {
+        $kernel = new AppKernel('test', false);
+        $application = new Application($kernel);
+        $application-&gt;setAutoExit(false);
+        $this-&gt;app = new ApplicationTester($application);
+    }
+
+    /**
+     * @test
+     */
+    public function it_saves_a_new_quote()
+    {
+        $exitCode = $this-&gt;app-&gt;run(array(
+            'quote:save',
+            'quote' =&gt; 'Nobody expects the spanish inquisition',
+        ));
+
+        self::assertSame(self::EXIT_SUCCESS, $exitCode, $this-&gt;app-&gt;getDisplay());
+    }
+}</code></pre>
+<blockquote>
+<p><strong>Note</strong>: Testing only the exit code is called "Smoke Testing" and is a very
+efficient way to check if the application is broken.
+Testing the output would be tedious and would make our test fragile as it might change often.</p>
+</blockquote>
+<p>Let's run it:</p>
+<pre><code>vendor/bin/phpunit</code></pre>
+<p>The tests fails because the command doesn't exist. Let's fix that:</p>
+<pre><code class="language-php">&lt;?php
+// src/AppBundle/Command/SaveQuoteCommand.php
+
+namespace AppBundle\Command;
+
+use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class SaveQuoteCommand extends ContainerAwareCommand
+{
+    protected function configure()
+    {
+        $this-&gt;setName('quote:save');
+        $this-&gt;addArgument('quote', InputArgument::REQUIRED);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $output-&gt;writeln('');
+        $output-&gt;writeln('// Saving quote');
+
+        $this-&gt;getContainer()-&gt;get('app.save_new_quote')-&gt;save(
+            $input-&gt;getArgument('quote')
+        );
+
+        $output-&gt;writeln('');
+        $output-&gt;writeln(' [OK] Quote saved');
+        $output-&gt;writeln('');
+    }
+}</code></pre>
+<p>Then run the test again:</p>
+<pre><code>vendor/bin/phpunit</code></pre>
+<p>It now fails for a different reason: the service used doesn't exist.</p>
+<h2 id="the-service">The service<a href="#the-service" class="anchor">#</a></h2>
+<p>The second step is to write the unit test for the service. With phpspec we can
+first bootstrap it:</p>
+<pre><code>vendor/bin/phpspec describe 'AppBundle\Service\SaveNewQuote'</code></pre>
+<p>Then we need to edit it:</p>
+<pre><code class="language-php">&lt;?php
+// spec/AppBundle/Service/SaveNewQuoteSpec.php
+
+namespace spec\AppBundle\Service;
+
+use PhpSpec\ObjectBehavior;
+use Symfony\Component\Filesystem\Filesystem;
+
+class SaveNewQuoteSpec extends ObjectBehavior
+{
+    const FILENAME = '/tmp/quotes.txt';
+    const QUOTE = 'Nobody expects the spanish inquisition!';
+
+    function let(Filesystem $filesystem)
+    {
+        $this-&gt;beConstructedWith($filesystem, self::FILENAME);
+    }
+
+    function it_saves_new_quote(Filesystem $filesystem)
+    {
+        $filesystem-&gt;dumpFile(self::FILENAME, self::QUOTE)-&gt;shouldBeCalled();
+
+        $this-&gt;save(self::QUOTE);
+    }
+}</code></pre>
+<p>Time to run the suite:</p>
+<pre><code>vendor/bin/phpspec run</code></pre>
+<p>phpspec will detect that the tested class doesn't exist and will bootstrap it for us,
+so we just have to edit it:</p>
+<pre><code class="language-php">&lt;?php
+// src/AppBundle/Service/SaveNewQuote.php
+
+namespace AppBundle\Service;
+
+use Symfony\Component\Filesystem\Filesystem;
+
+class SaveNewQuote
+{
+    private $filesystem;
+    private $filename;
+
+    public function __construct(Filesystem $filesystem, $filename)
+    {
+        $this-&gt;filesystem = $filesystem;
+        $this-&gt;filename = $filename;
+    }
+
+    public function save($quote)
+    {
+        $this-&gt;filesystem-&gt;dumpFile($this-&gt;filename, $quote);
+    }
+}</code></pre>
+<p>Again, we're going to run our unit test:</p>
+<pre><code>vendor/bin/phpspec run</code></pre>
+<p>It's finally green! Our final step will be to define our service in the Dependency Injection
+Container:</p>
+<pre><code># app/config/config.yml
+
+imports:
+    - { resource: parameters.yml }
+    - { resource: importer.php }
+
+framework:
+    secret: "%secret%"
+
+services:
+    app.save_new_quote:
+        class: AppBundle\Service\SaveNewQuote
+        arguments:
+            - "@filesystem"
+            - "%kernel.root_dir%/cache/quotes"</code></pre>
+<p>To make sure everything is fine, let's clear the cache and run the test:</p>
+<pre><code>rm -rf app/cache/*
+vendor/bin/phpunit</code></pre>
+<p>It's <a href="https://www.youtube.com/watch?v=lFeLDc2CzOs">Super Green</a>!</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>As we can see, PHPUnit and phpspec can work perfectly well together.</p>
+<p>Of course we could write our unit test in a similar manner with PHPUnit:</p>
+<pre><code>&lt;?php
+// tests/Service/SaveNewQuoteTest.php
+
+namespace AppBundle\Tests\Service;
+
+use AppBundle\Service\SaveNewQuote;
+use PHPUnit_Framework_TestCase;
+
+class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
+{
+    const FILENAME = '/tmp/quotes.txt';
+    const QUOTE = 'Nobody expects the spanish inquisition!';
+
+    private $filesystem;
+    private $saveNewQuote;
+
+    protected function setUp()
+    {
+        $this-&gt;filesystem = $this-&gt;prophesize('Symfony\Component\Filesystem\Filesystem');
+        $this-&gt;saveNewQuote = new SaveNewQuote($this-&gt;filesystem-&gt;reveal(), self::FILENAME);
+    }
+
+    /**
+     * @test
+     * @group unit
+     */
+    public function it_saves_new_quote()
+    {
+        $this-&gt;filesystem-&gt;dumpFile(self::FILENAME, self::QUOTE)-&gt;shouldBeCalled();
+
+        $this-&gt;saveNewQuote-&gt;save(self::QUOTE);
+    }
+}</code></pre>
+<p>And run it separately:</p>
+<pre><code>vendor/bin/phpunit --group=unit</code></pre>
+<p>But then we would lose all the advantages of phpspec:</p>
+<ul><li>it adds less overhead (this same test runs in ~20ms with phpspec, and ~80ms with PHPUnit)</li>
+<li>it tells you when it thinks you're doing something wrong (typically by making it harder/impossible for you to do it)</li>
+<li>it bootstraps things for you if you follow the TDD workflow (test first, then code)</li>
+</ul></p>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="2015/09/09/tactician.html">Previous: Tactician</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="about.html">About</a>
+                <a class="button three columns" href="archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

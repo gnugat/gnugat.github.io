@@ -11,34 +11,194 @@
     <link rel="canonical" href="http://gnugat.github.io/2015/04/29/memio-pretty-printer.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="../../../index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
+        <article>
+            <header>
+                <h2>
+    Memio Pretty Printer    <span class="sub-title">29/04/2015</span>
+</h2>
+                    <nav>
+                        <a class="button" href="../../../tags/memio.html">Memio</a>
+                <a class="button" href="../../../tags/pet-project.html">Pet Project</a>
+                <a class="button" href="../../../tags/introducing-library.html">Introducing Library</a>
+                    </ul>
+    <hr />
+            </header>
+
+            <blockquote>
+<p><strong>TL;DR</strong>: <a href="http://github.com/memio/pretty-printer">PrettyPrinter</a> converts a
+<a href="http://github.com/memio/model">Model</a> into its PHP code (returns a string),
+using <a href="http://twig.sensiolabs.org/">Twig templates</a>.</p>
+</blockquote>
+<p>Until now we've seen how to build Memio <a href="http://github.com/memio/model">Models</a>
+to describe PHP code and how to <a href="http://github.com/memio/validator">validate</a>
+the <a href="http://github.com/memio/linter">syntax</a>.</p>
+<p>It's now time to take things seriously with the newly released package:
+<a href="http://github.com/memio/pretty-printer">PrettyPrinter</a>, the actual code generator.</p>
+<h2 id="what-is-a-pretty-printer">What is a pretty printer?<a href="#what-is-a-pretty-printer" class="anchor">#</a></h2>
+<p>As opposed to "fidelity printers" which are supposed to generate code according to
+the developer's coding style, "pretty printer" rely on their own.</p>
+<p>If we were to open an existing PHP file with Memio and then to generate it again immediately,
+chances are that the code would look slightly different.</p>
+<blockquote>
+<p><strong>Note</strong>: Memio actually complies to <a href="http://www.php-fig.org/psr/">PHP standards</a>,
+with some extra rules.</p>
+</blockquote>
+<p>The name "printer" is a bit misleading: one could think that the service would
+print the generated code in the console's output or a web page, but all it really
+does is to return a simple string.</p>
+<blockquote>
+<p><strong>Note</strong>: The terminology used is inspired by this <a href="http://stackoverflow.com/a/5834775/3437428">StackOverflow answer</a>.</p>
+</blockquote>
+<h2 id="template-engine-agnostic">Template engine agnostic<a href="#template-engine-agnostic" class="anchor">#</a></h2>
+<p>Memio makes use of templates, making it easy to change the style. It defines a
+<code>TemplateEngine</code> interface that has to be implemented, in order to comply with
+<a href="http://webmozarts.com/">webmozart</a>'s <a href="https://github.com/memio/memio/issues/51">request</a>.</p>
+<p>For now the only package available is <a href="http://github.com/memio/twig-template-engine">TwigTemplateEngine</a>,
+it provides <a href="http://twig.sensiolabs.org/">Twig templates</a>.</p>
+<h2 id="code-generation-example">Code generation example<a href="#code-generation-example" class="anchor">#</a></h2>
+<p>Enough talk, let's code! First of all we have to create our <code>PrettyPrinter</code>:</p>
+<pre><code class="language-php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+$loader = new \Twig_Loader_Filesystem(\Memio\TwigTemplateEngine\Config\Locate::templates());
+$twig = new \Twig_Environment($loader);
+
+$line = new \Memio\TwigTemplateEngine\TwigExtension\Line\Line();
+$line-&gt;add(new \Memio\TwigTemplateEngine\TwigExtension\Line\ContractLineStrategy());
+$line-&gt;add(new \Memio\TwigTemplateEngine\TwigExtension\Line\FileLineStrategy());
+$line-&gt;add(new \Memio\TwigTemplateEngine\TwigExtension\Line\MethodPhpdocLineStrategy());
+$line-&gt;add(new \Memio\TwigTemplateEngine\TwigExtension\Line\ObjectLineStrategy());
+$line-&gt;add(new \Memio\TwigTemplateEngine\TwigExtension\Line\StructurePhpdocLineStrategy());
+
+$twig-&gt;addExtension(new \Memio\TwigTemplateEngine\TwigExtension\Type());
+$twig-&gt;addExtension(new \Memio\TwigTemplateEngine\TwigExtension\Whitespace($line));
+
+$templateEngine = new \Memio\TwigTemplateEngine\TwigTemplateEngine($twig);
+$prettyPrinter = new \Memio\PrettyPrinter\PrettyPrinter($templateEngine);</code></pre>
+<p>Wow! That was quite painful to write! Thankfully the next package to be released
+will make life really easier (spoiler alert: <code>Build::prettyPrinter()</code>).</p>
+<p>Now let's build some models:</p>
+<pre><code class="language-php">// ...
+
+$myMethod = new \Memio\Model\Method('myMethod');
+for ($i = 1; $i &lt; 10; $i++) {
+    $myMethod-&gt;addArgument(new \Memio\Model\Argument('mixed', 'argument'.$i));
+}</code></pre>
+<p>All it takes to generate the code is this:</p>
+<pre><code class="language-php">// ...
+
+$generatedCode = $prettyPrinter-&gt;generateCode($myMethod);</code></pre>
+<p>Let's see in the console output what it did:</p>
+<pre><code class="language-php">// ...
+
+echo $generatedCode;</code></pre>
+<p>We should get the following:</p>
+<pre><code class="language-php">    public function myMethod(
+        $argument1,
+        $argument2,
+        $argument3,
+        $argument4,
+        $argument5,
+        $argument6,
+        $argument7,
+        $argument8,
+        $argument9
+    )
+    {
+    }</code></pre>
+<p>Each arguments are displayed on their own line, because the inline equivalent
+would have been longer than 120 characters.</p>
+<h2 id="custom-templates">Custom templates<a href="#custom-templates" class="anchor">#</a></h2>
+<p>Memio has extra rules regarding coding standards, for example it adds an empty
+line between the PHP opening tag and the namespace statement.</p>
+<p>We can get rid of this by creating our own custom template: first we copy the <code>file.twig</code>
+template in our project:</p>
+<pre><code>
+{#- File: my_templates/file.twig -#}
+&lt;?php
+{% if file.licensePhpdoc is not empty %}
+
+{% include 'phpdoc/license_phpdoc.twig' with { 'license_phpdoc': file.licensePhpdoc } only %}
+{% endif %}
+namespace {{ file.namespace }};
+
+{% include 'collection/fully_qualified_name_collection.twig' with {
+    'fully_qualified_name_collection': file.allFullyQualifiedNames
+} only %}
+{% if needs_line_after(file, 'fully_qualified_names') %}
+
+{% endif %}
+{% if file.structure is contract %}
+{% include 'contract.twig' with { 'contract': file.structure } only %}
+{% else %}
+{% include 'object.twig' with { 'object': file.structure } only %}
+{% endif %}
+</code></pre>
+<p>We've removed the line between <code>{% endif %}</code> and <code>namespace {{ file.namespace }};</code>.</p>
+<p>In order for our custom template to be used, we'll need to add its directory path to <code>PrettyPrinter</code>:</p>
+<pre><code class="language-php">// ...
+
+$prettyPrinter-&gt;addTemplatePath(__DIR__.'/my_templates');</code></pre>
+<p>And we're done!</p>
+<p>Let's check the result:</p>
+<pre><code class="language-php">// ...
+
+$file = \Memio\Model\File::make('src/Vendor/Project/MyClass.php')
+    -&gt;setStructure(new \Memio\Model\Object('Vendor\Project\MyClass'))
+;
+
+echo $prettyPrinter-&gt;generateCode($file);</code></pre>
+<p>This will output:</p>
+<pre><code class="language-php">&lt;?php
+namespace Vendor\Project;
+
+class MyClass
+{
+}</code></pre>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>PrettyPrinter can convert Models into PHP code, it uses templates behind the scene
+so we can tweak the coding style our way. It isn't tied to any Template Engine,
+but we can install Memio's TwigTemplateEngine package .</p>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="../../../2015/04/22/memio-validator-linter.html">Previous: Memio validator and linter</a>
         
+                        <a class="six columns button" href="../../../2015/05/06/memio.html">Next: Memio v1.0</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="../../../about.html">About</a>
+                <a class="button three columns" href="../../../archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

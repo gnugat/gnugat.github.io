@@ -11,34 +11,229 @@
     <link rel="canonical" href="http://gnugat.github.io/2014/03/26/behat-quick-tour.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="../../../index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
+        <article>
+            <header>
+                <h2>
+    Behat: a quick tour    <span class="sub-title">26/03/2014</span>
+</h2>
+                    <nav>
+                        <a class="button" href="../../../tags/tests-series.html">Tests Series</a>
+                    </ul>
+    <hr />
+            </header>
+
+            <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+<p>This article is part of a series on Tests in general and on how to practice
+them:</p>
+<ol><li><a href="../../../2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="../../../2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+<li><a href="../../../2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+<li><a href="../../../2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+<li><a href="../../../2014/03/05/spec-bdd.html">spec BDD</a></li>
+<li><a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
+<li><a href="../../../2014/03/26/behat-quick-tour.html">Behat: a quick tour</a></li>
+<li><a href="../../../2014/04/02/tests-cheat-sheet.html">Conclusion</a></li>
+</ol><p><a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Story Behavior Driven Development (BDD)</a>
+is all about making user story's acceptance criteria executable.
+In this article we'll oversee <a href="http://behat.org/">Behat</a> a PHP framework which
+enables you to do so.</p>
+<h2 id="introduction">Introduction<a href="#introduction" class="anchor">#</a></h2>
+<p>In a nutshel Behat reads your user stories and links each steps in acceptance
+criteria to a function. The execution of those functions will then ascertain if
+the acceptance criteria succeeded.</p>
+<p>To be able to read the user story, Behat needs you to write it in a specific
+format.</p>
+<h2 id="user-story">User story<a href="#user-story" class="anchor">#</a></h2>
+<p>By default, your user stories are located as follow: <code>/features/*.feature</code>.
+They're written using the <a href="http://docs.behat.org/guides/1.gherkin.html">Gherkin language</a>,
+which looks like this:</p>
+<pre><code>Feature: &lt;user story title&gt;
+    In order to &lt;business value to attain&gt;
+    As a/an &lt;actor&gt;
+    I need to &lt;requirements to meet&gt;
+
+    Scenario: &lt;acceptance criteria title&gt;
+        Given &lt;precondition&gt;
+        When &lt;event&gt;
+        Then &lt;outcome&gt;</code></pre>
+<p>The first lines will be printed while executing the acceptance criteria. The
+<code>Scenario</code> keyword starts a new criteria. The <code>Given</code>, <code>When</code> and <code>Then</code>
+keywords will trigger a search for a related test method. Those are called
+steps.</p>
+<p>Your criteria will most likely have more than three lines. You can use <code>And</code> and
+<code>But</code> keywords to link the steps:</p>
+<pre><code>Feature: &lt;user story title&gt;
+    In order to &lt;business value to attain&gt;
+    As a/an &lt;actor&gt;
+    I need to &lt;requirements to meet&gt;
+
+    Scenario: &lt;acceptance criteria title&gt;
+        Given &lt;precondition&gt;
+        And &lt;another precondition&gt;
+        When &lt;event&gt;
+        But &lt;another event&gt;
+        Then &lt;outcome&gt;
+        And &lt;another outcom&gt;
+        But &lt;yet another outcome&gt;</code></pre>
+<p><em>Note</em>: to be fair, <code>Given</code>, <code>When</code>, <code>Then</code>, <code>But</code> and <code>And</code> keywords aren't
+different to Behat: the choice is there for you, in order to make your
+acceptance criteria more readable.</p>
+<h2 id="context">Context<a href="#context" class="anchor">#</a></h2>
+<p>The test methods should be placed in a context: <code>/features/bootstrap/FeatureContext.php</code>.
+It looks like this:</p>
+<pre><code>&lt;?php
+
+use Behat\Behat\Context\BehatContext;
+
+class FeatureContext extends BehatContext
+{
+    /**
+     * @Given /^a sentence from an acceptance criteria$/
+     */
+    public function aTestMethod()
+    {
+        // Your test code.
+    }
+}</code></pre>
+<p>When Behat reads your user stories, for each step it will look in your context
+and check the test method's annotations (comments starting by <code>@Given</code>, <code>@When</code>
+or <code>@Then</code>) to see if it matches.</p>
+<p><em>Note</em>: again, <code>@Given</code>, <code>@When</code> and <code>@Then</code> don't really matter. If you write
+<code>Given I am an imp</code> in your user story, and then write a test method with the
+annotation <code>@When /^I am an imp$/</code>, it will match!</p>
+<p>As you can see, a regexp is used for the matching, but since the version 3.0
+(still in release candidate at the time I write this article) you can use plain
+text with placeholders:</p>
+<pre><code>/**
+ * @Given I am an/a :type
+ */
+public function setType($type)
+{
+    // Your test code.
+}</code></pre>
+<p>This has been borrowed from <a href="https://github.com/jnicklas/turnip">Turnip</a>.</p>
+<p><em>Note</em>: your test method name can be anything, it doesn't have to match the step
+sentence.</p>
+<h2 id="the-definition-of-success">The definition of success<a href="#the-definition-of-success" class="anchor">#</a></h2>
+<p>When a test method is executed, it can have the following state:</p>
+<ul><li>not found: you need to create it</li>
+<li>pending: the test method exists, but isn't implemented</li>
+<li>failing: the method throws an exception or raises an error</li>
+<li>succeeds: the default</li>
+</ul><p>To set the pending state, write the following in your method:</p>
+<pre><code>throw new \Behat\Behat\Tester\Exception\Pending();</code></pre>
+<p>As you can see, if you write the test method, but put nothing in it, then the
+test will succeeds. The responsibility to make the success state match business
+expectations is yours.</p>
+<p>Behat eats its own dog food: its tests are written with itself! Which means you
+can have a look at them to inspire yourself. You'll see something that isn't
+written in the documentation: you can use
+<a href="http://phpunit.de/manual/current/en/writing-tests-for-phpunit.html#writing-tests-for-phpunit.assertions">PHPUnit's assertion methods</a>
+to make your test pass or fail.</p>
+<h2 id="an-automated-flow">An automated flow<a href="#an-automated-flow" class="anchor">#</a></h2>
+<p>Remember how <a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec</a>
+generates your code based on your specifications? Well it's the same thing with
+Behat.</p>
+<p>First Bootstrap your context:</p>
+<pre><code>behat --init</code></pre>
+<p>Write a <code>/features/&lt;user-story&gt;.feature</code> file.</p>
+<p>Next run the tests. For the pending steps, behat will propose you a template
+code which can be copy/pasted in your test methods:</p>
+<pre><code>behat</code></pre>
+<p>Then complete your test methods.</p>
+<p>And finally run your tests:</p>
+<pre><code>behat</code></pre>
+<p>The tests should all fail. Which means now you can start writting the code to
+make it pass: it's Behavior <strong>Driven</strong> Development, remember? ;)</p>
+<h2 id="misconceptions">Misconceptions<a href="#misconceptions" class="anchor">#</a></h2>
+<p>A lot of people hate Behat because it's slow and it needs <a href="http://docs.seleniumhq.org/">Selenium</a>
+to work, which isn't easy to install (if a novice can't install it, then it's
+not easy).
+Oh, and they hate it because the tests written with it aren't maintenable.</p>
+<p>Guess what? They're wrong. They're probably using the
+<a href="http://mink.behat.org/">mink extension</a>, which enables you to write things like:</p>
+<pre><code>Feature: User registration
+    In order to gain access to the website
+    As a user
+    I need to register
+
+    Scenario: Giving account details
+        Given I fill the field "#username" with "John"
+        And  I fill the field "#password" with "Doe"
+        When I submit the form "ul.form-block &gt; li:last &gt; #submit"
+        And I wait until the page is fully loaded
+        Then I should see "You've registered successfully"</code></pre>
+<p>The thing is, you're not describing the business value in this acceptance
+criteria. You're describing User Interface (UI) interractions. And it's
+completly different!</p>
+<p>So here's my rule of thumb: don't use mink nor selenium.
+In <a href="https://speakerdeck.com/igorw/silex-an-implementation-detail">Silex, an implementation detail</a>,
+the advice given is: imagine you need to add a CLI which shares the same
+functionnalities than the web interface. It would be a shame to have to re-write
+all your acceptance tests, wouldn't it?</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Behat enables you to make your acceptance criteria executable, and automates the
+process. Awsome!</p>
+<p>If you're using Selenium, or the mink extension, then you're doing it wrong:
+don't test the UI, test the business value.</p>
+<p>Here's my workflow advice:</p>
+<ol><li>write only one criteria</li>
+<li>implement only one step</li>
+<li>write the specification of one class used in the step implementation (using <a href="../../../2014/03/11/phpspec-quick-tour.html">phpspec</a>)</li>
+<li>write the code matching the specification</li>
+<li>go back to 3. until any code from the step implementation is written</li>
+<li>go back to 2. until any step is written</li>
+<li>go back to 1. until the user story is completely written</li>
+</ol><p>I hope you enjoyed this article, be sure to
+<a href="https://twitter.com/epiloic">tweet me what you think about it</a> ;) .</p>
+<p>Story BDD and Behat have a steep learning curve, which makes them hard to
+practice in the beginning (but totally worth it). To help you get your own way,
+here's a list of references:</p>
+<ul><li><a href="http://docs.behat.org/">Behat documentation</a></li>
+<li><a href="https://github.com/Behat/Behat">Behat sources</a></li>
+<li><a href="http://www.slideshare.net/everzet/behat-30-meetup-march">Behat version 3.0 announcement (slides)</a></li>
+<li><a href="https://www.youtube.com/watch?v=xOgyKTmgYI8">Behat version 3.0 announcement (video)</a></li>
+</ul><p>And of course have a look at the references <a href="../../../2014/03/19/behavior-driven-development-story-bdd.html">from my BDD article</a>.</p>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="../../../2014/03/19/behavior-driven-development-story-bdd.html">Previous: Behavior Driven Development: story BDD</a>
         
+                        <a class="six columns button" href="../../../2014/04/02/tests-cheat-sheet.html">Next: Tests cheat sheet</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="../../../about.html">About</a>
+                <a class="button three columns" href="../../../archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

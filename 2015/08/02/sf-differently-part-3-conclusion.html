@@ -11,34 +11,101 @@
     <link rel="canonical" href="http://gnugat.github.io/2015/08/02/sf-differently-part-3-conclusion.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="../../../index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
+        <article>
+            <header>
+                <h2>
+    Symfony Differently - part 3: Conclusion    <span class="sub-title">02/08/2015</span>
+</h2>
+                    <nav>
+                        <a class="button" href="../../../tags/symfony.html">Symfony</a>
+                <a class="button" href="../../../tags/symfony-differently.html">Symfony Differently</a>
+                    </ul>
+    <hr />
+            </header>
+
+            <p>This series isn't really working for me, so I've decided to conclude it prematurely.
+Have a look at the first ones:</p>
+<ol><li><a href="../../../2015/06/03/sf-differently-part-1-introduction.html">Introduction</a></li>
+<li><a href="../../../2015/06/10/sf-differently-part-2-bootstrap.html">Bootstrap</a></li>
+</ol><p>In this article we'll see a series of optimizations with their impact. Then we'll
+conclude that Caching is actually better, let's see those figures!</p>
+<h2 id="tools">Tools<a href="#tools" class="anchor">#</a></h2>
+<p>The application is built with the Symfony Standard Edition and Doctrine ORM's QueryBuilder.
+Composer's configuration has been tweaked to use PSR-4 and to not autoload tests.
+Also Composer has been run with the <code>--optimize-autoloader</code> option.</p>
+<p>Tests are done using <a href="https://httpd.apache.org/docs/2.2/programs/ab.html">ab</a>
+(with 10 concurrent clients for 10 seconds), on a different server than the application's
+one.</p>
+<p>Also, we're using PHP 5.5 and Symfony 2.7.</p>
+<h2 id="optimizations">Optimizations<a href="#optimizations" class="anchor">#</a></h2>
+<p>The application would initially serve: <strong>22 requests / seconds</strong>.</p>
+<p>By removing unused dependencies, we get <strong>23 requests / seconds</strong>.</p>
+<blockquote>
+<p>Note</p>
+<p>Removed:</p>
+<ul><li>AsseticBundle</li>
+<li>SensioDistributionBundle (only from <code>AppKernel</code>, the dependency is kept to generate <code>app/bootstrap.php.cache</code>)</li>
+<li>SensioGeneratorBundle</li>
+<li>SwiftmailerBundle</li>
+<li>TwigBundle</li>
+<li>WebProfilerBundle</li>
+</ul><p>Also, the following components have been disabled:</p>
+<ul><li>Form</li>
+<li>Validation</li>
+</ul></blockquote>
+<p>By switching from Doctrine ORM's Query Builder to Doctrine DBAL's one: <strong>28 requests / seconds</strong>.</p>
+<p>By <a href="http://labs.octivi.com/mastering-symfony2-performance-internals/">adding classes to compile</a>:
+<strong>29 requests / seconds</strong>.</p>
+<p>By defining controllers as services: <strong>30 requests / seconds</strong>.</p>
+<p>This sums up to an increase of 36%.</p>
+<h2 id="how-about-using-http-cache">How about using HTTP cache?<a href="#how-about-using-http-cache" class="anchor">#</a></h2>
+<p>By setting a 10 seconds HTTP cache (using <a href="http://foshttpcachebundle.readthedocs.org/en/latest/">FOSCacheBundle</a>),
+on top of the previous optimizations , we get <strong>160 requests / seconds</strong> (an increase of 430%).</p>
+<p>And that's by using Symfony's built in reverse proxy, imagine what we could get with varnish!</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>While optimizations are fun, they don't bring much value. The main bottlenecks
+are usually the autoloading, database/network transactions and the number of functions
+called.</p>
+<p>On the other hand, using a reverse proxy is quite simple and does pay off!</p>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="../../../2015/06/10/sf-differently-part-2-bootstrap.html">Previous: Symfony Differently - part 2: Bootstrap</a>
         
+                        <a class="six columns button" href="../../../2015/08/03/phpspec.html">Next: phpspec</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="../../../about.html">About</a>
+                <a class="button three columns" href="../../../archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

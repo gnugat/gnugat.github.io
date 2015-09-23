@@ -11,34 +11,154 @@
     <link rel="canonical" href="http://gnugat.github.io/2015/09/09/tactician.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="../../../index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
+        <article>
+            <header>
+                <h2>
+    Tactician    <span class="sub-title">09/09/2015</span>
+</h2>
+                    <nav>
+                        <a class="button" href="../../../tags/introducing-library.html">Introducing Library</a>
+                <a class="button" href="../../../tags/tactician.html">Tactician</a>
+                    </ul>
+    <hr />
+            </header>
+
+            <p>Just like <a href="../../../2015/08/04/simple-bus.html">SimpleBus</a>,
+<a href="https://tactician.thephpleague.com/">Tactician</a> is a lightweight library created by
+<a href="http://rosstuck.com/">Ross Tuck</a> allowing you to use the Command Bus design pattern
+in your applications.</p>
+<blockquote>
+<p><strong>Note</strong>: Command Bus is often used to comply to <a href="../../../2015/08/25/cqrs.html">CQRS</a>, but not only.</p>
+</blockquote>
+<h2 id="usage-example">Usage example<a href="#usage-example" class="anchor">#</a></h2>
+<p>Here's how to install Tactician:</p>
+<pre><code>composer require league/tactician:^0.6</code></pre>
+<p>Then we have to associate a Command to a CommandHandler:</p>
+<pre><code class="language-php">&lt;?php
+
+use League\Tactician\Setup\QuickStart;
+
+require __DIR__.'/vendor/autoload.php';
+
+$commandBus = QuickStart::create(array(
+    'Vendor\Project\Member\RegisterMember' =&gt; new Vendor\Project\Member\RegisterMemberHandler(),
+));</code></pre>
+<p>It provides many framework integrations, including one for <a href="http://symfony.com/">Symfony</a>:</p>
+<pre><code>composer require league/tactician-bundle:^0.3
+# Don't forget to register `League\Tactician\Bundle\TacticianBundle` in `AppKernel`</code></pre>
+<p>Then we just have to use the <code>tactician.commandBus</code> service. To register Command Handler, we
+need to tag service definitions as follow:</p>
+<pre><code>services:
+    register_member_handler:
+        class: Vendor\Project\Member\RegisterMemberHandler
+        tags:
+            - { name: tactician.handler, command: Vendor\Project\Member\RegisterMember }</code></pre>
+<p>Now that the configuration is settled, here's a usage example:</p>
+<pre><code class="language-php">$username = isset($argv[1]) ? $argv[1] : null;
+$commandBus-&gt;handle(new RegisterMember($username));</code></pre>
+<p>The command would look like this:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project\Member;
+
+class RegisterMember
+{
+    private $username;
+
+    public function __construct($username)
+    {
+        if (null === $username) {
+            throw new \InvalidArgumentException('Missing required "username" parameter');
+        }
+        $this-&gt;username = $username;
+    }
+
+    public function getUsername()
+    {
+        return $this-&gt;username;
+    }
+}</code></pre>
+<blockquote>
+<p><strong>Note</strong>: Commands validate simple input logic (required parameters, parameter type, etc).</p>
+</blockquote>
+<p>The Command Handler could look like this:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project\Member;
+
+class RegisterMemberHandler
+{
+    private $memberRepository;
+
+    public function __construct(MemberRespository $memberRepository)
+    {
+        $this-&gt;memberRepository = $memberRepository;
+    }
+
+    public function handle(RegisterMember $registerMember)
+    {
+        $username = $registerMember-&gt;getUsername();
+        if ($memberRepository-&gt;has($username)) {
+            throw new \DomainException(sprintf('Given username "%s" already exists, and duplicates are not allowed', $username));
+        }
+        $memberRepository-&gt;register($registerMember);
+    }
+}</code></pre>
+<p>The Command Handler validates more complex logic (member username duplication, etc).</p>
+<p>Here's a nice reference about command validation: <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command, and Model Validation</a>.</p>
+<h2 id="tips">Tips<a href="#tips" class="anchor">#</a></h2>
+<p>Here are some personal tips!</p>
+<p>CommandBus is able to return the value of the executed CommandHandler.
+While this isn't advised in asynchronous applications (think messaging queues, like RabbitMQ)
+it can be useful in simple applications.</p>
+<p>Because Commands also contain simple input validation you can write unit test for them,
+but since they're mainly DTOs it might not be too important.</p>
+<p>CommandHandlers on the other way are good candidates for unit tests.</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Remember when people said that controllers shouldn't have any logic in it?
+With the Command Bus pattern this becomes possible.
+It also makes this kind of logic reusable and testable.</p>
+<p>Tactician is a nice library for this: it doesn't get in our way and allows you to choose between
+the "good" way or the "pragmatic" way (if you don't choose wisely, then shame on you).</p>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="../../../2015/08/25/cqrs.html">Previous: Command/Query Responsibility Segregation</a>
         
+                        <a class="six columns button" href="../../../2015/09/23/phpunit-with-phpspec.html">Next: PHPUnit with phpspec</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="../../../about.html">About</a>
+                <a class="button three columns" href="../../../archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

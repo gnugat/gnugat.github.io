@@ -11,34 +11,115 @@
     <link rel="canonical" href="http://gnugat.github.io/2014/12/10/keep-it-simple-and-git.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="../../../index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
+        <article>
+            <header>
+                <h2>
+    Keep It Simple and Git    <span class="sub-title">10/12/2014</span>
+</h2>
+                    <nav>
+                        <a class="button" href="../../../tags/introducing-methodology.html">Introducing Methodology</a>
+                <a class="button" href="../../../tags/git.html">Git</a>
+                    </ul>
+    <hr />
+            </header>
+
+            <blockquote>
+<p><strong>TL;DR</strong>: Branch only from master, merge back when done and immediately deploy.</p>
+</blockquote>
+<p>Git proposes a branch system with the possibility to merge them together,
+allowing you to separate released code from work in progress one.</p>
+<p>Git flows have been created to help you keep the same process in your team.
+In this article, we'll have a look at <a href="https://github.com/jbenet">@jbenet</a>'s
+<a href="https://gist.github.com/jbenet/ee6c9ac48068889b0912">simple git branching model</a>:</p>
+<blockquote>
+<ol><li><code>master</code> must always be deployable.</li>
+<li><strong>all changes</strong> are made through feature branches (pull-request + merge)</li>
+<li>rebase to avoid/resolve conflicts; merge in to <code>master</code></li>
+</ol></blockquote>
+<h2 id="working-on-a-change">Working on a change<a href="#working-on-a-change" class="anchor">#</a></h2>
+<p>Changes can be new features, bug fixes, enhancements. They're all coming from
+master:</p>
+<pre><code class="language-bash">git checkout master
+git checkout -b my-changes</code></pre>
+<h2 id="making-the-change-ready">Making the change ready<a href="#making-the-change-ready" class="anchor">#</a></h2>
+<p>Once you're happy with your branch, you need to update it with the last changes
+from master:</p>
+<pre><code class="language-bash">git checkout master
+git pull --rebase
+git checkout my-changes
+git rebase master
+git push -fu origin my-changes</code></pre>
+<blockquote>
+<p><strong>Note</strong>: <code>rebase</code> will rewrite your commits, their dates will be changed
+(therefore their hash will be changed).</p>
+</blockquote>
+<p>Check your tests, the coding standards and ask for a code review.</p>
+<h3 id="managing-conflicts">Managing conflicts<a href="#managing-conflicts" class="anchor">#</a></h3>
+<p>You can list conflicts (if any):</p>
+<pre><code class="language-bash">git status</code></pre>
+<p>Edit your files and then mark them as solved:</p>
+<pre><code class="language-bash">git add &lt;file&gt;</code></pre>
+<p>When all conflicted files have been resolved, you can continue:</p>
+<pre><code class="language-bash">git rebase --continue</code></pre>
+<h3 id="when-to-merge">When to merge<a href="#when-to-merge" class="anchor">#</a></h3>
+<p>Here's a to do list you can use to know if a branch is ready to be merged:</p>
+<ul><li>is it compliant with the coding standards?</li>
+<li>has the code been reviewed?</li>
+<li>do the tests pass?</li>
+<li>has the Quality Assurance team checked the feature?</li>
+<li>will someone be available in the next hour in case of emergency?</li>
+<li>does the product owner want this feature now?</li>
+</ul><h2 id="deploying-the-new-change">Deploying the new change<a href="#deploying-the-new-change" class="anchor">#</a></h2>
+<p>If everything is ok with your change, then you can merge it into master:</p>
+<pre><code class="language-bash">git checkout master
+git merge --no-ff my-change
+git push
+git push origin :my-changes
+git branch -D my-changes</code></pre>
+<p>It's now time to deploy! You can make a tag:</p>
+<pre><code class="language-bash">git tag -a &lt;version&gt;
+git push --tags</code></pre>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Make small changes, release often.</p>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="../../../2014/12/03/lightweight-console-lib.html">Previous: Lightweight console library</a>
         
+                        <a class="six columns button" href="../../../2014/12/17/semantic-versioning.html">Next: Semantic Versioning</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="../../../about.html">About</a>
+                <a class="button three columns" href="../../../archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

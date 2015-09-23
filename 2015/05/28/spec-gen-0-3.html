@@ -11,34 +11,174 @@
     <link rel="canonical" href="http://gnugat.github.io/2015/05/28/spec-gen-0-3.html"/>
     <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="../../../css/normalize.css">
+    <link rel="stylesheet" href="../../../css/skeleton.css">
+    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="../../../index.html">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
+        <article>
+            <header>
+                <h2>
+    SpecGen v0.3    <span class="sub-title">28/05/2015</span>
+</h2>
+                    <nav>
+                        <a class="button" href="../../../tags/memio.html">Memio</a>
+                <a class="button" href="../../../tags/specgen.html">Specgen</a>
+                <a class="button" href="../../../tags/phpspec.html">Phpspec</a>
+                <a class="button" href="../../../tags/pet-project.html">Pet Project</a>
+                <a class="button" href="../../../tags/introducing-library.html">Introducing Library</a>
+                    </ul>
+    <hr />
+            </header>
+
+            <blockquote>
+<p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.3 inserts a property for each constructor argument.</p>
+</blockquote>
+<p>SpecGen is a <a href="http://phpspec.net">phpspec</a> extension which enhance its code generator.
+With the latest release, v0.3, we get the following features:</p>
+<ul><li>method generation:
+<ul><li>it inserts method at the end of the class</li>
+<li>it typehints object, array and callable arguments</li>
+<li>it names object arguments after their type</li>
+<li>it names scalar arguments after a generic name (<code>argument</code>)</li>
+<li>it adds number on names that could collide (e.g. <code>$argument1, $argument2</code>)</li>
+</ul></li>
+<li>constructor generation, same as method except:
+<ul><li>it inserts constructor at the begining of the class</li>
+<li>it inserts properties with initialization for each constructor arguments</li>
+</ul></li>
+</ul><p>Here's a simple example to demonstrate how helpful it can be.</p>
+<h2 id="example">Example<a href="#example" class="anchor">#</a></h2>
+<p>First of all, we need to set up a project with <a href="https://getcomposer.org/download">Composer</a>.
+Let's write the following <code>composer.json</code>:</p>
+<pre><code>{
+    "name": "vendor/project",
+    "autoload": {
+        "psr-4": {
+            "Vendor\\Project\\": "src/Vendor/Project"
+        }
+    },
+    "require": {},
+    "require-dev": {}
+}</code></pre>
+<p>Then we can install phpspec with SpecGen by running those commands:</p>
+<pre><code>composer require --dev phpspec/phpspec:~2.2
+composer require --dev memio/spec-gen:~0.3
+echo 'extensions:' &gt; phpspec.yml
+echo '  - Memio\SpecGen\MemioSpecGenExtension' &gt;&gt; phpspec.yml</code></pre>
+<p>In our example, we'll specify a <code>TextEditor</code> service, it should be able to
+create new files by relying on <code>Filesystem</code>, another service.</p>
+<p>This can be done as follow:</p>
+<pre><code>phpspec describe 'Vendor\Project\TextEditor'</code></pre>
+<blockquote>
+<p><strong>Tip</strong>: make your vendor's binaries available by adding <code>vendor/bin</code> to your <code>$PATH</code>.
+<code>export PATH="vendor/bin:$PATH"</code>.</p>
+</blockquote>
+<p>This should generate a <code>spec\Vendor\Project\TextEditorSpec.php</code> file:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace spec\Vendor\Project;
+
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class TextEditorSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType('Vendor\Project\TextEditor');
+    }
+}</code></pre>
+<p>It needs to be edited to fit our needs:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace spec\Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+use Vendor\Project\File;
+use PhpSpec\ObjectBehavior;
+
+class TextEditorSpec extends ObjectBehavior
+{
+    const FILENAME = '/tmp/file.txt';
+    const FORCE_FILE_CREATION = true;
+
+    function let(Filesystem $filesystem)
+    {
+        $this-&gt;beConstructedWith($filesystem);
+    }
+
+    function it_creates_new_files(File $file, Filesystem $filesystem)
+    {
+        $filesystem-&gt;exists(self::FILENAME)-&gt;willReturn(false);
+        $filesystem-&gt;create(self::FILENAME)-&gt;willReturn($file);
+
+        $this-&gt;open(self::FILENAME, self::FORCE_FILE_CREATION)-&gt;shouldBe($file);
+    }
+}</code></pre>
+<p>The Test Driven Development cycle advises us to run the test suite now:</p>
+<pre><code>phpspec run</code></pre>
+<p>This will bootstrap the following code:</p>
+<pre><code class="language-php">&lt;?php
+
+namespace Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+
+class TextEditor
+{
+    private $filesystem;
+
+    public function __construct(Filesystem $filesystem)
+    {
+        $this-&gt;filesystem = $filesystem;
+    }
+
+    public function open($argument1, $argument2)
+    {
+    }
+}</code></pre>
+<p>It created a <code>filesystem</code> property to mirror the constructor arguments. Neat!</p>
+<h2 id="what-s-next">What's next?<a href="#what-s-next" class="anchor">#</a></h2>
+<p>In our example phpspec also generated the collaborators (<code>File</code> and <code>Filesystem</code>).
+These don't beneficiate from SpecGen help yet, so the next release (v0.4) will
+probably be about using it for collaborators.</p>
+<p>Other features that could be implemented would be PHPdoc generation, or avoiding the
+<code>Interface</code> / <code>Abstract</code> suffix/prefix in interface and abstract object argument names.</p>
+
+            <footer>
+                    <nav class="row">
+                        <a class="six columns button" href="../../../2015/05/20/spec-gen-0-2.html">Previous: SpecGen v0.2</a>
         
+                        <a class="six columns button" href="../../../2015/06/03/sf-differently-part-1-introduction.html">Next: Symfony Differently - part 1: Introduction</a>
+            </nav>
+                <hr />
+            </footer>
+        </article>
+
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="../../../about.html">About</a>
+                <a class="button three columns" href="../../../archive.html">Archive</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);

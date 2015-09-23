@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>{{ carew.document.title|default('Technical Blog') }}</title>
+    <title>{% block site_title %}{{ carew.document.title }}{% endblock %}</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
@@ -11,35 +11,50 @@
     <link rel="canonical" href="{{ carew.site.url_absolute }}/{{ carew.document.path }}"/>
     <link rel="alternate" href="{{ carew.site.url_absolute }}/feed/atom.xml" type="application/atom+xml" title="{{ carew.site.title|default('') }}"/>
 
-    <link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/skeleton.css">
-    <link rel="stylesheet" href="http://yandex.st/highlightjs/8.0/styles/pojoaque.min.css">
+    <link rel="stylesheet" href="{{ carew.relativeRoot }}/css/normalize.css">
+    <link rel="stylesheet" href="{{ carew.relativeRoot }}/css/skeleton.css">
+    <link rel="stylesheet" href="{{ carew.relativeRoot }}/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://cdn.jsdelivr.net/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
+        <header class="title">
             <h1>
-                <a href="/">Loïc Faugeron</a>
+                <a href="{{ path(carew.pages['pages/index.md']) }}">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
-        {% block content %}{% endblock %}
+        <article>
+            <header>
+                {% block page_title %}<h2>{{ carew.document.title }}</h2>{% endblock %}
+                {% block article_header %}
+                {% endblock %}
+            </header>
+
+            {{ carew.document.body|raw }}
+
+            <footer>
+                {% block article_footer %}
+                {% endblock %}
+                <hr />
+            </footer>
+        </article>
 
         <footer>
-            <nav>
-                <a class="button three columns" href="/about.html">About</a>
-                <a class="button three columns" href="/archive">Archive</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+            <nav class="row">
+                <a class="button three columns" href="{{ path(carew.pages['pages/about.md']) }}">About</a>
+                <a class="button three columns" href="{{ path(carew.pages['pages/archive.md']) }}">Archive</a>
+                <a class="button three columns" href="{{ carew.site.url_absolute }}/feed/atom.xml">RSS</a>
                 <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
+    <script src="http://cdn.jsdelivr.net/highlight.js/8.8.0/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-47822314-1']);
