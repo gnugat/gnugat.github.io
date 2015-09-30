@@ -7,6 +7,10 @@
  * @author Loïc Faugeron <faugeron.loic+blog-css@gmail.com>
  */
 
+html, body {
+    font-size: 18px;
+}
+
 .title {
     text-align: center;
     margin-top: 60px;
@@ -23,3 +27,5 @@
     padding-left: 4px;
     display: block;
 }
+
+
