@@ -2,7 +2,7 @@
 
 {% block site_title %}{{ carew.posts|last }}{% endblock %}
 
-{% block post_title %}{{ carew.posts|last }}{% endblock %}
+{% block post_title %}<a href="{{ render_document_path(carew.posts|last) }}">{{ carew.posts|last }}</a>{% endblock %}
 {% block post_date %}{{ (carew.posts|last).metadatas.date|date('d/m/Y') }}{% endblock %}
 
 {% block post_tags %}
@@ -17,5 +17,7 @@
         {% if previous %}
         <a class="six columns button" href="{{ render_document_path(previous) }}">Previous: {{ previous.title }}</a>
         {% endif %}
+
+        <a class="six columns button" href="{{ render_document_path(carew.posts|last) }}">Get this article's URL</a>
     </nav>
 {% endblock %}

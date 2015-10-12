@@ -5,8 +5,514 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2015-09-30T00:00:00+01:00</updated>
+            <updated>2015-10-12T00:00:00+01:00</updated>
             <entry>
+        <title>Decouple from Libraries</title>
+                <id>http://gnugat.github.io/2015/10/12/decouple-from-libraries.html</id>
+                <updated>2015-10-12T00:00:00+01:00</updated>
+        <author>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic+blog@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/10/12/decouple-from-libraries.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>Libraries are similar to frameworks: they solve infrastructure problems (e.g.
+requesting remote endpoints or querying databases). They also don't directly
+add any value to our projects: the business need will not be fulfilled by
+connecting to a database.</p>
+<p>They also share the same Backward Compatibility (BC) break issue, since they will
+change to solve their own concerns, regardless of our projects.</p>
+<p>Here's a true story with <a href="http://guzzle.readthedocs.org/en/latest/">Guzzle</a>: we
+started to use version 2 in our project and spread direct calls to it in different places.
+After a while we've decided to use <a href="http://flysystem.thephpleague.com/">Flysystem</a>
+and its <a href="http://aws.amazon.com/sdkforphp">SDK for Amazon S3</a> but we had a problem:
+it required Guzzle 3.
+This means tracking down every usage of Guzzle in the project and adapting the
+calls to the new version. It's a dawnting task, especially when the project doesn't
+have strong enough tests.</p>
+<p>Later on, when Amazon S3 SDK stabilized, it started to require Guzzle 5...</p>
+<p><a href="http://knowyourmeme.com/memes/rage-guy-fffffuuuuuuuu"><img alt="Screaming with anger" src="http://i0.kym-cdn.com/photos/images/newsfeed/000/000/578/1234931504682.jpg"></a></p>
+<p>Does that mean that we shouldn't use any libraries? Should we just don't care and
+continue to use them in the same way?</p>
+<p>This article will explain how to avoid both extremes, by decoupling from the library.
+It can be done by using the Inversion of Control principle: instead of relying
+on the library we rely on interfaces and provide an implementation that uses the library.</p>
+<h2 id="fortune-our-example">Fortune: our example<a href="#fortune-our-example" class="anchor">#</a></h2>
+<p>In <a href="../../../2015/09/30/decouple-from-frameworks.html">the previous article</a>,
+we started to create an endpoint allowing us to subit new quotes for a
+<a href="https://en.wikipedia.org/wiki/Fortune_%28Unix%29">fortune</a> application.</p>
+<p>We're now going to create a SDK for it:</p>
+<pre><code>mkdir fortune-sdk
+cd fortune-sdk</code></pre>
+<p>To do so, we'll create the <code>composer.json</code> file:</p>
+<pre><code>{
+    "name": "acme/fortune-sdk",
+    "description": "A PHP SDK for Fortune",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Acme\\FortuneSdk\\": "src/Acme/FortuneSdk"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Acme\\FortuneSdk\\Fixtures\\": "fixtures",
+            "Acme\\FortuneSdk\\Tests\\": "tests"
+        }
+    },
+    "require": {
+        "php": "&gt;=5.4",
+    },
+    "require-dev": {
+        "phpspec/phpspec": "^2.3",
+        "phpunit/phpunit": "^4.5",
+        "symfony/console": "^2.3",
+        "symfony/yaml": "^2.2"
+    }
+}</code></pre>
+<p>Then create a test script:</p>
+<pre><code>#!/usr/bin/env sh
+
+# bin/test.sh
+
+composer --quiet --no-interaction update --optimize-autoloader &gt; /dev/null
+
+vendor/bin/phpspec --no-interaction run -f dot &amp;&amp; vendor/bin/phpunit</code></pre>
+<p>And finally configure PHPUnit:</p>
+<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- phpunit.xml.dist --&gt;
+&lt;!-- http://phpunit.de/manual/4.1/en/appendixes.configuration.html --&gt;
+&lt;phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.1/phpunit.xsd"
+         backupGlobals="false"
+         colors="true"
+         bootstrap="vendor/autoload.php"
+&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="Fortune SDK Test Suite"&gt;
+            &lt;directory&gt;tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;</code></pre>
+<h2 id="request-handler">Request Handler<a href="#request-handler" class="anchor">#</a></h2>
+<p>Since Guzzle might completly change next year, we're going to abstract it behind
+our own HTTP client:</p>
+<pre><code class="language-php">&lt;?php
+
+// src/Acme/FortuneSdk/Remote/RequestHandler.php
+
+namespace Acme\FortuneSdk\Remote;
+
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
+interface RequestHandler
+{
+    /**
+     * @param RequestInterface $request
+     *
+     * @return ResponseInterface
+     *
+     * @throws ClientException If client throws an unexpected exception (e.g. connection error, etc)
+     */
+    public function handle(RequestInterface $request);
+}</code></pre>
+<p>We've decided to use the new PSR-7 standard:</p>
+<pre><code>composer require psr/http-message:^1.0</code></pre>
+<p>We'll hide any errors behind our own exception:</p>
+<pre><code class="language-php">&lt;?php
+
+// src/Acme/FortuneSdk/Remote/ClientException.php
+
+namespace Acme\FortuneSdk\Remote;
+
+use RuntimeException;
+
+class ClientException extends RuntimeException
+{
+}</code></pre>
+<p>Its first implementation will be with Guzzle 6:</p>
+<pre><code class="language-php">&lt;?php
+
+// src/Acme/FortuneSdk/Remote/RequestHandler/GuzzleSixRequestHandler.php
+
+namespace Acme\FortuneSdk\Remote\RequestHandler;
+
+use Acme\FortuneSdk\Remote\ClientException;
+use Acme\FortuneSdk\Remote\RequestHandler;
+use Exception;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\BadResponseException;
+use Psr\Http\Message\RequestInterface;
+
+class GuzzleSixRequestHandler implements RequestHandler
+{
+    private $client;
+
+    public function __construct(Client $client)
+    {
+        $this-&gt;client = $client;
+    }
+
+    public function handle(RequestInterface $request)
+    {
+        try {
+            return $this-&gt;client-&gt;send($request);
+        } catch (BadResponseException $e) {
+            return $e-&gt;getResponse();
+        } catch (Exception $e) {
+            throw new ClientException('Client threw an unexpected exception', 0, $e);
+        }
+    }
+}</code></pre>
+<p>And that's it. When Guzzle 7 will be released, we'll just have to create a new
+implementation and throw away the old one instead of having to replace it everywhere
+in our project. We can even change our mind and use a completly different HTTP client
+(Buzz, etc).</p>
+<p>Since we've started to softly depend on Guzzle, we need to install it with Composer:</p>
+<pre><code>composer require guzzlehttp/guzzle:^6.0</code></pre>
+<h2 id="functional-test">Functional test<a href="#functional-test" class="anchor">#</a></h2>
+<p>We can now create a functional test describing our service:</p>
+<pre><code class="language-php">&lt;?php
+
+// tests/Quote/SubmitNewQuoteTest.php
+
+namespace Acme\FortuneSdk\Tests\Quote;
+
+use Acme\FortuneSdk\Quote\SubmitNewQuote\RemoteSubmitNewQuote;
+use Acme\FortuneSdk\Fixtures\FixturesRequestHandler;
+use PHPUnit_Framework_TestCase;
+
+class SubmitNewQuoteTest extends PHPUnit_Framework_TestCase
+{
+    const URL = 'http://example.com';
+    const QUOTE = 'Nobody expects the Spanish Inquisition!';
+
+    private $submitNewQuote;
+
+    protected function setUp()
+    {
+        $requestHandler = new FixturesRequestHandler();
+        $this-&gt;submitNewQuote = new RemoteSubmitNewQuote($requestHandler, self::URL);
+    }
+
+    /**
+     * @test
+     */
+    public function it_can_submit_a_new_quote()
+    {
+        $quote = $this-&gt;submitNewQuote-&gt;submit(self::QUOTE);
+
+        self::assertSame(self::QUOTE, $quote['quote']);
+    }
+}</code></pre>
+<p>Let's run the tests:</p>
+<pre><code>sh ./bin/test.sh</code></pre>
+<p>It fails because <code>FixturesRequestHandler</code> doesn't exist. It's an implementation
+of <code>RequestHandler</code> designed for our tests: even if the endpoint actually existed,
+relying on network calls in our tests would only make them brittle
+(because it's slow and unreliable).</p>
+<p>Let's create it:</p>
+<pre><code class="language-php">&lt;?php
+
+// fixtures/FixturesRequestHandler.php
+
+namespace Acme\FortuneSdk\Fixtures;
+
+use Acme\FortuneSdk\Remote\RequestHandler;
+use Psr\Http\Message\RequestInterface;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\Stream;
+
+class FixturesRequestHandler implements RequestHandler
+{
+    private $routes;
+
+    public function __construct()
+    {
+        $this-&gt;routes = array(
+            array(
+                'controller' =&gt; new Controller\Quote\SubmitNewQuoteController(),
+                'pattern' =&gt; '#/quotes#',
+                'methods' =&gt; array('POST'),
+            ),
+        );
+    }
+
+    public function handle(RequestInterface $request)
+    {
+        $path = $request-&gt;getUri()-&gt;getPath();
+        $method = $request-&gt;getMethod();
+        foreach ($this-&gt;routes as $route) {
+            if (1 === preg_match($route['pattern'], $path)) {
+                if (false === in_array($method, $route['methods'], true)) {
+                    $body = new Stream('php://temp', 'w');
+                    $body-&gt;write(json_encode(array(
+                        'message' =&gt; "Method \"$method\" for route \"$path\" not supported (supported methods are: ".implode(', ', $route['methods']).")",
+                    )));
+
+                    return new Response($body, 405, array('Content-Type' =&gt; 'application/json'));
+                }
+                try {
+                    return $route['controller']-&gt;handle($request);
+                } catch (FixturesException $e) {
+                    $body = new Stream('php://temp', 'w');
+                    $body-&gt;write($e-&gt;getMessage());
+
+                    return new Response($body, $e-&gt;getCode(), array('Content-Type' =&gt; 'application/json'));
+                }
+            }
+        }
+        $body = new Stream('php://temp', 'w');
+        $body-&gt;write(json_encode(array(
+            'message' =&gt; "Route \"$path\" not found",
+        )));
+
+        return new Response($body, 404, array('Content-Type' =&gt; 'application/json'));
+    }
+}</code></pre>
+<p>We've decided to rely on Zend Diactoros to build the request, since it is the de
+facto implementation of PSR-7:</p>
+<pre><code>composer require zendframework/zend-diactoros:^1.0</code></pre>
+<p>We've open the possibility of managing many endpoints with this class. We now need
+to define a controller for the quote submission one:</p>
+<pre><code class="language-php">&lt;?php
+
+// fixtures/Controller/Quote/SubmitNewQuoteController.php
+
+namespace Acme\FortuneSdk\Fixtures\Controller\Quote;
+
+use Acme\FortuneSdk\Remote\RequestHandler;
+use Acme\FortuneSdk\Fixtures\FixturesException;
+use Psr\Http\Message\RequestInterface;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\Stream;
+
+class SubmitNewQuoteController implements RequestHandler
+{
+    public function handle(RequestInterface $request)
+    {
+        $submitNewQuote = json_decode($request-&gt;getBody()-&gt;__toString(), true);
+        if (false === isset($submitNewQuote['quote'])) {
+            throw FixturesException::make('Missing required "quote" parameter', 422);
+        }
+        $quote = (string) $submitNewQuote['quote'];
+        if ('' === $quote) {
+            throw FixturesException::make('Invalid "quote" parameter: must not be empty', 422);
+        }
+        $body = new Stream('php://temp', 'w');
+        $body-&gt;write(json_encode(array(
+            'id' =&gt; '',
+            'quote' =&gt; $quote
+        )));
+
+        return new Response($body, 201, array('Content-Type' =&gt; 'application/json'));
+    }
+}</code></pre>
+<p>Finally we need to write the exception class:</p>
+<pre><code class="language-php">&lt;?php
+
+// fixtures/FixturesException.php
+
+namespace fixtures\Acme\FortuneSdk\Fixtures;
+
+use DomainException;
+
+class FixturesException extends DomainException
+{
+    /**
+     * @param string $message
+     * @param int    $statusCode
+     *
+     * @return FixturesException
+     */
+    public static function make($message, $statusCode)
+    {
+        return new self(json_encode(array('message' =&gt; $message)), $statusCode);
+    }
+}</code></pre>
+<p>Let's run the tests:</p>
+<pre><code>sh ./bin/test.sh</code></pre>
+<p>They now fail because <code>SubmitNewQuote</code> doesn't exist.</p>
+<h2 id="submitnewquote">SubmitNewQuote<a href="#submitnewquote" class="anchor">#</a></h2>
+<p>First of all, we'll define our service as an interface:</p>
+<pre><code class="language-php">&lt;?php
+
+// src/Acme/FortuneSdk/Quote/SubmitNewQuote.php
+
+namespace Acme\FortuneSdk\Quote;
+
+interface SubmitNewQuote
+{
+    public function submit($quote);
+}</code></pre>
+<p>This will allow developers using our SDK to create their own implementation for testing
+or extension purpose.
+It will also allow us to create Composite implementation: we can have a remote
+implementation that does the actual work, wrapped in a lazy cache implementation
+itself wrapped in a log implementation.</p>
+<p>Here we'll just take care of the remote one, let's bootstrap its test:</p>
+<pre><code>vendor/bin/phpspec describe 'Acme\FortuneSdk\Quote\SubmitNewQuote\RemoteSubmitNewQuote'</code></pre>
+<p>And now we can write the tests:</p>
+<pre><code class="language-php">&lt;?php
+
+// spec/Acme/FortuneSdk/Quote/SubmitNewQuote.php
+
+namespace spec\Acme\FortuneSdk\Quote\SubmitNewQuote;
+
+use Acme\FortuneSdk\Remote\RequestHandler;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
+
+class RemoteSubmitNewQuoteSpec extends ObjectBehavior
+{
+    const URL = 'http://example.com';
+    const QUOTE = 'Nobody expects the Spanish Inquisition!';
+
+    function let(RequestHandler $requestHandler)
+    {
+        $this-&gt;beConstructedWith($requestHandler, self::URL);
+    }
+
+    function it_is_a_submit_new_quote()
+    {
+        $this-&gt;shouldImplement('Acme\FortuneSdk\Quote\SubmitNewQuote');
+    }
+
+    function it_calls_the_remote_endpoint(
+        RequestHandler $requestHandler,
+        ResponseInterface $response,
+        StreamInterface $stream
+    ) {
+        $quote = array(
+            'quote' =&gt; self::QUOTE,
+        );
+
+        $request = Argument::type('Psr\Http\Message\RequestInterface');
+        $requestHandler-&gt;handle($request)-&gt;willReturn($response);
+        $response-&gt;getBody()-&gt;willReturn($stream);
+        $stream-&gt;__toString()-&gt;willReturn(json_encode($quote));
+
+        $this-&gt;submit(self::QUOTE)-&gt;shouldBe($quote);
+    }
+}</code></pre>
+<p>In this test, we've used a wildcard to represent the request since the service is
+going to create it. This is at the cost of not knowing how it is built.</p>
+<p>If we absolutely want to have control over this, we need to delegate the request
+construction to a factory, it then becomes possible to mock the request and check
+how it is built:</p>
+<pre><code class="language-php">&lt;?php
+
+// spec/Acme/FortuneSdk/Quote/SubmitNewQuote.php
+
+namespace spec\Acme\FortuneSdk\Quote\SubmitNewQuote;
+
+use Acme\FortuneSdk\Remote\RequestFactory;
+use Acme\FortuneSdk\Remote\RequestHandler;
+use PhpSpec\ObjectBehavior;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
+
+class RemoteSubmitNewQuoteSpec extends ObjectBehavior
+{
+    const URL = 'http://example.com';
+    const QUOTE = 'Nobody expects the Spanish Inquisition!';
+
+    function let(RequestFactory $requestFactory, RequestHandler $requestHandler)
+    {
+        $this-&gt;beConstructedWith($requestFactory, $requestHandler, self::URL);
+    }
+
+    function it_is_a_submit_new_quote()
+    {
+        $this-&gt;shouldImplement('Acme\FortuneSdk\Quote\SubmitNewQuote');
+    }
+
+    function it_calls_the_remote_endpoint(
+        RequestFactory $requestFactory,
+        RequestHandler $requestHandler,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamInterface $stream
+    ) {
+        $quote = array(
+            'quote' =&gt; self::QUOTE,
+        );
+
+        $requestFactory-&gt;make(self::URL.'/v1/quotes', 'POST', json_encode($quote), array(
+            'Content-Type' =&gt; 'application/json'
+        ))-&gt;willReturn($request);
+        $requestHandler-&gt;handle($request)-&gt;willReturn($response);
+        $response-&gt;getBody()-&gt;willReturn($stream);
+        $stream-&gt;__toString()-&gt;willReturn(json_encode($quote));
+
+        $this-&gt;submit(self::QUOTE)-&gt;shouldBe($quote);
+    }
+}</code></pre>
+<p>The choice between the first solution and the second one really depends on our preferences
+and on what we're trying to achieve. For the sake of this article, we'll stick
+to the first one (to avoid having to create the factory class and change the functional test,
+this article is already long enough!).</p>
+<p>Let's run our tests to bootstrap the code:</p>
+<pre><code>vendor/bin/phpspec run</code></pre>
+<p>Now we can write the actual code:</p>
+<pre><code class="language-php">&lt;?php
+
+// src/Acme/FortuneSdk/Quote/SubmitNewQuote/RemoteSubmitNewQuote.php
+
+namespace Acme\FortuneSdk\Quote\SubmitNewQuote;
+
+use Acme\FortuneSdk\Quote\SubmitNewQuote;
+use Acme\FortuneSdk\Remote\RequestHandler;
+use Zend\Diactoros\Request;
+use Zend\Diactoros\Stream;
+
+class RemoteSubmitNewQuote implements SubmitNewQuote
+{
+    private $requestHandler;
+    private $url;
+
+    public function __construct(RequestHandler $requestHandler, $url)
+    {
+        $this-&gt;requestHandler = $requestHandler;
+        $this-&gt;url = $url;
+    }
+
+    public function submit($quote)
+    {
+        $body = new Stream('php://memory', 'w');
+        $body-&gt;write(json_encode(array(
+            'quote' =&gt; $quote,
+        )));
+        $request = new Request($this-&gt;url.'/v1/quotes', 'POST', $body, array(
+            'Content-Type' =&gt; 'application/json'
+        ));
+        $quote = json_decode($this-&gt;requestHandler-&gt;handle($request)-&gt;getBody()-&gt;__toString(), true);
+
+        return $quote;
+    }
+}</code></pre>
+<p>This should be sufficient to make our tests pass:</p>
+<pre><code>sh ./bin/test.sh</code></pre>
+<p>All green!</p>
+<p>We now have a SDK that provides a <code>SubmitNewQuote</code> service allowing us to submit new quotes.
+Since we've mocked the network connection, we can't be sure that our SDK actually works.
+Manual testing can be sufficient in this case: we can build a Command Line Interface (CLI)
+client and check by ourselves if everything is fine, once in a while.</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Inversion of Control is a principle that can come handy when dealing with third party library,
+especially the ones that change often like Guzzle. It can be applied easily:
+instead of making our high level classes rely on concrete low level ones, we just
+need to introduce an interface.</p>
+<p>Once again, all projects are different and this solution might not apply in every
+case. If we're building an application that we expect to maintain for a couple of years
+it can be worth it to protect ourselves from external changes.</p>]]></content>
+    </entry>
+        <entry>
         <title>Decouple from Frameworks</title>
                 <id>http://gnugat.github.io/2015/09/30/decouple-from-frameworks.html</id>
                 <updated>2015-09-30T00:00:00+01:00</updated>
