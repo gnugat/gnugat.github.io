@@ -5,8 +5,60 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2015-10-12T00:00:00+01:00</updated>
+            <updated>2015-10-26T00:00:00+00:00</updated>
             <entry>
+        <title>Decouple from Decoupling</title>
+                <id>http://gnugat.github.io/2015/10/26/decouple-from-decoupling.html</id>
+                <updated>2015-10-26T00:00:00+00:00</updated>
+        <author>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic+blog@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/10/26/decouple-from-decoupling.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>In the last two articles, we've seen how to decouple our application:</p>
+<ul><li><a href="../../../2015/09/30/decouple-from-frameworks.html">from frameworks, using the Command Bus pattern</a></li>
+<li><a href="../../../2015/10/12/decouple-from-libraries.html">from libraries, using the Inversion of Control principle</a></li>
+</ul><p>Decoupling can be considered as a "Best Practice" as it is a good protection
+against external changes, but it doesn't mean that it should always be applied
+everywhere.</p>
+<p>This article is about mitigating the usage of this tool.</p>
+<h2 id="clean-code">Clean Code<a href="#clean-code" class="anchor">#</a></h2>
+<p>Decoupling is an important part of clean code, as it can allow a better readability.</p>
+<p>For example instead of having a controller full of logic, we just have a Command
+class initialized with the input parameters that matter and a class name that describe
+the expected behavior. Inside the Command Handler, instead of having implementation
+details we have a sequence of service calls that decribe even further the behavior.</p>
+<p>Clean code is all about making the application easier to maintain so in theory
+this should be applied everywhere, but like every rules it can be abused and its
+usefulness depends on the type of the project.</p>
+<p>It might seem strange but some projects don't need to be maintained, for example
+Proof of Concepts are usually thrown away once the experience they were designed
+for are done, so it doesn't make sense to take the time to make them perfect.</p>
+<p>Some industry are also commissioned to bootstrap a project as fast as possible
+and are expected to pass over the project without any maintainance plan: usually
+the ones that promise the earlier delivery for the lowest price are selected.
+Again it doesn't make sense to take the time to create the most beautiful code
+if that's not what's been asked and paid for.</p>
+<h2 id="pragmatism">Pragmatism<a href="#pragmatism" class="anchor">#</a></h2>
+<p>Trying to use the right tool for the right job is an important part of being
+pragmatic.</p>
+<p>We've seen that some projects don't necessarly need decoupling as we don't expect
+to maintain them. But sometimes a project might need decoupling in some parts
+of it and not in other parts.</p>
+<p>As the saying goes, "Fool me once, shame on you, fool me twice, shame on me":
+since we can't know in advance which parts are going to change we might decide
+to couple things first. When an issue occurs due to the coupling, we can refactor
+to avoid further issues.</p>
+<p>Last but not least, we can't always decouple from everything: for example the
+programming language used can also release backward incompatible changes, or we
+might want to switch to an entirely different one. Is it worth decouling from the
+language?</p>
+<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Decoupling is a great tool that should be used when needed but the decision of
+when to use it depends on the context (project, team, industry, etc).</p>
+<p>The rule of thumb number one is: don't follow blindly rule of thumbs.</p>]]></content>
+    </entry>
+        <entry>
         <title>Decouple from Libraries</title>
                 <id>http://gnugat.github.io/2015/10/12/decouple-from-libraries.html</id>
                 <updated>2015-10-12T00:00:00+01:00</updated>
