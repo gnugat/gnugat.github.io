@@ -5,8 +5,45 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2015-10-26T00:00:00+00:00</updated>
+            <updated>2015-11-05T00:00:00+00:00</updated>
             <entry>
+        <title>porpaginas</title>
+                <id>http://gnugat.github.io/2015/11/05/porpaginas.html</id>
+                <updated>2015-11-05T00:00:00+00:00</updated>
+        <author>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic+blog@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/11/05/porpaginas.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<p>Pagination libraries like <a href="https://github.com/whiteoctober/Pagerfanta">Pagerfanta</a>
+or <a href="https://github.com/KnpLabs/KnpPaginatorBundle">KnpPaginator</a> usually require
+a <code>QueryBuilder</code>:</p>
+<pre><code>// Usually in a controller
+$queryBuilder = $this-&gt;itemRepository-&gt;queryBuilderForFindAll();
+$results = $paginationService-&gt;paginate(
+    $queryBuilder,
+    $currentPageNumber,
+    $itemsPerPage
+);</code></pre>
+<p>This is necessary because we need to get the result for the page as well as the
+number of total results (with a database it would mean two queries).
+Unfortunately this kind of logic tends to leak in our controllers which is why
+<a href="http://www.whitewashing.de/">Benjamin Eberlei</a> suggests an elegant alternative:</p>
+<pre><code class="language-php">// Can be done in a service
+$result = $this-&gt;itemRepository-&gt;findAll();
+
+// Can be done in a ViewListener
+$page = $result-&gt;take($currentPageNumber, $itemsPerPage);</code></pre>
+<p>The <code>QueryBuilder</code> is actually wrapped in a <code>Result</code> which provides the possibility
+to get all of them or a single portion.
+Its <code>take</code> method returns the <code>PaginatorService</code> wrapped in a <code>Page</code> which contains
+all the meta data we usually expect (page number, total elements, etc).</p>
+<p>To make it possible he created <a href="http://github.com/beberlei/porpaginas">porpaginas</a>,
+a small library that provides <code>Result</code> and <code>Page</code> as interfaces.
+The actual pagination logic is delegated to the library of our choice, using adapters.</p>
+<p>Enjoy!</p>]]></content>
+    </entry>
+        <entry>
         <title>Decouple from Decoupling</title>
                 <id>http://gnugat.github.io/2015/10/26/decouple-from-decoupling.html</id>
                 <updated>2015-10-26T00:00:00+00:00</updated>
