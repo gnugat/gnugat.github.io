@@ -46,7 +46,7 @@ library providing implementations for <a href="http://www.php-fig.org/psr/psr-7/
 <pre><code>composer require zendframework/zend-diactoros:^1.0</code></pre>
 <h2 id="example">Example<a href="#example" class="anchor">#</a></h2>
 <p>We'd like to retrieve data from remote endpoints, using our internal <code>RequestHandler</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project;
 
@@ -62,7 +62,7 @@ interface RequestHandler
 you'd use an actual HTTP client (e.g. <a href="http://guzzle.readthedocs.org/en/latest/">Guzzle</a>).</p>
 </blockquote>
 <p><code>RequestHandler</code> expects a <code>Request</code> parameter, so we're going to build it:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project;
 
@@ -77,41 +77,41 @@ class MemberGateway
 
     public function __construct(RequestHandler $requestHandler, $username, $password)
     {
-        $this-&gt;requestHandler = $requestHandler;
-        $this-&gt;username = $username;
-        $this-&gt;password = $password;
+        $this->requestHandler = $requestHandler;
+        $this->username = $username;
+        $this->password = $password;
     }
 
     public function findOne($id)
     {
         $request = new Request('http://example.com/members/'.$id, 'GET', 'php://memory', array(
-            'Authorization' =&gt; 'Basic '.base64_encode($this-&gt;username.':'.$this-&gt;password),
+            'Authorization' => 'Basic '.base64_encode($this->username.':'.$this->password),
         ));
-        $item = json_decode($this-&gt;requestHandler-&gt;handle($request)-&gt;getBody()-&gt;__toString(), true);
+        $item = json_decode($this->requestHandler->handle($request)->getBody()->__toString(), true);
 
         return array(
-            'id' =&gt; $item['id'],
-            'name' =&gt; $item['name'],
-            'description' =&gt; $item['description'],
+            'id' => $item['id'],
+            'name' => $item['name'],
+            'description' => $item['description'],
         );
     }
 
     public function createOne($name, $description)
     {
         $body = new Stream('php://memory', 'w');
-        $body-&gt;write(json_encode(array(
-            'name' =&gt; $name,
-            'description' =&gt; $description,
+        $body->write(json_encode(array(
+            'name' => $name,
+            'description' => $description,
         )));
         $request = new Request('http://example.com/members/'.$id, 'GET', $body, array(
-            'Authorization' =&gt; 'Basic '.base64_encode($this-&gt;username.':'.$this-&gt;password),
+            'Authorization' => 'Basic '.base64_encode($this->username.':'.$this->password),
         ));
-        $item = json_decode($this-&gt;requestHandler-&gt;handle($request)-&gt;getBody()-&gt;__toString(), true);
+        $item = json_decode($this->requestHandler->handle($request)->getBody()->__toString(), true);
 
         return array(
-            'id' =&gt; $item['id'],
-            'name' =&gt; $item['name'],
-            'description' =&gt; $item['description'],
+            'id' => $item['id'],
+            'name' => $item['name'],
+            'description' => $item['description'],
         );
     }
 }</code></pre>

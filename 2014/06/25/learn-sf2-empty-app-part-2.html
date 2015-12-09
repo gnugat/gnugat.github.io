@@ -45,9 +45,9 @@ Have a look at the first one: <a href="../../../2014/06/18/learn-sf2-composer-pa
 <p>In the first article we began to create an empty project with the following
 files:</p>
 <pre><code>.
-&#9500;&#9472;&#9472; composer.json
-&#9500;&#9472;&#9472; composer.lock
-&#9492;&#9472;&#9472; .gitignore</code></pre>
+├── composer.json
+├── composer.lock
+└── .gitignore</code></pre>
 <p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
 in git.</p>
 <p>Here's the <a href="https://github.com/gnugat/learning-symfony2/tree/1-composer">repository where you can find the actual code</a>.</p>
@@ -59,7 +59,7 @@ which page to display.</p>
 <p>Create its directory:</p>
 <pre><code>mkdir web</code></pre>
 <p>Then the file:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: web/app.php
 
 use Symfony\Component\HttpFoundation\Request;
@@ -69,9 +69,9 @@ require_once __DIR__.'/../app/AppKernel.php';
 
 $kernel = new AppKernel('prod', false);
 $request = Request::createFromGlobals();
-$response = $kernel-&gt;handle($request);
-$response-&gt;send();
-$kernel-&gt;terminate($request, $response);</code></pre>
+$response = $kernel->handle($request);
+$response->send();
+$kernel->terminate($request, $response);</code></pre>
 <p>First it includes Composer's autoloader: it will require every files needed.</p>
 <p>Then we create an instance of our Kernel with the production environment and
 the debug utilities disabled. This class acts like a web server: it takes a
@@ -82,10 +82,10 @@ It is filled from PHP's variable super globals (<code>$_GET</code>, <code>$_POST
 say that it will find the controller associated to the requested URL. It is the
 controller's responsibility to return a representation of the HTTP response (see
 <code>Symfony\Component\HttpFoundation\Response</code>).</p>
-<p>The <code>$response-&gt;send()</code> method will simply call the PHP <code>header</code> function and
+<p>The <code>$response->send()</code> method will simply call the PHP <code>header</code> function and
 print a string representing the response's body (usually HTML, JSON or anything
 you want).</p>
-<p>Finally the <code>$kernel-&gt;terminate()</code> method will call any tasks which registered
+<p>Finally the <code>$kernel->terminate()</code> method will call any tasks which registered
 to the <code>kernel.terminate</code> event. This alows you to return a response as fast as
 possible and then execute some actions like sending emails.</p>
 <p><em>Note</em>: events aren't in the scope of this article, but they're worth
@@ -96,7 +96,7 @@ provides you with a <code>Kernel</code> class, which we will extend.</p>
 <p>Create the following directory:</p>
 <pre><code>mkdir app</code></pre>
 <p>And then the kernel file:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: app/AppKernel.php
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -113,7 +113,7 @@ class AppKernel extends Kernel
 
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
-        $loader-&gt;load(__DIR__.'/config/config.yml');
+        $loader->load(__DIR__.'/config/config.yml');
     }
 }</code></pre>
 <p>This class will load the project's configuration. This is also where you
@@ -144,8 +144,8 @@ git commit -m 'Created application structure'</code></pre>
 touch app/{cache,logs}/.gitkeep</code></pre>
 <p>Git doesn't allow to commit empty directory, hence the <code>.gitkeep</code> files.</p>
 <p>Because files in these directories are temporaries, we'll ignore them:</p>
-<pre><code>echo '/app/cache/*' &gt;&gt; .gitignore
-echo '/app/logs/*' &gt;&gt; .gitignore
+<pre><code>echo '/app/cache/*' >> .gitignore
+echo '/app/logs/*' >> .gitignore
 git add -A
 git add -f app/cache/.gitkeep
 git add -f app/logs/.gitkeep
@@ -155,7 +155,7 @@ git commit -m 'Created temporary directories'</code></pre>
 server. This configuration is well explained
 <a href="http://symfony.com/doc/current/cookbook/configuration/web_server_configuration.html">in the documentation</a>,
 so here's a dump of an apache vhost:</p>
-<pre><code>&lt;VirtualHost *:80&gt;
+<pre><code><VirtualHost *:80>
     ServerName knight.local
 
     DocumentRoot /home/loic.chardonnet/Projects/gnugat/knight/web
@@ -163,18 +163,18 @@ so here's a dump of an apache vhost:</p>
     ErrorLog "/home/loic.chardonnet/Projects/gnugat/knight/app/logs/apache_errors.log"
     CustomLog "/home/loic.chardonnet/Projects/gnugat/knight/app/logs/apache_accesses.log" common
 
-    &lt;Directory /home/loic.chardonnet/Projects/gnugat/knight/web&gt;
+    <Directory /home/loic.chardonnet/Projects/gnugat/knight/web>
         Options Indexes FollowSymLinks MultiViews
         AllowOverride None
         Order allow,deny
         allow from all
-        &lt;IfModule mod_rewrite.c&gt;
+        <IfModule mod_rewrite.c>
             RewriteEngine On
             RewriteCond %{REQUEST_FILENAME} !-f
             RewriteRule ^(.*)$ /app.php [QSA,L]
-        &lt;/IfModule&gt;
-    &lt;/Directory&gt;
-&lt;/VirtualHost&gt;</code></pre>
+        </IfModule>
+    </Directory>
+</VirtualHost></code></pre>
 <p>If you run into some permission problem (like writing in <code>cache</code> and <code>logs</code>),
 you might consider to change <code>APACHE_RUN_USER</code> and <code>APACHE_RUN_GROUP</code>
 environment variables present in <code>/etc/apache2/envvars</code> to your own user and

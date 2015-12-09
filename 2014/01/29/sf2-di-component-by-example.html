@@ -56,7 +56,7 @@ take this responsibility and centralize it.</p>
 <p>Let's replace <a href="http://pimple.sensiolabs.org/">Pimple</a> by
 <a href="http://symfony.com/doc/current/components/dependency_injection/index.html">Symfony2 DI component</a>
 in the code sample from the previous article:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -64,19 +64,19 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 $container = new ContainerBuilder();
 
 // This is a parameter definition
-$container-&gt;setParameter('verbosity_level_map', array(
-    OutputInterface::VERBOSITY_NORMAL =&gt; Logger::NOTICE,
-    OutputInterface::VERBOSITY_VERBOSE =&gt; Logger::INFO,
-    OutputInterface::VERBOSITY_VERY_VERBOSE =&gt; Logger::DEBUG,
-    OutputInterface::VERBOSITY_DEBUG =&gt; Logger::DEBUG,
+$container->setParameter('verbosity_level_map', array(
+    OutputInterface::VERBOSITY_NORMAL => Logger::NOTICE,
+    OutputInterface::VERBOSITY_VERBOSE => Logger::INFO,
+    OutputInterface::VERBOSITY_VERY_VERBOSE => Logger::DEBUG,
+    OutputInterface::VERBOSITY_DEBUG => Logger::DEBUG,
 );
 
 // register takes the service name, and then its fully qualified classname as a string
-$container-&gt;register(
+$container->register(
     'console_output',
     'Symfony\Component\Console\Output\ConsoleOutput'
 );
-$container-&gt;register(
+$container->register(
     'output_formatter',
     'Gnugat\Fossil\ApplicationLayer\OutputFormatter'
 );
@@ -87,83 +87,83 @@ $container-&gt;register(
 // * parameters which have been declared previously
 // * setter dependencies
 $container
-    -&gt;register('console_handler', 'Symfony\Bridge\Monolog\Handler\ConsoleHandler')
-    -&gt;addArgument(new Reference('console_output'))
-    -&gt;addArgument(true)
-    -&gt;addArgument('%verbosity_level_map%')
-    -&gt;addMethodCall('setFormatter', array(new Reference('output_formatter')));
+    ->register('console_handler', 'Symfony\Bridge\Monolog\Handler\ConsoleHandler')
+    ->addArgument(new Reference('console_output'))
+    ->addArgument(true)
+    ->addArgument('%verbosity_level_map%')
+    ->addMethodCall('setFormatter', array(new Reference('output_formatter')));
 ;
 
 $container
-    -&gt;register('logger', 'Monolog\Logger')
-    -&gt;addArgument('default.logger')
-    -&gt;addMethodCall('pushHandler', array(new Reference('console_handler')));
+    ->register('logger', 'Monolog\Logger')
+    ->addArgument('default.logger')
+    ->addMethodCall('pushHandler', array(new Reference('console_handler')));
 ;
 
-$container-&gt;register('filesystem', 'Symfony\Component\Filesystem\Filesystem');
+$container->register('filesystem', 'Symfony\Component\Filesystem\Filesystem');
 
 $container
-    -&gt;register('documentation_writer', 'Gnugat\Fossil\MarkdownFile\DocumentationWriter')
-    -&gt;addArgument(new Reference('filesystem'))
-    -&gt;addArgument(new Reference('logger'))
+    ->register('documentation_writer', 'Gnugat\Fossil\MarkdownFile\DocumentationWriter')
+    ->addArgument(new Reference('filesystem'))
+    ->addArgument(new Reference('logger'))
 ;</code></pre>
 <p>If you think about it, the construction of objects is a configuration thing:
 you need to define for each object their dependencies. Symfony2's DI component
 allows you to put all those definition inside a configuration file:</p>
-<pre><code>&lt;?xml version="1.0" ?&gt;
-&lt;!-- File: dic_config.xml --&gt;
+<pre><code><?xml version="1.0" ?>
+<!-- File: dic_config.xml -->
 
-&lt;container xmlns="http://symfony.com/schema/dic/services"
+<container xmlns="http://symfony.com/schema/dic/services"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
-    &lt;parameters&gt;
-        &lt;parameter key="verbosity_Level_map" type="collection"&gt;
-            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_NORMAL"&gt;Monolog\Logger::NOTICE&lt;/parameter&gt;
-            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERBOSE"&gt;Monolog\Logger::INFO&lt;/parameter&gt;
-            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERY_VERBOSE"&gt;Monolog\Logger::DEBUG&lt;/parameter&gt;
-            &lt;parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_DEBUG"&gt;Monolog\Logger::DEBUG&lt;/parameter&gt;
-        &lt;/parameter&gt;
-    &lt;/parameters&gt;
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <parameters>
+        <parameter key="verbosity_Level_map" type="collection">
+            <parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_NORMAL">Monolog\Logger::NOTICE</parameter>
+            <parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERBOSE">Monolog\Logger::INFO</parameter>
+            <parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_VERY_VERBOSE">Monolog\Logger::DEBUG</parameter>
+            <parameter key="Symfony\Component\Console\Output\OutputInterface::VERBOSITY_DEBUG">Monolog\Logger::DEBUG</parameter>
+        </parameter>
+    </parameters>
 
-    &lt;services&gt;
-        &lt;service id="console_output"
-            class="Symfony\Component\Console\Output\ConsoleOutput"&gt;
-        &lt;/service&gt;
+    <services>
+        <service id="console_output"
+            class="Symfony\Component\Console\Output\ConsoleOutput">
+        </service>
 
-        &lt;service id="output_formatter"
-            class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"&gt;
-        &lt;/service&gt;
+        <service id="output_formatter"
+            class="Gnugat\Fossil\ApplicationLayer\OutputFormatter">
+        </service>
 
-        &lt;service id="console_handler"
-            class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"&gt;
-            &lt;argument type="service" id="console.output" /&gt;
-            &lt;argument key="bubble"&gt;true&lt;/argument&gt;
-            &lt;argument&gt;%verbosity_Level_map%&lt;/argument&gt;
-            &lt;call method="setFormatter"&gt;
-                 &lt;argument type="service" id="output_formatter" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
+        <service id="console_handler"
+            class="Symfony\Bridge\Monolog\Handler\ConsoleHandler">
+            <argument type="service" id="console.output" />
+            <argument key="bubble">true</argument>
+            <argument>%verbosity_Level_map%</argument>
+            <call method="setFormatter">
+                 <argument type="service" id="output_formatter" />
+            </call>
+        </service>
 
-        &lt;service id="logger" class="Monolog\Logger"&gt;
-            &lt;argument&gt;default.logger&lt;/argument&gt;
-            &lt;call method="pushHandler"&gt;
-                 &lt;argument type="service" id="console_handler" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
+        <service id="logger" class="Monolog\Logger">
+            <argument>default.logger</argument>
+            <call method="pushHandler">
+                 <argument type="service" id="console_handler" />
+            </call>
+        </service>
 
-        &lt;service id="filesystem"
-            class="Symfony\Component\Filesystem\Filesystem"&gt;
-        &lt;/service&gt;
+        <service id="filesystem"
+            class="Symfony\Component\Filesystem\Filesystem">
+        </service>
 
-        &lt;service id="documentation_writer"
-            class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"&gt;
-            &lt;argument type="service" id="filesystem" /&gt;
-            &lt;argument type="service" id="logger" /&gt;
-        &lt;/service&gt;
-    &lt;/services&gt;
-&lt;/container&gt;</code></pre>
+        <service id="documentation_writer"
+            class="Gnugat\Fossil\MarkdownFile\DocumentationWriter">
+            <argument type="service" id="filesystem" />
+            <argument type="service" id="logger" />
+        </service>
+    </services>
+</container></code></pre>
 <p>And here's the code sample allowing you to feed the DIC with this configuration:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 // File: front_controller.php
 
@@ -175,10 +175,10 @@ $container = new ContainerBuilder();
 $configurationDirectory = new FileLocator(__DIR__);
 
 $loader = new XmlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('dic_config.xml');
+$loader->load('dic_config.xml');
 
-$documentationWriter = $container-&gt;get('documentation_writer');
-$documentationWriter-&gt;write('/tmp/example.txt', 'Hello world');</code></pre>
+$documentationWriter = $container->get('documentation_writer');
+$documentationWriter->write('/tmp/example.txt', 'Hello world');</code></pre>
 <p>The construction of our objects has been completely removed from the code and
 has been put into a configuration file. Actually, we've replaced object
 constructions by container initialization, which is way more concise.</p>
@@ -197,13 +197,13 @@ like:</p>
 </ul><p>Not to mention the fact that it doesn't support every options (for instance
 <a href="http://symfony.com/doc/current/components/dependency_injection/parameters.html#constants-as-parameters">you cannot declare constants as parameters</a>)</p>
 <p>On the other hand, the only thing XML doesn't support is concatenation:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 $container = new ContainerBuilder();
 // Needs to be done in plain PHP
-$container-&gt;setParameter('skeletons_path', __DIR__.'/skeletons');</code></pre>
+$container->setParameter('skeletons_path', __DIR__.'/skeletons');</code></pre>
 <p>XML can be easily validated and it also can be read by many software like IDE's
 which can use it in order to provide you with blissful autocompletion.</p>
 <p>If you're concerned about performances (reading XML might be slower than
@@ -225,7 +225,7 @@ a command which allows you to bootstrap markdown files of your projects
 (<a href="../../../2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html">cf this article</a>).
 It uses Symfony2's Console component which requires some boilerplate code in
 order to create the application:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 // This is the front controller of the application
 // File: fossil
@@ -240,80 +240,80 @@ $container = new ContainerBuilder();
 $configurationDirectory = new FileLocator(__DIR__);
 
 $loader = new XmlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('dic_config.xml');
+$loader->load('dic_config.xml');
 
-$documentationWriter = $container-&gt;get('documentation_writer');
+$documentationWriter = $container->get('documentation_writer');
 
 $docCommand = new DocCommand($documentationWriter);
 
 $application = new Application('Fossil', '2.0.0');
-$application-&gt;add($docCommand);
+$application->add($docCommand);
 
-$output = $container-&gt;get('console_output');
+$output = $container->get('console_output');
 
-$application-&gt;run(null, $output);</code></pre>
+$application->run(null, $output);</code></pre>
 <p>Can you imagine what this front controller can become if we were to add more
 commands? You'd rather not? Me neither, that's why I advise you to put all this
 boilerplate code into a configuration file:</p>
-<pre><code>&lt;?xml version="1.0" ?&gt;
+<pre><code><?xml version="1.0" ?>
 
-&lt;!-- File: dic_config.xml --&gt;
+<!-- File: dic_config.xml -->
 
-&lt;container xmlns="http://symfony.com/schema/dic/services"
+<container xmlns="http://symfony.com/schema/dic/services"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
-    &lt;services&gt;
-        &lt;service id="console_output"
-            class="Symfony\Component\Console\Output\ConsoleOutput"&gt;
-        &lt;/service&gt;
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <service id="console_output"
+            class="Symfony\Component\Console\Output\ConsoleOutput">
+        </service>
 
-        &lt;service id="output_formatter"
+        <service id="output_formatter"
             class="Gnugat\Fossil\ApplicationLayer\OutputFormatter"
-        &lt;/service&gt;
+        </service>
 
-        &lt;service id="console_handler"
+        <service id="console_handler"
             class="Symfony\Bridge\Monolog\Handler\ConsoleHandler"
-            &lt;argument type="service" id="console.output" /&gt;
-            &lt;argument key="bubble"&gt;true&lt;/argument&gt;
-            &lt;argument&gt;%verbosity_Level_map%&lt;/argument&gt;
-            &lt;call method="setFormatter"&gt;
-                 &lt;argument type="service" id="output_formatter" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
+            <argument type="service" id="console.output" />
+            <argument key="bubble">true</argument>
+            <argument>%verbosity_Level_map%</argument>
+            <call method="setFormatter">
+                 <argument type="service" id="output_formatter" />
+            </call>
+        </service>
 
-        &lt;service id="logger" class="Monolog\Logger"&gt;
-            &lt;argument&gt;default.logger&lt;/argument&gt;
-            &lt;call method="pushHandler"&gt;
-                 &lt;argument type="service" id="console_handler" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
+        <service id="logger" class="Monolog\Logger">
+            <argument>default.logger</argument>
+            <call method="pushHandler">
+                 <argument type="service" id="console_handler" />
+            </call>
+        </service>
 
-        &lt;service id="filesystem"
+        <service id="filesystem"
             class="Symfony\Component\Filesystem\Filesystem"
-        &lt;/service&gt;
+        </service>
 
-        &lt;service id="documentation_writer"
+        <service id="documentation_writer"
             class="Gnugat\Fossil\MarkdownFile\DocumentationWriter"
-            &lt;argument type="service" id="filesystem" /&gt;
-            &lt;argument type="service" id="logger" /&gt;
-        &lt;/service&gt;
+            <argument type="service" id="filesystem" />
+            <argument type="service" id="logger" />
+        </service>
 
-        &lt;service id="doc_command" class="Gnugat\Fossil\DocCommand"&gt;
-            &lt;argument type="service" id="documentation_writer" /&gt;
-        &lt;/service&gt;
+        <service id="doc_command" class="Gnugat\Fossil\DocCommand">
+            <argument type="service" id="documentation_writer" />
+        </service>
 
-        &lt;service id="application"
-            class="Symfony\Component\Console\Application"&gt;
-            &lt;argument key="name"&gt;Fossil&lt;/argument&gt;
-            &lt;argument key="version"&gt;2.0.0&lt;/argument&gt;
-            &lt;call method="add"&gt;
-                 &lt;argument type="service" id="doc_command" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
-    &lt;/services&gt;
-&lt;/container&gt;</code></pre>
+        <service id="application"
+            class="Symfony\Component\Console\Application">
+            <argument key="name">Fossil</argument>
+            <argument key="version">2.0.0</argument>
+            <call method="add">
+                 <argument type="service" id="doc_command" />
+            </call>
+        </service>
+    </services>
+</container></code></pre>
 <p>Which allows us to reduce our front controller:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 // This is the front controller of the application
 // File: fossil
@@ -326,31 +326,31 @@ $container = new ContainerBuilder();
 $configurationDirectory = new FileLocator(__DIR__);
 
 $loader = new XmlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('dic_config.xml');
+$loader->load('dic_config.xml');
 
-$application = $container-&gt;get('application');
+$application = $container->get('application');
 
-$output = $container-&gt;get('console_output');
+$output = $container->get('console_output');
 
-$application-&gt;run(null, $output);</code></pre>
+$application->run(null, $output);</code></pre>
 <p>Now our concern is the size of the <code>dic_config.xml</code> file which will keep growing
 each time we create new services. Don't panic! You can split it into many files
 using the <code>imports</code> tag:</p>
-<pre><code>&lt;?xml version="1.0" ?&gt;
+<pre><code><?xml version="1.0" ?>
 
-&lt;!-- File: config/dic.xml --&gt;
+<!-- File: config/dic.xml -->
 
-&lt;container xmlns="http://symfony.com/schema/dic/services"
+<container xmlns="http://symfony.com/schema/dic/services"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
-    &lt;imports&gt;
-        &lt;import resource="01-application.xml" /&gt;
-        &lt;import resource="02-documentation_writer.xml" /&gt;
-    &lt;/imports&gt;
-&lt;/container&gt;</code></pre>
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <imports>
+        <import resource="01-application.xml" />
+        <import resource="02-documentation_writer.xml" />
+    </imports>
+</container></code></pre>
 <p>We created a <code>config</code> directory to put all those XML files, which means we
 should change our front controller to:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 // This is the front controller of the application
 // File: fossil
@@ -363,13 +363,13 @@ $container = new ContainerBuilder();
 $configurationDirectory = new FileLocator(__DIR__.'/config');
 
 $loader = new XmlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('dic.xml');
+$loader->load('dic.xml');
 
-$application = $container-&gt;get('application');
+$application = $container->get('application');
 
-$output = $container-&gt;get('console_output');
+$output = $container->get('console_output');
 
-$application-&gt;run(null, $output);</code></pre>
+$application->run(null, $output);</code></pre>
 <p>The creation of the <code>config/01-application.xml</code> and
 <code>config/02-documentation_writer.xml</code> files is left as an exercise for the
 reader.</p>

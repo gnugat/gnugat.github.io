@@ -57,7 +57,7 @@ This means tracking down every usage of Guzzle in the project and adapting the
 calls to the new version. It's a dawnting task, especially when the project doesn't
 have strong enough tests.</p>
 <p>Later on, when Amazon S3 SDK stabilized, it started to require Guzzle 5...</p>
-<p><a href="http://knowyourmeme.com/memes/rage-guy-fffffuuuuuuuu"><img alt="Screaming with anger" src="http://i0.kym-cdn.com/photos/images/newsfeed/000/000/578/1234931504682.jpg"></a></p>
+<p><a href="http://knowyourmeme.com/memes/rage-guy-fffffuuuuuuuu"><img src="http://i0.kym-cdn.com/photos/images/newsfeed/000/000/578/1234931504682.jpg" alt="Screaming with anger"></a></p>
 <p>Does that mean that we shouldn't use any libraries? Should we just don't care and
 continue to use them in the same way?</p>
 <p>This article will explain how to avoid both extremes, by decoupling from the library.
@@ -88,7 +88,7 @@ cd fortune-sdk</code></pre>
         }
     },
     "require": {
-        "php": "&gt;=5.4",
+        "php": ">=5.4",
     },
     "require-dev": {
         "phpspec/phpspec": "^2.3",
@@ -102,30 +102,30 @@ cd fortune-sdk</code></pre>
 
 # bin/test.sh
 
-composer --quiet --no-interaction update --optimize-autoloader &gt; /dev/null
+composer --quiet --no-interaction update --optimize-autoloader > /dev/null
 
-vendor/bin/phpspec --no-interaction run -f dot &amp;&amp; vendor/bin/phpunit</code></pre>
+vendor/bin/phpspec --no-interaction run -f dot && vendor/bin/phpunit</code></pre>
 <p>And finally configure PHPUnit:</p>
-<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml"><?xml version="1.0" encoding="UTF-8"?>
 
-&lt;!-- phpunit.xml.dist --&gt;
-&lt;!-- http://phpunit.de/manual/4.1/en/appendixes.configuration.html --&gt;
-&lt;phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<!-- phpunit.xml.dist -->
+<!-- http://phpunit.de/manual/4.1/en/appendixes.configuration.html -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.1/phpunit.xsd"
          backupGlobals="false"
          colors="true"
          bootstrap="vendor/autoload.php"
-&gt;
-    &lt;testsuites&gt;
-        &lt;testsuite name="Fortune SDK Test Suite"&gt;
-            &lt;directory&gt;tests&lt;/directory&gt;
-        &lt;/testsuite&gt;
-    &lt;/testsuites&gt;
-&lt;/phpunit&gt;</code></pre>
+>
+    <testsuites>
+        <testsuite name="Fortune SDK Test Suite">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit></code></pre>
 <h2 id="request-handler">Request Handler<a href="#request-handler" class="anchor">#</a></h2>
 <p>Since Guzzle might completly change next year, we're going to abstract it behind
 our own HTTP client:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 // src/Acme/FortuneSdk/Remote/RequestHandler.php
 
@@ -148,7 +148,7 @@ interface RequestHandler
 <p>We've decided to use the new PSR-7 standard:</p>
 <pre><code>composer require psr/http-message:^1.0</code></pre>
 <p>We'll hide any errors behind our own exception:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 // src/Acme/FortuneSdk/Remote/ClientException.php
 
@@ -160,7 +160,7 @@ class ClientException extends RuntimeException
 {
 }</code></pre>
 <p>Its first implementation will be with Guzzle 6:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 // src/Acme/FortuneSdk/Remote/RequestHandler/GuzzleSixRequestHandler.php
 
@@ -179,15 +179,15 @@ class GuzzleSixRequestHandler implements RequestHandler
 
     public function __construct(Client $client)
     {
-        $this-&gt;client = $client;
+        $this->client = $client;
     }
 
     public function handle(RequestInterface $request)
     {
         try {
-            return $this-&gt;client-&gt;send($request);
+            return $this->client->send($request);
         } catch (BadResponseException $e) {
-            return $e-&gt;getResponse();
+            return $e->getResponse();
         } catch (Exception $e) {
             throw new ClientException('Client threw an unexpected exception', 0, $e);
         }
@@ -201,7 +201,7 @@ in our project. We can even change our mind and use a completly different HTTP c
 <pre><code>composer require guzzlehttp/guzzle:^6.0</code></pre>
 <h2 id="functional-test">Functional test<a href="#functional-test" class="anchor">#</a></h2>
 <p>We can now create a functional test describing our service:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 // tests/Quote/SubmitNewQuoteTest.php
 
@@ -221,7 +221,7 @@ class SubmitNewQuoteTest extends PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $requestHandler = new FixturesRequestHandler();
-        $this-&gt;submitNewQuote = new RemoteSubmitNewQuote($requestHandler, self::URL);
+        $this->submitNewQuote = new RemoteSubmitNewQuote($requestHandler, self::URL);
     }
 
     /**
@@ -229,7 +229,7 @@ class SubmitNewQuoteTest extends PHPUnit_Framework_TestCase
      */
     public function it_can_submit_a_new_quote()
     {
-        $quote = $this-&gt;submitNewQuote-&gt;submit(self::QUOTE);
+        $quote = $this->submitNewQuote->submit(self::QUOTE);
 
         self::assertSame(self::QUOTE, $quote['quote']);
     }
@@ -241,7 +241,7 @@ of <code>RequestHandler</code> designed for our tests: even if the endpoint actu
 relying on network calls in our tests would only make them brittle
 (because it's slow and unreliable).</p>
 <p>Let's create it:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 // fixtures/FixturesRequestHandler.php
 
@@ -258,45 +258,45 @@ class FixturesRequestHandler implements RequestHandler
 
     public function __construct()
     {
-        $this-&gt;routes = array(
+        $this->routes = array(
             array(
-                'controller' =&gt; new Controller\Quote\SubmitNewQuoteController(),
-                'pattern' =&gt; '#/quotes#',
-                'methods' =&gt; array('POST'),
+                'controller' => new Controller\Quote\SubmitNewQuoteController(),
+                'pattern' => '#/quotes#',
+                'methods' => array('POST'),
             ),
         );
     }
 
     public function handle(RequestInterface $request)
     {
-        $path = $request-&gt;getUri()-&gt;getPath();
-        $method = $request-&gt;getMethod();
-        foreach ($this-&gt;routes as $route) {
+        $path = $request->getUri()->getPath();
+        $method = $request->getMethod();
+        foreach ($this->routes as $route) {
             if (1 === preg_match($route['pattern'], $path)) {
                 if (false === in_array($method, $route['methods'], true)) {
                     $body = new Stream('php://temp', 'w');
-                    $body-&gt;write(json_encode(array(
-                        'message' =&gt; "Method \"$method\" for route \"$path\" not supported (supported methods are: ".implode(', ', $route['methods']).")",
+                    $body->write(json_encode(array(
+                        'message' => "Method \"$method\" for route \"$path\" not supported (supported methods are: ".implode(', ', $route['methods']).")",
                     )));
 
-                    return new Response($body, 405, array('Content-Type' =&gt; 'application/json'));
+                    return new Response($body, 405, array('Content-Type' => 'application/json'));
                 }
                 try {
-                    return $route['controller']-&gt;handle($request);
+                    return $route['controller']->handle($request);
                 } catch (FixturesException $e) {
                     $body = new Stream('php://temp', 'w');
-                    $body-&gt;write($e-&gt;getMessage());
+                    $body->write($e->getMessage());
 
-                    return new Response($body, $e-&gt;getCode(), array('Content-Type' =&gt; 'application/json'));
+                    return new Response($body, $e->getCode(), array('Content-Type' => 'application/json'));
                 }
             }
         }
         $body = new Stream('php://temp', 'w');
-        $body-&gt;write(json_encode(array(
-            'message' =&gt; "Route \"$path\" not found",
+        $body->write(json_encode(array(
+            'message' => "Route \"$path\" not found",
         )));
 
-        return new Response($body, 404, array('Content-Type' =&gt; 'application/json'));
+        return new Response($body, 404, array('Content-Type' => 'application/json'));
     }
 }</code></pre>
 <p>We've decided to rely on Zend Diactoros to build the request, since it is the de
@@ -304,7 +304,7 @@ facto implementation of PSR-7:</p>
 <pre><code>composer require zendframework/zend-diactoros:^1.0</code></pre>
 <p>We've open the possibility of managing many endpoints with this class. We now need
 to define a controller for the quote submission one:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 // fixtures/Controller/Quote/SubmitNewQuoteController.php
 
@@ -320,7 +320,7 @@ class SubmitNewQuoteController implements RequestHandler
 {
     public function handle(RequestInterface $request)
     {
-        $submitNewQuote = json_decode($request-&gt;getBody()-&gt;__toString(), true);
+        $submitNewQuote = json_decode($request->getBody()->__toString(), true);
         if (false === isset($submitNewQuote['quote'])) {
             throw FixturesException::make('Missing required "quote" parameter', 422);
         }
@@ -329,16 +329,16 @@ class SubmitNewQuoteController implements RequestHandler
             throw FixturesException::make('Invalid "quote" parameter: must not be empty', 422);
         }
         $body = new Stream('php://temp', 'w');
-        $body-&gt;write(json_encode(array(
-            'id' =&gt; '',
-            'quote' =&gt; $quote
+        $body->write(json_encode(array(
+            'id' => '',
+            'quote' => $quote
         )));
 
-        return new Response($body, 201, array('Content-Type' =&gt; 'application/json'));
+        return new Response($body, 201, array('Content-Type' => 'application/json'));
     }
 }</code></pre>
 <p>Finally we need to write the exception class:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 // fixtures/FixturesException.php
 
@@ -356,7 +356,7 @@ class FixturesException extends DomainException
      */
     public static function make($message, $statusCode)
     {
-        return new self(json_encode(array('message' =&gt; $message)), $statusCode);
+        return new self(json_encode(array('message' => $message)), $statusCode);
     }
 }</code></pre>
 <p>Let's run the tests:</p>
@@ -364,7 +364,7 @@ class FixturesException extends DomainException
 <p>They now fail because <code>SubmitNewQuote</code> doesn't exist.</p>
 <h2 id="submitnewquote">SubmitNewQuote<a href="#submitnewquote" class="anchor">#</a></h2>
 <p>First of all, we'll define our service as an interface:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 // src/Acme/FortuneSdk/Quote/SubmitNewQuote.php
 
@@ -382,7 +382,7 @@ itself wrapped in a log implementation.</p>
 <p>Here we'll just take care of the remote one, let's bootstrap its test:</p>
 <pre><code>vendor/bin/phpspec describe 'Acme\FortuneSdk\Quote\SubmitNewQuote\RemoteSubmitNewQuote'</code></pre>
 <p>And now we can write the tests:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 // spec/Acme/FortuneSdk/Quote/SubmitNewQuote.php
 
@@ -401,12 +401,12 @@ class RemoteSubmitNewQuoteSpec extends ObjectBehavior
 
     function let(RequestHandler $requestHandler)
     {
-        $this-&gt;beConstructedWith($requestHandler, self::URL);
+        $this->beConstructedWith($requestHandler, self::URL);
     }
 
     function it_is_a_submit_new_quote()
     {
-        $this-&gt;shouldImplement('Acme\FortuneSdk\Quote\SubmitNewQuote');
+        $this->shouldImplement('Acme\FortuneSdk\Quote\SubmitNewQuote');
     }
 
     function it_calls_the_remote_endpoint(
@@ -415,15 +415,15 @@ class RemoteSubmitNewQuoteSpec extends ObjectBehavior
         StreamInterface $stream
     ) {
         $quote = array(
-            'quote' =&gt; self::QUOTE,
+            'quote' => self::QUOTE,
         );
 
         $request = Argument::type('Psr\Http\Message\RequestInterface');
-        $requestHandler-&gt;handle($request)-&gt;willReturn($response);
-        $response-&gt;getBody()-&gt;willReturn($stream);
-        $stream-&gt;__toString()-&gt;willReturn(json_encode($quote));
+        $requestHandler->handle($request)->willReturn($response);
+        $response->getBody()->willReturn($stream);
+        $stream->__toString()->willReturn(json_encode($quote));
 
-        $this-&gt;submit(self::QUOTE)-&gt;shouldBe($quote);
+        $this->submit(self::QUOTE)->shouldBe($quote);
     }
 }</code></pre>
 <p>In this test, we've used a wildcard to represent the request since the service is
@@ -431,7 +431,7 @@ going to create it. This is at the cost of not knowing how it is built.</p>
 <p>If we absolutely want to have control over this, we need to delegate the request
 construction to a factory, it then becomes possible to mock the request and check
 how it is built:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 // spec/Acme/FortuneSdk/Quote/SubmitNewQuote.php
 
@@ -451,12 +451,12 @@ class RemoteSubmitNewQuoteSpec extends ObjectBehavior
 
     function let(RequestFactory $requestFactory, RequestHandler $requestHandler)
     {
-        $this-&gt;beConstructedWith($requestFactory, $requestHandler, self::URL);
+        $this->beConstructedWith($requestFactory, $requestHandler, self::URL);
     }
 
     function it_is_a_submit_new_quote()
     {
-        $this-&gt;shouldImplement('Acme\FortuneSdk\Quote\SubmitNewQuote');
+        $this->shouldImplement('Acme\FortuneSdk\Quote\SubmitNewQuote');
     }
 
     function it_calls_the_remote_endpoint(
@@ -467,17 +467,17 @@ class RemoteSubmitNewQuoteSpec extends ObjectBehavior
         StreamInterface $stream
     ) {
         $quote = array(
-            'quote' =&gt; self::QUOTE,
+            'quote' => self::QUOTE,
         );
 
-        $requestFactory-&gt;make(self::URL.'/v1/quotes', 'POST', json_encode($quote), array(
-            'Content-Type' =&gt; 'application/json'
-        ))-&gt;willReturn($request);
-        $requestHandler-&gt;handle($request)-&gt;willReturn($response);
-        $response-&gt;getBody()-&gt;willReturn($stream);
-        $stream-&gt;__toString()-&gt;willReturn(json_encode($quote));
+        $requestFactory->make(self::URL.'/v1/quotes', 'POST', json_encode($quote), array(
+            'Content-Type' => 'application/json'
+        ))->willReturn($request);
+        $requestHandler->handle($request)->willReturn($response);
+        $response->getBody()->willReturn($stream);
+        $stream->__toString()->willReturn(json_encode($quote));
 
-        $this-&gt;submit(self::QUOTE)-&gt;shouldBe($quote);
+        $this->submit(self::QUOTE)->shouldBe($quote);
     }
 }</code></pre>
 <p>The choice between the first solution and the second one really depends on our preferences
@@ -487,7 +487,7 @@ this article is already long enough!).</p>
 <p>Let's run our tests to bootstrap the code:</p>
 <pre><code>vendor/bin/phpspec run</code></pre>
 <p>Now we can write the actual code:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 // src/Acme/FortuneSdk/Quote/SubmitNewQuote/RemoteSubmitNewQuote.php
 
@@ -505,20 +505,20 @@ class RemoteSubmitNewQuote implements SubmitNewQuote
 
     public function __construct(RequestHandler $requestHandler, $url)
     {
-        $this-&gt;requestHandler = $requestHandler;
-        $this-&gt;url = $url;
+        $this->requestHandler = $requestHandler;
+        $this->url = $url;
     }
 
     public function submit($quote)
     {
         $body = new Stream('php://memory', 'w');
-        $body-&gt;write(json_encode(array(
-            'quote' =&gt; $quote,
+        $body->write(json_encode(array(
+            'quote' => $quote,
         )));
-        $request = new Request($this-&gt;url.'/v1/quotes', 'POST', $body, array(
-            'Content-Type' =&gt; 'application/json'
+        $request = new Request($this->url.'/v1/quotes', 'POST', $body, array(
+            'Content-Type' => 'application/json'
         ));
-        $quote = json_decode($this-&gt;requestHandler-&gt;handle($request)-&gt;getBody()-&gt;__toString(), true);
+        $quote = json_decode($this->requestHandler->handle($request)->getBody()->__toString(), true);
 
         return $quote;
     }

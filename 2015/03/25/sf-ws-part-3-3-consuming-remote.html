@@ -83,7 +83,7 @@ then go to the <code>Factory</code> directory, etc...</p>
 <p>Here we've chosen an alternative: group services by model. All <code>Profile</code> services
 can be found in the same directory.</p>
 <p>Let's write the Gateway's specification:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: spec/AppBundle/Profile/ProfileGatewaySpec.php
 
 namespace spec\AppBundle\Profile;
@@ -104,28 +104,28 @@ class ProfileGatewaySpec extends ObjectBehavior
 
     function let(RequestHandler $requestHandler)
     {
-        $this-&gt;beConstructedWith($requestHandler, self::URL, self::USERNAME, self::PASSWORD);
+        $this->beConstructedWith($requestHandler, self::URL, self::USERNAME, self::PASSWORD);
     }
 
     function it_creates_profiles(RequestHandler $requestHandler, Response $response)
     {
         $profile = array(
-            'id' =&gt; self::ID,
-            'name' =&gt; self::NAME,
+            'id' => self::ID,
+            'name' => self::NAME,
         );
 
         $request = Argument::type('AppBundle\RequestHandler\Request');
-        $requestHandler-&gt;handle($request)-&gt;willReturn($response);
-        $response-&gt;getBody()-&gt;willReturn($profile);
+        $requestHandler->handle($request)->willReturn($response);
+        $response->getBody()->willReturn($profile);
 
-        $this-&gt;create(self::NAME)-&gt;shouldBe($profile);
+        $this->create(self::NAME)->shouldBe($profile);
     }
 }</code></pre>
 <p>We can now generate the code's skeleton:</p>
 <pre><code>./bin/phpspec run</code></pre>
 <p>It constructs a <code>Request</code> object, gives it to <code>RequestHandler</code> and then returns the
 <code>Response</code>'s body:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/Profile/ProfileGateway.php
 
 namespace AppBundle\Profile;
@@ -142,21 +142,21 @@ class ProfileGateway
 
     public function __construct(RequestHandler $requestHandler, $url, $username, $password)
     {
-        $this-&gt;requestHandler = $requestHandler;
-        $this-&gt;username = $username;
-        $this-&gt;password = $password;
+        $this->requestHandler = $requestHandler;
+        $this->username = $username;
+        $this->password = $password;
     }
 
     public function create($name)
     {
-        $request = new Request('POST', $this-&gt;url.'/api/v1/profiles');
-        $request-&gt;setHeader('Authorization', 'Basic '.base64_encode($this-&gt;username.':'.$this-&gt;password));
-        $request-&gt;setHeader('Content-Type', 'application/json');
-        $request-&gt;setBody(json_encode(array('name' =&gt; $name)));
+        $request = new Request('POST', $this->url.'/api/v1/profiles');
+        $request->setHeader('Authorization', 'Basic '.base64_encode($this->username.':'.$this->password));
+        $request->setHeader('Content-Type', 'application/json');
+        $request->setBody(json_encode(array('name' => $name)));
 
-        $response = $this-&gt;requestHandler-&gt;handle($request);
+        $response = $this->requestHandler->handle($request);
 
-        return $response-&gt;getBody();
+        return $response->getBody();
     }
 }</code></pre>
 <blockquote>
@@ -175,7 +175,7 @@ git commit -m 'Created ProfileGateway'</code></pre>
 <h2 id="create-profile-command">Create Profile Command<a href="#create-profile-command" class="anchor">#</a></h2>
 <p>Our application happens to be a Command Line Interface (CLI). We want to write a
 command to create profiles, and as usual we'll begin with a test:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: tests/Command/CreateProfileCommandTest.php
 
 namespace AppBundle\Tests\Command;
@@ -193,25 +193,25 @@ class CreateProfileCommandTest extends PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $kernel = new \AppKernel('test', false);
-        $this-&gt;app = new Application($kernel);
-        $this-&gt;app-&gt;setAutoExit(false);
-        $this-&gt;output = new NullOutput();
+        $this->app = new Application($kernel);
+        $this->app->setAutoExit(false);
+        $this->output = new NullOutput();
     }
 
     public function testItRunsSuccessfully()
     {
         $input = new ArrayInput(array(
-            'commandName' =&gt; 'app:profile:create',
-            'name' =&gt; 'Igor',
+            'commandName' => 'app:profile:create',
+            'name' => 'Igor',
         ));
 
-        $exitCode = $this-&gt;app-&gt;run($input, $this-&gt;output);
+        $exitCode = $this->app->run($input, $this->output);
 
-        $this-&gt;assertSame(0, $exitCode);
+        $this->assertSame(0, $exitCode);
     }
 }</code></pre>
 <p>Let's make this test pass:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/Command/CreateProfileCommand.php
 
 namespace AppBundle\Command;
@@ -226,19 +226,19 @@ class CreateProfileCommand extends ContainerAwareCommand
 {
     protected function configure()
     {
-        $this-&gt;setName('app:profile:create');
-        $this-&gt;setDescription('Create a new profile');
+        $this->setName('app:profile:create');
+        $this->setDescription('Create a new profile');
 
-        $this-&gt;addArgument('name', InputArgument::REQUIRED);
+        $this->addArgument('name', InputArgument::REQUIRED);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $profileGateway = $this-&gt;getContainer()-&gt;get('app.profile_gateway');
+        $profileGateway = $this->getContainer()->get('app.profile_gateway');
 
-        $profile = $profileGateway-&gt;create($input-&gt;getArgument('name'));
+        $profile = $profileGateway->create($input->getArgument('name'));
 
-        $output-&gt;writeln(sprintf('Profile #%s "%s" created', $profile['id'], $profile['name']));
+        $output->writeln(sprintf('Profile #%s "%s" created', $profile['id'], $profile['name']));
     }
 }</code></pre>
 <p>We'll need to define <code>ProfileGateway</code> as a service:</p>
@@ -256,21 +256,21 @@ services:
             - "%ws_password%"</code></pre>
 <p>By having a look <code>ProfileGateway</code> we can spot a mistake, the initialization or URL
 is missing from the constructor:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/Profile/ProfileGateway.php
 
     public function __construct(RequestHandler $requestHandler, $url, $username, $password)
     {
-        $this-&gt;requestHandler = $requestHandler;
-        $this-&gt;username = $username;
-        $this-&gt;password = $password;
-        $this-&gt;url = $url;
+        $this->requestHandler = $requestHandler;
+        $this->username = $username;
+        $this->password = $password;
+        $this->url = $url;
     }</code></pre>
 <p>Another mistake lies in <code>JsonResponseListener</code>, each Guzzle header is an array:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/RequestHandler/Listener/JsonResponseListener.php
 
-        $contentType = $response-&gt;getHeader('Content-Type');
+        $contentType = $response->getHeader('Content-Type');
         if (false === strpos($contentType[0], 'application/json')) {
             return;
         }</code></pre>

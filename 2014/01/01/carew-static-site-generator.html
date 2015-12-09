@@ -64,15 +64,15 @@ using <a href="http://getbootstrap.com/2.3.2/">Bootstrap</a>.</p>
 <h2 id="carew-and-github">Carew and Github<a href="#carew-and-github" class="anchor">#</a></h2>
 <p>A common way to quickly publish static sites is to use
 <a href="http://pages.github.com/">Github Pages</a> which works as follow:</p>
-<ol><li>create a repository, the name should follow this format: <code>&lt;username&gt;.github.io</code></li>
+<ol><li>create a repository, the name should follow this format: <code><username>.github.io</code></li>
 <li>add, commit and push the content of the <code>web</code> directory directly at the
 root of your repo</li>
-<li>the site is now available at this address: <code>http://&lt;username&gt;.github.io</code></li>
+<li>the site is now available at this address: <code>http://<username>.github.io</code></li>
 </ol><p><a href="http://carew.github.io/cookbook/hosting.html">Learn more about hosting a website built with Carew on the official website</a>.</p>
 <h2 id="creation">Creation<a href="#creation" class="anchor">#</a></h2>
 <p>Creating your site using Carew is very simple, just follow these steps:</p>
-<pre><code>$ php composer.phar create-project carew/boilerplate &lt;project&gt; -s dev
-$ cd &lt;project&gt;
+<pre><code>$ php composer.phar create-project carew/boilerplate <project> -s dev
+$ cd <project>
 $ bin/carew build</code></pre>
 <p>Examples pages (which sources are located in <code>pages</code> and <code>posts</code>) are converted
 from markdown to HTML in the <code>web</code> directory.</p>
@@ -88,7 +88,7 @@ post using this command:</p>
 <p>Each markdown file starts with a header:</p>
 <pre><code>---
 layout: post # no need for this line when writing a regular page
-title: Will be used by `&lt;title&gt;&lt;/title&gt;` and `&lt;h1&gt;&lt;/h1&gt;`
+title: Will be used by `<title></title>` and `<h1></h1>`
 tags:
     - first tag
     - carew

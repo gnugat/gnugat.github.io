@@ -43,8 +43,8 @@
 or <a href="https://github.com/KnpLabs/KnpPaginatorBundle">KnpPaginator</a> usually require
 a <code>QueryBuilder</code>:</p>
 <pre><code>// Usually in a controller
-$queryBuilder = $this-&gt;itemRepository-&gt;queryBuilderForFindAll();
-$results = $paginationService-&gt;paginate(
+$queryBuilder = $this->itemRepository->queryBuilderForFindAll();
+$results = $paginationService->paginate(
     $queryBuilder,
     $currentPageNumber,
     $itemsPerPage
@@ -54,10 +54,10 @@ number of total results (with a database it would mean two queries).
 Unfortunately this kind of logic tends to leak in our controllers which is why
 <a href="http://www.whitewashing.de/">Benjamin Eberlei</a> suggests an elegant alternative:</p>
 <pre><code class="language-php">// Can be done in a service
-$result = $this-&gt;itemRepository-&gt;findAll();
+$result = $this->itemRepository->findAll();
 
 // Can be done in a ViewListener
-$page = $result-&gt;take($currentPageNumber, $itemsPerPage);</code></pre>
+$page = $result->take($currentPageNumber, $itemsPerPage);</code></pre>
 <p>The <code>QueryBuilder</code> is actually wrapped in a <code>Result</code> which provides the possibility
 to get all of them or a single portion.
 Its <code>take</code> method returns the <code>PaginatorService</code> wrapped in a <code>Page</code> which contains

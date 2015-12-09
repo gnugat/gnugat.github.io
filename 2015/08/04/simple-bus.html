@@ -67,7 +67,7 @@ and roll them back.</p>
 <pre><code>composer require simple-bus/message-bus:^3.0</code></pre>
 <p>Since it allows us to choose how the Command Bus will find the Command Handler, we
 have to set it up:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 use SimpleBus\Message\Bus\Middleware\MessageBusSupportingMiddleware;
 use SimpleBus\Message\CallableResolver\CallableMap;
@@ -79,7 +79,7 @@ use SimpleBus\Message\Name\ClassBasedNameResolver;
 require __DIR__.'/vendor/autoload.php';
 
 $commandHandlerMap = new CallableMap(array(
-    'Vendor\Project\Member\RegisterMember' =&gt; array('register_member_handler', 'handle'),
+    'Vendor\Project\Member\RegisterMember' => array('register_member_handler', 'handle'),
 ), new ServiceLocatorAwareCallableResolver(function ($serviceId) {
     if ('register_member_handler' === $serviceId) {
         return new Vendor\Project\Member\RegisterMemberHandler();
@@ -87,7 +87,7 @@ $commandHandlerMap = new CallableMap(array(
 }));
 
 $commandBus = new MessageBusSupportingMiddleware();
-$commandBus-&gt;appendMiddleware(new DelegatesToMessageHandlerMiddleware(new NameBasedMessageHandlerResolver(
+$commandBus->appendMiddleware(new DelegatesToMessageHandlerMiddleware(new NameBasedMessageHandlerResolver(
     new ClassBasedNameResolver(),
     $commandHandlerMap
 )));</code></pre>
@@ -107,9 +107,9 @@ need to tag service definitions as follow:</p>
             - { name: command_handler, handles: Vendor\Project\Member\RegisterMember }</code></pre>
 <p>Now that the configuration is settled, here's a usage example:</p>
 <pre><code class="language-php">$username = isset($argv[1]) ? $argv[1] : null;
-$commandBus-&gt;handle(new RegisterMember($username));</code></pre>
+$commandBus->handle(new RegisterMember($username));</code></pre>
 <p>The command would look like this:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project\Member;
 
@@ -122,14 +122,14 @@ class RegisterMember
         if (null === $username) {
             throw new \InvalidArgumentException('Missing required "username" parameter');
         }
-        $this-&gt;username = $username;
+        $this->username = $username;
     }
 }</code></pre>
 <blockquote>
 <p><strong>Note</strong>: Commands validate simple input logic (required parameters, parameter type, etc).</p>
 </blockquote>
 <p>The Command Handler could look like this:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project\Member;
 
@@ -139,15 +139,15 @@ class RegisterMember
 
     public function __construct(MemberRespository $memberRepository)
     {
-        $this-&gt;memberRepository = $memberRepository;
+        $this->memberRepository = $memberRepository;
     }
 
     public function handle(RegisterMember $registerMember)
     {
-        if ($memberRepository-&gt;has($registerMember-&gt;username)) {
-            throw new \DomainException(sprintf('Given username "%s" already exists, and duplicates are not allowed', $registerMember-&gt;username));
+        if ($memberRepository->has($registerMember->username)) {
+            throw new \DomainException(sprintf('Given username "%s" already exists, and duplicates are not allowed', $registerMember->username));
         }
-        $memberRepository-&gt;register($registerMember);
+        $memberRepository->register($registerMember);
     }
 }</code></pre>
 <p>The Command Handler validates more complex logic (member username duplication, etc).</p>

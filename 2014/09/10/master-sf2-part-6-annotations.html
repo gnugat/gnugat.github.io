@@ -49,51 +49,51 @@
 </ul><p>In the previous articles we created an API allowing us to submit and list
 quotes:</p>
 <pre><code>.
-&#9500;&#9472;&#9472; app
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_prod.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_test.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; doctrine.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml.dist
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; console
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; logs
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; phpunit.xml.dist
-&#9500;&#9472;&#9472; composer.json
-&#9500;&#9472;&#9472; composer.lock
-&#9500;&#9472;&#9472; src
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Fortune
-&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Controller
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteController.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; DependencyInjection
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; FortuneApplicationExtension.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Entity
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; QuoteFactory.php
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; QuoteGateway.php
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; Quote.php
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteRepository.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; EventListener
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; SubmitJsonListener.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; FortuneApplicationBundle.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Resources
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; config
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp;     &#9500;&#9472;&#9472; doctrine
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp;     &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Quote.orm.yml
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; services.xml
-&#9474;&nbsp;&nbsp;         &#9492;&#9472;&#9472; Tests
-&#9474;&nbsp;&nbsp;             &#9500;&#9472;&#9472; Controller
-&#9474;&nbsp;&nbsp;             &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteControllerTest.php
-&#9474;&nbsp;&nbsp;             &#9492;&#9472;&#9472; Entity
-&#9474;&nbsp;&nbsp;                 &#9492;&#9472;&#9472; QuoteRepositoryTest.php
-&#9492;&#9472;&#9472; web
-    &#9492;&#9472;&#9472; app.php</code></pre>
+├── app
+│   ├── AppKernel.php
+│   ├── cache
+│   │   └── .gitkeep
+│   ├── config
+│   │   ├── config_prod.yml
+│   │   ├── config_test.yml
+│   │   ├── config.yml
+│   │   ├── doctrine.yml
+│   │   ├── parameters.yml
+│   │   ├── parameters.yml.dist
+│   │   └── routing.yml
+│   ├── console
+│   ├── logs
+│   │   └── .gitkeep
+│   └── phpunit.xml.dist
+├── composer.json
+├── composer.lock
+├── src
+│   └── Fortune
+│       └── ApplicationBundle
+│           ├── Controller
+│           │   └── QuoteController.php
+│           ├── DependencyInjection
+│           │   └── FortuneApplicationExtension.php
+│           ├── Entity
+│           │   ├── QuoteFactory.php
+│           │   ├── QuoteGateway.php
+│           │   ├── Quote.php
+│           │   └── QuoteRepository.php
+│           ├── EventListener
+│           │   └── SubmitJsonListener.php
+│           ├── FortuneApplicationBundle.php
+│           ├── Resources
+│           │   └── config
+│           │       ├── doctrine
+│           │       │   └── Quote.orm.yml
+│           │       └── services.xml
+│           └── Tests
+│               ├── Controller
+│               │   └── QuoteControllerTest.php
+│               └── Entity
+│                   └── QuoteRepositoryTest.php
+└── web
+    └── app.php</code></pre>
 <p>Here's the <a href="https://github.com/gnugat/mastering-symfony2">repository where you can find the actual code</a>.</p>
 <p>In this article, we'll discover annotations.</p>
 <h2 id="doctrine-annotations">Doctrine Annotations<a href="#doctrine-annotations" class="anchor">#</a></h2>
@@ -116,7 +116,7 @@ the routing configuration from <code>app/config/routing.yml</code> directly to t
 <p>Let's download the bundle:</p>
 <pre><code>composer require sensio/framework-extra-bundle:~3.0</code></pre>
 <p>Then register it:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: app/AppKernel.php
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -136,12 +136,12 @@ class AppKernel extends Kernel
 
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
-        $loader-&gt;load(__DIR__.'/config/config_'.$this-&gt;getEnvironment().'.yml');
+        $loader->load(__DIR__.'/config/config_'.$this->getEnvironment().'.yml');
     }
 }</code></pre>
 <p>Finally, we need to tell Doctrine's Annotation library  where to find the
 classes by registering Composer's autoloader:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: app/autoload.php
 
 use Doctrine\Common\Annotations\AnnotationRegistry;
@@ -152,7 +152,7 @@ AnnotationRegistry::registerLoader(array($loader, 'loadClass'));
 
 return $loader;</code></pre>
 <p>This file should be used in our front controller:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 use Symfony\Component\HttpFoundation\Request;
 
@@ -161,24 +161,24 @@ require_once __DIR__.'/../app/AppKernel.php';
 
 $kernel = new AppKernel('prod', false);
 $request = Request::createFromGlobals();
-$response = $kernel-&gt;handle($request);
-$response-&gt;send();
-$kernel-&gt;terminate($request, $response);</code></pre>
+$response = $kernel->handle($request);
+$response->send();
+$kernel->terminate($request, $response);</code></pre>
 <p>But also in our test suite:</p>
-<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
-&lt;phpunit
+<pre><code><?xml version="1.0" encoding="UTF-8"?>
+<!-- http://phpunit.de/manual/current/en/appendixes.configuration.html -->
+<phpunit
     backupGlobals="false"
     colors="true"
     syntaxCheck="false"
-    bootstrap="autoload.php"&gt;
+    bootstrap="autoload.php">
 
-    &lt;testsuites&gt;
-        &lt;testsuite name="Functional Test Suite"&gt;
-            &lt;directory&gt;../src/*/*/Tests&lt;/directory&gt;
-        &lt;/testsuite&gt;
-    &lt;/testsuites&gt;
-&lt;/phpunit&gt;</code></pre>
+    <testsuites>
+        <testsuite name="Functional Test Suite">
+            <directory>../src/*/*/Tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit></code></pre>
 <h2 id="using-the-route-annotation">Using the @Route annotation<a href="#using-the-route-annotation" class="anchor">#</a></h2>
 <p>We can now empty the <code>routing.yml</code> file and tell it to import the configuration
 from the <code>QuoteController</code> using its annotations:</p>
@@ -187,7 +187,7 @@ fortune_application:
     resource: @FortuneApplicationBundle/Controller
     type: annotation</code></pre>
 <p>The controller itself will look like this:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
 
 namespace Fortune\ApplicationBundle\Controller;
@@ -205,14 +205,14 @@ class QuoteController extends Controller
      */
     public function submitAction(Request $request)
     {
-        $postedValues = $request-&gt;request-&gt;all();
+        $postedValues = $request->request->all();
         if (empty($postedValues['content'])) {
-            $answer = array('message' =&gt; 'Missing required parameter: content');
+            $answer = array('message' => 'Missing required parameter: content');
 
             return new JsonResponse($answer, Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        $quoteRepository = $this-&gt;container-&gt;get('fortune_application.quote_repository');
-        $quote = $quoteRepository-&gt;insert($postedValues['content']);
+        $quoteRepository = $this->container->get('fortune_application.quote_repository');
+        $quote = $quoteRepository->insert($postedValues['content']);
 
         return new JsonResponse($quote, Response::HTTP_CREATED);
     }
@@ -222,8 +222,8 @@ class QuoteController extends Controller
      */
     public function listAction(Request $request)
     {
-        $quoteRepository = $this-&gt;container-&gt;get('fortune_application.quote_repository');
-        $quotes = $quoteRepository-&gt;findAll();
+        $quoteRepository = $this->container->get('fortune_application.quote_repository');
+        $quotes = $quoteRepository->findAll();
 
         return new JsonResponse($quotes, Response::HTTP_OK);
     }

@@ -50,10 +50,10 @@ in v0.7.</p>
 </ol><h2 id="changes-done">Changes done<a href="#changes-done" class="anchor">#</a></h2>
 <p>Thanks to <a href="https://github.com/gnugat/redaktilo/commits?author=WouterJ">WouterJ</a>
 you can now:</p>
-<ul><li>remove the current line: <code>$editor-&gt;remove($file);</code></li>
-<li>replace the current line: <code>$editor-&gt;changeTo($file, $replacement);</code></li>
-<li>replace all occurences: <code>$editor-&gt;replaceWith($file, $regex, $callback);</code></li>
-<li>check line presence: <code>$editor-&gt;has($file, $pattern);</code></li>
+<ul><li>remove the current line: <code>$editor->remove($file);</code></li>
+<li>replace the current line: <code>$editor->changeTo($file, $replacement);</code></li>
+<li>replace all occurences: <code>$editor->replaceWith($file, $regex, $callback);</code></li>
+<li>check line presence: <code>$editor->has($file, $pattern);</code></li>
 </ul><p>I've updated to documentation to make the library easier to learn with:</p>
 <ul><li>a <a href="https://github.com/gnugat/redaktilo/blob/master/doc/01-tutorial.md">tutorial</a></li>
 <li>a <a href="https://github.com/gnugat/redaktilo/blob/master/doc/03-reference.md">code reference</a></li>
@@ -64,7 +64,7 @@ this promise, I've added executable
 extended:</p>
 <ul><li><a href="https://github.com/gnugat/redaktilo/tree/master/src/Gnugat/Redaktilo/Search">you can add search strategies</a></li>
 <li><a href="https://github.com/gnugat/redaktilo/tree/master/src/Gnugat/Redaktilo/Converter">you can convert the file's content</a></li>
-</ul><p>As highlited by <a href="https://twitter.com/clemherreman/status/466497340824911872">Cl&eacute;ment Herreman</a>,
+</ul><p>As highlited by <a href="https://twitter.com/clemherreman/status/466497340824911872">Clément Herreman</a>,
 those refactorings have introduced a more complex construction schema.
 To make things easier, a
 <a href="https://github.com/gnugat/redaktilo/blob/master/src/Gnugat/Redaktilo/DependencyInjection/StaticContainer.php">static Dependency Injection Container</a>
@@ -88,7 +88,7 @@ to <code>Editor</code> (<code>jumpToFirst</code>).</p>
 <p>Finally, the editor should allow insertion, replacement and removal in any
 locations, not just on the current line.</p>
 <p>Once these features added, more refactoring should take place: since the
-creation of <strong>Redaktilo</strong>, <a href="https://github.com/jfsimon">Jean-Fran&ccedil;ois Simon</a>
+creation of <strong>Redaktilo</strong>, <a href="https://github.com/jfsimon">Jean-François Simon</a>
 advised me to use the command and memento patterns, which would allow the
 undo/redo feature.
 While I now think that <code>Command</code> is indeed more suitable than <code>ReplaceStrategy</code>
@@ -140,10 +140,10 @@ names):</p>
 given location)</li>
 <li>global manipulation: replaceAll</li>
 </ul><p>I'd like to thank the early contributors:</p>
-<ul><li><a href="https://github.com/jfsimon">Jean-Fran&ccedil;ois Simon</a></li>
+<ul><li><a href="https://github.com/jfsimon">Jean-François Simon</a></li>
 <li><a href="https://github.com/gnugat/redaktilo/commits?author=WouterJ">WouterJ</a></li>
-<li><a href="https://github.com/gnugat/redaktilo/commit/7c8da2d94e1d659318e9bb1745c8cc19435cb3af#commitcomment-6279956">Cl&eacute;ment Debiaune</a></li>
-<li><a href="https://twitter.com/clemherreman/status/466497340824911872">Cl&eacute;ment Herreman</a></li>
+<li><a href="https://github.com/gnugat/redaktilo/commit/7c8da2d94e1d659318e9bb1745c8cc19435cb3af#commitcomment-6279956">Clément Debiaune</a></li>
+<li><a href="https://twitter.com/clemherreman/status/466497340824911872">Clément Herreman</a></li>
 <li><a href="https://github.com/gnugat/redaktilo/issues/6#issuecomment-44005931">Loick Piera</a></li>
 </ul><p>Any help is appreciated, whether it's some code review, typo fixing or
 code/documentation contribution. But the biggest help you could give me:

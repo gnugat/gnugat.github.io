@@ -84,7 +84,7 @@ technology is to stick to it in order to avoid having too many different technol
 </blockquote>
 <p>We need to create a virtual host first by creating the <code>/etc/apache2/sites-available/items.conf</code>
 file:</p>
-<pre><code>&lt;VirtualHost *:80&gt;
+<pre><code><VirtualHost *:80>
     ServerName items.local
 
     DocumentRoot /home/foobar/items/web
@@ -92,14 +92,14 @@ file:</p>
     ErrorLog "/home/foobar/items/app/logs/apache_errors.log"
     CustomLog "/home/foobar/items/app/logs/apache_accesses.log" common
 
-    &lt;Directory /home/foobar/items/web&gt;
+    <Directory /home/foobar/items/web>
         Options Indexes FollowSymLinks MultiViews
         AllowOverride all
         Require all granted
         Order allow,deny
         allow from all
-    &lt;/Directory&gt;
-&lt;/VirtualHost&gt;</code></pre>
+    </Directory>
+</VirtualHost></code></pre>
 <p>Apache will require access to the logs and cache directories, as well as our user.
 The easiest way to avoid permission issues is to change Apache's user and group
 to ours in <code>/etc/apache2/envvars</code>:</p>
@@ -127,16 +127,16 @@ as follow:</p>
         "psr-4": { "AppBundle\\Tests\\": "tests/" }
     },
     "require": {
-        "php": "&gt;=5.3.3",
+        "php": ">=5.3.3",
         "symfony/symfony": "~2.7@beta",
-        "doctrine/orm": "~2.2,&gt;=2.2.3,&lt;2.5",
-        "doctrine/dbal": "&lt;2.5",
+        "doctrine/orm": "~2.2,>=2.2.3,<2.5",
+        "doctrine/dbal": "<2.5",
         "doctrine/doctrine-bundle": "~1.4",
         "symfony/assetic-bundle": "~2.3",
         "symfony/swiftmailer-bundle": "~2.3",
         "symfony/monolog-bundle": "~2.4",
-        "sensio/distribution-bundle": "~3.0,&gt;=3.0.12",
-        "sensio/framework-extra-bundle": "~3.0,&gt;=3.0.2",
+        "sensio/distribution-bundle": "~3.0,>=3.0.12",
+        "sensio/framework-extra-bundle": "~3.0,>=3.0.2",
         "incenteev/composer-parameter-handler": "~2.0"
     },
     "require-dev": {
@@ -194,7 +194,7 @@ composer update</code></pre>
 unreliable. To fix this, we'll create a "middleware" that wraps our <code>AppKernel</code> in a
 database transaction and rolls it back after each requests:</p>
 <p>To do so, we can create the following <code>app/RollbackKernel.php</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: app/RollbackKernel.php
 
 use Doctrine\DBAL\Connection;
@@ -208,52 +208,52 @@ class RollbackKernel implements HttpKernelInterface
 
     public function __construct(HttpKernelInterface $app, Connection $connection)
     {
-        $this-&gt;app = $app;
-        $this-&gt;connection = $connection;
+        $this->app = $app;
+        $this->connection = $connection;
     }
 
     public static function make()
     {
         $kernel = new \AppKernel('test', false);
-        $kernel-&gt;boot();
-        $connection = $kernel-&gt;getContainer()-&gt;get('doctrine.dbal.default_connection');
+        $kernel->boot();
+        $connection = $kernel->getContainer()->get('doctrine.dbal.default_connection');
 
         return new self($kernel, $connection);
     }
 
     public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true)
     {
-        $this-&gt;connection-&gt;beginTransaction();
-        $response = $this-&gt;app-&gt;handle($request, $type, $catch);
-        $this-&gt;connection-&gt;rollback();
+        $this->connection->beginTransaction();
+        $response = $this->app->handle($request, $type, $catch);
+        $this->connection->rollback();
 
         return $response;
     }
 }</code></pre>
 <p>To be able to use <code>RollbackKernel</code> in our tests we need to make it available by
 creating the following <code>app/bootstrap_test.php</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: app/bootstrap_test.php
 
 require __DIR__.'/bootstrap.php.cache';
 require __DIR__.'/AppKernel.php';
 require __DIR__.'/RollBackKernel.php';</code></pre>
 <p>Then we can configure PHPUnit to use it by editing <code>app/phpunit.xml.dist</code>:</p>
-<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code><?xml version="1.0" encoding="UTF-8"?>
 
-&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
-&lt;phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="bootstrap_test.php"&gt;
-    &lt;testsuites&gt;
-        &lt;testsuite name="Functional Tests"&gt;
-            &lt;directory&gt;../tests&lt;/directory&gt;
-        &lt;/testsuite&gt;
-    &lt;/testsuites&gt;
-&lt;/phpunit&gt;</code></pre>
+<!-- http://phpunit.de/manual/current/en/appendixes.configuration.html -->
+<phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="bootstrap_test.php">
+    <testsuites>
+        <testsuite name="Functional Tests">
+            <directory>../tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit></code></pre>
 <p>Finally we'll install <a href="http://phpspec.net/">phpspec</a> with <a href="http://memio.github.io/spec-gen">SpecGen</a>
 for our unit tests:</p>
 <pre><code>composer require --dev phpunit/phpunit:~4.6 phpspec/phpspec:~2.2 memio/spec-gen:~0.3
-echo 'extensions:' &gt; phpspec.yml
-echo '  - Memio\SpecGen\MemioSpecGenExtension' &gt;&gt; phpspec.yml</code></pre>
+echo 'extensions:' > phpspec.yml
+echo '  - Memio\SpecGen\MemioSpecGenExtension' >> phpspec.yml</code></pre>
 <p>And now we're ready to test our application! Let's save our work:</p>
 <pre><code>git add -A
 git commit -m 'Prepared application for tests'</code></pre>
@@ -271,7 +271,7 @@ we'll need Doctrine Fixtures and Doctrine Migrations:</p>
 composer require doctrine/migrations:~1.0@alpha
 composer require doctrine/doctrine-migrations-bundle:~1.0</code></pre>
 <p>Then we have to register them in <code>app/AppKernel.php</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Config\Loader\LoaderInterface;
@@ -292,7 +292,7 @@ class AppKernel extends Kernel
             new AppBundle\AppBundle(),
         );
 
-        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
+        if (in_array($this->getEnvironment(), array('dev', 'test'))) {
             $bundles[] = new Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle();
             $bundles[] = new Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle();
             $bundles[] = new Symfony\Bundle\DebugBundle\DebugBundle();
@@ -306,7 +306,7 @@ class AppKernel extends Kernel
 
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
-        $loader-&gt;load($this-&gt;getRootDir().'/config/config_'.$this-&gt;getEnvironment().'.yml');
+        $loader->load($this->getRootDir().'/config/config_'.$this->getEnvironment().'.yml');
     }
 }</code></pre>
 <p>Now we can write the following <code>bin/build.sh</code> script:</p>
@@ -317,9 +317,9 @@ echo '// Building development environment'
 
 rm -rf app/cache/* app/logs/*
 
-composer --quiet --no-interaction install --optimize-autoloader &gt; /dev/null
+composer --quiet --no-interaction install --optimize-autoloader > /dev/null
 
-php app/console --quiet doctrine:database:drop --force &gt; /dev/null 2&gt;&amp;1
+php app/console --quiet doctrine:database:drop --force > /dev/null 2>&1
 php app/console --quiet doctrine:database:create
 php app/console --no-interaction --quiet doctrine:migrations:migrate
 php app/console --no-interaction --quiet doctrine:fixtures:load --fixtures=src
@@ -338,10 +338,10 @@ echo '// Building test environment'
 
 rm -rf app/cache/test app/logs/*test.log
 
-composer --quiet --no-interaction install --optimize-autoloader  &gt; /dev/null
+composer --quiet --no-interaction install --optimize-autoloader  > /dev/null
 php app/console --env=test --quiet cache:clear
 
-php app/console --env=test --no-debug --quiet doctrine:database:drop --force &gt; /dev/null 2&gt;&amp;1
+php app/console --env=test --no-debug --quiet doctrine:database:drop --force > /dev/null 2>&1
 php app/console --env=test --no-debug --quiet doctrine:database:create
 php app/console --env=test --no-debug --no-interaction --quiet doctrine:migrations:migrate
 php app/console --env=test --no-debug --no-interaction --quiet doctrine:fixtures:load --fixtures=src
@@ -350,7 +350,7 @@ echo ''
 echo ' [OK] Test environment built'
 echo ''
 
-vendor/bin/phpunit -c app &amp;&amp; vendor/bin/phpspec --no-interaction run --format=dot &amp;&amp; vendor/bin/php-cs-fixer fix --dry-run --config=sf23 .</code></pre>
+vendor/bin/phpunit -c app && vendor/bin/phpspec --no-interaction run --format=dot && vendor/bin/php-cs-fixer fix --dry-run --config=sf23 .</code></pre>
 <p>With this we can start the tickets assigned to us, we can commit the changes:</p>
 <pre><code>chmod +x bin/*.sh
 git add -A

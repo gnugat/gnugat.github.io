@@ -75,24 +75,24 @@ cd fortune</code></pre>
 <a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">learn Symfony2 series</a>.
 It contains the following files:</p>
 <pre><code>.
-&#9500;&#9472;&#9472; app
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_prod.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_test.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml.dist
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; logs
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; phpunit.xml.dist
-&#9500;&#9472;&#9472; composer.json
-&#9500;&#9472;&#9472; LICENSE
-&#9500;&#9472;&#9472; README.md
-&#9492;&#9472;&#9472; web
-    &#9492;&#9472;&#9472; app.php</code></pre>
+├── app
+│   ├── AppKernel.php
+│   ├── cache
+│   │   └── .gitkeep
+│   ├── config
+│   │   ├── config_prod.yml
+│   │   ├── config_test.yml
+│   │   ├── config.yml
+│   │   ├── parameters.yml.dist
+│   │   └── routing.yml
+│   ├── logs
+│   │   └── .gitkeep
+│   └── phpunit.xml.dist
+├── composer.json
+├── LICENSE
+├── README.md
+└── web
+    └── app.php</code></pre>
 <p>Remove the documentation files:</p>
 <pre><code>rm README.md LICENSE</code></pre>
 <p>Change the <code>composer.json</code> information:</p>
@@ -105,7 +105,7 @@ It contains the following files:</p>
         "psr-4": { "": "src/" }
     },
     "require": {
-        "php": "&gt;=5.3.17",
+        "php": ">=5.3.17",
 
         "symfony/symfony": "~2.4"
     },
@@ -119,7 +119,7 @@ It contains the following files:</p>
 secret parameter:</p>
 <pre><code>parameters:
     secret: hazuZRqYGdRrL8ATdB8kAqBZ</code></pre>
-<p><strong>Tip</strong>: Use <a href="https://www.random.org/passwords/?num=1&amp;len=24&amp;format=html&amp;rnd=new">random.org</a>
+<p><strong>Tip</strong>: Use <a href="https://www.random.org/passwords/?num=1&len=24&format=html&rnd=new">random.org</a>
 to generate your secret token.</p>
 <p><strong>Note</strong>: For security reason, this parameter file is ignored by git. It means
 that this file should be created on each installation.</p>
@@ -132,7 +132,7 @@ git commit -m 'Created a Symfony2 Emptier application'</code></pre>
 <p>We will also need an Application bundle. First we create the directories:</p>
 <pre><code>mkdir -p src/Fortune/ApplicationBundle</code></pre>
 <p>Then the Bundle class:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Fortune/ApplicationBundle/FortuneApplicationBundle.php
 
 namespace Fortune\ApplicationBundle;
@@ -143,7 +143,7 @@ class FortuneApplicationBundle extends Bundle
 {
 }</code></pre>
 <p>And finally register it in the application's kernel:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: app/AppKernel.php
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -155,13 +155,13 @@ class AppKernel extends Kernel
     {
         return array(
             new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
-            new Fortune\ApplicationBundle\FortuneApplicationBundle(), // &lt;-- Here!
+            new Fortune\ApplicationBundle\FortuneApplicationBundle(), // <-- Here!
         );
     }
 
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
-        $loader-&gt;load(__DIR__.'/config/config_'.$this-&gt;getEnvironment().'.yml');
+        $loader->load(__DIR__.'/config/config_'.$this->getEnvironment().'.yml');
     }
 }</code></pre>
 <p>We're now ready to get started with our real concern, so let's commit our work:</p>
@@ -172,7 +172,7 @@ git commit -m 'Created ApplicationBundle'</code></pre>
 server. This configuration is well explained
 <a href="http://symfony.com/doc/current/cookbook/configuration/web_server_configuration.html">in the documentation</a>,
 so here's a dump of an apache vhost:</p>
-<pre><code>&lt;VirtualHost *:80&gt;
+<pre><code><VirtualHost *:80>
     ServerName fortune.local
 
     DocumentRoot /home/loic.chardonnet/Projects/gnugat/fortune/web
@@ -180,18 +180,18 @@ so here's a dump of an apache vhost:</p>
     ErrorLog "/home/loic.chardonnet/Projects/gnugat/fortune/app/logs/apache_errors.log"
     CustomLog "/home/loic.chardonnet/Projects/gnugat/fortune/app/logs/apache_accesses.log" common
 
-    &lt;Directory /home/loic.chardonnet/Projects/gnugat/fortune/web&gt;
+    <Directory /home/loic.chardonnet/Projects/gnugat/fortune/web>
         Options Indexes FollowSymLinks MultiViews
         AllowOverride None
         Order allow,deny
         allow from all
-        &lt;IfModule mod_rewrite.c&gt;
+        <IfModule mod_rewrite.c>
             RewriteEngine On
             RewriteCond %{REQUEST_FILENAME} !-f
             RewriteRule ^(.*)$ /app.php [QSA,L]
-        &lt;/IfModule&gt;
-    &lt;/Directory&gt;
-&lt;/VirtualHost&gt;</code></pre>
+        </IfModule>
+    </Directory>
+</VirtualHost></code></pre>
 <p>If you run into some permission problem (like writing in <code>cache</code> and <code>logs</code>),
 you might consider to change <code>APACHE_RUN_USER</code> and <code>APACHE_RUN_GROUP</code>
 environment variables present in <code>/etc/apache2/envvars</code> to your own user and

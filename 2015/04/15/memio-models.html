@@ -64,7 +64,7 @@ split into smaller packages.</p>
 <li>an integer named <code>type</code> which defaults to <code>self::MASTER_REQUEST</code></li>
 <li>a boolean named <code>catch</code> which defaults to <code>true</code></li>
 </ul><p>Memio provides models that allow us to describe this method by constructing objects:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 use Memio\Model\Argument;
 use Memio\Model\Method;
@@ -72,18 +72,18 @@ use Memio\Model\Method;
 require __DIR__.'/vendor/autoload.php';
 
 $method = Method::make('handle')
-    -&gt;addArgument(Argument::make('Request', 'request'))
-    -&gt;addArgument(Argument::make('int', 'type')
-        -&gt;setDefaultValue('self::MASTER_REQUEST')
+    ->addArgument(Argument::make('Request', 'request'))
+    ->addArgument(Argument::make('int', 'type')
+        ->setDefaultValue('self::MASTER_REQUEST')
     )
-    -&gt;addArgument(Argument::make('bool', 'catch')
-        -&gt;setDefaultValue('true')
+    ->addArgument(Argument::make('bool', 'catch')
+        ->setDefaultValue('true')
     )
 ;</code></pre>
 <blockquote>
 <p><strong>Note</strong>: Static constructors are used to allow fluent interface (chaining calls).
 From PHP 5.6 it is possible to do the following:
-<code>(new Method('handle'))-&gt;addArgument(new Argument('Request', 'request'));</code></p>
+<code>(new Method('handle'))->addArgument(new Argument('Request', 'request'));</code></p>
 </blockquote>
 <h2 id="building-models-dynamically">Building models dynamically<a href="#building-models-dynamically" class="anchor">#</a></h2>
 <p>Usually models aren't built manually, they could be constructed using:</p>
@@ -93,13 +93,13 @@ From PHP 5.6 it is possible to do the following:
 </ul><p>Here's a usage example. When running the test suite, <a href="http://phpspec.net">phpspec</a>
 generates missing methods in our code (amongst many other nice things).</p>
 <p>If the following call is found in a test:</p>
-<pre><code class="language-php">        $this-&gt;handle($request);</code></pre>
+<pre><code class="language-php">        $this->handle($request);</code></pre>
 <p>And if the <code>handle</code> method isn't defined in the class currently tested, then phpspec
 gathers the following parameters:</p>
 <ul><li><code>$methodName</code>, which here is set to <code>'handle'</code></li>
 <li><code>$arguments</code>, which here is set to <code>array($request)</code></li>
 </ul><p>Let's re-write its generator using Memio:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 use Memio\Model\Argument;
 use Memio\Model\Method;
@@ -112,7 +112,7 @@ function phpspec_generator($methodName, array $arguments) {
     foreach ($arguments as $argument) {
         $type = is_object($argument) ? get_class($argument) : gettype($argument);
         $argumentName = 'argument'.$index++;
-        $method-&gt;addArgument(new Argument($type, $argumentName));
+        $method->addArgument(new Argument($type, $argumentName));
     }
 
     return $method

@@ -52,35 +52,35 @@ statements to upgrade and downgrade your schema, or insert / delete data.</p>
 <code>export PATH="vendor/bin:$PATH"</code>.</p>
 </blockquote>
 <p>Then we need to configure the settings:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: phinx.php
 
 $parameters = \Symfony\Component\Yaml\Yaml::parse(file_get_contents(__DIR__.'/app/config/parameters.yml'));
 
 return array(
-    'paths' =&gt; array(
-        'migrations' =&gt; __DIR__.'/migrations'
+    'paths' => array(
+        'migrations' => __DIR__.'/migrations'
     ),
-    'environments' =&gt; array(
-        'default_migration_table' =&gt; 'migration',
-        'default_database' =&gt; 'prod',
-        'prod' =&gt; array(
-            'adapter' =&gt; 'pgsql', // Could also be "mysql", "sqlite" or "sqlsrv"
-            'host' =&gt; $parameters['parameters']['database_host'],
-            'name' =&gt; $parameters['parameters']['database_name'],
-            'user' =&gt; $parameters['parameters']['database_user'],
-            'pass' =&gt; $parameters['parameters']['database_pass'],
-            'port' =&gt; $parameters['parameters']['database_port'],
-            'charset' =&gt; 'utf8',
+    'environments' => array(
+        'default_migration_table' => 'migration',
+        'default_database' => 'prod',
+        'prod' => array(
+            'adapter' => 'pgsql', // Could also be "mysql", "sqlite" or "sqlsrv"
+            'host' => $parameters['parameters']['database_host'],
+            'name' => $parameters['parameters']['database_name'],
+            'user' => $parameters['parameters']['database_user'],
+            'pass' => $parameters['parameters']['database_pass'],
+            'port' => $parameters['parameters']['database_port'],
+            'charset' => 'utf8',
         ),
-        'test' =&gt; array(
-            'adapter' =&gt; 'pgsql',
-            'host' =&gt; $parameters['parameters']['database_host'],
-            'name' =&gt; $parameters['parameters']['database_name'].'_test',
-            'user' =&gt; $parameters['parameters']['database_user'],
-            'pass' =&gt; $parameters['parameters']['database_pass'],
-            'port' =&gt; $parameters['parameters']['database_port'],
-            'charset' =&gt; 'utf8',
+        'test' => array(
+            'adapter' => 'pgsql',
+            'host' => $parameters['parameters']['database_host'],
+            'name' => $parameters['parameters']['database_name'].'_test',
+            'user' => $parameters['parameters']['database_user'],
+            'pass' => $parameters['parameters']['database_pass'],
+            'port' => $parameters['parameters']['database_port'],
+            'charset' => 'utf8',
         ),
     ),
 );</code></pre>
@@ -90,7 +90,7 @@ the database configuration with the application's one.</p>
 <p>Migration files can be bootstrapped using the command:</p>
 <pre><code>phinx create FirstVersion</code></pre>
 <p>Which results in the following file (<code>migrations/20150805201245_first_version.php</code>):</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 use Phinx\Migration\AbstractMigration;
 
@@ -100,14 +100,14 @@ class FirstVersion extends AbstractMigration
     {
     }
 }</code></pre>
-<p>In the <code>change</code> method we need to get a <code>Table</code> object using <code>$this-&gt;table('table_name')</code>
+<p>In the <code>change</code> method we need to get a <code>Table</code> object using <code>$this->table('table_name')</code>
 and then use it to describe the changes in the schema: phinx is then able to figure out
 how to reverse them if necessary.</p>
 <p>If you'd rather write SQL queries directly you need to remove <code>change</code> and define
-a <code>up</code> and a <code>down</code> method. In them you can use <code>$this-&gt;query('SQL')</code> to execute
+a <code>up</code> and a <code>down</code> method. In them you can use <code>$this->query('SQL')</code> to execute
 your queries.</p>
 <p>Example:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 use Phinx\Migration\AbstractMigration;
 
@@ -115,12 +115,12 @@ class FirstVersion extends AbstractMigration
 {
     public function up()
     {
-        $this-&gt;query('CREATE TABLE my_table;');
+        $this->query('CREATE TABLE my_table;');
     }
 
     public function down()
     {
-        $this-&gt;query('DROP TABLE my_table;');
+        $this->query('DROP TABLE my_table;');
     }
 }</code></pre>
 <p>Migrating an application then becomes as simple as:</p>

@@ -49,7 +49,7 @@ this.</p>
 <h2 id="low-level-file-manipulation">Low level file manipulation<a href="#low-level-file-manipulation" class="anchor">#</a></h2>
 <p><strong>Redaktilo</strong> provides an object oriented way to manipulate files. For example
 you can open existing ones, or create new ones:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 require_once __DIR__.'/vendor/autoload.php';
 
 use Gnugat\Redaktilo\DependencyInjection\StaticContainer;
@@ -57,36 +57,36 @@ use Gnugat\Redaktilo\DependencyInjection\StaticContainer;
 $filesystem = StaticContainer::makeFilesystem();
 
 $filename = '/tmp/monthy.py';
-if ($filesystem-&gt;exists($filename)) {
-    $file = $filesystem-&gt;open('/tmp/existing.txt');
+if ($filesystem->exists($filename)) {
+    $file = $filesystem->open('/tmp/existing.txt');
 } else {
-    $file = $filesystem-&gt;create('/tmp/new.txt');
+    $file = $filesystem->create('/tmp/new.txt');
 }
 
 // ...</code></pre>
 <p>The main interest in this library lies in manipulations you can do, for example
 jumping to a line and adding a new one under it:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // ...
 
 $lineSearchStrategy = StaticContainer::makeLineSearchStrategy();
 $lineReplaceStrategy = StaticContainer::makeLineReplaceStrategy();
 
-$lineNumber = $lineSearchStrategy-&gt;findNext('if Knight.saysNi():');
-$lineReplaceStrategy-&gt;insertAt($file, $lineNumber, '    print "Ni!"');
+$lineNumber = $lineSearchStrategy->findNext('if Knight.saysNi():');
+$lineReplaceStrategy->insertAt($file, $lineNumber, '    print "Ni!"');
 
 // ...</code></pre>
 <p>Finally, you need to actually save the changes (they were only done in memory
 until now) :</p>
 <pre><code class="language-php">// ...
 
-$filesystem-&gt;write($file);</code></pre>
+$filesystem->write($file);</code></pre>
 <h2 id="a-higher-level-api">A higher level API?<a href="#a-higher-level-api" class="anchor">#</a></h2>
 <p>The Filesystem and Search/Replace strategies are low level APIs and require a
 lot of boilerplate code to do every day tasks.</p>
 <p>What if we provided a unique interface in front of those services? One that
 would be in a higher level, say a text editor metaphor for instance?</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 require_once __DIR__.'/vendor/autoload.php';
 
 use Gnugat\Redaktilo\DependencyInjection\StaticContainer;
@@ -94,12 +94,12 @@ use Gnugat\Redaktilo\DependencyInjection\StaticContainer;
 $editor = StaticContainer::makeEditor();
 
 $filename = '/tmp/monthy.py';
-$file = $editor-&gt;open($filename, true); // Force file creation.
+$file = $editor->open($filename, true); // Force file creation.
 
-$editor-&gt;jumpDownTo($file, 'if Knight.saysNi():');
-$editor-&gt;addAfter($file, '    print "Ni!"');
+$editor->jumpDownTo($file, 'if Knight.saysNi():');
+$editor->addAfter($file, '    print "Ni!"');
 
-$editor-&gt;save($file);</code></pre>
+$editor->save($file);</code></pre>
 <p>You don't need to take care of every service creation, and now you only have to
 learn a small set of methods. The text editor metaphor also provides you with a
 neat way to easily remember these methods!</p>

@@ -74,7 +74,7 @@ git push -fu origin my-changes</code></pre>
 <p>You can list conflicts (if any):</p>
 <pre><code class="language-bash">git status</code></pre>
 <p>Edit your files and then mark them as solved:</p>
-<pre><code class="language-bash">git add &lt;file&gt;</code></pre>
+<pre><code class="language-bash">git add <file></code></pre>
 <p>When all conflicted files have been resolved, you can continue:</p>
 <pre><code class="language-bash">git rebase --continue</code></pre>
 <h3 id="when-to-merge">When to merge<a href="#when-to-merge" class="anchor">#</a></h3>
@@ -93,7 +93,7 @@ git push
 git push origin :my-changes
 git branch -D my-changes</code></pre>
 <p>It's now time to deploy! You can make a tag:</p>
-<pre><code class="language-bash">git tag -a &lt;version&gt;
+<pre><code class="language-bash">git tag -a <version>
 git push --tags</code></pre>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>Make small changes, release often.</p>

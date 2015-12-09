@@ -63,7 +63,7 @@ nightmare).</p>
 </ol><h2 id="basics">Basics<a href="#basics" class="anchor">#</a></h2>
 <p>In almost any cases, you'll only deal with the following three methods of the
 <code>Session</code> object:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Symfony\Component\HttpFoundation\Session;
 
@@ -77,7 +77,7 @@ class Session implements SessionInterface, \IteratorAggregate, \Countable
 }</code></pre>
 <p>A <code>Bag</code> is a group of attributes stored in the session. Again, in most cases
 you'll only deal with the following four methods of the <code>AttributeBag</code> object:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Symfony\Component\HttpFoundation\Session\Attribute;
 
@@ -89,40 +89,40 @@ class AttributeBag implements AttributeBagInterface, \IteratorAggregate, \Counta
     public function set($name, $value);
 }</code></pre>
 <p>When using the sessions, you'll generally need to bootstrap things up as follows:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 $session = new Session();
 
 $myAttributeBag = new AttributeBag('my_storage_key');
-$myAttributeBag-&gt;setName('some_descriptive_name');
-$session-&gt;registerBag($myAttributeBag);
+$myAttributeBag->setName('some_descriptive_name');
+$session->registerBag($myAttributeBag);
 
-$session-&gt;start();</code></pre>
+$session->start();</code></pre>
 <p>The session <strong>MUST</strong> be started by Symfony2, and it <em>SHOULD</em> be started after
 the bag registrations.</p>
 <h2 id="examples">Examples<a href="#examples" class="anchor">#</a></h2>
 <p>Here's some code samples to make things clear.</p>
 <h3 id="simple-attributes">Simple attributes<a href="#simple-attributes" class="anchor">#</a></h3>
 <p>Let's assume that our session looks like this:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 $_SESSION = array(
-    'user' =&gt; array(
-        'first_name' =&gt; 'Arthur',
-        'last_name' =&gt; 'Dent',
+    'user' => array(
+        'first_name' => 'Arthur',
+        'last_name' => 'Dent',
     ),
 );</code></pre>
 <p>Here's the bootstrap code we need:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 $session = new Session();
 
 $userAttributeBag = new AttributeBag('user');
-$session-&gt;registerBag($userAttributeBag);
+$session->registerBag($userAttributeBag);
 
-$session-&gt;start();</code></pre>
+$session->start();</code></pre>
 <p>The equivalent to:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 $firstName = 'Ford';
 if (isset($_SESSION['user']['first_name'])) {
@@ -130,43 +130,43 @@ if (isset($_SESSION['user']['first_name'])) {
 }
 $_SESSION['user']['last_name'] = 'Prefect';</code></pre>
 <p>Would be:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
-$userAttributeBag = $session-&gt;getBag('user');
+$userAttributeBag = $session->getBag('user');
 
-$firstName = $userAttributeBag-&gt;get('first_name', 'Ford');
-$userAttributeBag-&gt;set('last_name', 'Prefect');</code></pre>
+$firstName = $userAttributeBag->get('first_name', 'Ford');
+$userAttributeBag->set('last_name', 'Prefect');</code></pre>
 <h3 id="deep-attributes">Deep attributes<a href="#deep-attributes" class="anchor">#</a></h3>
 <p>Now, let's assume we have a session which has deep attributes:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 $_SESSION = array(
-    'authentication' =&gt; array(
-        'tokens' =&gt; array(
-            'github' =&gt; 'A45E96F',
-            'twitter' =&gt; '11AEBC980D456E4EF',
+    'authentication' => array(
+        'tokens' => array(
+            'github' => 'A45E96F',
+            'twitter' => '11AEBC980D456E4EF',
         ),
     ),
 );</code></pre>
 <p>Here's the bootstrap code we need:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 $session = new Session();
 
 $authenticationAttributeBag = new NamespacedAttributeBag('authentication');
-$session-&gt;registerBag($authenticationAttributeBag);
+$session->registerBag($authenticationAttributeBag);
 
-$session-&gt;start();</code></pre>
+$session->start();</code></pre>
 <p>The equivalent to:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 $_SESSION['authentication']['tokens']['github'] = 'AEB558F02C3B346';</code></pre>
 <p>Would be:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
-$authenticationAttributeBag = $session-&gt;getBag($authenticationAttributeBag);
+$authenticationAttributeBag = $session->getBag($authenticationAttributeBag);
 
-$authenticationAttributeBag-&gt;set('tokens/github', 'AEB558F02C3B346');</code></pre>
+$authenticationAttributeBag->set('tokens/github', 'AEB558F02C3B346');</code></pre>
 <h2 id="going-further">Going further<a href="#going-further" class="anchor">#</a></h2>
 <p>The <code>Session</code> has been designed to contain a group of attribute bags. But when
 working with legacy sessions, you might have to access attributes which are
@@ -174,13 +174,13 @@ located at the root of the session. Here's how to extend the <code>Session</code
 this.</p>
 <h3 id="root-attributes">Root attributes<a href="#root-attributes" class="anchor">#</a></h3>
 <p>A root attribute might look like:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 $_SESSION = array(
-    'attribute' =&gt; 'value',
+    'attribute' => 'value',
 );</code></pre>
 <p>You need to create your own kind of <code>Bag</code>:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Acme\Session;
 
@@ -198,52 +198,52 @@ class RootAttributeBag implements SessionBagInterface
 
     public function __construct($storageKey)
     {
-        $this-&gt;storageKey = $storageKey;
+        $this->storageKey = $storageKey;
     }
 
     /** {@inheritdoc} */
     public function getName()
     {
-        return $this-&gt;name;
+        return $this->name;
     }
 
     public function setName($name)
     {
-        $this-&gt;name = $name;
+        $this->name = $name;
     }
 
     /** {@inheritdoc} */
-    public function initialize(array &amp;$array)
+    public function initialize(array &$array)
     {
         $attribute = !empty($array) ? $array[0] : null;
-        $this-&gt;attribute = &amp;$attribute;
+        $this->attribute = &$attribute;
     }
 
     /** {@inheritdoc} */
     public function getStorageKey()
     {
-        return $this-&gt;storageKey;
+        return $this->storageKey;
     }
 
     /** {@inheritdoc} */
     public function clear()
     {
-        $this-&gt;attribute = null;
+        $this->attribute = null;
     }
 
     public function get()
     {
-        return $this-&gt;attribute;
+        return $this->attribute;
     }
 
     public function set($value)
     {
-        $this-&gt;attribute = $value;
+        $this->attribute = $value;
     }
 }</code></pre>
 <p>The <code>storage key</code> will be directly the attribute's key.</p>
 <p>We also need to hack a <code>Storage</code> class which supports our <code>Bag</code>:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Acme\Session;
 
@@ -252,27 +252,27 @@ use Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage;
 class LegacySessionStorage extends NativeSessionStorage
 {
     /** {@inheritdoc} */
-    protected function loadSession(array &amp;$session = null)
+    protected function loadSession(array &$session = null)
     {
         if (null === $session) {
-            $session = &amp;$_SESSION;
+            $session = &$_SESSION;
         }
 
-        $bags = array_merge($this-&gt;bags, array($this-&gt;metadataBag));
+        $bags = array_merge($this->bags, array($this->metadataBag));
 
         foreach ($bags as $bag) {
-            $key = $bag-&gt;getStorageKey();
+            $key = $bag->getStorageKey();
             // We cast $_SESSION[$key] to an array, because of the SessionBagInterface::initialize() signature
             $session[$key] = isset($session[$key]) ? (array) $session[$key] : array();
-            $bag-&gt;initialize($session[$key]);
+            $bag->initialize($session[$key]);
         }
 
-        $this-&gt;started = true;
-        $this-&gt;closed = false;
+        $this->started = true;
+        $this->closed = false;
     }
 }</code></pre>
 <p>Finally, we'll need the following bootstrap code:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 use Acme\Session\LegacySessionStorage;
 use Acme\Session\RootAttributeBag;
@@ -283,10 +283,10 @@ $session = new Session($sessionStorage);
 
 // before: $_SESSION['attribute']
 $legacyBag = new RootAttributeBag('attribute');
-$legacyBag-&gt;setName('legacy');
+$legacyBag->setName('legacy');
 
-// after: $session-&gt;getBag('legacy')-&gt;get()
-$session-&gt;registerBag($legacyBag);</code></pre>
+// after: $session->getBag('legacy')->get()
+$session->registerBag($legacyBag);</code></pre>
 <h3 id="documentation">Documentation<a href="#documentation" class="anchor">#</a></h3>
 <p><a href="http://symfony.com/doc/current/components/http_foundation/sessions.html">The official documentation</a>
 provides useful information about how the session use it.
@@ -309,7 +309,7 @@ session itself. If you cannot prevent this, use
 <a href="https://github.com/symfony/HttpFoundation/blob/master/Session/Storage/PhpBridgeSessionStorage.php"><code>PhpBridgeSessionStorage</code></a>
 with
 <a href="https://github.com/symfony/HttpFoundation/blob/master/Session/Storage/Handler/NativeFileSessionHandler.php"><code>NativeFileSessionHandler</code></a>:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\Handler\NativeFileSessionHandler;
@@ -321,15 +321,15 @@ $session = new Session($sessionStorage);</code></pre>
 <p>Another trouble you can encounter: you register some bags but they're always
 empty, even though the <code>$_SESSION</code> contains the targeted values.
 This would be because you register your bags after starting the session: if you
-can't do otherwise then simply call <code>$session-&gt;migrate()</code> after your bag
+can't do otherwise then simply call <code>$session->migrate()</code> after your bag
 registration, this will reload the values.</p>
 <p>Finally when doing AJAX request you might notice slow performances, or non
 persistence of the data. This might be caused by a
 <a href="http://blog.alterphp.com/2012/08/how-to-deal-with-asynchronous-request.html">session locking mechanism</a>
 which can be solved like this by saving manually the session:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
-$session-&gt;save();
+$session->save();
 session_write_close();</code></pre>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>By wrapping <code>$_SESSION</code> and <code>session_*()</code> functions, <code>Session</code> allows you to

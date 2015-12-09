@@ -62,7 +62,7 @@ by creating an embed application. We will then have a look at its practical use:
 <li><a href="#conclusion">Conclusion</a></li>
 </ol><h2 id="minimal-bundle">Minimal Bundle<a href="#minimal-bundle" class="anchor">#</a></h2>
 <p>Creating a bundle is fairly easy as you just need to create the following class:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: AcmeStandaloneBundle.php
 
 namespace Acme\StandaloneBundle;
@@ -102,7 +102,7 @@ to register it in <a href="https://packagist.org/">Packagist</a>.</p>
 <li>register it in its <code>app/AppKernel.php</code> file and have a look...</li>
 </ol><p>But we can do better!</p>
 <p>We can create the smallest Symfony2 application ever <strong>inside</strong> our bundle:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: Tests/app/AppKernel.php
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -120,7 +120,7 @@ class AppKernel extends Kernel
 
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
-        $loader-&gt;load(__DIR__.'/config.yml');
+        $loader->load(__DIR__.'/config.yml');
     }
 }</code></pre>
 <p><a href="https://github.com/symfony/FrameworkBundle">FrameworkBundle</a> requires the
@@ -129,7 +129,7 @@ following configuration parameter in order to work:</p>
 framework:
     secret: "Three can keep a secret, if two of them are dead."</code></pre>
 <p>I'd also advise you to create an autoload file to make things easier:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: Tests/app/autoload.php
 
 $loader = require __DIR__.'/../../vendor/autoload.php';
@@ -166,7 +166,7 @@ people will be able to test it manually and do some demonstrations with it.</p>
 <p>Let's pretend we created a command in our bundle. We'd like to run it just to
 make sure everything works as expected. For this we'll need to create an
 embed console:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: Tests/app/console.php
 
 set_time_limit(0);
@@ -177,14 +177,14 @@ use Symfony\Bundle\FrameworkBundle\Console\Application;
 
 $kernel = new AppKernel('dev', true);
 $application = new Application($kernel);
-$application-&gt;run();</code></pre>
+$application->run();</code></pre>
 <p>That's it! You can now run:</p>
 <pre><code>php Tests/app/console.php</code></pre>
 <h3 id="browsing-pages">Browsing pages<a href="#browsing-pages" class="anchor">#</a></h3>
 <p>Let's pretend we created a controller which returns some JSON data. We'd like to
 browse it just to make sure everyting works as expected. For this, we'll need to
 create an embed web app:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: Tests/app/web.php
 
 use Symfony\Component\HttpFoundation\Request;
@@ -193,8 +193,8 @@ require_once __DIR__.'/autoload.php';
 
 $kernel = new AppKernel('prod', false);
 $request = Request::createFromGlobals();
-$response = $kernel-&gt;handle($request);
-$response-&gt;send();</code></pre>
+$response = $kernel->handle($request);
+$response->send();</code></pre>
 <p>That's it! You can now run:</p>
 <pre><code>php Tests/app/console.php server:run -d Tests/app</code></pre>
 <p>And browse your application.</p>
@@ -211,7 +211,7 @@ But an embed application is also great to write automated tests.</p>
 <p>Let's pretend we created a service which is defined in the DIC. We'd like to
 make sure it is properly configured (for e.g. checking if we forgot to inject a
 dependency). For this, we'll need to created a simple test:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: Tests/ServiceTest.php
 
 namespace Acme\StandaloneBundle\Tests;
@@ -223,16 +223,16 @@ class ServiceTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $kernel = new \AppKernel('test', true);
-        $kernel-&gt;boot();
+        $kernel->boot();
 
-        $this-&gt;container = $kernel-&gt;getContainer();
+        $this->container = $kernel->getContainer();
     }
 
     public function testServiceIsDefinedInContainer()
     {
-        $service = $this-&gt;container-&gt;get('acme_standalone.service');
+        $service = $this->container->get('acme_standalone.service');
 
-        $this-&gt;assertInstanceOf('Acme\StandaloneBundle\Service', $service);
+        $this->assertInstanceOf('Acme\StandaloneBundle\Service', $service);
     }
 }</code></pre>
 <p>We need to add <a href="https://phpunit.de/">PHPUnit</a> as a development dependency:</p>
@@ -254,21 +254,21 @@ class ServiceTest extends \PHPUnit_Framework_TestCase
     }
 }</code></pre>
 <p>Finally we need to configure PHPUnit to use our autoload:</p>
-<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml"><?xml version="1.0" encoding="UTF-8"?>
 
-&lt;!-- http://phpunit.de/manual/4.3/en/appendixes.configuration.html --&gt;
-&lt;phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<!-- http://phpunit.de/manual/4.3/en/appendixes.configuration.html -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.3/phpunit.xsd"
     backupGlobals="false"
     colors="true"
     bootstrap="./Tests/app/autoload.php"
-&gt;
-    &lt;testsuites&gt;
-        &lt;testsuite name="Test Suite"&gt;
-            &lt;directory&gt;./Tests/&lt;/directory&gt;
-        &lt;/testsuite&gt;
-    &lt;/testsuites&gt;
-&lt;/phpunit&gt;</code></pre>
+>
+    <testsuites>
+        <testsuite name="Test Suite">
+            <directory>./Tests/</directory>
+        </testsuite>
+    </testsuites>
+</phpunit></code></pre>
 <p>That's it! You can now run:</p>
 <pre><code>./vendor/bin/phpunit</code></pre>
 <blockquote>
@@ -278,7 +278,7 @@ class ServiceTest extends \PHPUnit_Framework_TestCase
 <p>Let's pretend we created a command. We'd like to run it automatically and check
 its exit code to make sure it works. For this, we'll need to created a simple
 test:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: Tests/ServiceTest.php
 
 namespace Acme\StandaloneBundle\Tests\Command;
@@ -294,20 +294,20 @@ class DemoCommandTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $kernel = new AppKernel('dev', true);
-        $this-&gt;application = new Application($kernel);
+        $this->application = new Application($kernel);
     }
 
     public function testItRunsSuccessfully()
     {
         $output = new NullOutput();
         $input = new ArrayInput(
-            'command_name' =&gt; 'acme:demo',
-            'argument' =&gt; 'value',
-            '--option' =&gt; 'value',
+            'command_name' => 'acme:demo',
+            'argument' => 'value',
+            '--option' => 'value',
         );
-        $exitCode = $this-&gt;application-&gt;run($input, $output);
+        $exitCode = $this->application->run($input, $output);
 
-        $this-&gt;assertSame(0, $exitCode);
+        $this->assertSame(0, $exitCode);
     }
 }</code></pre>
 <p>And that's it!</p>
@@ -315,7 +315,7 @@ class DemoCommandTest extends \PHPUnit_Framework_TestCase
 <p>Let's pretend we created a controller which returns some JSON data. We'd like to
 browse it automatically and check its status code to make sure it works. For
 this, we'll need to created a simple test:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: Tests/ServiceTest.php
 
 namespace Acme\StandaloneBundle\Tests\Controller;
@@ -331,16 +331,16 @@ class DemoControllerTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $kernel = new AppKernel('test', true);
-        $kernel-&gt;boot();
+        $kernel->boot();
 
-        $this-&gt;client = $kernel-&gt;getContainer()-&gt;get('test.client');
+        $this->client = $kernel->getContainer()->get('test.client');
     }
 
     public function testItRunsSuccessfully()
     {
-        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
-        $content = array('parameter' =&gt; 'value');
-        $response = $this-&gt;client-&gt;request(
+        $headers = array('CONTENT_TYPE' => 'application/json');
+        $content = array('parameter' => 'value');
+        $response = $this->client->request(
             'POST',
             '/demo',
             array(),
@@ -349,7 +349,7 @@ class DemoControllerTest extends \PHPUnit_Framework_TestCase
             $content
         );
 
-        $this-&gt;assertTrue($response-&gt;isSuccessful());
+        $this->assertTrue($response->isSuccessful());
     }
 }</code></pre>
 <p>The <code>test.client</code> service is only available when the <code>test</code> configuration

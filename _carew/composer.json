@@ -8,7 +8,7 @@
         }
     ],
     "require": {
-        "carew/carew": "2.0",
+        "carew/carew": "^2.0",
         "gnugat/carew-next": "^1.0",
         "twig/twig": "^1.14"
     },

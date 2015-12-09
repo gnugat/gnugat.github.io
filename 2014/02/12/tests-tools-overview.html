@@ -114,28 +114,28 @@ by downloading for you the libraries you told him to (it takes care of selecting
 the good versions and can update them to get bug fixes). It also autoloads your
 classes so you don't have to require them.</p>
 <p>Now that you have the latest stable version, you'll need to configure it:</p>
-<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-&lt;!-- File: phpunit.xml --&gt;
-&lt;phpunit
+<pre><code><?xml version="1.0" encoding="UTF-8"?>
+<!-- File: phpunit.xml -->
+<phpunit
     backupGlobals="false"
     colors="true"
     syntaxCheck="false"
     bootstrap="test/bootstrap.php"
-&gt;
-    &lt;testsuites&gt;
-        &lt;testsuite name="Fossil Test Suite"&gt;
-            &lt;directory suffix="Test.php"&gt;./test/&lt;/directory&gt;
-        &lt;/testsuite&gt;
-    &lt;/testsuites&gt;
-&lt;/phpunit&gt;</code></pre>
+>
+    <testsuites>
+        <testsuite name="Fossil Test Suite">
+            <directory suffix="Test.php">./test/</directory>
+        </testsuite>
+    </testsuites>
+</phpunit></code></pre>
 <p>This configuration tells PHPUnit to look (recursively) in the <code>test</code> directory
 for files ending in <code>Test.php</code>. Those will be your test suites.</p>
 <p>You'll need a bootstrap file in order to use composer's autoloader:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 $loader = require __DIR__.'/../vendor/autoload.php';
-$loader-&gt;add('Gnugat\\Fossil\\Test', __DIR__);</code></pre>
-<p>And voil&agrave;! You can now write your tests in <code>test</code>.</p>
+$loader->add('Gnugat\\Fossil\\Test', __DIR__);</code></pre>
+<p>And voilà! You can now write your tests in <code>test</code>.</p>
 <h2 id="unit-tests">Unit tests<a href="#unit-tests" class="anchor">#</a></h2>
 <p>The common understanding of unit test is a symmetry between classes and tests:
 when you have a class with 2 methods, you need to have a test class for it
@@ -146,7 +146,7 @@ many times as wanted. Fortunately a new kind of test was created to fix this
 misunderstanding, so let's stick with the common one.</p>
 <p>Imagine you have the following class, which creates a file if it doesn't already
 exist:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/MarkdownFile/DocumentationWriter.php
 
 namespace Gnugat\Fossil\MarkdownFile;
@@ -159,13 +159,13 @@ class DocumentationWriter
 
     public function __construct(Filesystem $filesystem)
     {
-        $this-&gt;filesystem = $filesystem;
+        $this->filesystem = $filesystem;
     }
 
     public function write($absolutePathname, $content)
     {
-        if (!$this-&gt;filesystem-&gt;exists($absolutePathname)) {
-            $this-&gt;filesystem-&gt;dumpFile($absolutePathname, $content);
+        if (!$this->filesystem->exists($absolutePathname)) {
+            $this->filesystem->dumpFile($absolutePathname, $content);
         }
     }
 }</code></pre>
@@ -200,7 +200,7 @@ collaborators (classes used by the SUT, also called dependencies), we can mock
 them to monitor their use.</p>
 <p>PHPUnit allows us to create stubs and mocks without having to write a class
 which extends the colaborator and overwrites its methods:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: test/MarkdownFile/DocumentationWriterTest.php
 
 namespace Gnugat\Fossil\Test\MarkdownFile;
@@ -214,39 +214,39 @@ class DocumentationWriterTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this-&gt;filesystem = $this-&gt;getMock('Symfony\\Component\\Filesystem\\Filesystem');
-        $this-&gt;documentationWriter = new DocumentationWriter($this-&gt;filesystem);
+        $this->filesystem = $this->getMock('Symfony\\Component\\Filesystem\\Filesystem');
+        $this->documentationWriter = new DocumentationWriter($this->filesystem);
     }
 
     public function testWriteNewFile()
     {
         // Stub
-        $this-&gt;filesystem-&gt;expects($this-&gt;any())
-            -&gt;method('exists')
-            -&gt;with(self::FIXTURE_ABSOLUTE_PATHNAME)
-            -&gt;will($this-&gt;returnValue(true))
+        $this->filesystem->expects($this->any())
+            ->method('exists')
+            ->with(self::FIXTURE_ABSOLUTE_PATHNAME)
+            ->will($this->returnValue(true))
         ;
 
         // Mock
-        $this-&gt;filesystem-&gt;expects($this-&gt;once())
-            -&gt;method('dumpFile')
-            -&gt;with(
-                $this-&gt;equalTo(self::FIXTURE_ABSOLUTE_PATHNAME),
-                $this-&gt;equalTo(self::FIXTURE_CONTENT)
+        $this->filesystem->expects($this->once())
+            ->method('dumpFile')
+            ->with(
+                $this->equalTo(self::FIXTURE_ABSOLUTE_PATHNAME),
+                $this->equalTo(self::FIXTURE_CONTENT)
             )
         ;
 
         // Call
-        $this-&gt;documentationWriter-&gt;write(
+        $this->documentationWriter->write(
             self::FIXTURE_ABSOLUTE_PATHNAME,
             self::FIXTURE_CONTENT
         );
     }
 }</code></pre>
-<p>In the stub: for every call (<code>expects($this-&gt;any())</code>) of the method <code>exists</code>
+<p>In the stub: for every call (<code>expects($this->any())</code>) of the method <code>exists</code>
 with the parameter <code>self::FIXTURE_ABSOLUTE_PATHNAME</code>, force the colaborator to
 return <code>true</code>.</p>
-<p>In the mock: a unique call must be made (<code>expects($this-&gt;once())</code>) of the method
+<p>In the mock: a unique call must be made (<code>expects($this->once())</code>) of the method
 <code>dumpFile</code> with the two parameters <code>self::FIXTURE_ABSOLUTE_PATHNAME</code> and
 <code>self::FIXTURE_CONTENT</code>.</p>
 <p>You can run the test using <code>php vendor/bin/phpunit</code> and see that they pass. As
@@ -267,7 +267,7 @@ in its name, this test framework allows us to write many types of tests.</p>
 <p>The Symfony2 web framework is all about the HTTP protocol: it takes a HTTP
 Request and returns a HTTP Response. It also provides a convenient client which
 simulates HTTP Requests, allowing us to write easily functional tests:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Acme/DemoBundle/Tests/Controller/DemoControllerTest.php
 
 namespace Acme\DemoBundle\Tests\Controller;
@@ -281,11 +281,11 @@ class DemoControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $client-&gt;request('GET', '/demo/hello/Fabien');
+        $client->request('GET', '/demo/hello/Fabien');
 
-        $this-&gt;assertSame(
+        $this->assertSame(
             Response::HTTP_OK,
-            $client-&gt;getResponse()-&gt;getStatusCode()
+            $client->getResponse()->getStatusCode()
         );
     }
 }</code></pre>
@@ -308,7 +308,7 @@ which takes the expected value:</p>
 });</code></pre>
 <p>In this case, assertions are splitted into expectations and matchers.</p>
 <p>Back to our sheeps. Here's an example of functional test for a Symfony2 command:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Acme/DemoBundle/Tests/Command/GreetCommandTest.php
 
 namespace Acme/DemoBundle/Tests/Command;
@@ -322,24 +322,24 @@ class ListCommandTest extends WebTestCase
 {
     public function testExecute()
     {
-        $kernel = $this-&gt;createKernel();
-        $kernel-&gt;boot();
+        $kernel = $this->createKernel();
+        $kernel->boot();
 
         $application = new Application($kernel);
-        $application-&gt;add(new GreetCommand());
+        $application->add(new GreetCommand());
 
-        $command = $application-&gt;find('demo:greet');
+        $command = $application->find('demo:greet');
         $commandTester = new CommandTester($command);
-        $commandTester-&gt;execute(
+        $commandTester->execute(
             array(
-                'name' =&gt; 'Fabien',
-                '--yell'  =&gt; true,
+                'name' => 'Fabien',
+                '--yell'  => true,
             )
         );
 
         $exitSuccess = 0;
 
-        $this-&gt;assertSame($exitSuccess, $commandTester-&gt;getStatusCode());
+        $this->assertSame($exitSuccess, $commandTester->getStatusCode());
     }
 }</code></pre>
 <p>Just like with a controller where we check the HTTP Response's status code, in
@@ -360,7 +360,7 @@ a technique.</p>
 simulates interractions with the page. Technically it means having a Selenium
 server running in the background, and using a webdriver library in your test to
 send messages to it. In PHP, you can find those webdrivers:</p>
-<ul><li><a href="https://github.com/alexandresalome/php-webdriver">One by Alexandre Salom&eacute;</a></li>
+<ul><li><a href="https://github.com/alexandresalome/php-webdriver">One by Alexandre Salomé</a></li>
 <li><a href="https://github.com/facebook/php-webdriver">another one by Facebook</a></li>
 </ul><p>You can find code samples in the respective documentation of each library, for
 example here's the doc describing <a href="https://github.com/alexandresalome/php-webdriver/blob/master/doc/elements.rst#element-api">how to click on a button with Alexandre's one</a>.</p>

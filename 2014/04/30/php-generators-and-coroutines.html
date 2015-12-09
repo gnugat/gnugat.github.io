@@ -66,21 +66,21 @@ you can send the returned value of the <code>yield</code> occurence.</p>
 <pre><code class="language-php">function direct_generator()
 {
     yield 1;
-    yield 'index' =&gt; 2;
+    yield 'index' => 2;
 }
 
 $generator = direct_generator();
-echo $generator-&gt;current(); // outputs 1
-$generator-&gt;next();
-echo $generator-&gt;current(); // outputs 2
-echo $generator-&gt;key(); // outputs index
+echo $generator->current(); // outputs 1
+$generator->next();
+echo $generator->current(); // outputs 2
+echo $generator->key(); // outputs index
 </code></pre>
 <h3 id="range-example">Range example<a href="#range-example" class="anchor">#</a></h3>
 <p>The <code>foreach</code> loop internally calls <code>current</code>, <code>key</code>, <code>next</code> and <code>valid</code> methods:</p>
 <pre><code class="language-php">function xrange($start, $end)
 {
     $value = $start;
-    while ($value &lt;= $end) {
+    while ($value <= $end) {
         yield $value;
         $value++;
     }
@@ -94,7 +94,7 @@ foreach(xrange(1, 2) as $value) {
 value.</p>
 <pre><code class="language-php">function holy_grail_countdown($number)
 {
-    while (0 &lt; $number) {
+    while (0 < $number) {
         $reset = (yield $number);
         $number = $reset ?: $number - 1;
     }
@@ -104,7 +104,7 @@ $c = holy_grail_countdown(5);
 foreach ($c as $number) {
     echo "$number\n"; // outputs 5, then 2 and finally 1.
     if (5 === $number) {
-        $c-&gt;send(3);
+        $c->send(3);
     }
 }</code></pre>
 <h2 id="links-to-use-cases">Links to use cases<a href="#links-to-use-cases" class="anchor">#</a></h2>

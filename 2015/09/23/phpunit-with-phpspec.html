@@ -60,20 +60,20 @@ cd fortune</code></pre>
 <pre><code>composer require --dev phpunit/phpunit
 composer require --dev phpspec/phpspec</code></pre>
 <p>Finally we'll configure PHPUnit:</p>
-<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml"><?xml version="1.0" encoding="UTF-8"?>
 
-&lt;!-- phpunit.xml.dist --&gt;
-&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
-&lt;phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="app/bootstrap.php"&gt;
-    &lt;testsuites&gt;
-        &lt;testsuite name="System Tests"&gt;
-            &lt;directory&gt;tests&lt;/directory&gt;
-        &lt;/testsuite&gt;
-    &lt;/testsuites&gt;
-&lt;/phpunit&gt;</code></pre>
+<!-- phpunit.xml.dist -->
+<!-- http://phpunit.de/manual/current/en/appendixes.configuration.html -->
+<phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="app/bootstrap.php">
+    <testsuites>
+        <testsuite name="System Tests">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit></code></pre>
 <h2 id="the-command">The command<a href="#the-command" class="anchor">#</a></h2>
 <p>Our first step will be to write a <strong>system test</strong> describing the command:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // tests/Command/SaveQuoteCommandTest.php
 
 namespace AppBundle\Tests\Command;
@@ -93,8 +93,8 @@ class SaveQuoteCommandTest extends PHPUnit_Framework_TestCase
     {
         $kernel = new AppKernel('test', false);
         $application = new Application($kernel);
-        $application-&gt;setAutoExit(false);
-        $this-&gt;app = new ApplicationTester($application);
+        $application->setAutoExit(false);
+        $this->app = new ApplicationTester($application);
     }
 
     /**
@@ -102,12 +102,12 @@ class SaveQuoteCommandTest extends PHPUnit_Framework_TestCase
      */
     public function it_saves_a_new_quote()
     {
-        $exitCode = $this-&gt;app-&gt;run(array(
+        $exitCode = $this->app->run(array(
             'quote:save',
-            'quote' =&gt; 'Nobody expects the spanish inquisition',
+            'quote' => 'Nobody expects the spanish inquisition',
         ));
 
-        self::assertSame(self::EXIT_SUCCESS, $exitCode, $this-&gt;app-&gt;getDisplay());
+        self::assertSame(self::EXIT_SUCCESS, $exitCode, $this->app->getDisplay());
     }
 }</code></pre>
 <blockquote>
@@ -118,7 +118,7 @@ Testing the output would be tedious and would make our test fragile as it might 
 <p>Let's run it:</p>
 <pre><code>vendor/bin/phpunit</code></pre>
 <p>The tests fails because the command doesn't exist. Let's fix that:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // src/AppBundle/Command/SaveQuoteCommand.php
 
 namespace AppBundle\Command;
@@ -132,22 +132,22 @@ class SaveQuoteCommand extends ContainerAwareCommand
 {
     protected function configure()
     {
-        $this-&gt;setName('quote:save');
-        $this-&gt;addArgument('quote', InputArgument::REQUIRED);
+        $this->setName('quote:save');
+        $this->addArgument('quote', InputArgument::REQUIRED);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output-&gt;writeln('');
-        $output-&gt;writeln('// Saving quote');
+        $output->writeln('');
+        $output->writeln('// Saving quote');
 
-        $this-&gt;getContainer()-&gt;get('app.save_new_quote')-&gt;save(
-            $input-&gt;getArgument('quote')
+        $this->getContainer()->get('app.save_new_quote')->save(
+            $input->getArgument('quote')
         );
 
-        $output-&gt;writeln('');
-        $output-&gt;writeln(' [OK] Quote saved');
-        $output-&gt;writeln('');
+        $output->writeln('');
+        $output->writeln(' [OK] Quote saved');
+        $output->writeln('');
     }
 }</code></pre>
 <p>Then run the test again:</p>
@@ -158,7 +158,7 @@ class SaveQuoteCommand extends ContainerAwareCommand
 first bootstrap it:</p>
 <pre><code>vendor/bin/phpspec describe 'AppBundle\Service\SaveNewQuote'</code></pre>
 <p>Then we need to edit it:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // spec/AppBundle/Service/SaveNewQuoteSpec.php
 
 namespace spec\AppBundle\Service;
@@ -173,21 +173,21 @@ class SaveNewQuoteSpec extends ObjectBehavior
 
     function let(Filesystem $filesystem)
     {
-        $this-&gt;beConstructedWith($filesystem, self::FILENAME);
+        $this->beConstructedWith($filesystem, self::FILENAME);
     }
 
     function it_saves_new_quote(Filesystem $filesystem)
     {
-        $filesystem-&gt;dumpFile(self::FILENAME, self::QUOTE)-&gt;shouldBeCalled();
+        $filesystem->dumpFile(self::FILENAME, self::QUOTE)->shouldBeCalled();
 
-        $this-&gt;save(self::QUOTE);
+        $this->save(self::QUOTE);
     }
 }</code></pre>
 <p>Time to run the suite:</p>
 <pre><code>vendor/bin/phpspec run</code></pre>
 <p>phpspec will detect that the tested class doesn't exist and will bootstrap it for us,
 so we just have to edit it:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // src/AppBundle/Service/SaveNewQuote.php
 
 namespace AppBundle\Service;
@@ -201,13 +201,13 @@ class SaveNewQuote
 
     public function __construct(Filesystem $filesystem, $filename)
     {
-        $this-&gt;filesystem = $filesystem;
-        $this-&gt;filename = $filename;
+        $this->filesystem = $filesystem;
+        $this->filename = $filename;
     }
 
     public function save($quote)
     {
-        $this-&gt;filesystem-&gt;dumpFile($this-&gt;filename, $quote);
+        $this->filesystem->dumpFile($this->filename, $quote);
     }
 }</code></pre>
 <p>Again, we're going to run our unit test:</p>
@@ -236,7 +236,7 @@ vendor/bin/phpunit</code></pre>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>As we can see, PHPUnit and phpspec can work perfectly well together.</p>
 <p>Of course we could write our unit test in a similar manner with PHPUnit:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // tests/Service/SaveNewQuoteTest.php
 
 namespace AppBundle\Tests\Service;
@@ -254,8 +254,8 @@ class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this-&gt;filesystem = $this-&gt;prophesize('Symfony\Component\Filesystem\Filesystem');
-        $this-&gt;saveNewQuote = new SaveNewQuote($this-&gt;filesystem-&gt;reveal(), self::FILENAME);
+        $this->filesystem = $this->prophesize('Symfony\Component\Filesystem\Filesystem');
+        $this->saveNewQuote = new SaveNewQuote($this->filesystem->reveal(), self::FILENAME);
     }
 
     /**
@@ -264,9 +264,9 @@ class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
      */
     public function it_saves_new_quote()
     {
-        $this-&gt;filesystem-&gt;dumpFile(self::FILENAME, self::QUOTE)-&gt;shouldBeCalled();
+        $this->filesystem->dumpFile(self::FILENAME, self::QUOTE)->shouldBeCalled();
 
-        $this-&gt;saveNewQuote-&gt;save(self::QUOTE);
+        $this->saveNewQuote->save(self::QUOTE);
     }
 }</code></pre>
 <p>And run it separately:</p>

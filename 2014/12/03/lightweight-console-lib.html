@@ -54,7 +54,7 @@ of them :) .</p>
 <li><a href="#conclusion">Conclusion</a></li>
 </ul><h2 id="create-a-command">Create a command<a href="#create-a-command" class="anchor">#</a></h2>
 <p>Let's create a "hello world" command:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Acme\Demo\Command;
 
@@ -65,7 +65,7 @@ class HelloWorldCommand implements Command
 {
     public function execute(Input $input)
     {
-        $name = $input-&gt;getArgument('name');
+        $name = $input->getArgument('name');
         echo "Hello $name\n";
 
         return Command::EXIT_SUCCESS;
@@ -79,7 +79,7 @@ Keep reading to know more about those exceptions.</p>
 <code>Input</code> class and returns 0 on success (actually this is optional).</p>
 <h2 id="binding-up-an-application">Binding up an application<a href="#binding-up-an-application" class="anchor">#</a></h2>
 <p>Now that we have a command, let's put it in an application:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: console.php
 
 use Acme\Demo\Command\HelloWorldCommand;
@@ -90,18 +90,18 @@ require __DIR__.'/vendor/autoload.php';
 
 $input = new Input($argv[1]); // command name (acme:hello-world)
 if (isset($argv[2])) {
-    $input-&gt;setArgument('name', $argv[2]);
+    $input->setArgument('name', $argv[2]);
 }
 
 $application = new Application();
-$application-&gt;addCommand('acme:hello-world', new HelloWorldCommand());
+$application->addCommand('acme:hello-world', new HelloWorldCommand());
 
-$application-&gt;run($input);</code></pre>
+$application->run($input);</code></pre>
 <p>You can then run it:</p>
 <pre><code>php console.php acme:hello-world Igor</code></pre>
 <h2 id="input-constraint">Input constraint<a href="#input-constraint" class="anchor">#</a></h2>
 <p>If you need to validate the input, you can create a constraint:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Acme\Demo\Validation;
 
@@ -113,14 +113,14 @@ class NoWorldNameConstraint implements InputConstraint
 {
     public function throwIfInvalid(Input $input)
     {
-        $name = $input-&gt;getArgument('name');
+        $name = $input->getArgument('name');
         if ('World' === $name) {
             throw new InvalidInputException($input, 'The "name" parameter must not be set to "World"');
         }
     }
 }</code></pre>
 <p>This constraint can be used directly in the command, as a dependency:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Acme\Demo\Command;
 
@@ -134,20 +134,20 @@ class HelloWorldCommand implements Command
 
     public function __construct(NoWorldNameConstraint $noWorldNameConstraint)
     {
-        $this-&gt;noWorldNameConstraint = $noWorldNameConstraint;
+        $this->noWorldNameConstraint = $noWorldNameConstraint;
     }
 
     public function execute(Input $input)
     {
-        $this-&gt;noWorldNameConstraint-&gt;throwIfInvalid($input);
-        $name = $input-&gt;getArgument('name');
+        $this->noWorldNameConstraint->throwIfInvalid($input);
+        $name = $input->getArgument('name');
         echo "Hello $name\n";
 
         return Command::EXIT_SUCCESS;
     }
 }</code></pre>
 <p>And then inject it:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: console.php
 
 use Acme\Demo\Command\HelloWorldCommand;
@@ -159,16 +159,16 @@ require __DIR__.'/vendor/autoload.php';
 
 $input = new Input($argv[1]); // command name (acme:hello-world)
 if (isset($argv[2])) {
-    $input-&gt;setArgument('name', $argv[2]);
+    $input->setArgument('name', $argv[2]);
 }
 
 $application = new Application();
-$application-&gt;addCommand('acme:hello-world', new HelloWorldCommand(new NoWorldNameConstraint()));
+$application->addCommand('acme:hello-world', new HelloWorldCommand(new NoWorldNameConstraint()));
 
-$application-&gt;run($input);</code></pre>
+$application->run($input);</code></pre>
 <h2 id="input-validator">Input validator<a href="#input-validator" class="anchor">#</a></h2>
 <p>More conveniently, the command can depend on a validator:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Acme\Demo\Command;
 
@@ -182,20 +182,20 @@ class HelloWorldCommand implements Command
 
     public function __construct(InputValidator $validator)
     {
-        $this-&gt;validator = $validator;
+        $this->validator = $validator;
     }
 
     public function execute(Input $input)
     {
-        $this-&gt;validator-&gt;throwIfInvalid($input);
-        $name = $input-&gt;getArgument('name');
+        $this->validator->throwIfInvalid($input);
+        $name = $input->getArgument('name');
         echo "Hello $name\n";
 
         return Command::EXIT_SUCCESS;
     }
 }</code></pre>
 <p>You can add many constraint in a validator, and set priorities:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: console.php
 
 use Acme\Demo\Command\HelloWorldCommand;
@@ -208,16 +208,16 @@ require __DIR__.'/vendor/autoload.php';
 
 $input = new Input($argv[1]); // command name (acme:hello-world)
 if (isset($argv[2])) {
-    $input-&gt;setArgument('name', $argv[2]);
+    $input->setArgument('name', $argv[2]);
 }
 
 $helloWorldValidator = new InputValidator();
-$helloWorldValidator-&gt;addConstraint(new NoWorldNameConstraint(), 42);
+$helloWorldValidator->addConstraint(new NoWorldNameConstraint(), 42);
 
 $application = new Application();
-$application-&gt;addCommand('acme:hello-world', new HelloWorldCommand($helloWorldValidator));
+$application->addCommand('acme:hello-world', new HelloWorldCommand($helloWorldValidator));
 
-$application-&gt;run($input);</code></pre>
+$application->run($input);</code></pre>
 <blockquote>
 <p><strong>Note</strong>: The highest the priority, the soonest the constraint will be executed.
 For example, a constraint with priority 1337 will be executed before another

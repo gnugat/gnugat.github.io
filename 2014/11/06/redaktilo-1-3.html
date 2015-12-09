@@ -63,7 +63,7 @@ started to think that there was something to do here.</p>
 <h2 id="public-api">Public API<a href="#public-api" class="anchor">#</a></h2>
 <p>My purpose was to create a single service which would be used as a text editor
 ("redaktilo" means "editor", in esperanto):</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Gnugat\Redaktilo;
 
@@ -92,7 +92,7 @@ class Editor
     public function run($name, array $input);
 }</code></pre>
 <p>This service is <strong>stateless</strong>, it manipulates the following model:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Gnugat\Redaktilo;
 
@@ -129,7 +129,7 @@ directly from the <code>Editor</code>!</p>
 <p>If the manipulations provided out of the box aren't sufficient, you can create
 your own <code>Command</code>, register it in <code>CommandInvoker</code> and it will be available
 directly from the <code>Editor</code>!</p>
-<p>Commands rely on user input, which is why Lo&iuml;ck worked on <code>InputSanitizer</code> to
+<p>Commands rely on user input, which is why Loïck worked on <code>InputSanitizer</code> to
 validate it. If the ones provided aren't enough, you can still create your own
 implementations.</p>
 <p>Finally, I'd like to highlight Wouter's work on the <code>EditorFatory</code> helper: it is
@@ -141,25 +141,25 @@ factory, you'll never have to do it by yourself!</p>
 provides tags to register custom search strategies and commands.</p>
 </blockquote>
 <h2 id="what-s-next">What's next?<a href="#what-s-next" class="anchor">#</a></h2>
-<p>Lo&iuml;ck is currently improving the library's exceptions for the version 1.4.</p>
+<p>Loïck is currently improving the library's exceptions for the version 1.4.</p>
 <p>For version 1.5, two new methods will be added to <code>Text</code>:
 <code>incrementCurrentLineNumber</code> and <code>decrementCurrentLineNumber</code>, to avoid the
 following:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 require __DIR__.'/vendor/autoload.php';
 
 use Gnugat\Redaktilo\EditorFactory;
 
 $editor = EditorFactory::createEditor();
-$file = $editor-&gt;open('/tmp/monty-python.txt');
+$file = $editor->open('/tmp/monty-python.txt');
 
 // Currently
-$currentLineNumber = $file-&gt;getCurrentLineNumber();
-$file-&gt;setCurrentLineNumber($currentLineNumber + 2);
+$currentLineNumber = $file->getCurrentLineNumber();
+$file->setCurrentLineNumber($currentLineNumber + 2);
 
 // Soon...
-$file-&gt;incrementCurrentLineNumber(2);</code></pre>
+$file->incrementCurrentLineNumber(2);</code></pre>
 <p>For the final version 1.6, a strong documentation of the deprecations will be
 done, leading the way to version 2.0 where those will be removed (50% of the code
 base will vanish!).</p>
@@ -173,7 +173,7 @@ to be done, leading the given version numbers above to change.</p>
 might be a bit misleading. It is a library which <strong>feels like</strong> an editor, but
 it is in no way an actual editor you might run.</p>
 <p>Here's an example of what you might be doing currently without Redaktilo:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 $lines = file('/tmp/monty-python.txt');
 $currentLineNumber = 42;
@@ -186,17 +186,17 @@ array_splice($lines, $currentLineNumber + 1, 0, 'new line below "a knewt"');
 $content = implode("\n", $lines); // Let's hope it wasn't a file created on Windows.
 file_put_contents($content, '/tmp/monty-python');</code></pre>
 <p>With redaktilo:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 require __DIR__.'/vendor/autoload.php';
 
 use Gnugat\Redaktilo\EditorFactory;
 
 $editor = EditorFactory::createEditor();
-$file = $editor-&gt;open('/tmp/monty-python');
-$editor-&gt;jumpAbove($file, '/a knewt/', 42);
-$editor-&gt;insertBelow($file, 'new line below "a knewt"');
-$editor-&gt;save($file);</code></pre>
+$file = $editor->open('/tmp/monty-python');
+$editor->jumpAbove($file, '/a knewt/', 42);
+$editor->insertBelow($file, 'new line below "a knewt"');
+$editor->save($file);</code></pre>
 <h3 id="is-it-a-code-editor">Is it a code editor?<a href="#is-it-a-code-editor" class="anchor">#</a></h3>
 <p>Because the code example on the README is about inserting a new line in the
 <code>AppKernel</code> file of a Symfony2 application, I also get this question.</p>

@@ -50,14 +50,14 @@ in your applications.</p>
 <p>Here's how to install Tactician:</p>
 <pre><code>composer require league/tactician:^0.6</code></pre>
 <p>Then we have to associate a Command to a CommandHandler:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 use League\Tactician\Setup\QuickStart;
 
 require __DIR__.'/vendor/autoload.php';
 
 $commandBus = QuickStart::create(array(
-    'Vendor\Project\Member\RegisterMember' =&gt; new Vendor\Project\Member\RegisterMemberHandler(),
+    'Vendor\Project\Member\RegisterMember' => new Vendor\Project\Member\RegisterMemberHandler(),
 ));</code></pre>
 <p>It provides many framework integrations, including one for <a href="http://symfony.com/">Symfony</a>:</p>
 <pre><code>composer require league/tactician-bundle:^0.3
@@ -71,9 +71,9 @@ need to tag service definitions as follow:</p>
             - { name: tactician.handler, command: Vendor\Project\Member\RegisterMember }</code></pre>
 <p>Now that the configuration is settled, here's a usage example:</p>
 <pre><code class="language-php">$username = isset($argv[1]) ? $argv[1] : null;
-$commandBus-&gt;handle(new RegisterMember($username));</code></pre>
+$commandBus->handle(new RegisterMember($username));</code></pre>
 <p>The command would look like this:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project\Member;
 
@@ -86,19 +86,19 @@ class RegisterMember
         if (null === $username) {
             throw new \InvalidArgumentException('Missing required "username" parameter');
         }
-        $this-&gt;username = $username;
+        $this->username = $username;
     }
 
     public function getUsername()
     {
-        return $this-&gt;username;
+        return $this->username;
     }
 }</code></pre>
 <blockquote>
 <p><strong>Note</strong>: Commands validate simple input logic (required parameters, parameter type, etc).</p>
 </blockquote>
 <p>The Command Handler could look like this:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project\Member;
 
@@ -108,16 +108,16 @@ class RegisterMemberHandler
 
     public function __construct(MemberRespository $memberRepository)
     {
-        $this-&gt;memberRepository = $memberRepository;
+        $this->memberRepository = $memberRepository;
     }
 
     public function handle(RegisterMember $registerMember)
     {
-        $username = $registerMember-&gt;getUsername();
-        if ($memberRepository-&gt;has($username)) {
+        $username = $registerMember->getUsername();
+        if ($memberRepository->has($username)) {
             throw new \DomainException(sprintf('Given username "%s" already exists, and duplicates are not allowed', $username));
         }
-        $memberRepository-&gt;register($registerMember);
+        $memberRepository->register($registerMember);
     }
 }</code></pre>
 <p>The Command Handler validates more complex logic (member username duplication, etc).</p>

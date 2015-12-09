@@ -51,11 +51,11 @@ In this article, we'll see how the different packages are assembled in the main 
 <p>Memio is composed of small packages (<code>linter</code>, <code>model</code>, <code>pretty-printer</code>, <code>twig-template-engine</code>, <code>validator</code>),
 the main repository (<a href="http://gituhb.com/memio/memio">memio/memio</a>) is a standard selection of those
 to make their usage easier:</p>
-<p><img alt="Package diagram" src="http://yuml.me/8686d889"></p>
+<p><img src="http://yuml.me/8686d889" alt="Package diagram"></p>
 <p>It can be installed using <a href="http://getcomposer.com/">Composer</a>:</p>
 <pre><code>composer require memio/memio:~1.0</code></pre>
 <p>It provides two services, which can be instanciated as follow:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: memio.php
 
 require __DIR__.'/vendor/autoload.php';
@@ -71,26 +71,26 @@ use Memio\Model\Method;
 use Memio\Model\Argument;
 
 $handle = Method::make('handle')
-    -&gt;addArgument(Argument::make('Request', 'request'))
-    -&gt;addArgument(Argument::make('int', 'type')
-        -&gt;setDefaultValue('self::MASTER_REQUEST')
+    ->addArgument(Argument::make('Request', 'request'))
+    ->addArgument(Argument::make('int', 'type')
+        ->setDefaultValue('self::MASTER_REQUEST')
     )
-    -&gt;addArgument(Argument::make('bool', 'catch')
-        -&gt;setDefaultValue('true')
+    ->addArgument(Argument::make('bool', 'catch')
+        ->setDefaultValue('true')
     )
 ;</code></pre>
 <blockquote>
 <p><strong>Note</strong>: Each Model can be constructed using <code>new</code> or the static constructor <code>make</code>.
-The last one has the advantage to allow method chaining (e.g. <code>Method::make('doHandle')-&gt;makePrivate()</code>).</p>
+The last one has the advantage to allow method chaining (e.g. <code>Method::make('doHandle')->makePrivate()</code>).</p>
 </blockquote>
 <p>We can lint this model:</p>
 <pre><code class="language-php">// ...
 
-$linter-&gt;validate($handler); // @throws Memio\Validator\Exception\InvalidModelException if the model contains syntax errors.</code></pre>
+$linter->validate($handler); // @throws Memio\Validator\Exception\InvalidModelException if the model contains syntax errors.</code></pre>
 <p>And we can generate the corresponding PHP code:</p>
 <pre><code class="language-php">// ...
 
-$generatedCode = $prettyPrinter-&gt;generateCode($handle);</code></pre>
+$generatedCode = $prettyPrinter->generateCode($handle);</code></pre>
 <p>We can check in our console's output the result:</p>
 <pre><code class="language-php">// ...
 
@@ -110,9 +110,9 @@ echo $generatedCode;</code></pre>
 </ul><p>It is possible to describe a method Body, but only with a string:</p>
 <pre><code class="language-php">// ...
 
-$handle-&gt;setBody(&lt;&lt;&lt;BODY
+$handle->setBody(<<<BODY
         try {
-            $this-&gt;requestHandler-&gt;handle($request);
+            $this->requestHandler->handle($request);
         } catch (\Exception $e) {
             if (!$catch) {
                 throw $e;
@@ -134,10 +134,10 @@ $method = new Method($methodName);
 $index = 1;
 foreach ($arguments as $argumentType) {
     $argumentName = 'argument'.$index++;
-    $method-&gt;addArgument(new Argument($argumentType, $argumentName));
+    $method->addArgument(new Argument($argumentType, $argumentName));
 }
 
-echo $prettyPrinter-&gt;generatedCode($method);</code></pre>
+echo $prettyPrinter->generatedCode($method);</code></pre>
 <p>Have a try by running <code>php memio.php handle Request int bool</code>, it should print the following:</p>
 <pre><code class="language-php">    public function handle(Request $argument1, $argument2, $argument3)
     {
@@ -148,7 +148,7 @@ This is going to be the next Memio package, a phpspec extension.</p>
 <p>The coding style can be changed by creating our custom templates. Those can be loaded as follow:</p>
 <pre><code class="language-php">// ...
 
-$prettyPrinter-&gt;addTemplatePath(__DIR__.'/our-custom-templates-dir');</code></pre>
+$prettyPrinter->addTemplatePath(__DIR__.'/our-custom-templates-dir');</code></pre>
 <p>Custom constraints can be written to check more things, for example we can ensure
 that arguments are always object.</p>
 <p>Those steps, just like the rest, are heavily described in the official <a href="http://memio.github.io/memio">documentation</a>.</p>

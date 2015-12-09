@@ -48,54 +48,54 @@
 </ul><p>In the previous articles we created an API allowing us to submit and list
 quotes:</p>
 <pre><code>.
-&#9500;&#9472;&#9472; app
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_prod.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_test.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; doctrine.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml.dist
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; logs
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; phpunit.xml.dist
-&#9500;&#9472;&#9472; composer.json
-&#9500;&#9472;&#9472; composer.lock
-&#9500;&#9472;&#9472; src
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Fortune
-&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Controller
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteController.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; DependencyInjection
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; FortuneApplicationExtension.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Entity
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; QuoteFactory.php
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; QuoteGateway.php
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; Quote.php
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteRepository.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; FortuneApplicationBundle.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Resources
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; config
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp;     &#9500;&#9472;&#9472; doctrine
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp;     &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Quote.orm.yml
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; services.xml
-&#9474;&nbsp;&nbsp;         &#9492;&#9472;&#9472; Tests
-&#9474;&nbsp;&nbsp;             &#9500;&#9472;&#9472; Controller
-&#9474;&nbsp;&nbsp;             &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteControllerTest.php
-&#9474;&nbsp;&nbsp;             &#9492;&#9472;&#9472; Entity
-&#9474;&nbsp;&nbsp;                 &#9492;&#9472;&#9472; QuoteRepositoryTest.php
-&#9492;&#9472;&#9472; web
-    &#9492;&#9472;&#9472; app.php</code></pre>
+├── app
+│   ├── AppKernel.php
+│   ├── cache
+│   │   └── .gitkeep
+│   ├── config
+│   │   ├── config_prod.yml
+│   │   ├── config_test.yml
+│   │   ├── config.yml
+│   │   ├── doctrine.yml
+│   │   ├── parameters.yml
+│   │   ├── parameters.yml.dist
+│   │   └── routing.yml
+│   ├── logs
+│   │   └── .gitkeep
+│   └── phpunit.xml.dist
+├── composer.json
+├── composer.lock
+├── src
+│   └── Fortune
+│       └── ApplicationBundle
+│           ├── Controller
+│           │   └── QuoteController.php
+│           ├── DependencyInjection
+│           │   └── FortuneApplicationExtension.php
+│           ├── Entity
+│           │   ├── QuoteFactory.php
+│           │   ├── QuoteGateway.php
+│           │   ├── Quote.php
+│           │   └── QuoteRepository.php
+│           ├── FortuneApplicationBundle.php
+│           ├── Resources
+│           │   └── config
+│           │       ├── doctrine
+│           │       │   └── Quote.orm.yml
+│           │       └── services.xml
+│           └── Tests
+│               ├── Controller
+│               │   └── QuoteControllerTest.php
+│               └── Entity
+│                   └── QuoteRepositoryTest.php
+└── web
+    └── app.php</code></pre>
 <p>Here's the <a href="https://github.com/gnugat/mastering-symfony2">repository where you can find the actual code</a>.</p>
 <p>In this one we'll learn how to extend the framework using events.</p>
 <h2 id="eventdispatcher-component">EventDispatcher Component<a href="#eventdispatcher-component" class="anchor">#</a></h2>
 <p>The <a href="http://symfony.com/doc/current/components/event_dispatcher/introduction.html">Event Dispatcher</a>
 is another standalone component which can be summed up as follow:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 class EventDispatcher
 {
@@ -103,12 +103,12 @@ class EventDispatcher
 
     public function addListener($event, $listener)
     {
-        $this-&gt;events[$event][] = $listener;
+        $this->events[$event][] = $listener;
     }
 
     public function dispatch($event)
     {
-        foreach ($this-&gt;events[$event] as $listener) {
+        foreach ($this->events[$event] as $listener) {
             $listener();
         }
     }
@@ -116,10 +116,10 @@ class EventDispatcher
 <p>You can register listeners (which are callables) and then call them by
 dispatching the subscribed event:</p>
 <pre><code>$dispatcher = new EventDispatcher();
-$dispatcher-&gt;addListener('before.boyard', function () { echo 'Ultimate Challenge'; });
-$dispatcher-&gt;dispatch('before.boyard'); // Prints "Ultimate Challenge".</code></pre>
+$dispatcher->addListener('before.boyard', function () { echo 'Ultimate Challenge'; });
+$dispatcher->dispatch('before.boyard'); // Prints "Ultimate Challenge".</code></pre>
 <p>Here's the actual API:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Symfony\Component\EventDispatcher;
 
@@ -153,7 +153,7 @@ dispatches events to provide extension points, we can:</p>
 <p>Here's the <a href="http://symfony.com/doc/current/components/http_kernel/introduction.html#component-http-kernel-event-table">full list of kernel events</a>.</p>
 <p><strong>Note</strong>: If you want to learn more about those events, have a look at
 <a href="https://twitter.com/matthiasnoback">Matthias Noback</a>'s book:
-<a href="https://leanpub.com/a-year-with-symfony?utm_campaign=a-year-with-symfony&amp;utm_medium=embed&amp;utm_source=gnugat.github.io">A year with Symfony</a>.</p>
+<a href="https://leanpub.com/a-year-with-symfony?utm_campaign=a-year-with-symfony&utm_medium=embed&utm_source=gnugat.github.io">A year with Symfony</a>.</p>
 <p>The FrameworkBundle takes care of registering the listeners using the
 Dependency Injection Container (DIC): we declare our listener as a service in
 the configuration, with a specific tag.</p>
@@ -168,7 +168,7 @@ every controller: we can move it in an event listener.</p>
 <p>First create the directory:</p>
 <pre><code>mkdir src/Fortune/ApplicationBundle/EventListener</code></pre>
 <p>Then we create the actual listener:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Fortune/ApplicationBundle/EventListener/SubmitJsonListener.php
 
 namespace Fortune\ApplicationBundle\EventListener;
@@ -179,45 +179,45 @@ class SubmitJsonListener
 {
     public function onKernelRequest(GetResponseEvent $event)
     {
-        $request = $event-&gt;getRequest();
-        $content = $request-&gt;getContent();
+        $request = $event->getRequest();
+        $content = $request->getContent();
         $data = json_decode($content, true);
-        $request-&gt;request-&gt;add($data ?: array());
+        $request->request->add($data ?: array());
     }
 }</code></pre>
 <p>Next we register it in the Dependency Injection Container:</p>
-<pre><code>&lt;?xml version="1.0" ?&gt;
-&lt;!-- File: src/Fortune/ApplicationBundle/Resources/config/services.xml --&gt;
+<pre><code><?xml version="1.0" ?>
+<!-- File: src/Fortune/ApplicationBundle/Resources/config/services.xml -->
 
-&lt;container xmlns="http://symfony.com/schema/dic/services"
+<container xmlns="http://symfony.com/schema/dic/services"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
-    &lt;services&gt;
-        &lt;service id="fortune_application.quote_factory"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <service id="fortune_application.quote_factory"
             class="Fortune\ApplicationBundle\Entity\QuoteFactory"
-        &gt;
-        &lt;/service&gt;
-        &lt;service id="fortune_application.quote_gateway"
+        >
+        </service>
+        <service id="fortune_application.quote_gateway"
             class="Fortune\ApplicationBundle\Entity\QuoteGateway"
             factory-service="doctrine"
-            factory-method="getRepository"&gt;
-            &lt;argument&gt;FortuneApplicationBundle:Quote&lt;/argument&gt;
-        &lt;/service&gt;
-        &lt;service id="fortune_application.quote_repository"
+            factory-method="getRepository">
+            <argument>FortuneApplicationBundle:Quote</argument>
+        </service>
+        <service id="fortune_application.quote_repository"
             class="Fortune\ApplicationBundle\Entity\QuoteRepository"
-        &gt;
-            &lt;argument type="service" id="fortune_application.quote_gateway" /&gt;
-            &lt;argument type="service" id="fortune_application.quote_factory" /&gt;
-        &lt;/service&gt;
-        &lt;service id="fortune_application.submit_json_listener"
+        >
+            <argument type="service" id="fortune_application.quote_gateway" />
+            <argument type="service" id="fortune_application.quote_factory" />
+        </service>
+        <service id="fortune_application.submit_json_listener"
             class="Fortune\ApplicationBundle\EventListener\SubmitJsonListener"
-        &gt;
-            &lt;tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest" /&gt;
-        &lt;/service&gt;
-    &lt;/services&gt;
-&lt;/container&gt;</code></pre>
+        >
+            <tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest" />
+        </service>
+    </services>
+</container></code></pre>
 <p>And finally we update the controller:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
 
 namespace Fortune\ApplicationBundle\Controller;
@@ -231,22 +231,22 @@ class QuoteController extends Controller
 {
     public function submitAction(Request $request)
     {
-        $postedValues = $request-&gt;request-&gt;all();
+        $postedValues = $request->request->all();
         if (empty($postedValues['content'])) {
-            $answer = array('message' =&gt; 'Missing required parameter: content');
+            $answer = array('message' => 'Missing required parameter: content');
 
             return new JsonResponse($answer, Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-        $quoteRepository = $this-&gt;container-&gt;get('fortune_application.quote_repository');
-        $quote = $quoteRepository-&gt;insert($postedValues['content']);
+        $quoteRepository = $this->container->get('fortune_application.quote_repository');
+        $quote = $quoteRepository->insert($postedValues['content']);
 
         return new JsonResponse($quote, Response::HTTP_CREATED);
     }
 
     public function listAction(Request $request)
     {
-        $quoteRepository = $this-&gt;container-&gt;get('fortune_application.quote_repository');
-        $quotes = $quoteRepository-&gt;findAll();
+        $quoteRepository = $this->container->get('fortune_application.quote_repository');
+        $quotes = $quoteRepository->findAll();
 
         return new JsonResponse($quotes, Response::HTTP_OK);
     }
@@ -262,7 +262,7 @@ about events.</p>
 <h2 id="managing-errors-in-a-listener">Managing errors in a listener<a href="#managing-errors-in-a-listener" class="anchor">#</a></h2>
 <p>If someone submits a malformed JSON, our listener can stop the execution and
 return a proper response:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Fortune/ApplicationBundle/EventListener/SubmitJsonListener.php
 
 namespace Fortune\ApplicationBundle\EventListener;
@@ -275,16 +275,16 @@ class SubmitJsonListener
 {
     public function onKernelRequest(GetResponseEvent $event)
     {
-        $request = $event-&gt;getRequest();
-        $content = $request-&gt;getContent();
+        $request = $event->getRequest();
+        $content = $request->getContent();
         $data = json_decode($content, true);
         if (JSON_ERROR_NONE !== json_last_error()) {
-            $data = array('message' =&gt; 'Invalid or malformed JSON');
+            $data = array('message' => 'Invalid or malformed JSON');
             $response = new JsonResponse($data, Response::HTTP_BAD_REQUEST);
-            $event-&gt;setResponse($response);
-            $event-&gt;stopPropagation();
+            $event->setResponse($response);
+            $event->stopPropagation();
         }
-        $request-&gt;request-&gt;add($data ?: array());
+        $request->request->add($data ?: array());
     }
 }</code></pre>
 <p>By setting a response in the event, the <code>HttpKernel</code> will almost stop (it

@@ -55,12 +55,12 @@ Bacon
 Spam</code></pre>
 <p>Redaktilo provides an <code>Editor</code> class which allows you to jump to the line you
 want, provided that you know exactly its content:</p>
-<pre><code class="language-php">$editor-&gt;has($file, 'Bacon'); // true!
-$editor-&gt;jumpDownTo($file, 'Bacon'); // Current line: Bacon
-$editor-&gt;jumpUpTo($file, 'Sausage'); // Current line: Sausage</code></pre>
+<pre><code class="language-php">$editor->has($file, 'Bacon'); // true!
+$editor->jumpDownTo($file, 'Bacon'); // Current line: Bacon
+$editor->jumpUpTo($file, 'Sausage'); // Current line: Sausage</code></pre>
 <p>But what if you want to jump two lines under <code>Sausage</code>? You'd have to create
 a new method:</p>
-<pre><code class="language-php">$editor-&gt;moveDown($file, 2); // Current line: Spam</code></pre>
+<pre><code class="language-php">$editor->moveDown($file, 2); // Current line: Spam</code></pre>
 <p>You have extended <code>Editor</code> by modifying it.</p>
 <h2 id="complying-to-the-open-closed-principle">Complying to the Open/Closed principle<a href="#complying-to-the-open-closed-principle" class="anchor">#</a></h2>
 <p>Having to fork a library to extend it doesn't feel natural. What does the
@@ -72,7 +72,7 @@ extension, but closed for modification.</p>
 <p>Our <code>Editor</code> class is open to extension, but also to modification.</p>
 <p>To fix this, we can transfer the responsibility of finding a pattern in the file
 to a <code>SearchStrategy</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Gnugat\Redaktilo\Search;
 
@@ -97,7 +97,7 @@ interface SearchStrategy
 a string, but that <code>RegexpSearchStrategy</code> needs an <code>Expression</code> value object.</p>
 <p>The responsibility to find a <code>SearchStrategy</code> which supports the given pattern
 should be delegated to <code>SearchEngine</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Gnugat\Redaktilo\Search;
 
@@ -107,13 +107,13 @@ class SearchEngine
 
     public function registerStrategy(SearchStrategy $searchStrategy)
     {
-        $this-&gt;searchStrategies[] = $searchStrategy;
+        $this->searchStrategies[] = $searchStrategy;
     }
 
     public function resolve($pattern)
     {
-        foreach ($this-&gt;searchStrategies as $searchStrategy) {
-            if ($searchStrategy-&gt;supports($pattern)) {
+        foreach ($this->searchStrategies as $searchStrategy) {
+            if ($searchStrategy->supports($pattern)) {
                 return $searchStrategy;
             }
         }
@@ -134,10 +134,10 @@ use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
 $searchEngine = new SearchEngine();
 
 $lineSearchStrategy = new LineSearchStrategy();
-$searchEngine-&gt;registerStrategy($lineSearchStrategy);
+$searchEngine->registerStrategy($lineSearchStrategy);
 
 $lineNumberSearchStrategy = new LineNumberSearchStrategy();
-$searchEngine-&gt;registerStrategy($lineNumberSearchStrategy);
+$searchEngine->registerStrategy($lineNumberSearchStrategy);
 
 $symfonyFilesystem = new SymfonyFilesystem();
 $filesystem = new Filesystem($symfonyFilesystem);
@@ -146,7 +146,7 @@ $editor = new Editor($filesystem, $searchEngine);</code></pre>
 hooray!</p>
 <h2 id="editor-s-diff">Editor's diff<a href="#editor-s-diff" class="anchor">#</a></h2>
 <p>Here's what <code>Editor</code> looked like after adding <code>moveDown</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Gnugat\Redaktilo;
 
@@ -154,13 +154,13 @@ class Editor
 {
     public function jumpDownTo(File $file, $pattern)
     {
-        $lines = $file-&gt;readlines();
-        $filename = $file-&gt;getFilename();
-        $currentLineNumber = $file-&gt;getCurrentLineNumber() + 1;
+        $lines = $file->readlines();
+        $filename = $file->getFilename();
+        $currentLineNumber = $file->getCurrentLineNumber() + 1;
         $length = count($lines);
-        while ($currentLineNumber &lt; $length) {
+        while ($currentLineNumber < $length) {
             if ($lines[$currentLineNumber] === $pattern) {
-                $file-&gt;setCurrentLineNumber($currentLineNumber);
+                $file->setCurrentLineNumber($currentLineNumber);
 
                 return;
             }
@@ -172,12 +172,12 @@ class Editor
 
     public function jumpUpTo(File $file, $pattern)
     {
-        $lines = $file-&gt;readlines();
-        $filename = $file-&gt;getFilename();
-        $currentLineNumber = $file-&gt;getCurrentLineNumber() - 1;
-        while (0 &lt;= $currentLineNumber) {
+        $lines = $file->readlines();
+        $filename = $file->getFilename();
+        $currentLineNumber = $file->getCurrentLineNumber() - 1;
+        while (0 <= $currentLineNumber) {
             if ($lines[$currentLineNumber] === $pattern) {
-                $file-&gt;setCurrentLineNumber($currentLineNumber);
+                $file->setCurrentLineNumber($currentLineNumber);
 
                 return;
             }
@@ -189,22 +189,22 @@ class Editor
 
     public function moveUp(File $file, $lines = 1)
     {
-        $newLineNumber = $file-&gt;getCurrentLineNumber() - $lines;
+        $newLineNumber = $file->getCurrentLineNumber() - $lines;
 
-        if ($newLineNumber &lt; 0) {
+        if ($newLineNumber < 0) {
             $newLineNumber = 0;
         }
 
-        $file-&gt;setCurrentLineNumber($newLineNumber);
+        $file->setCurrentLineNumber($newLineNumber);
     }
 
     public function has(File $file, $pattern)
     {
-        return $file-&gt;hasLine($pattern);
+        return $file->hasLine($pattern);
     }
 }</code></pre>
 <p>And now, here's what it looks like:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Gnugat\Redaktilo;
 
@@ -216,30 +216,30 @@ class Editor
 
     public function __construct(SearchEngine $searchEngine)
     {
-        $this-&gt;searchEngine = $searchEngine;
+        $this->searchEngine = $searchEngine;
     }
 
     public function jumpDownTo(File $file, $pattern)
     {
-        $searchStrategy = $this-&gt;searchEngine-&gt;resolve($pattern);
-        $foundLineNumber = $searchStrategy-&gt;findNext($file, $pattern);
+        $searchStrategy = $this->searchEngine->resolve($pattern);
+        $foundLineNumber = $searchStrategy->findNext($file, $pattern);
 
-        $file-&gt;setCurrentLineNumber($foundLineNumber);
+        $file->setCurrentLineNumber($foundLineNumber);
     }
 
     public function jumpUpTo(File $file, $pattern)
     {
-        $searchStrategy = $this-&gt;searchEngine-&gt;resolve($pattern);
-        $foundLineNumber = $searchStrategy-&gt;findPrevious($file, $pattern);
+        $searchStrategy = $this->searchEngine->resolve($pattern);
+        $foundLineNumber = $searchStrategy->findPrevious($file, $pattern);
 
-        $file-&gt;setCurrentLineNumber($foundLineNumber);
+        $file->setCurrentLineNumber($foundLineNumber);
     }
 
     public function has(File $file, $pattern)
     {
-        $searchStrategy = $this-&gt;searchEngine-&gt;resolve($pattern);
+        $searchStrategy = $this->searchEngine->resolve($pattern);
 
-        return $searchStrategy-&gt;has($file, $pattern);
+        return $searchStrategy->has($file, $pattern);
     }
 }</code></pre>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>

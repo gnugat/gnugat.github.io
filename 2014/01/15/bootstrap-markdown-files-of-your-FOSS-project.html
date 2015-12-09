@@ -128,7 +128,7 @@ by the installer.</p>
 only will it download the bundle using composer, but it will also add its fully
 qualified classname in the <code>app/AppKernel.php</code> file! Hooray!</p>
 <p>The application's kernel will look like this afterwards:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: app/AppKernel.php
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -142,7 +142,7 @@ class AppKernel extends Kernel
             new Acme\DemoBundle\AcmeDemoBundle(),
         );
 
-        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
+        if (in_array($this->getEnvironment(), array('dev', 'test'))) {
             // Other bundles...
         }
 
@@ -156,7 +156,7 @@ quotes, just like in the example.</p>
 it runs in development or test environment:</p>
 <pre><code>fossil d:b 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle' -d</code></pre>
 <p>The application's kernel will look like this afterwards:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: app/AppKernel.php
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -169,7 +169,7 @@ class AppKernel extends Kernel
             // Other bundles...
         );
 
-        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
+        if (in_array($this->getEnvironment(), array('dev', 'test'))) {
             // Other bundles...
             $bundles[] = new Acme\DemoBundle\AcmeDemoBundle();
         }

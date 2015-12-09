@@ -73,7 +73,7 @@ does is to return a simple string.</p>
 it provides <a href="http://twig.sensiolabs.org/">Twig templates</a>.</p>
 <h2 id="code-generation-example">Code generation example<a href="#code-generation-example" class="anchor">#</a></h2>
 <p>Enough talk, let's code! First of all we have to create our <code>PrettyPrinter</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 require __DIR__.'/vendor/autoload.php';
 
@@ -81,14 +81,14 @@ $loader = new \Twig_Loader_Filesystem(\Memio\TwigTemplateEngine\Config\Locate::t
 $twig = new \Twig_Environment($loader);
 
 $line = new \Memio\TwigTemplateEngine\TwigExtension\Line\Line();
-$line-&gt;add(new \Memio\TwigTemplateEngine\TwigExtension\Line\ContractLineStrategy());
-$line-&gt;add(new \Memio\TwigTemplateEngine\TwigExtension\Line\FileLineStrategy());
-$line-&gt;add(new \Memio\TwigTemplateEngine\TwigExtension\Line\MethodPhpdocLineStrategy());
-$line-&gt;add(new \Memio\TwigTemplateEngine\TwigExtension\Line\ObjectLineStrategy());
-$line-&gt;add(new \Memio\TwigTemplateEngine\TwigExtension\Line\StructurePhpdocLineStrategy());
+$line->add(new \Memio\TwigTemplateEngine\TwigExtension\Line\ContractLineStrategy());
+$line->add(new \Memio\TwigTemplateEngine\TwigExtension\Line\FileLineStrategy());
+$line->add(new \Memio\TwigTemplateEngine\TwigExtension\Line\MethodPhpdocLineStrategy());
+$line->add(new \Memio\TwigTemplateEngine\TwigExtension\Line\ObjectLineStrategy());
+$line->add(new \Memio\TwigTemplateEngine\TwigExtension\Line\StructurePhpdocLineStrategy());
 
-$twig-&gt;addExtension(new \Memio\TwigTemplateEngine\TwigExtension\Type());
-$twig-&gt;addExtension(new \Memio\TwigTemplateEngine\TwigExtension\Whitespace($line));
+$twig->addExtension(new \Memio\TwigTemplateEngine\TwigExtension\Type());
+$twig->addExtension(new \Memio\TwigTemplateEngine\TwigExtension\Whitespace($line));
 
 $templateEngine = new \Memio\TwigTemplateEngine\TwigTemplateEngine($twig);
 $prettyPrinter = new \Memio\PrettyPrinter\PrettyPrinter($templateEngine);</code></pre>
@@ -98,13 +98,13 @@ will make life really easier (spoiler alert: <code>Build::prettyPrinter()</code>
 <pre><code class="language-php">// ...
 
 $myMethod = new \Memio\Model\Method('myMethod');
-for ($i = 1; $i &lt; 10; $i++) {
-    $myMethod-&gt;addArgument(new \Memio\Model\Argument('mixed', 'argument'.$i));
+for ($i = 1; $i < 10; $i++) {
+    $myMethod->addArgument(new \Memio\Model\Argument('mixed', 'argument'.$i));
 }</code></pre>
 <p>All it takes to generate the code is this:</p>
 <pre><code class="language-php">// ...
 
-$generatedCode = $prettyPrinter-&gt;generateCode($myMethod);</code></pre>
+$generatedCode = $prettyPrinter->generateCode($myMethod);</code></pre>
 <p>Let's see in the console output what it did:</p>
 <pre><code class="language-php">// ...
 
@@ -132,7 +132,7 @@ line between the PHP opening tag and the namespace statement.</p>
 template in our project:</p>
 <pre><code>
 {#- File: my_templates/file.twig -#}
-&lt;?php
+<?php
 {% if file.licensePhpdoc is not empty %}
 
 {% include 'phpdoc/license_phpdoc.twig' with { 'license_phpdoc': file.licensePhpdoc } only %}
@@ -155,18 +155,18 @@ namespace {{ file.namespace }};
 <p>In order for our custom template to be used, we'll need to add its directory path to <code>PrettyPrinter</code>:</p>
 <pre><code class="language-php">// ...
 
-$prettyPrinter-&gt;addTemplatePath(__DIR__.'/my_templates');</code></pre>
+$prettyPrinter->addTemplatePath(__DIR__.'/my_templates');</code></pre>
 <p>And we're done!</p>
 <p>Let's check the result:</p>
 <pre><code class="language-php">// ...
 
 $file = \Memio\Model\File::make('src/Vendor/Project/MyClass.php')
-    -&gt;setStructure(new \Memio\Model\Object('Vendor\Project\MyClass'))
+    ->setStructure(new \Memio\Model\Object('Vendor\Project\MyClass'))
 ;
 
-echo $prettyPrinter-&gt;generateCode($file);</code></pre>
+echo $prettyPrinter->generateCode($file);</code></pre>
 <p>This will output:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 namespace Vendor\Project;
 
 class MyClass

@@ -69,7 +69,7 @@ to solve, with some good (and graphical) examples.</p>
 <li>an injection is the fact of passing an argument to a function</li>
 </ul><p>Some people instanciate those dependencies inside the class which use them, for
 example:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Gnugat\Fossil\MarkdownFile;
 
@@ -80,14 +80,14 @@ class DocumentationWriter
     public function write($absolutePathname, $content)
     {
         $filesystem = new Filesystem();
-        if (!$filesystem-&gt;exists($absolutePathname)) {
-            $filesystem-&gt;dumpFile($absolutePathname, $content);
+        if (!$filesystem->exists($absolutePathname)) {
+            $filesystem->dumpFile($absolutePathname, $content);
         }
     }
 }
 
 $documentationWriter = new DocumentationWriter();
-$documentationWriter-&gt;write('/tmp/example.txt', 'Hello world');</code></pre>
+$documentationWriter->write('/tmp/example.txt', 'Hello world');</code></pre>
 <p>There's nothing wrong with this code, but it could be improved.</p>
 <p>First of all, it happens that <code>Filesystem</code> is "stateless": you can call every
 methods it has, in the order you want, it won't change the way it behaves. Which
@@ -99,7 +99,7 @@ content.</p>
 <p>DI (Dependency Injection) is used to solve these two problems: you should first
 create the instance of <code>Filesystem</code> and then pass it to (inject it into)
 <code>DocumentationWriter</code>:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Gnugat\Fossil\MarkdownFile;
 
@@ -109,8 +109,8 @@ class DocumentationWriter
 {
     public function write(Filesystem $filesystem, $absolutePathname, $content)
     {
-        if (!$filesystem-&gt;exists($absolutePathname)) {
-            $filesystem-&gt;dumpFile($absolutePathname, $content);
+        if (!$filesystem->exists($absolutePathname)) {
+            $filesystem->dumpFile($absolutePathname, $content);
         }
     }
 }
@@ -118,11 +118,11 @@ class DocumentationWriter
 $filesystem = new Filesystem();
 
 $documentationWriter = new DocumentationWriter();
-$documentationWriter-&gt;write($filesystem, '/tmp/example.txt', 'Hello world');</code></pre>
+$documentationWriter->write($filesystem, '/tmp/example.txt', 'Hello world');</code></pre>
 <p>The dependency can now be shared throughout your application, and you can pass
 a mock of it which will be able to tell you which method was called.</p>
 <p>Injection is usually done via the constructor:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Gnugat\Fossil\MarkdownFile;
 
@@ -134,13 +134,13 @@ class DocumentationWriter
 
     public function __construct(Filesystem $filesystem)
     {
-        $this-&gt;filesystem = $filesystem;
+        $this->filesystem = $filesystem;
     }
 
     public function write($absolutePathname, $content)
     {
-        if (!$this-&gt;filesystem-&gt;exists($absolutePathname)) {
-            $this-&gt;filesystem-&gt;dumpFile($absolutePathname, $content);
+        if (!$this->filesystem->exists($absolutePathname)) {
+            $this->filesystem->dumpFile($absolutePathname, $content);
         }
     }
 }
@@ -148,9 +148,9 @@ class DocumentationWriter
 $filesystem = new Filesystem();
 
 $documentationWriter = new DocumentationWriter($filesystem);
-$documentationWriter-&gt;write('/tmp/example.txt', 'Hello world');</code></pre>
+$documentationWriter->write('/tmp/example.txt', 'Hello world');</code></pre>
 <p>Time to time, injection will be done via setters:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Gnugat\Fossil\MarkdownFile;
 
@@ -162,13 +162,13 @@ class DocumentationWriter
 
     public function setFilesystem(Filesystem $filesystem)
     {
-        $this-&gt;filesystem = $filesystem;
+        $this->filesystem = $filesystem;
     }
 
     public function write($absolutePathname, $content)
     {
-        if (!$this-&gt;filesystem-&gt;exists($absolutePathname)) {
-            $this-&gt;filesystem-&gt;dumpFile($absolutePathname, $content);
+        if (!$this->filesystem->exists($absolutePathname)) {
+            $this->filesystem->dumpFile($absolutePathname, $content);
         }
     }
 }
@@ -176,12 +176,12 @@ class DocumentationWriter
 $filesystem = new Filesystem();
 
 $documentationWriter = new DocumentationWriter();
-$documentationWriter-&gt;setFilesystem($filesystem);
-$documentationWriter-&gt;write('/tmp/example.txt', 'Hello world');</code></pre>
+$documentationWriter->setFilesystem($filesystem);
+$documentationWriter->write('/tmp/example.txt', 'Hello world');</code></pre>
 <p>Setter injection is used when you have no control on the object construction,
 and can be dangerous: if the setter isn't called, a runtime error will occur.</p>
 <p>To help debug this kind of error, you can do this:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Gnugat\Fossil\MarkdownFile;
 
@@ -193,31 +193,31 @@ class DocumentationWriter
 
     public function setFilesystem(Filesystem $filesystem)
     {
-        $this-&gt;filesystem = $filesystem;
+        $this->filesystem = $filesystem;
     }
 
     public function write($absolutePathname, $content)
     {
-        if (!$this-&gt;getFilesystem()-&gt;exists($absolutePathname)) {
-            $this-&gt;getFilesystem()-&gt;dumpFile($absolutePathname, $content);
+        if (!$this->getFilesystem()->exists($absolutePathname)) {
+            $this->getFilesystem()->dumpFile($absolutePathname, $content);
         }
     }
 
     private function getFilesystem()
     {
-        if (!($this-&gt;filesystem instanceof Filesystem)) {
+        if (!($this->filesystem instanceof Filesystem)) {
             $msg = 'The Filesystem dependency is missing.';
             $msg .= ' Did you forgot to call setFilesystem?';
             throw new \LogicException($msg);
         }
 
-        return $this-&gt;filesystem;
+        return $this->filesystem;
     }
 }
 
 $documentationWriter = new DocumentationWriter();
 // Will throw an exception with a helpful message.
-$documentationWriter-&gt;write('/tmp/example.txt', 'Hello world');</code></pre>
+$documentationWriter->write('/tmp/example.txt', 'Hello world');</code></pre>
 <p>You shouldn't need to use setter injection in your own class, but rather on
 classes which extend third party library.</p>
 <p>For example Doctrine's repositories can only be retrieved using its
@@ -241,7 +241,7 @@ losing track of it: if you don't know that an object has already been
 constructing you might accidently construct it again.</p>
 <p>Let's add a dependency on <a href="https://github.com/Seldaek/monolog">Monolog</a> to our
 <code>DocumentationWriter</code> (plus some custom configuration to spice it up):</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 use Gnugat\Fossil\ApplicationLayer\OutputFormatter;
 use Gnugat\Fossil\MarkdownFile\DocumentationWriter;
@@ -252,10 +252,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 $verbosityLevelMap = array(
-    'OutputInterface::VERBOSITY_NORMAL' =&gt; Logger::NOTICE,
-    'OutputInterface::VERBOSITY_VERBOSE' =&gt; Logger::INFO,
-    'OutputInterface::VERBOSITY_VERY_VERBOSE' =&gt; Logger::DEBUG,
-    'OutputInterface::VERBOSITY_DEBUG' =&gt; Logger::DEBUG,
+    'OutputInterface::VERBOSITY_NORMAL' => Logger::NOTICE,
+    'OutputInterface::VERBOSITY_VERBOSE' => Logger::INFO,
+    'OutputInterface::VERBOSITY_VERY_VERBOSE' => Logger::DEBUG,
+    'OutputInterface::VERBOSITY_DEBUG' => Logger::DEBUG,
 );
 
 $consoleOutput = new ConsoleOutput();
@@ -265,10 +265,10 @@ $consoleHandler = new ConsoleHandler(
     true,
     $verbosityLevelMap
 );
-$consoleHandler-&gt;setFormatter($outputFormatter);
+$consoleHandler->setFormatter($outputFormatter);
 
 $logger = new Logger('default.logger');
-$logger-&gt;pushHandler($consoleHandler);
+$logger->pushHandler($consoleHandler);
 
 $filesystem = new Filesystem();
 
@@ -276,7 +276,7 @@ $documentationWritter = new DocumentationWriter(
     $filesystem,
     $logger
 );
-$documentationWriter-&gt;write('/tmp/example.txt', 'Hello world');</code></pre>
+$documentationWriter->write('/tmp/example.txt', 'Hello world');</code></pre>
 <p>It's quite a burden isn't it?</p>
 <p>The DIC (Dependency Injection Container) solves this problem by taking the
 responsibility of creating them for you. technically, you still write all of
@@ -291,7 +291,7 @@ a small DIC for PHP using a javascript-like syntax.</p>
 <p>Pimple can be considered as an array in which you can put parameters and
 "factories": an anonymous function which creates an instance of the class.</p>
 <p>Here's the code sample:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 // File: dic.php
 
@@ -307,44 +307,44 @@ $dic = new Pimple();
 
 // This is a parameter definition
 $dic['verbosity_level_map'] = array(
-    'OutputInterface::VERBOSITY_NORMAL' =&gt; Logger::NOTICE,
-    'OutputInterface::VERBOSITY_VERBOSE' =&gt; Logger::INFO,
-    'OutputInterface::VERBOSITY_VERY_VERBOSE' =&gt; Logger::DEBUG,
-    'OutputInterface::VERBOSITY_DEBUG' =&gt; Logger::DEBUG,
+    'OutputInterface::VERBOSITY_NORMAL' => Logger::NOTICE,
+    'OutputInterface::VERBOSITY_VERBOSE' => Logger::INFO,
+    'OutputInterface::VERBOSITY_VERY_VERBOSE' => Logger::DEBUG,
+    'OutputInterface::VERBOSITY_DEBUG' => Logger::DEBUG,
 );
 
 // Thess are a factory definition
-$dic['console_output'] = $dic-&gt;share(function($dic) {
+$dic['console_output'] = $dic->share(function($dic) {
     return new ConsoleOutput();
 });
-$dic['output_formatter'] = $dic-&gt;share(function($dic) {
+$dic['output_formatter'] = $dic->share(function($dic) {
     return new OutputFormatter();
 });
 
 // You can inject dependencies which have been declared previously
-$dic['console_handler'] = $dic-&gt;share(function($dic) {
+$dic['console_handler'] = $dic->share(function($dic) {
     $consoleHandler = new ConsoleHandler(
         $dic['console_output'],
         true,
         $dic['verbosity_level_map']
     );
-    $consoleHandler-&gt;setFormatter($dic['output_formatter']);
+    $consoleHandler->setFormatter($dic['output_formatter']);
 
     return $consoleHandler
 });
 
-$dic['logger'] = $dic-&gt;share(function($dic) {
+$dic['logger'] = $dic->share(function($dic) {
     $logger = new Logger('default.logger');
-    $logger-&gt;pushHandler($dic['console_handler']);
+    $logger->pushHandler($dic['console_handler']);
 
     return $logger
 });
 
-$dic['filesystem'] = $dic-&gt;share(function($dic) {
+$dic['filesystem'] = $dic->share(function($dic) {
     return new Filesystem();
 });
 
-$dic['documentation_writer'] = $dic-&gt;share(function($dic) {
+$dic['documentation_writer'] = $dic->share(function($dic) {
     return new DocumentationWriter(
         $dic['filesystem'],
         $dic['logger']
@@ -357,7 +357,7 @@ of your object is done in a central place (you can move it into a file
 which means as long as you don't aks for them they won't be created, and once
 you created them they won't be created a second time.</p>
 <p>In your application, you just need to pass the DIC and use it:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 // File: front_controller.php
 
@@ -366,7 +366,7 @@ require_once __DIR__.'/dic.php';
 // Now you can retrieve instances from the DIC
 $documentationWriter = $dic['documentation_writer'];
 
-$documentationWriter-&gt;write('/tmp/example.txt', 'Hello world');</code></pre>
+$documentationWriter->write('/tmp/example.txt', 'Hello world');</code></pre>
 <p>I must stress on the fact that object creation is now centralized: the code
 from the first example (the one without DIC) could be scattered into different
 places of your application.</p>
@@ -379,7 +379,7 @@ IoC. There's a lot of <a href="https://github.com/rande/python-simple-ioc">DIC l
 instanciated once and that it should be guarded from being instanciated a second
 time.</p>
 <p>Here's an implementation example of a singleton:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 // Code from https://github.com/domnikl/DesignPatternsPHP/blob/master/Singleton/Singleton.php
 
@@ -407,7 +407,7 @@ time manually.</p>
 <p>Keep in mind that DIC aren't always making sure of this: in our example we've
 used <a href="https://github.com/fabpot/Pimple/blob/1.1/lib/Pimple.php#L116">the special share method</a>
 of Pimple to ensure it, but you can also retrieve a new instance on every call:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 use Symfony\Component\Finder\Finder;
 

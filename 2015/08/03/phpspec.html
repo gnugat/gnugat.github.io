@@ -76,7 +76,7 @@ and currently for version 2.3 better constructor specification.</p>
 </blockquote>
 <p>We should now have the <code>spec/Vendor/Project/TextEditorSpec.php</code> file, bootstraped
 for us by phpspec:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace spec\Vendor\Project;
 
@@ -87,7 +87,7 @@ class TextEditorSpec extends ObjectBehavior
 {
     function it_is_initializable()
     {
-        $this-&gt;shouldHaveType('Vendor\Project\TextEditor');
+        $this->shouldHaveType('Vendor\Project\TextEditor');
     }
 }</code></pre>
 <blockquote>
@@ -98,7 +98,7 @@ Those are filesystem operations, so we decide to delegate the actual logic to a
 <code>Filesystem</code> class (we'll create it later).</p>
 <p>So our first step will be to create a set up method (it will be executed before
 every test method) that initializes our object:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: spec/Vendor/Project/TextEditorSpec.php
 
 namespace spec\Vendor\Project;
@@ -110,13 +110,13 @@ class TextEditorSpec extends ObjectBehavior
 {
     function let(Filesystem $filesystem)
     {
-        $this-&gt;beConstructedWith($filesystem);
+        $this->beConstructedWith($filesystem);
     }
 }</code></pre>
 <p>Arguments passed to test methods are actually test doubles (phpspec uses the typehint
 to know what to mock).</p>
 <p>Now we can create the actual test method:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: spec/Vendor/Project/TextEditorSpec.php
 
 namespace spec\Vendor\Project;
@@ -132,19 +132,19 @@ class TextEditorSpec extends ObjectBehavior
 
     function let(Filesystem $filesystem)
     {
-        $this-&gt;beConstructedWith($filesystem);
+        $this->beConstructedWith($filesystem);
     }
 
     function it_can_force_file_creation_if_it_does_not_already_exists(File $file, Filesystem $filesystem)
     {
-        $filesystem-&gt;exists(self::FILENAME)-&gt;willReturn(false);
-        $filesystem-&gt;create(self::FILENAME)-&gt;willReturn($file);
+        $filesystem->exists(self::FILENAME)->willReturn(false);
+        $filesystem->create(self::FILENAME)->willReturn($file);
 
-        $this-&gt;open(self::FILENAME, self::FORCE_FILE_CREATION)-&gt;shouldBe($file);
+        $this->open(self::FILENAME, self::FORCE_FILE_CREATION)->shouldBe($file);
     }
 }</code></pre>
 <p>This is roughly the equivalent of the following with <a href="https://phpunit.de/">PHPUnit</a>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project\Tests;
 
@@ -163,14 +163,14 @@ class TextEditorTest extends PHPUnit_Framewor_TestCase
 
     protected function setUp()
     {
-        $this-&gt;prophet = new \Prophecy\Prophet();
-        $this-&gt;filesystem = $this-&gt;prophet-&gt;prophesize('Vendor\Project\Service\Filesystem');
-        $this-&gt;textEditor = new TextEditor($filesystem-&gt;reveal());
+        $this->prophet = new \Prophecy\Prophet();
+        $this->filesystem = $this->prophet->prophesize('Vendor\Project\Service\Filesystem');
+        $this->textEditor = new TextEditor($filesystem->reveal());
     }
 
     protected function tearDown()
     {
-        $this-&gt;prophet-&gt;checkPredictions();
+        $this->prophet->checkPredictions();
     }
 
     /**
@@ -178,11 +178,11 @@ class TextEditorTest extends PHPUnit_Framewor_TestCase
      */
     public function it_can_force_file_creation_if_it_does_not_already_exists()
     {
-        $file = $this-&gt;prophet-&gt;prophesize('Vendor\Project\File');
-        $this-&gt;filesystem-&gt;exists(self::FILENAME)-&gt;willReturn(false);
-        $this-&gt;filesystem-&gt;create(self::FILENAME)-&gt;willReturn($file);
+        $file = $this->prophet->prophesize('Vendor\Project\File');
+        $this->filesystem->exists(self::FILENAME)->willReturn(false);
+        $this->filesystem->create(self::FILENAME)->willReturn($file);
 
-        self::assertSame($file, $this-&gt;textEditor-&gt;open(self::FILENAME, self::FORCE_FILE_CREATION));
+        self::assertSame($file, $this->textEditor->open(self::FILENAME, self::FORCE_FILE_CREATION));
     }
 }</code></pre>
 <blockquote>
@@ -191,8 +191,8 @@ This is the whole point of specBDD (specification Behavior Driven Development).<
 </blockquote>
 <p>phpspec uses the mocking library prophecy (also available in PHPUnit since version 4.4),
 which tries to be as less verbose as possible: to describe interractions, test doubles
-can almost be used as the actual object, except we need to add a <code>-&gt;willreturn()</code> or
-<code>-&gt;shouldBeCalled()</code> call afterwards.</p>
+can almost be used as the actual object, except we need to add a <code>->willreturn()</code> or
+<code>->shouldBeCalled()</code> call afterwards.</p>
 <blockquote>
 <p><strong>Note</strong>: By mocking all collaborators, we are forced to think how our object interracts with them.
 This is the whole point of Mockist TDD (Mockist Test Driven Development).</p>
@@ -209,7 +209,7 @@ This is the whole point of Mockist TDD (Mockist Test Driven Development).</p>
 <li>Do you want me to create <code>Vendor\Project\TextEditor::open()</code> for you?</li>
 </ol><p>By accepting everytime, phpspec will bootstrap the following
 <code>src/Vendor/Project/Vendor/TextEditor.php</code> file:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project;
 
@@ -228,7 +228,7 @@ class TextEditor
 }</code></pre>
 <p>In our specification, we make use of non existing class (<code>File</code> and <code>Filesystem</code>)
 but phpspec also bootstraped them for us, for example <code>src/Vendor/Project/Vendor/Filesystem.php</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project\Service;
 
@@ -248,14 +248,14 @@ use cases to the test class (e.g. what happens if the file already exists?).</p>
 Hence the <a href="https://github.com/memio/spec-gen">SpecGen</a> extension!</p>
 <p>We can install it as follow:</p>
 <pre><code>composer require --dev memio/spec-gen:^0.4
-echo 'extensions:' &gt; phpspec.yml
-echo '  - Memio\SpecGen\MemioSpecGenExtension' &gt;&gt; phpspec.yml</code></pre>
+echo 'extensions:' > phpspec.yml
+echo '  - Memio\SpecGen\MemioSpecGenExtension' >> phpspec.yml</code></pre>
 <p>If we remove the code generated by phpspec:</p>
 <pre><code>rm src/Vendor/Project/TextEditor.php</code></pre>
 <p>And re-run the tests:</p>
 <pre><code>phpspec run</code></pre>
 <p>Then the generated class will be:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project;
 
@@ -267,7 +267,7 @@ class TextEditor
 
     public function __construct(Filesystem $filesystem)
     {
-        $this-&gt;filesystem = $filesystem;
+        $this->filesystem = $filesystem;
     }
 
     public function open($argument1, $argument2)

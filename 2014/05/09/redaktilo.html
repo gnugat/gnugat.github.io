@@ -76,7 +76,7 @@ environments, and doesn't take into account bundle which depend on the kernel.</
 <p>If you take a look at the <a href="https://github.com/sensiolabs/SensioGeneratorBundle/blob/8b7a33aa3d22388443b6de0b0cf184122e9f60d2/Manipulator/KernelManipulator.php">KernelManipulator source code</a>
 you'll realise it has been a bit over engineered as it parses PHP tokens.</p>
 <p>A new <code>KernelManipulator</code> could be written using Redaktilo as follow:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Sensio\Bundle\GeneratorBundle\Manipulator;
 
@@ -89,22 +89,22 @@ class KernelManipulator extends Manipulator
 
     public function __construct(Editor $editor, $appKernelFilename)
     {
-        $this-&gt;editor = $editor;
-        $this-&gt;appKernelFilename = $appKernelFilename;
+        $this->editor = $editor;
+        $this->appKernelFilename = $appKernelFilename;
     }
 
     public function addBundle($bundle)
     {
-        $file = $this-&gt;editor-&gt;open($this-&gt;appKernelFilename);
+        $file = $this->editor->open($this->appKernelFilename);
         $newLine = sprintf('            new %s(),', $bundle);
 
-        $this-&gt;editor-&gt;jumpDownTo('    public function registerBundles()');
-        $this-&gt;editor-&gt;jumpDownTo('        $bundles = array(');
-        $this-&gt;editor-&gt;jumpDownTo('        );');
+        $this->editor->jumpDownTo('    public function registerBundles()');
+        $this->editor->jumpDownTo('        $bundles = array(');
+        $this->editor->jumpDownTo('        );');
 
-        $this-&gt;editor-&gt;addBefore($file, $newLine);
+        $this->editor->addBefore($file, $newLine);
 
-        $this-&gt;editor-&gt;save($file);
+        $this->editor->save($file);
 
         return true;
     }
@@ -116,7 +116,7 @@ class KernelManipulator extends Manipulator
 <p>You can install Redaktilo using <a href="https://getcomposer.org/">Composer</a>:</p>
 <pre><code>composer require "gnugat/redaktilo:~0.3@dev"</code></pre>
 <p>Then you need to create an instance of the <code>Editor</code> class:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 require_once __DIR__.'/vendor/autoload.php';
 
 use Gnugat\Redaktilo\Filesystem;
@@ -132,7 +132,7 @@ everywhere in your scripts/applications/libraries.</p>
 <h2 id="file">File<a href="#file" class="anchor">#</a></h2>
 <p>The basic idea behind Redaktilo is to provide an object oriented way to
 represent files:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Gnugat\Redaktilo;
 
@@ -148,7 +148,7 @@ class File
 <p>Once this domain model available, you can build services to manipulate it.</p>
 <h2 id="filesystem">Filesystem<a href="#filesystem" class="anchor">#</a></h2>
 <p>This is the first service available:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Gnugat\Redaktilo;
 
@@ -165,7 +165,7 @@ class Filesystem
 <h2 id="editor">Editor<a href="#editor" class="anchor">#</a></h2>
 <p>Developers should only use the <code>Editor</code> class: it's a facade which provides the
 text edition metaphor:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Gnugat\Redaktilo;
 

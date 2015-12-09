@@ -48,23 +48,23 @@ Have a look at the three first ones:</p>
 </ol><p>In the previous articles we created a one-bundled empty application with the
 following files:</p>
 <pre><code>.
-&#9500;&#9472;&#9472; app
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; config.yml
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; logs
-&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; .gitkeep
-&#9500;&#9472;&#9472; composer.json
-&#9500;&#9472;&#9472; composer.lock
-&#9500;&#9472;&#9472; src
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Knight
-&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
-&#9474;&nbsp;&nbsp;         &#9492;&#9472;&#9472; KnightApplicationBundle.php
-&#9500;&#9472;&#9472; .gitignore
-&#9492;&#9472;&#9472; web
-    &#9492;&#9472;&#9472; app.php</code></pre>
+├── app
+│   ├── AppKernel.php
+│   ├── cache
+│   │   └── .gitkeep
+│   ├── config
+│   │   └── config.yml
+│   └── logs
+│       └── .gitkeep
+├── composer.json
+├── composer.lock
+├── src
+│   └── Knight
+│       └── ApplicationBundle
+│           └── KnightApplicationBundle.php
+├── .gitignore
+└── web
+    └── app.php</code></pre>
 <p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
 with git.</p>
 <p>Here's the <a href="https://github.com/gnugat/learning-symfony2/releases/tag/3-bundles">repository where you can find the actual code</a>.</p>
@@ -96,7 +96,7 @@ unprefixed method name.</p>
 <p>Now we need to create the following directory:</p>
 <pre><code>mkdir src/Knight/ApplicationBundle/Controller</code></pre>
 <p>And to create the controller class:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Knight/ApplicationBundle/Controller/ApiController.php
 
 namespace Knight\ApplicationBundle\Controller;
@@ -135,7 +135,7 @@ ni:
 <p>Our controller will retrieve the posted value (named <code>offering</code>), check if it
 is a <code>shrubbery</code> and send back a response containing either <code>Ni</code> (on error) or
 <code>Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv</code> (on success):</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Knight/ApplicationBundle/Controller/ApiController.php
 
 namespace Knight\ApplicationBundle\Controller;
@@ -149,10 +149,10 @@ class ApiController extends Controller
 {
     public function niAction(Request $request)
     {
-        $postedContent = $request-&gt;getContent();
+        $postedContent = $request->getContent();
         $postedValues = json_decode($postedContent, true);
 
-        $answer = array('answer' =&gt; 'Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv');
+        $answer = array('answer' => 'Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv');
         $statusCode = Response::HTTP_OK;
         if (!isset($postedValues['offering']) || 'shrubbery' !== $postedValues['offering']) {
             $answer['answer'] = 'Ni';
@@ -192,7 +192,7 @@ Transfer-Encoding: chunked
 }</code></pre>
 <h2 id="request-s-api">Request's API<a href="#request-s-api" class="anchor">#</a></h2>
 <p>Here's part of the Request's API:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Symfony\Component\HttpFoundation;
 
@@ -231,14 +231,14 @@ values are sent in the request's content like this:</p>
 <pre><code>offering=hareng</code></pre>
 <p>PHP understands this and will put the values in the <code>$_POST</code> superglobal. This
 mean you could retrieve it like this:</p>
-<pre><code>$request-&gt;request-&gt;get('offering');</code></pre>
+<pre><code>$request->request->get('offering');</code></pre>
 <p>However, when we submit something in JSON with the <code>Content-Type</code> set to
 <code>application/json</code>, PHP doesn't populate <code>$_POST</code>. You need to retrieve the raw
 data with <code>getContent</code> and to convert it using <code>json_decode</code>, as we did in our
 controller.</p>
 <h2 id="response-s-api">Response's API<a href="#response-s-api" class="anchor">#</a></h2>
 <p>Here's a part of the Response's API:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Symfony\Component\HttpFoundation;
 

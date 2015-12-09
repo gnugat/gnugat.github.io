@@ -63,9 +63,9 @@ easier.</p>
 containing PHP source code and makes an array of tokens and informations out of
 it.</p>
 <p>Here's an example:</p>
-<pre><code class="language-php">&lt;?php
-$code =&lt;&lt;&lt;'EOF'
-&lt;?php
+<pre><code class="language-php"><?php
+$code =<<<'EOF'
+<?php
 
 /**
  * @param string $content
@@ -85,7 +85,7 @@ $tokens = token_get_all($code);</code></pre>
     // 0: code, 1: value, 2: line number
 
     // Line 1
-    array(T_OPEN_TAG, "&lt;?php\n", 1),
+    array(T_OPEN_TAG, "<?php\n", 1),
     // Line 2
     array(T_WHITESPACE, "\n", 2),
     // Lines 3, 4 and 5

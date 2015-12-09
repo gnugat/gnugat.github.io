@@ -62,32 +62,32 @@ which we don't need as we only intend on checking the status code, not the body.
 </blockquote>
 <p>Let's take an easier way: we will create a bootstrap file which requires the
 kernel's file:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: app/bootstrap.php
 
 require __DIR__.'/bootstrap.php.cache';
 require __DIR__.'/AppKernel.php';</code></pre>
 <p>Now all you need to do for your tests is to use this file. For example with
 PHPUnit:</p>
-<pre><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+<pre><code class="language-xml"><?xml version="1.0" encoding="UTF-8"?>
 
-&lt;!-- File: app/phpunit.xml.dist --&gt;
-&lt;phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<!-- File: app/phpunit.xml.dist -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.3/phpunit.xsd"
     backupGlobals="false"
     colors="true"
     bootstrap="./bootstrap.php"
-&gt;
-    &lt;testsuites&gt;
-        &lt;testsuite name="Test Suite"&gt;
-            &lt;directory&gt;./src/AppBundle/Tests&lt;/directory&gt;
-        &lt;/testsuite&gt;
-    &lt;/testsuites&gt;
-&lt;/phpunit&gt;</code></pre>
+>
+    <testsuites>
+        <testsuite name="Test Suite">
+            <directory>./src/AppBundle/Tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit></code></pre>
 <h2 id="testing-commands">Testing commands<a href="#testing-commands" class="anchor">#</a></h2>
 <p>Now let's say we're testing the famous <a href="https://github.com/sensiolabs/SensioDistributionBundle/tree/master/Resources/skeleton/acme-demo-bundle/Acme/DemoBundle">AcmeDemoBundle</a>,
 and its <a href="https://github.com/sensiolabs/SensioDistributionBundle/blob/master/Resources/skeleton/acme-demo-bundle/Acme/DemoBundle/Command/HelloWorldCommand.php">hello world command</a>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Acme\DemoBundle\Tests\Command;
 
@@ -103,21 +103,21 @@ class HelloWorldCommandTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $kernel = new \AppKernel('test', false);
-        $this-&gt;app = new Application($kernel);
-        $this-&gt;app-&gt;setAutoExit(false);
-        $this-&gt;output = new NullOutput();
+        $this->app = new Application($kernel);
+        $this->app->setAutoExit(false);
+        $this->output = new NullOutput();
     }
 
     public function testItRunsSuccessfully()
     {
         $input = new ArrayInput(array(
-            'commandName' =&gt; 'acme:hello',
-            'name' =&gt; 'Igor',
+            'commandName' => 'acme:hello',
+            'name' => 'Igor',
         ));
 
-        $exitCode = $this-&gt;app-&gt;run($input, $this-&gt;output);
+        $exitCode = $this->app->run($input, $this->output);
 
-        $this-&gt;assertSame(0, $exitCode);
+        $this->assertSame(0, $exitCode);
     }
 }</code></pre>
 <p>As you can see our test is neatly structured in 3 parts: input definition, the
@@ -128,7 +128,7 @@ call PHP's <code>exit</code>. The <code>NullOutput</code> ensures that nothing i
 </blockquote>
 <h2 id="testing-controllers">Testing controllers<a href="#testing-controllers" class="anchor">#</a></h2>
 <p>Once again let's test AcmeDemoBundle, this time the <a href="https://github.com/sensiolabs/SensioDistributionBundle/blob/master/Resources/skeleton/acme-demo-bundle/Acme/DemoBundle/Controller/DemoController.php">demo controller</a>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Acme\DemoBundle\Tests\Controller;
 
@@ -140,38 +140,38 @@ class DemoControllerTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this-&gt;app = new \AppKernel('test', false);
-        $this-&gt;app-&gt;boot();
+        $this->app = new \AppKernel('test', false);
+        $this->app->boot();
     }
 
     public function testHomepage()
     {
         $request = new Request::create('/', 'GET');
 
-        $response = $this-&gt;app-&gt;handle($request);
+        $response = $this->app->handle($request);
 
-        $this-&gt;assertTrue($response-&gt;isSuccessful());
+        $this->assertTrue($response->isSuccessful());
     }
 
     public function testItSaysHello()
     {
         $request = new Request('/hello/igor', 'GET');
 
-        $response = $this-&gt;app-&gt;handle($request);
+        $response = $this->app->handle($request);
 
-        $this-&gt;assertTrue($response-&gt;isSuccessful());
+        $this->assertTrue($response->isSuccessful());
     }
 
     public function testItSendsEmail()
     {
         $request = new Request('/contact', 'POST', array(
-            'email' =&gt; 'igor@example.com',
-            'content' =&gt; 'Hello',
+            'email' => 'igor@example.com',
+            'content' => 'Hello',
         ));
 
-        $response = $this-&gt;app-&gt;handle($request);
+        $response = $this->app->handle($request);
 
-        $this-&gt;assertTrue($response-&gt;isSuccessful());
+        $this->assertTrue($response->isSuccessful());
     }
 }</code></pre>
 <blockquote>

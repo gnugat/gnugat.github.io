@@ -93,7 +93,7 @@ project that provides many benefits:</p>
 </blockquote>
 <p>We should now have the <code>spec/Vendor/Project/RequestHandlerSpec.php</code> file, bootstraped
 for us by phpspec:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace spec\Vendor\Project;
 
@@ -104,11 +104,11 @@ class RequestHandlerSpec extends ObjectBehavior
 {
     function it_is_initializable()
     {
-        $this-&gt;shouldHaveType('Vendor\Project\RequestHandler');
+        $this->shouldHaveType('Vendor\Project\RequestHandler');
     }
 }</code></pre>
 <p>We can directly start by writing our first specification (test method) in it:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: spec/Vendor/Project/RequestHandlerSpec.php
 
 namespace spec\Vendor\Project;
@@ -120,7 +120,7 @@ class RequestHandlerSpec extends ObjectBehavior
 {
     function it_takes_arequest_and_returns_a_response(Request $request)
     {
-        $this-&gt;handle($request)-&gt;shouldHaveType('Vendor\Project\Response');
+        $this->handle($request)->shouldHaveType('Vendor\Project\Response');
     }
 }</code></pre>
 <blockquote>
@@ -135,7 +135,7 @@ This is the whole point of specBDD (specification Behavior Driven Development).<
 <li>Do you want me to create <code>Vendor\Project\RequestHandler::handle()</code> for you?</li>
 </ol><p>By accepting everytime, phpspec will bootstrap the following
 <code>src/Vendor/Project/Vendor/RequestHandler.php</code> file:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project;
 
@@ -149,7 +149,7 @@ class RequestHandler
 }</code></pre>
 <p>In our specification, we make use of a non existing <code>Request</code> class, and phpspec
 also bootstraped it for us in <code>src/Vendor/Project/Vendor/Request.php</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project;
 
@@ -181,7 +181,7 @@ provides, so why would we choose SpecGen? Well simply because it intends to do m
 <p>Let's give it a try by first removing the code we boostrapped until now:</p>
 <pre><code>rm -rf src</code></pre>
 <p>In order to demonstrate more type hints, we'll add more arguments:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: spec/Vendor/Project/RequestHandlerSpec.php
 
 namespace spec\Vendor\Project;
@@ -195,13 +195,13 @@ class RequestHandlerSpec extends ObjectBehavior
     {
         $parameters = array();
         $isEnabled = true;
-        $this-&gt;handle($request, $parameters, $isEnabled)-&gt;shouldHaveType('Vendor\Project\Response');
+        $this->handle($request, $parameters, $isEnabled)->shouldHaveType('Vendor\Project\Response');
     }
 }</code></pre>
 <p>We can now run the test suite to bootstrap the code:</p>
 <pre><code>phpspec run</code></pre>
 <p>This should create the following <code>src/Vendor/Project/RequestHandler.php</code> file:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project;
 
@@ -218,7 +218,7 @@ matter since <code>Request</code> is in the same namespace as <code>RequestHandl
 <p>Let's remove again the generated code:</p>
 <pre><code>rm -rf src</code></pre>
 <p>Now we'd like to see this multiline feature by adding many arguments to our specifiction:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: spec/Vendor/Project/RequestHandlerSpec.php
 
 namespace spec\Vendor\Project;
@@ -229,13 +229,13 @@ class RequestHandlerSpec extends ObjectBehavior
 {
     function it_takes_arequest_and_returns_a_response()
     {
-        $this-&gt;myMethod(1, 2, 3, 4, 5, 6, 7, 8);
+        $this->myMethod(1, 2, 3, 4, 5, 6, 7, 8);
     }
 }</code></pre>
 <p>Again, we run the test suite:</p>
 <pre><code>phpspec run</code></pre>
 <p>This should bootstrap the following <code>src/Vendor/Project/RequestHandler.php</code> file:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project;
 

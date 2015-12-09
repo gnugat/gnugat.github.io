@@ -47,19 +47,19 @@ Have a look at the two first ones:</p>
 </ul><p>In the previous articles we began to create an empty application with the
 following files:</p>
 <pre><code>.
-&#9500;&#9472;&#9472; app
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; config.yml
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; logs
-&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; .gitkeep
-&#9500;&#9472;&#9472; composer.json
-&#9500;&#9472;&#9472; composer.lock
-&#9500;&#9472;&#9472; .gitignore
-&#9492;&#9472;&#9472; web
-    &#9492;&#9472;&#9472; app.php</code></pre>
+├── app
+│   ├── AppKernel.php
+│   ├── cache
+│   │   └── .gitkeep
+│   ├── config
+│   │   └── config.yml
+│   └── logs
+│       └── .gitkeep
+├── composer.json
+├── composer.lock
+├── .gitignore
+└── web
+    └── app.php</code></pre>
 <p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
 with git.</p>
 <p>Here's the <a href="https://github.com/gnugat/learning-symfony2/releases/tag/2-empty-application">repository where you can find the actual code</a>.</p>
@@ -72,7 +72,7 @@ user do not appease it. To do so, the user should post a shrubbery!</p>
 our code. To do so we need to create the directory:</p>
 <pre><code>mkdir -p src/Knight/ApplicationBundle</code></pre>
 <p>Then the class extending <code>Symfony\Component\HttpKernel\Bundle\Bundle</code>:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Knight/ApplicationBundle/KnightApplicationBundle.php
 
 namespace Knight\ApplicationBundle;
@@ -83,7 +83,7 @@ class KnightApplicationBundle extends Bundle
 {
 }</code></pre>
 <p>Finally we register the bundle into our application:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: app/AppKernel.php
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -95,13 +95,13 @@ class AppKernel extends Kernel
     {
         return array(
             new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
-            new Knight\ApplicationBundle\KnightApplicationBundle(), // &lt;-- Here!
+            new Knight\ApplicationBundle\KnightApplicationBundle(), // <-- Here!
         );
     }
 
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
-        $loader-&gt;load(__DIR__.'/config/config.yml');
+        $loader->load(__DIR__.'/config/config.yml');
     }
 }</code></pre>
 <p>Let's commit our work:</p>
@@ -109,7 +109,7 @@ class AppKernel extends Kernel
 git commit -m 'Created Application bundle'</code></pre>
 <h2 id="bundles-allow-you-to-extend-the-application-s-dic">Bundles allow you to extend the application's DIC<a href="#bundles-allow-you-to-extend-the-application-s-dic" class="anchor">#</a></h2>
 <p>The <code>KnightApplicationBundle</code> class extends the following one:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Symfony\Component\HttpKernel\Bundle;
 
@@ -126,11 +126,11 @@ abstract class Bundle extends ContainerAware implements BundleInterface
 its Dependency Injection Container's (DIC) extension, if the following directory
 directory structure is used:</p>
 <pre><code>.
-&#9500;&#9472;&#9472; Command
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; *Command.php
-&#9500;&#9472;&#9472; DependencyInjection
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; KnightApplicationExtension.php
-&#9492;&#9472;&#9472; KnightApplicationBundle.php</code></pre>
+├── Command
+│   └── *Command.php
+├── DependencyInjection
+│   └── KnightApplicationExtension.php
+└── KnightApplicationBundle.php</code></pre>
 <p><em>Note</em>: the only file required in a bundle is the <code>KnightApplicationBundle.php</code>
 one.</p>
 <p>The name of a bundle (in our example <code>KnightApplication</code>) is composed of:</p>

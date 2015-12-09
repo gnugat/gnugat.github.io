@@ -104,7 +104,7 @@ exceptions to get their types.</p>
 </ul><p>Those changes will introduce deprecations that will be removed only when the
 MAJOR version is incremented.</p>
 <p>This can be documented directly in the code, using <a href="http://www.phpdoc.org/docs/latest/references/phpdoc/tags/deprecated.html">phpdoc</a>:
-use <code>@deprecated &lt;since-version&gt; &lt;what to use instead&gt;</code>.</p>
+use <code>@deprecated <since-version> <what to use instead></code>.</p>
 <p>This can also be described in a migration documentation (e.g. <code>UPGRADE-2.0.md</code>).</p>
 <h2 id="avoid-complete-rewrites">Avoid complete rewrites<a href="#avoid-complete-rewrites" class="anchor">#</a></h2>
 <p>Semantic versioning only applies to versions greater than <code>1.0.0</code>: if you tag your project as
@@ -124,7 +124,7 @@ as deprecated.</p>
 <p>When creating a library, remember that exceptions and all constructors (even of
 private classes) are part of the public API.</p>
 <blockquote>
-<p><strong>Note</strong>: Many thanks to <a href="http://loickpiera.com/">Lo&iuml;ck Piera</a> and his help,
+<p><strong>Note</strong>: Many thanks to <a href="http://loickpiera.com/">Loïck Piera</a> and his help,
 without him I'd still think that declaring a class as being part of the public
 API is sufficient.</p>
 </blockquote>

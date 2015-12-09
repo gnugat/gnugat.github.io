@@ -53,7 +53,7 @@
 <li><a href="#conclusion">Conclusion</a></li>
 </ul><h2 id="creating-the-controller">Creating the controller<a href="#creating-the-controller" class="anchor">#</a></h2>
 <p>First things first, we'll write a functional test:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: tests/Controller/ProfileCreationControllerTest.php
 
 namespace AppBundle\Tests\Controller;
@@ -66,30 +66,30 @@ class ProfileCreationControllerTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this-&gt;app = new \AppKernel('test', false);
-        $this-&gt;app-&gt;boot();
+        $this->app = new \AppKernel('test', false);
+        $this->app->boot();
     }
 
     public function testItCreatesProfiles()
     {
         $headers = array(
-            'CONTENT_TYPE' =&gt; 'application/json',
-            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
-            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+            'CONTENT_TYPE' => 'application/json',
+            'PHP_AUTH_USER' => 'spanish_inquisition',
+            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('name' =&gt; 'Fawlty Towers'));
+        $body = json_encode(array('name' => 'Fawlty Towers'));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $response = $this-&gt;app-&gt;handle($request);
+        $response = $this->app->handle($request);
 
-        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+        $this->assertSame(201, $response->getStatusCode(), $response->getContent());
     }
 }</code></pre>
 <p>The test should fail, because the route hasn't been found (<code>404 NOT FOUND</code>):</p>
 <pre><code>phpunit -c app</code></pre>
 <p>Flabergast! The test fails with a <code>PHP Fatal error:  Class 'AppKernel' not found</code>!
 Let's fix this by adding the forgotten PHP tag opening in the bootstrap file:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: app/bootstrap.php
 
 require __DIR__.'/bootstrap.php.cache';
@@ -103,7 +103,7 @@ environment:</p>
 <pre><code>phpunit -c app</code></pre>
 <p>This time the test fails for the right reason: the page doesn't exist.
 To fix this, we'll create an empty controller:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/Controller/ProfileCreationController.php;
 
 namespace AppBundle\Controller;
@@ -122,7 +122,7 @@ class ProfileCreationController extends Controller
      */
     public function createProfileAction(Request $request)
     {
-        $name = $request-&gt;request-&gt;get('name');
+        $name = $request->request->get('name');
         $createdProfile = array();
 
         return new JsonResponse($createdProfile, 201);
@@ -156,7 +156,7 @@ we'll use MySQL and Doctrine, so we'll need to create a profile entity.</p>
 <p>We'll first generate a skeleton of its specification using <a href="http://phpspec.net">phpspec</a>:</p>
 <pre><code>./bin/phpspec describe 'AppBundle\Entity\Profile'</code></pre>
 <p>Then we'll edit the specification:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: spec/AppBundle/Entity/ProfileSpec.php
 
 namespace spec\AppBundle\Entity;
@@ -169,21 +169,21 @@ class ProfileSpec extends ObjectBehavior
 
     function let()
     {
-        $this-&gt;beConstructedWith(self::NAME);
+        $this->beConstructedWith(self::NAME);
     }
 
     function it_can_be_converted_to_array()
     {
-        $this-&gt;toArray()-&gt;shouldBe(array(
-            'id' =&gt; null,
-            'name' =&gt; self::NAME,
+        $this->toArray()->shouldBe(array(
+            'id' => null,
+            'name' => self::NAME,
         ));
     }
 }</code></pre>
 <p>Since we're happy with this step, we'll generate a skeleton of the code:</p>
 <pre><code>./bin/phpspec run</code></pre>
 <p>Of course we need to edit it:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/Entity/Profile.php
 
 namespace AppBundle\Entity;
@@ -210,14 +210,14 @@ class Profile
 
     public function __construct($name)
     {
-        $this-&gt;name = $name;
+        $this->name = $name;
     }
 
     public function toArray()
     {
         return array(
-            'id' =&gt; $this-&gt;id,
-            'name' =&gt; $this-&gt;name,
+            'id' => $this->id,
+            'name' => $this->name,
         );
     }
 }</code></pre>
@@ -265,7 +265,7 @@ git commit -m 'Created Profile entity'</code></pre>
 Before doing anything with the code, we'll need to update our functional test:
 we don't want the data to be actually persisted, as it would make the test fail
 on a second run:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: tests/Controller/ProfileCreationControllerTest.php
 
 namespace AppBundle\Tests\Controller;
@@ -279,36 +279,36 @@ class ProfileCreationControllerTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this-&gt;app = new \AppKernel('test', true);
-        $this-&gt;app-&gt;boot();
+        $this->app = new \AppKernel('test', true);
+        $this->app->boot();
 
-        $this-&gt;em = $this-&gt;app-&gt;getContainer()-&gt;get('doctrine.orm.entity_manager');
-        $this-&gt;em-&gt;beginTransaction();
+        $this->em = $this->app->getContainer()->get('doctrine.orm.entity_manager');
+        $this->em->beginTransaction();
     }
 
     public function testItCreatesProfiles()
     {
         $headers = array(
-            'CONTENT_TYPE' =&gt; 'application/json',
-            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
-            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+            'CONTENT_TYPE' => 'application/json',
+            'PHP_AUTH_USER' => 'spanish_inquisition',
+            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('name' =&gt; 'Fawlty Towers'));
+        $body = json_encode(array('name' => 'Fawlty Towers'));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $response = $this-&gt;app-&gt;handle($request);
+        $response = $this->app->handle($request);
 
-        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+        $this->assertSame(201, $response->getStatusCode(), $response->getContent());
     }
 
     protected function tearDown()
     {
-        $this-&gt;em-&gt;rollback();
-        $this-&gt;em-&gt;close();
+        $this->em->rollback();
+        $this->em->close();
     }
 }</code></pre>
 <p>Let's update the controller:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/Controller/ProfileCreationController.php;
 
 namespace AppBundle\Controller;
@@ -328,13 +328,13 @@ class ProfileCreationController extends Controller
      */
     public function createProfileAction(Request $request)
     {
-        $em = $this-&gt;get('doctrine.orm.entity_manager');
+        $em = $this->get('doctrine.orm.entity_manager');
 
-        $createdProfile = new Profile($request-&gt;request-&gt;get('name'));
-        $em-&gt;persist($createdProfile);
-        $em-&gt;flush();
+        $createdProfile = new Profile($request->request->get('name'));
+        $em->persist($createdProfile);
+        $em->flush();
 
-        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+        return new JsonResponse($createdProfile->toArray(), 201);
     }
 }</code></pre>
 <p>Time to run the tests:</p>
@@ -345,7 +345,7 @@ git commit -m 'Saved created profile in database'</code></pre>
 <h2 id="managing-errors">Managing errors<a href="#managing-errors" class="anchor">#</a></h2>
 <p>Our endpoint should return an error if the "name" parameter is missing. Let's add
 a functional test for this:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: tests/Controller/ProfileCreationControllerTest.php
 
 namespace AppBundle\Tests\Controller;
@@ -359,53 +359,53 @@ class ProfileCreationControllerTest extends PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this-&gt;app = new \AppKernel('test', true);
-        $this-&gt;app-&gt;boot();
+        $this->app = new \AppKernel('test', true);
+        $this->app->boot();
 
-        $this-&gt;em = $this-&gt;app-&gt;getContainer()-&gt;get('doctrine.orm.entity_manager');
-        $this-&gt;em-&gt;beginTransaction();
+        $this->em = $this->app->getContainer()->get('doctrine.orm.entity_manager');
+        $this->em->beginTransaction();
     }
 
     public function testItCreatesProfiles()
     {
         $headers = array(
-            'CONTENT_TYPE' =&gt; 'application/json',
-            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
-            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+            'CONTENT_TYPE' => 'application/json',
+            'PHP_AUTH_USER' => 'spanish_inquisition',
+            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('name' =&gt; 'Fawlty Towers'));
+        $body = json_encode(array('name' => 'Fawlty Towers'));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $response = $this-&gt;app-&gt;handle($request);
+        $response = $this->app->handle($request);
 
-        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+        $this->assertSame(201, $response->getStatusCode(), $response->getContent());
     }
 
     public function testItFailsIfNameIsMissing()
     {
         $headers = array(
-            'CONTENT_TYPE' =&gt; 'application/json',
-            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
-            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+            'CONTENT_TYPE' => 'application/json',
+            'PHP_AUTH_USER' => 'spanish_inquisition',
+            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('no-name' =&gt; ''));
+        $body = json_encode(array('no-name' => ''));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $response = $this-&gt;app-&gt;handle($request);
+        $response = $this->app->handle($request);
 
-        $this-&gt;assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
+        $this->assertSame(422, $response->getStatusCode(), $response->getContent());
     }
 
     protected function tearDown()
     {
-        $this-&gt;em-&gt;rollback();
-        $this-&gt;em-&gt;close();
+        $this->em->rollback();
+        $this->em->close();
     }
 }</code></pre>
 <p>It should make our tests fail:</p>
 <pre><code>make test</code></pre>
 <p>We can make this test pass by adding a simple check:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/Controller/ProfileCreationController.php;
 
 namespace AppBundle\Controller;
@@ -424,17 +424,17 @@ class ProfileCreationController extends Controller
      */
     public function createProfileAction(Request $request)
     {
-        $em = $this-&gt;get('doctrine.orm.entity_manager');
+        $em = $this->get('doctrine.orm.entity_manager');
 
-        $name = $request-&gt;request-&gt;get('name');
+        $name = $request->request->get('name');
         if (null === $name) {
-            return new JsonResponse(array('error' =&gt; 'The "name" parameter is missing from the request\'s body'), 422);
+            return new JsonResponse(array('error' => 'The "name" parameter is missing from the request\'s body'), 422);
         }
         $createdProfile = new Profile($name);
-        $em-&gt;persist($createdProfile);
-        $em-&gt;flush();
+        $em->persist($createdProfile);
+        $em->flush();
 
-        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+        return new JsonResponse($createdProfile->toArray(), 201);
     }
 }</code></pre>
 <p>Let's see:</p>
@@ -446,7 +446,7 @@ need to do it manually.</p>
 </blockquote>
 <p>Looks nice! Our endpoint should also fail when a profile with the same name
 already exist:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: tests/Controller/ProfileCreationControllerTest.php
 
 namespace AppBundle\Tests\Controller;
@@ -460,69 +460,69 @@ class ProfileCreationControllerTest extends PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this-&gt;app = new \AppKernel('test', true);
-        $this-&gt;app-&gt;boot();
+        $this->app = new \AppKernel('test', true);
+        $this->app->boot();
 
-        $this-&gt;em = $this-&gt;app-&gt;getContainer()-&gt;get('doctrine.orm.entity_manager');
-        $this-&gt;em-&gt;beginTransaction();
+        $this->em = $this->app->getContainer()->get('doctrine.orm.entity_manager');
+        $this->em->beginTransaction();
     }
 
     public function testItCreatesProfiles()
     {
         $headers = array(
-            'CONTENT_TYPE' =&gt; 'application/json',
-            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
-            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+            'CONTENT_TYPE' => 'application/json',
+            'PHP_AUTH_USER' => 'spanish_inquisition',
+            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('name' =&gt; 'Fawlty Towers'));
+        $body = json_encode(array('name' => 'Fawlty Towers'));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $response = $this-&gt;app-&gt;handle($request);
+        $response = $this->app->handle($request);
 
-        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+        $this->assertSame(201, $response->getStatusCode(), $response->getContent());
     }
 
     public function testItFailsIfNameIsMissing()
     {
         $headers = array(
-            'CONTENT_TYPE' =&gt; 'application/json',
-            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
-            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+            'CONTENT_TYPE' => 'application/json',
+            'PHP_AUTH_USER' => 'spanish_inquisition',
+            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('no-name' =&gt; ''));
+        $body = json_encode(array('no-name' => ''));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $response = $this-&gt;app-&gt;handle($request);
+        $response = $this->app->handle($request);
 
-        $this-&gt;assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
+        $this->assertSame(422, $response->getStatusCode(), $response->getContent());
     }
 
     public function testItFailsIfNameAlreadyExists()
     {
         $headers = array(
-            'CONTENT_TYPE' =&gt; 'application/json',
-            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
-            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+            'CONTENT_TYPE' => 'application/json',
+            'PHP_AUTH_USER' => 'spanish_inquisition',
+            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('name' =&gt; 'Proven&ccedil;al le Gaulois'));
+        $body = json_encode(array('name' => 'Provençal le Gaulois'));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $this-&gt;app-&gt;handle($request);
-        $response = $this-&gt;app-&gt;handle($request);
+        $this->app->handle($request);
+        $response = $this->app->handle($request);
 
-        $this-&gt;assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
+        $this->assertSame(422, $response->getStatusCode(), $response->getContent());
     }
 
     protected function tearDown()
     {
-        $this-&gt;em-&gt;rollback();
-        $this-&gt;em-&gt;close();
+        $this->em->rollback();
+        $this->em->close();
     }
 }</code></pre>
 <p>Our tests should be broken again:</p>
 <pre><code>make test</code></pre>
 <p>Another check can fix this awful situation:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/Controller/ProfileCreationController.php;
 
 namespace AppBundle\Controller;
@@ -541,20 +541,20 @@ class ProfileCreationController extends Controller
      */
     public function createProfileAction(Request $request)
     {
-        $em = $this-&gt;get('doctrine.orm.entity_manager');
+        $em = $this->get('doctrine.orm.entity_manager');
 
-        $name = $request-&gt;request-&gt;get('name');
+        $name = $request->request->get('name');
         if (null === $name) {
-            return new JsonResponse(array('error' =&gt; 'The "name" parameter is missing from the request\'s body'), 422);
+            return new JsonResponse(array('error' => 'The "name" parameter is missing from the request\'s body'), 422);
         }
-        if (null !== $em-&gt;getRepository('AppBundle:Profile')-&gt;findOneByName($name)) {
-            return new JsonResponse(array('error' =&gt; 'The name "'.$name.'" is already taken'), 422);
+        if (null !== $em->getRepository('AppBundle:Profile')->findOneByName($name)) {
+            return new JsonResponse(array('error' => 'The name "'.$name.'" is already taken'), 422);
         }
         $createdProfile = new Profile($name);
-        $em-&gt;persist($createdProfile);
-        $em-&gt;flush();
+        $em->persist($createdProfile);
+        $em->flush();
 
-        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+        return new JsonResponse($createdProfile->toArray(), 201);
     }
 }</code></pre>
 <p>Are we there yet?</p>
@@ -572,7 +572,7 @@ life application we'll need to add more complexity as new requirements appear.</
 our code by creating some services, each with their specific responsibilities,
 to prevent our application from becoming a <a href="https://speakerdeck.com/richardmiller/atm">big ball of mud</a>
 where everything is hard to read, impossible to test and expensive to change.</p>
-<p>This will the subject of <a href="../../../2015/03/04/sf-ws-part-2-3-creation-refactoring.html">next week</a>'s article.</p>
+<p>This will the subject of <a href="../../../2015/03/04/sf-ws-part-2-3-creation-refactoring.html">next week</a> article.</p>
 
             <footer>
                     <nav class="row">

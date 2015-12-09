@@ -47,24 +47,24 @@ or <a href="http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/tut
 <p>Pomm can be installed using <a href="https://getcomposer.org/download/">Composer</a>:</p>
 <pre><code>composer require pomm-project/foundation:^2.0@rc</code></pre>
 <p>Then we need to create a <code>QueryManager</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 require __DIR__.'/vendor/autoload.php';
 
 $pomm = new PommProject\Foundation\Pomm(
-    'database_name' =&gt; array(
-        'dsn' =&gt; 'pgsql://database_user:database_pass@database_host:database_port/database_name',
-        'class:session_builder' =&gt; '\PommProject\Foundation\SessionBuilder',
+    'database_name' => array(
+        'dsn' => 'pgsql://database_user:database_pass@database_host:database_port/database_name',
+        'class:session_builder' => '\PommProject\Foundation\SessionBuilder',
     ),
 );
 
 /**
  * @var PommProject\Foundation\QueryManager\QueryManagerInterface
  */
-$queryManager = $pomm-&gt;getDefaultSession()-&gt;getQueryManager();</code></pre>
+$queryManager = $pomm->getDefaultSession()->getQueryManager();</code></pre>
 <h2 id="usage">Usage<a href="#usage" class="anchor">#</a></h2>
 <p>The <code>QueryManager</code> allows us to send query to our database:</p>
-<pre><code class="language-php">$items = $queryManager-&gt;query('SELECT * FROM item WHERE name = $1 AND description = $2', array(
+<pre><code class="language-php">$items = $queryManager->query('SELECT * FROM item WHERE name = $1 AND description = $2', array(
     'Arthur Dent',
     'Nobody expects the Spanish Inquisition!',
 ));</code></pre>

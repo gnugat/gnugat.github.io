@@ -71,10 +71,10 @@ git commit -m 'Installed Guzzle'</code></pre>
 S3 in our project. The issue? It's version 2 depends on Guzzle 3 and its version 3
 depends on Guzzle 5. We now need to upgrade our usage of Guzzle everywhere in our
 application.</p>
-<p><a href="http://knowyourmeme.com/photos/141710-true-story"><img alt="True story" src="http://i0.kym-cdn.com/photos/images/newsfeed/000/141/710/7nTnr.png?1309357850"></a></p>
+<p><a href="http://knowyourmeme.com/photos/141710-true-story"><img src="http://i0.kym-cdn.com/photos/images/newsfeed/000/141/710/7nTnr.png?1309357850" alt="True story"></a></p>
 <p>To minimize this, we can centralize the usage of Guzzle in one single file. In order
 to be able to do so, we'll create a RequestHandler:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/RequestHandler/RequestHandler.php
 
 namespace AppBundle\RequestHandler;
@@ -95,15 +95,15 @@ with two arguments:</p>
 
     function it_has_a_verb_and_an_uri()
     {
-        $this-&gt;beConstructedWith('GET', '/api/v1/profiles');
+        $this->beConstructedWith('GET', '/api/v1/profiles');
 
-        $this-&gt;getVerb()-&gt;shouldBe('GET');
-        $this-&gt;getUri()-&gt;shouldBe('/api/v1/profiles');
+        $this->getVerb()->shouldBe('GET');
+        $this->getUri()->shouldBe('/api/v1/profiles');
     }</code></pre>
 <p>Running the specifications will bootstrap the class for us:</p>
 <pre><code>./bin/phpspec run</code></pre>
 <p>We can now make the test pass by writing the code:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/RequestHandler/Request.php
 
 namespace AppBundle\RequestHandler;
@@ -115,18 +115,18 @@ class Request
 
     public function __construct($verb, $uri)
     {
-        $this-&gt;verb = $verb;
-        $this-&gt;uri = $uri;
+        $this->verb = $verb;
+        $this->uri = $uri;
     }
 
     public function getVerb()
     {
-        return $this-&gt;verb;
+        return $this->verb;
     }
 
     public function getUri()
     {
-        return $this-&gt;uri;
+        return $this->uri;
     }
 }</code></pre>
 <p>Let's check if it's enough for now:</p>
@@ -140,10 +140,10 @@ git commit -m 'Created Request'</code></pre>
 
     function it_can_have_headers()
     {
-        $this-&gt;beConstructedWith('GET', '/api/v1/profiles');
-        $this-&gt;setHeader('Content-Type', 'application/json');
+        $this->beConstructedWith('GET', '/api/v1/profiles');
+        $this->setHeader('Content-Type', 'application/json');
 
-        $this-&gt;getHeaders()-&gt;shouldBe(array('Content-Type' =&gt; 'application/json'));
+        $this->getHeaders()->shouldBe(array('Content-Type' => 'application/json'));
     }</code></pre>
 <p>Let's boostrap them:</p>
 <pre><code>./bin/phpspec run</code></pre>
@@ -154,12 +154,12 @@ git commit -m 'Created Request'</code></pre>
 
     public function setHeader($name, $value)
     {
-        $this-&gt;headers[$name] = $value;
+        $this->headers[$name] = $value;
     }
 
     public function getHeaders()
     {
-        return $this-&gt;headers;
+        return $this->headers;
     }</code></pre>
 <p>This makes the test pass:</p>
 <pre><code>./bin/phpspec run</code></pre>
@@ -172,10 +172,10 @@ git commit -m 'Added headers to Request'</code></pre>
 
     function it_can_have_a_body()
     {
-        $this-&gt;beConstructedWith('GET', '/api/v1/profiles');
-        $this-&gt;setBody('{"wound":"just a flesh one"}');
+        $this->beConstructedWith('GET', '/api/v1/profiles');
+        $this->setBody('{"wound":"just a flesh one"}');
 
-        $this-&gt;getBody()-&gt;shouldBe('{"wound":"just a flesh one"}');
+        $this->getBody()->shouldBe('{"wound":"just a flesh one"}');
     }</code></pre>
 <p>As usual we bootstrap it:</p>
 <pre><code>./bin/phpspec run</code></pre>
@@ -186,12 +186,12 @@ git commit -m 'Added headers to Request'</code></pre>
 
     public function setBody($body)
     {
-        $this-&gt;body = $body;
+        $this->body = $body;
     }
 
     public function getBody()
     {
-        return $this-&gt;body;
+        return $this->body;
     }</code></pre>
 <p>Let's make our console green:</p>
 <pre><code>./bin/phpspec run</code></pre>
@@ -209,14 +209,14 @@ define the constructor with a single argument:</p>
 
     function it_has_a_status_code()
     {
-        $this-&gt;beConstructedWith(204);
+        $this->beConstructedWith(204);
 
-        $this-&gt;getStatusCode()-&gt;shouldBe(204);
+        $this->getStatusCode()->shouldBe(204);
     }</code></pre>
 <p>Running the specifications will bootstrap the class for us:</p>
 <pre><code>./bin/phpspec run</code></pre>
 <p>We can now make the test pass by writing the code:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/RequestHandler/Response.php
 
 namespace AppBundle\RequestHandler;
@@ -227,12 +227,12 @@ class Response
 
     public function __construct($statusCode)
     {
-        $this-&gt;statusCode = $statusCode;
+        $this->statusCode = $statusCode;
     }
 
     public function getStatusCode()
     {
-        return $this-&gt;statusCode;
+        return $this->statusCode;
     }
 }</code></pre>
 <p>Let's check if it's enough for now:</p>
@@ -246,10 +246,10 @@ git commit -m 'Created Response'</code></pre>
 
     function it_can_have_headers()
     {
-        $this-&gt;beConstructedWith(204);
-        $this-&gt;setHeaders(array('Content-Type' =&gt; 'application/json'));
+        $this->beConstructedWith(204);
+        $this->setHeaders(array('Content-Type' => 'application/json'));
 
-        $this-&gt;getHeader('Content-Type')-&gt;shouldBe('application/json');
+        $this->getHeader('Content-Type')->shouldBe('application/json');
     }</code></pre>
 <p>Let's boostrap them:</p>
 <pre><code>./bin/phpspec run</code></pre>
@@ -260,12 +260,12 @@ git commit -m 'Created Response'</code></pre>
 
     public function setHeaders(array $headers)
     {
-        $this-&gt;headers = $headers;
+        $this->headers = $headers;
     }
 
     public function getHeader($name)
     {
-        return (isset($this-&gt;headers[$name]) ? $this-&gt;headers[$name] : null);
+        return (isset($this->headers[$name]) ? $this->headers[$name] : null);
     }</code></pre>
 <p>This makes the test pass:</p>
 <pre><code>./bin/phpspec run</code></pre>
@@ -278,10 +278,10 @@ git commit -m 'Added headers to Response'</code></pre>
 
     function it_can_have_a_body()
     {
-        $this-&gt;beConstructedWith(200);
-        $this-&gt;setBody('{"wound":"just a flesh one"}');
+        $this->beConstructedWith(200);
+        $this->setBody('{"wound":"just a flesh one"}');
 
-        $this-&gt;getBody()-&gt;shouldBe('{"wound":"just a flesh one"}');
+        $this->getBody()->shouldBe('{"wound":"just a flesh one"}');
     }</code></pre>
 <p>As usual we bootstrap it:</p>
 <pre><code>./bin/phpspec run</code></pre>
@@ -292,12 +292,12 @@ git commit -m 'Added headers to Response'</code></pre>
 
     public function setBody($body)
     {
-        $this-&gt;body = $body;
+        $this->body = $body;
     }
 
     public function getBody()
     {
-        return $this-&gt;body;
+        return $this->body;
     }</code></pre>
 <p>Let's make our console green:</p>
 <pre><code>./bin/phpspec run</code></pre>

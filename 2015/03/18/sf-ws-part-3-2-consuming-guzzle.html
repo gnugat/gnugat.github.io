@@ -57,7 +57,7 @@ remote endpoints.</p>
 <pre><code>./bin/phpspec describe 'AppBundle\RequestHandler\Middleware\GuzzleRequestHandler'</code></pre>
 <p>Our Guzzle implementation will translate our <code>Request</code> into a guzzle one, and a
 guzzle response into our <code>Response</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // spec/AppBundle/RequestHandler/Middleware/GuzzleRequestHandlerSpec.php
 
 namespace spec\AppBundle\RequestHandler\Middleware;
@@ -81,12 +81,12 @@ class GuzzleRequestHandlerSpec extends ObjectBehavior
 
     function let(ClientInterface $client)
     {
-        $this-&gt;beConstructedWith($client);
+        $this->beConstructedWith($client);
     }
 
     function it_is_a_request_handler()
     {
-        $this-&gt;shouldImplement('AppBundle\RequestHandler\RequestHandler');
+        $this->shouldImplement('AppBundle\RequestHandler\RequestHandler');
     }
 
     function it_uses_guzzle_to_do_the_actual_request(
@@ -97,26 +97,26 @@ class GuzzleRequestHandlerSpec extends ObjectBehavior
     )
     {
         $request = new Request(self::VERB, self::URI);
-        $request-&gt;setHeader(self::HEADER_NAME, self::HEADER_VALUE);
-        $request-&gt;setBody(self::BODY);
+        $request->setHeader(self::HEADER_NAME, self::HEADER_VALUE);
+        $request->setBody(self::BODY);
 
-        $client-&gt;createRequest(self::VERB, self::URI, array(
-            'headers' =&gt; array(self::HEADER_NAME =&gt; self::HEADER_VALUE),
-            'body' =&gt; self::BODY,
-        ))-&gt;willReturn($guzzleRequest);
-        $client-&gt;send($guzzleRequest)-&gt;willReturn($guzzleResponse);
-        $guzzleResponse-&gt;getStatusCode()-&gt;willReturn(201);
-        $guzzleResponse-&gt;getHeaders()-&gt;willReturn(array('Content-Type' =&gt; 'application/json'));
-        $guzzleResponse-&gt;getBody()-&gt;willReturn($stream);
-        $stream-&gt;__toString()-&gt;willReturn('{"id":42,"username":"King Arthur"}');
+        $client->createRequest(self::VERB, self::URI, array(
+            'headers' => array(self::HEADER_NAME => self::HEADER_VALUE),
+            'body' => self::BODY,
+        ))->willReturn($guzzleRequest);
+        $client->send($guzzleRequest)->willReturn($guzzleResponse);
+        $guzzleResponse->getStatusCode()->willReturn(201);
+        $guzzleResponse->getHeaders()->willReturn(array('Content-Type' => 'application/json'));
+        $guzzleResponse->getBody()->willReturn($stream);
+        $stream->__toString()->willReturn('{"id":42,"username":"King Arthur"}');
 
-        $this-&gt;handle($request)-&gt;shouldHaveType('AppBundle\RequestHandler\Response');
+        $this->handle($request)->shouldHaveType('AppBundle\RequestHandler\Response');
     }
 }</code></pre>
 <p>Time to boostrap this implementation:</p>
 <pre><code>./bin/phpspec run</code></pre>
 <p>And to actually write it:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/RequestHandler/Middleware/GuzzleRequestHandler.php
 
 namespace AppBundle\RequestHandler\Middleware;
@@ -135,19 +135,19 @@ class GuzzleRequestHandler implements RequestHandler
 
     public function __construct(ClientInterface $client)
     {
-        $this-&gt;client = $client;
+        $this->client = $client;
     }
 
     public function handle(Request $request)
     {
-        $guzzleRequest = $this-&gt;client-&gt;createRequest($request-&gt;getVerb(), $request-&gt;getUri(), array(
-            'headers' =&gt; $request-&gt;getHeaders(),
-            'body' =&gt; $request-&gt;getBody(),
+        $guzzleRequest = $this->client->createRequest($request->getVerb(), $request->getUri(), array(
+            'headers' => $request->getHeaders(),
+            'body' => $request->getBody(),
         ));
-        $guzzleResponse = $this-&gt;client-&gt;send($guzzleRequest);
-        $response = new Response($guzzleResponse-&gt;getStatusCode());
-        $response-&gt;setHeaders($guzzleResponse-&gt;getHeaders());
-        $response-&gt;setBody($guzzleResponse-&gt;getBody()-&gt;__toString());
+        $guzzleResponse = $this->client->send($guzzleRequest);
+        $response = new Response($guzzleResponse->getStatusCode());
+        $response->setHeaders($guzzleResponse->getHeaders());
+        $response->setBody($guzzleResponse->getBody()->__toString());
 
         return $response;
     }
@@ -161,7 +161,7 @@ git commit -m 'Created GuzzleRequestHandler'</code></pre>
 <p>In the future we'd like to be able to hook in the <code>RequestHandler</code>'s workflow,
 for example if the Response's body is in JSON, convert it into an array.</p>
 <p>This kind of thing can be done by sending events, in our case when a Response is received:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/RequestHandler/ReceivedResponse.php
 
 namespace AppBundle\RequestHandler\Event;
@@ -175,12 +175,12 @@ class ReceivedResponse extends Event
 
     public function __construct(Response $response)
     {
-        $this-&gt;response = $response;
+        $this->response = $response;
     }
 
     public function getResponse()
     {
-        return $this-&gt;response;
+        return $this->response;
     }
 }</code></pre>
 <blockquote>
@@ -193,7 +193,7 @@ a middleware: a RequestHandler that dispatches events and then calls another Req
 <pre><code>./bin/phpspec describe 'AppBundle\RequestHandler\Middleware\EventRequestHandler'</code></pre>
 <p>This way if we want to throw away <code>GuzzleRequestHandler</code> and replace it with something
 else, we don't have to write again the dispatching code. Here's the specification:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: spec/AppBundle/RequestHandler/Middleware/EventRequestHandlerSpec.php
 
 namespace spec\AppBundle\RequestHandler\Middleware;
@@ -209,12 +209,12 @@ class EventRequestHandlerSpec extends ObjectBehavior
 {
     function let(EventDispatcherInterface $eventDispatcher, RequestHandler $requestHandler)
     {
-        $this-&gt;beConstructedWith($eventDispatcher, $requestHandler);
+        $this->beConstructedWith($eventDispatcher, $requestHandler);
     }
 
     function it_is_a_request_handler()
     {
-        $this-&gt;shouldImplement('AppBundle\RequestHandler\RequestHandler');
+        $this->shouldImplement('AppBundle\RequestHandler\RequestHandler');
     }
 
     function it_dispatches_events(
@@ -224,11 +224,11 @@ class EventRequestHandlerSpec extends ObjectBehavior
         Response $response
     )
     {
-        $requestHandler-&gt;handle($request)-&gt;willReturn($response);
+        $requestHandler->handle($request)->willReturn($response);
         $receivedResponse = Argument::type('AppBundle\RequestHandler\Event\ReceivedResponse');
-        $eventDispatcher-&gt;dispatch('request_handler.received_response', $receivedResponse)-&gt;shouldBeCalled();
+        $eventDispatcher->dispatch('request_handler.received_response', $receivedResponse)->shouldBeCalled();
 
-        $this-&gt;handle($request)-&gt;shouldBe($response);
+        $this->handle($request)->shouldBe($response);
     }
 }</code></pre>
 <blockquote>
@@ -239,7 +239,7 @@ the RequestHandler and dispatch an event.</p>
 <p>Time to bootstrap the code:</p>
 <pre><code>./bin/phpspec run</code></pre>
 <p>And to make the test pass:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/RequestHandler/Middleware/EventRequestHandler.php
 
 namespace AppBundle\RequestHandler\Middleware;
@@ -256,14 +256,14 @@ class EventRequestHandler implements RequestHandler
 
     public function __construct(EventDispatcherInterface $eventDispatcher, RequestHandler $requestHandler)
     {
-        $this-&gt;eventDispatcher = $eventDispatcher;
-        $this-&gt;requestHandler = $requestHandler;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->requestHandler = $requestHandler;
     }
 
     public function handle(Request $request)
     {
-        $response = $this-&gt;requestHandler-&gt;handle($request);
-        $this-&gt;eventDispatcher-&gt;dispatch('request_handler.received_response', new ReceivedResponse($response));
+        $response = $this->requestHandler->handle($request);
+        $this->eventDispatcher->dispatch('request_handler.received_response', new ReceivedResponse($response));
 
         return $response;
     }
@@ -281,7 +281,7 @@ git commit -m 'Created EventRequestHandler'</code></pre>
 </ul><p>With this in mind, we can describe the listerner:</p>
 <pre><code>./bin/phpspec describe 'AppBundle\RequestHandler\Listener\JsonResponseListener'</code></pre>
 <p>Now we can write the specification:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // src: spec/AppBundle/RequestHandler/Listener/JsonResponseListenerSpec.php
 
 namespace spec\AppBundle\RequestHandler\Listener;
@@ -295,35 +295,35 @@ class JsonResponseListenerSpec extends ObjectBehavior
 {
     function it_handles_json_response(ReceivedResponse $receivedResponse, Response $response)
     {
-        $receivedResponse-&gt;getResponse()-&gt;willReturn($response);
-        $response-&gt;getHeader('Content-Type')-&gt;willReturn('application/json');
-        $response-&gt;getBody()-&gt;willReturn('{"data":[]}');
-        $response-&gt;setBody(array('data' =&gt; array()))-&gt;shouldBeCalled();
+        $receivedResponse->getResponse()->willReturn($response);
+        $response->getHeader('Content-Type')->willReturn('application/json');
+        $response->getBody()->willReturn('{"data":[]}');
+        $response->setBody(array('data' => array()))->shouldBeCalled();
 
-        $this-&gt;onReceivedResponse($receivedResponse);
+        $this->onReceivedResponse($receivedResponse);
     }
 
     function it_does_not_handle_non_json_response(ReceivedResponse $receivedResponse, Response $response)
     {
-        $receivedResponse-&gt;getResponse()-&gt;willReturn($response);
-        $response-&gt;getHeader('Content-Type')-&gt;willReturn('text/html');
-        $response-&gt;getBody()-&gt;shouldNotBeCalled();
+        $receivedResponse->getResponse()->willReturn($response);
+        $response->getHeader('Content-Type')->willReturn('text/html');
+        $response->getBody()->shouldNotBeCalled();
 
-        $this-&gt;onReceivedResponse($receivedResponse);
+        $this->onReceivedResponse($receivedResponse);
     }
 
     function it_fails_to_handle_invalid_json(ReceivedResponse $receivedResponse, Response $response)
     {
-        $receivedResponse-&gt;getResponse()-&gt;willReturn($response);
-        $response-&gt;getHeader('Content-Type')-&gt;willReturn('application/json');
-        $response-&gt;getBody()-&gt;willReturn('{"data":[');
+        $receivedResponse->getResponse()->willReturn($response);
+        $response->getHeader('Content-Type')->willReturn('application/json');
+        $response->getBody()->willReturn('{"data":[');
 
         $exception = 'Exception';
-        $this-&gt;shouldThrow($exception)-&gt;duringOnReceivedResponse($receivedResponse);
+        $this->shouldThrow($exception)->duringOnReceivedResponse($receivedResponse);
     }
 }</code></pre>
 <p>Time to implement the code:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: src/AppBundle/RequestHandler/Listener/JsonResponseListener.php
 
 namespace AppBundle\RequestHandler\Listener;
@@ -335,17 +335,17 @@ class JsonResponseListener
 {
     public function onReceivedResponse(ReceivedResponse $receivedResponse)
     {
-        $response = $receivedResponse-&gt;getResponse();
-        $contentType = $response-&gt;getHeader('Content-Type');
-        if (false === strpos($response-&gt;getHeader('Content-Type'), 'application/json')) {
+        $response = $receivedResponse->getResponse();
+        $contentType = $response->getHeader('Content-Type');
+        if (false === strpos($response->getHeader('Content-Type'), 'application/json')) {
             return;
         }
-        $body = $response-&gt;getBody();
+        $body = $response->getBody();
         $json = json_decode($body, true);
         if (json_last_error()) {
             throw new Exception("Invalid JSON: $body");
         }
-        $response-&gt;setBody($json);
+        $response->setBody($json);
     }
 }</code></pre>
 <p>Is it enough to make the tests pass?</p>

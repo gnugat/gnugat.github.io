@@ -58,7 +58,7 @@ a single class.</p>
 standards, the file should only contain one class and its filename should be the
 same as the classname.</p>
 <p>Let's create a function that retrieves the namespace declaration:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 function _get_full_namespace($filename) {
     $lines = file($filename);
@@ -70,7 +70,7 @@ function _get_full_namespace($filename) {
     return $fullNamespace;
 }</code></pre>
 <p>Now let's create a function that chops down the filename to get the classname:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 function _get_classname($filename) {
     $directoriesAndFilename = explode('/', $filename);
@@ -82,29 +82,29 @@ function _get_classname($filename) {
 }</code></pre>
 <p>That was easy! To get the Fully Qualified ClassName from a filename we can simply
 call those two functions:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 $fqcn = _get_full_namespace($filename).'\\'._get_class_name($filename);</code></pre>
 <h2 id="for-a-project">For a project<a href="#for-a-project" class="anchor">#</a></h2>
 <p>The second step is to find the filenames of all the project's classes. Let's use
 the <a href="http://symfony.com/doc/current/components/finder/index.html">Symfony2 Finder Component</a>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 use Symfony\Component\Finder\Finder;
 
 require __DIR__.'/vendor/autoload.php';
 
 function _get_filenames($path) {
-    $finderFiles = Finder::create()-&gt;files()-&gt;in($path)-&gt;name('*.php');
+    $finderFiles = Finder::create()->files()->in($path)->name('*.php');
     $filenames = array();
     foreach ($finderFiles as $finderFile) {
-        $filenames[] $finderFiles-&gt;getRealpath();
+        $filenames[] $finderFiles->getRealpath();
     }
 
     return $filenames;
 }</code></pre>
 <p>And that's it! We can now create a function which calls those three:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 function get_all_fcqns($path) {
     $filenames = _get_filenames($projectRoot);
@@ -116,7 +116,7 @@ function get_all_fcqns($path) {
     return $fcqns
 }</code></pre>
 <p>It can simply be used like this:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 $allFcqns = get_all_fcqns(__DIR__);</code></pre>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>

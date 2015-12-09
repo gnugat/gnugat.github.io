@@ -59,7 +59,7 @@ The idea is to have:</p>
 <li>an implementation considered to be the basic one</li>
 <li>implementations that wraps a call to another one</li>
 </ol><p>Let's take <a href="http://symofny.com">Symfony</a>'s <code>HttpKernelInterface</code> as an example:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Symfony\Component\HttpKernel\HttpKernelInterface;
 
@@ -81,7 +81,7 @@ interface HttpKernelInterface
 <li><a href="http://williamdurand.fr/Negotiation/">Content Negotiation</a>, guess how to format the Response body based on the <code>Accept</code> header</li>
 <li>Database transaction, with the possibility to rollback on error (or always rollback for tests)</li>
 </ul><p>Here's an example to always rollback database transactions with <a href="../../../2015/08/06/pomm-foundation.html">Pomm Foundation</a>.</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Acme\Fortune\Bridge\HttpKernel;
 
@@ -97,16 +97,16 @@ class RollbackKernel implements HttpKernelInterface
 
     public function __construct(HttpKernelInterface $httpKernel, QueryManagerInterface $queryManager)
     {
-        $this-&gt;httpKernel = $httpKernel;
-        $this-&gt;queryManager = $queryManager;
+        $this->httpKernel = $httpKernel;
+        $this->queryManager = $queryManager;
     }
 
     // @return Response
     public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = false)
     {
-        $this-&gt;queryManager-&gt;query('START TRANSACTION');
-        $response = $this-&gt;httpKernel-&gt;handle($request, $type, $catch);
-        $this-&gt;queryManager-&gt;query('ROLLBACK');
+        $this->queryManager->query('START TRANSACTION');
+        $response = $this->httpKernel->handle($request, $type, $catch);
+        $this->queryManager->query('ROLLBACK');
 
         return $response;
     }
@@ -121,7 +121,7 @@ Of course such a standard isn't straigthforward as there are many ways to create
 <h3 id="1-take-request-return-response">1. Take request, return response<a href="#1-take-request-return-response" class="anchor">#</a></h3>
 <p>Similar to <code>HttpKernelInterface</code>, this one just receives a <code>RequestInterface</code>
 and returns a <code>ResponseInterface</code>:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 use Psr\Message\RequestInterface;
 use Psr\Message\ResponseInterface;
@@ -137,7 +137,7 @@ up to the implementation (can use dependency injection).</p>
 using this implementation.</p>
 <h3 id="2-take-request-response-and-next">2. Take request, response and next<a href="#2-take-request-response-and-next" class="anchor">#</a></h3>
 <p>Another interface commonly encountered forces the way of managing the next middleware:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 use Psr\Message\RequestInterface;
 use Psr\Message\ResponseInterface;
@@ -159,7 +159,7 @@ missing a standard for it. As long as it will be missing, we're going to assist 
 the creation of a wide range of "PSR-7 middlewares",  all incompatible with each others.</p>
 <p>Since this seems inevitable, maybe we should instead try to figure out a new standard
 that would allow to compose all those middlewares?</p>
-<p><a href="https://xkcd.com/927/"><img alt="XKCD explaining how standards proliferate" src="https://imgs.xkcd.com/comics/standards.png"></a></p>
+<p><a href="https://xkcd.com/927/"><img src="https://imgs.xkcd.com/comics/standards.png" alt="XKCD explaining how standards proliferate"></a></p>
 
             <footer>
                     <nav class="row">

@@ -75,8 +75,8 @@ Let's write the following <code>composer.json</code>:</p>
 <p>Then we can install phpspec with SpecGen by running those commands:</p>
 <pre><code>composer require --dev phpspec/phpspec:~2.2
 composer require --dev memio/spec-gen:~0.3
-echo 'extensions:' &gt; phpspec.yml
-echo '  - Memio\SpecGen\MemioSpecGenExtension' &gt;&gt; phpspec.yml</code></pre>
+echo 'extensions:' > phpspec.yml
+echo '  - Memio\SpecGen\MemioSpecGenExtension' >> phpspec.yml</code></pre>
 <p>In our example, we'll specify a <code>TextEditor</code> service, it should be able to
 create new files by relying on <code>Filesystem</code>, another service.</p>
 <p>This can be done as follow:</p>
@@ -86,7 +86,7 @@ create new files by relying on <code>Filesystem</code>, another service.</p>
 <code>export PATH="vendor/bin:$PATH"</code>.</p>
 </blockquote>
 <p>This should generate a <code>spec\Vendor\Project\TextEditorSpec.php</code> file:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace spec\Vendor\Project;
 
@@ -97,11 +97,11 @@ class TextEditorSpec extends ObjectBehavior
 {
     function it_is_initializable()
     {
-        $this-&gt;shouldHaveType('Vendor\Project\TextEditor');
+        $this->shouldHaveType('Vendor\Project\TextEditor');
     }
 }</code></pre>
 <p>It needs to be edited to fit our needs:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace spec\Vendor\Project;
 
@@ -116,21 +116,21 @@ class TextEditorSpec extends ObjectBehavior
 
     function let(Filesystem $filesystem)
     {
-        $this-&gt;beConstructedWith($filesystem);
+        $this->beConstructedWith($filesystem);
     }
 
     function it_creates_new_files(File $file, Filesystem $filesystem)
     {
-        $filesystem-&gt;exists(self::FILENAME)-&gt;willReturn(false);
-        $filesystem-&gt;create(self::FILENAME)-&gt;willReturn($file);
+        $filesystem->exists(self::FILENAME)->willReturn(false);
+        $filesystem->create(self::FILENAME)->willReturn($file);
 
-        $this-&gt;open(self::FILENAME, self::FORCE_FILE_CREATION)-&gt;shouldBe($file);
+        $this->open(self::FILENAME, self::FORCE_FILE_CREATION)->shouldBe($file);
     }
 }</code></pre>
 <p>The Test Driven Development cycle advises us to run the test suite now:</p>
 <pre><code>phpspec run</code></pre>
 <p>This will bootstrap the following code:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project;
 
@@ -142,7 +142,7 @@ class TextEditor
 
     public function __construct(Filesystem $filesystem)
     {
-        $this-&gt;filesystem = $filesystem;
+        $this->filesystem = $filesystem;
     }
 
     public function open($argument1, $argument2)

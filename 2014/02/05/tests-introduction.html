@@ -61,7 +61,7 @@ practice them. Here's what we'll cover:</p>
 wrote the <code>strlen</code> function: it takes a string as argument and returns its
 length. To make sure it works correctly, you might have created a script file
 which looked like this:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 echo strlen('We'); // Should print 2
 echo strlen('are'); // Sould print 3
@@ -103,7 +103,7 @@ owner or even better by Quality Assurance (QA).</p>
 <em>to err is human</em>. The software industry was partly created to automate
 repititive tasks, so how about we automate those tests?</p>
 <p>The simplest way of automating test is to use assertions:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 $input = 'We are no longer the knights who say "Ni"!';
 $expectedOutput = 42;
@@ -133,14 +133,14 @@ automated or not, your tests can target many levels/layers in your application:<
 <li>unit tests: services, interfaces, functions</li>
 </ul></li>
 </ul><p><strong>Note</strong>: this classification has been taken from
-<a href="https://speakerdeck.com/halleck/symfony2-un-framework-oriente-domain-driven-design?slide=20">Jean Fran&ccedil;ois L&eacute;pine's slides</a></p>
+<a href="https://speakerdeck.com/halleck/symfony2-un-framework-oriente-domain-driven-design?slide=20">Jean François Lépine's slides</a></p>
 <p>Each of those tests can be executed manually, or can be automated.</p>
 <p>There's so many types of tests out there, and so little of us to write them!
 Depending on your team, competences, project and planning, you won't be able to
 write every possible tests.</p>
 <p>I'm afraid you'll have somehow to chose which kind of test is more suitable for
 you project. As a matter of fact, testing everything isn't wise:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 class User
 {
@@ -148,21 +148,21 @@ class User
 
     public function __construct($name)
     {
-        $this-&gt;name = $name;
+        $this->name = $name;
     }
 
     public function getName()
     {
-        return $this-&gt;name;
+        return $this->name;
     }
 }
 
 // Is this test really usefull? I think not!
-$input = 'Johann Gambolputty de von Ausfern -schplenden -schlitter -crasscrenbon -fried -digger -dangle -dungle -burstein -von -knacker -thrasher -apple -banger -horowitz -ticolensic -grander -knotty -spelltinkle -grandlich -grumblemeyer -spelterwasser -k&uuml;rstlich -himbleeisen -bahnwagen -gutenabend -bitte -eine -n&uuml;rnburger -bratwustle -gerspurten -mit -zweimache -luber -hundsfut -gumberaber -sh&ouml;nendanker -kalbsfleisch -mittler -raucher von Hautkopft of Ulm.';
+$input = 'Johann Gambolputty de von Ausfern -schplenden -schlitter -crasscrenbon -fried -digger -dangle -dungle -burstein -von -knacker -thrasher -apple -banger -horowitz -ticolensic -grander -knotty -spelltinkle -grandlich -grumblemeyer -spelterwasser -kürstlich -himbleeisen -bahnwagen -gutenabend -bitte -eine -nürnburger -bratwustle -gerspurten -mit -zweimache -luber -hundsfut -gumberaber -shönendanker -kalbsfleisch -mittler -raucher von Hautkopft of Ulm.';
 $expectedOutput = $input;
 
 $user = new User($input);
-$output = $user-&gt;getName();
+$output = $user->getName();
 
 echo ($expectedOutput === $output ? 'Test pass' : 'Test fails');</code></pre>
 <p>In the upper code sample, we're testing if the getter returns a value which

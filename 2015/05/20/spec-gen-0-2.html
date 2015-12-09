@@ -51,7 +51,7 @@
 and clean it a little bit:</p>
 <pre><code>rm -rf src</code></pre>
 <p>Given the following specification:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: spec/Vendor/Project/RequestHandlerSpec.php
 
 namespace spec\Vendor\Project;
@@ -65,13 +65,13 @@ class RequestHandlerSpec extends ObjectBehavior
     {
         $parameters = array();
         $isEnabled = true;
-        $this-&gt;handle($request, $parameters, $isEnabled)-&gt;shouldHaveType('Vendor\Project\Message\Response');
+        $this->handle($request, $parameters, $isEnabled)->shouldHaveType('Vendor\Project\Message\Response');
     }
 }</code></pre>
 <p>When we run the test suite:</p>
 <pre><code>phpspec run</code></pre>
 <p>Then we should get the following file, with a use statement:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project;
 
@@ -85,7 +85,7 @@ class RequestHandler
 }</code></pre>
 <h2 id="it-doesn-t-insert-use-statements-twice">It doesn't insert use statements twice<a href="#it-doesn-t-insert-use-statements-twice" class="anchor">#</a></h2>
 <p>Given the following new step in our specification:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: spec/Vendor/Project/RequestHandlerSpec.php
 
 namespace spec\Vendor\Project;
@@ -99,18 +99,18 @@ class RequestHandlerSpec extends ObjectBehavior
     {
         $parameters = array();
         $isEnabled = true;
-        $this-&gt;handle($request, $parameters, $isEnabled)-&gt;shouldHaveType('Vendor\Project\Message\Response');
+        $this->handle($request, $parameters, $isEnabled)->shouldHaveType('Vendor\Project\Message\Response');
     }
 
     function it_supports_request(Request $request)
     {
-        $this-&gt;supports($request)-&gt;shouldBe(true);
+        $this->supports($request)->shouldBe(true);
     }
 }</code></pre>
 <p>When we run the test suite:</p>
 <pre><code>phpspec run</code></pre>
 <p>Then we should get the following file, without new use statements:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project;
 
@@ -130,7 +130,7 @@ class RequestHandler
 <p>Let's clear everything:</p>
 <pre><code>rm -rf src</code></pre>
 <p>Given the following specification:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 // File: spec/Vendor/Project/RequestHandlerSpec.php
 
 namespace spec\Vendor\Project;
@@ -144,7 +144,7 @@ class RequestHandlerSpec extends ObjectBehavior
     {
         $parameters = array();
         $isEnabled = true;
-        $this-&gt;handle($request, $parameters, $isEnabled)-&gt;shouldHaveType('Vendor\Project\Response');
+        $this->handle($request, $parameters, $isEnabled)->shouldHaveType('Vendor\Project\Response');
     }
 }</code></pre>
 <blockquote>
@@ -153,7 +153,7 @@ class RequestHandlerSpec extends ObjectBehavior
 <p>When we run the test suite:</p>
 <pre><code>phpspec run</code></pre>
 <p>Then we should get the following, without any use statements:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 namespace Vendor\Project;
 
@@ -168,10 +168,10 @@ class RequestHandler
 introduction of <code>CodeEditor</code>, a facade for a home made <code>CommandBus</code> and for
 <a href="http://gnugat.github.io/redaktilo">Redaktilo</a>'s <code>Editor</code>.</p>
 <p>With these, the code to generate a method and insert a use statement looks like this:</p>
-<pre><code class="language-php">$file = $this-&gt;codeEditor-&gt;open($fileName);
-$this-&gt;codeEditor-&gt;handle(new InsertUseStatements($file, $fullyQualifiedNames));
-$this-&gt;codeEditor-&gt;handle(new InsertMethod($file, $method));
-$this-&gt;codeEditor-&gt;save($file);</code></pre>
+<pre><code class="language-php">$file = $this->codeEditor->open($fileName);
+$this->codeEditor->handle(new InsertUseStatements($file, $fullyQualifiedNames));
+$this->codeEditor->handle(new InsertMethod($file, $method));
+$this->codeEditor->save($file);</code></pre>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>While some improvements can still be done (use statements in alphabetical order,
 typehint interfaces only), the version 0.3 will mainly be about the introduction

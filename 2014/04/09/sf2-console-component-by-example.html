@@ -83,7 +83,7 @@ the right <code>Command</code>.</p>
 you should know, with the methods you'll likely use.</p>
 <h3 id="application">Application<a href="#application" class="anchor">#</a></h3>
 <p>All you need to know about the <code>Application</code> is this:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Symfony\Component\Console;
 
@@ -100,18 +100,18 @@ class Application
 }</code></pre>
 <p>Minimum usage:</p>
 <pre><code>#!/usr/bin/env php
-&lt;?php
+<?php
 
 use Symfony\Component\Console\Application;
 
 $application = new Application();
-$application-&gt;run();</code></pre>
+$application->run();</code></pre>
 <p>By running this script, you should be able to see a colorful output which lists
 the available commands (<code>list</code> is the default command, and a <code>help</code> is also
 available).</p>
 <h3 id="command">Command<a href="#command" class="anchor">#</a></h3>
 <p>The <code>Command</code> class is the controller of your CLI application:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Symfony\Component\Console\Command;
 
@@ -148,7 +148,7 @@ questions to the user to set more input arguments and options.</p>
 don't forget to provide a default one</li>
 </ul><h3 id="input">Input<a href="#input" class="anchor">#</a></h3>
 <p>The container of the arguments and options given by the user:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Symfony\Component\Console\Input;
 
@@ -165,7 +165,7 @@ be an integer, the <code>name</code> argument should be escaped to avoid SQL inj
 etc).</p>
 <h3 id="output">Output<a href="#output" class="anchor">#</a></h3>
 <p>A convenient object which allows you to write on the console output:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Symfony\Component\Console\Output;
 
@@ -177,13 +177,13 @@ abstract class Output implements OutputInterface
 the end). If the given <code>message</code> is an array, it will print each elements on a
 new line.</p>
 <p>The tags allow you to color some parts:</p>
-<ul><li>green text for informative messages (usage example: <code>&lt;info&gt;foo&lt;/info&gt;</code>)</li>
-<li>yellow text for comments (usage example: <code>&lt;comment&gt;foo&lt;/comment&gt;</code>)</li>
-<li>black text on a cyan background for questions (usage example: <code>&lt;question&gt;foo&lt;/question&gt;</code>)</li>
-<li>white text on a red background for errors (usage example: <code>&lt;error&gt;foo&lt;/error&gt;</code>)</li>
+<ul><li>green text for informative messages (usage example: <code><info>foo</info></code>)</li>
+<li>yellow text for comments (usage example: <code><comment>foo</comment></code>)</li>
+<li>black text on a cyan background for questions (usage example: <code><question>foo</question></code>)</li>
+<li>white text on a red background for errors (usage example: <code><error>foo</error></code>)</li>
 </ul><h3 id="consolelogger">ConsoleLogger<a href="#consolelogger" class="anchor">#</a></h3>
 <p>Another brand new class from the version 2.5:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 
 namespace Symfony\Component\Console\Logger;
 
@@ -218,7 +218,7 @@ like <a href="https://github.com/gnugat/fossil">fossil</a> (the <a href="../../.
 $ ./composer.phar require "symfony/console:~2.5@dev"</code></pre>
 <p>Then create an empty application:</p>
 <pre><code>#!/usr/bin/env php
-&lt;?php
+<?php
 // File: fossil
 
 require __DIR__.'/vendor/autoload.php';
@@ -226,7 +226,7 @@ require __DIR__.'/vendor/autoload.php';
 use Symfony\Component\Console\Application;
 
 $application = new Application('Fossil', '2.0.0');
-$application-&gt;run();</code></pre>
+$application->run();</code></pre>
 <h3 id="creating-the-command">Creating the command<a href="#creating-the-command" class="anchor">#</a></h3>
 <p>Our command has two arguments:</p>
 <ul><li>the name for the copyright</li>
@@ -234,7 +234,7 @@ $application-&gt;run();</code></pre>
 </ul><p>It can also take the path of the project as an option (we'll provide the
 current directory as default value).</p>
 <p>Let's create it:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Gnugat/Fossil/LicenseCommand.php
 
 namespace Gnugat\Fossil;
@@ -249,13 +249,13 @@ class LicenseCommand extends Command
 {
     protected function configure()
     {
-        $this-&gt;setName('license');
-        $this-&gt;setDescription('Bootstraps the license file of your project');
+        $this->setName('license');
+        $this->setDescription('Bootstraps the license file of your project');
 
-        $this-&gt;addArgument('author', InputArgument::REQUIRED);
-        $this-&gt;addArgument('year', InputArgument::REQUIRED);
+        $this->addArgument('author', InputArgument::REQUIRED);
+        $this->addArgument('year', InputArgument::REQUIRED);
 
-        $this-&gt;addOption('path', 'p', InputOption::VALUE_REQUIRED, '', getcwd());
+        $this->addOption('path', 'p', InputOption::VALUE_REQUIRED, '', getcwd());
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -266,7 +266,7 @@ class LicenseCommand extends Command
 <p>Our command doesn't do anything yet, but we can already register it in our
 application:</p>
 <pre><code>#!/usr/bin/env php
-&lt;?php
+<?php
 // File: fossil
 
 require __DIR__.'/vendor/autoload.php';
@@ -277,8 +277,8 @@ use Gnugat\Fossil\LicenseCommand;
 $command = new LicenseCommand();
 
 $application = new Application('Fossil', '2.0.0');
-$application-&gt;add($command);
-$application-&gt;run();</code></pre>
+$application->add($command);
+$application->run();</code></pre>
 <p>In order for it to run, you'll need to register the namespace in the autoloader
 by editing the <code>composer.json</code> file at the root of the project:</p>
 <pre><code>{
@@ -303,7 +303,7 @@ values are replaced using <a href="http://twig.sensiolabs.org/">Twig</a> and wri
 </ul><p>This means that you have to install the new component:</p>
 <pre><code>$ ./composer.phar require "symfony/filesystem:~2.4"</code></pre>
 <p>And then you need to fill the <code>execute</code> method:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Gnugat/Fossil/LicenseCommand.php
 
 namespace Gnugat\Fossil;
@@ -319,26 +319,26 @@ class LicenseCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $path = $input-&gt;getOption('path').'/LICENSE';
+        $path = $input->getOption('path').'/LICENSE';
         $license = implode(' ', array(
             'Copyright (c)',
-            $input-&gt;getArgument('author'),
-            $input-&gt;getArgument('year'),
+            $input->getArgument('author'),
+            $input->getArgument('year'),
         ));
 
         $filesystem = new Filesystem();
-        $filesystem-&gt;dumpFile($path, $license.PHP_EOL);
+        $filesystem->dumpFile($path, $license.PHP_EOL);
 
-        $output-&gt;writeln(sprintf('Created the file %s', $path));
+        $output->writeln(sprintf('Created the file %s', $path));
     }
 }</code></pre>
-<p>Now running <code>./fossil license "Lo&iuml;c Chardonnet" "2013-2014" -p="/tmp"</code> will
+<p>Now running <code>./fossil license "Loïc Chardonnet" "2013-2014" -p="/tmp"</code> will
 output the message "Created the file /tmp/LICENSE", which should be what really
 happened.</p>
 <h3 id="thin-controller-many-small-services">Thin controller, many small services<a href="#thin-controller-many-small-services" class="anchor">#</a></h3>
 <p>I'm not a big fan of putting logic in my commands, so generally I use services
 to do the actual job:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File src/Gnugat/Fossil/DocumentationWriter.php
 
 namespace Gnugat\Fossil;
@@ -353,14 +353,14 @@ class DocumentationWriter
 
     public function __construct(Filesystem $filesystem, LoggerInterface $logger)
     {
-        $this-&gt;filesystem = $filesystem;
-        $this-&gt;logger = $logger;
+        $this->filesystem = $filesystem;
+        $this->logger = $logger;
     }
 
     public function write($path, $content)
     {
-        $this-&gt;filesystem-&gt;dumpFile($path, $content);
-        $this-&gt;logger-&gt;notice(sprintf('Created file %s', $path));
+        $this->filesystem->dumpFile($path, $content);
+        $this->logger->notice(sprintf('Created file %s', $path));
     }
 }</code></pre>
 <p>As you can see, the <code>DocumentationWriter</code> isn't very big. It might seem
@@ -373,7 +373,7 @@ We need to install the PSR-3 logger interface:</p>
 <pre><code>$ composer require "psr/log:~1.0"</code></pre>
 <p>Our command will now be much thinner, just like any controller should be (MVC
 can also be applied in CLI):</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Gnugat/Fossil/LicenseCommand.php
 
 namespace Gnugat\Fossil;
@@ -391,18 +391,18 @@ class LicenseCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $path = $input-&gt;getOption('path').'/LICENSE';
+        $path = $input->getOption('path').'/LICENSE';
         $license = implode(' ', array(
             'Copyright (c)',
-            $input-&gt;getArgument('author'),
-            $input-&gt;getArgument('year'),
+            $input->getArgument('author'),
+            $input->getArgument('year'),
         ));
 
         $filesystem = new Filesystem();
         $logger = new ConsoleLogger($output);
         $documentationWriter = new DocumentationWriter($filesystem, $logger);
 
-        $documentationWriter-&gt;write($path, $license.PHP_EOL);
+        $documentationWriter->write($path, $license.PHP_EOL);
     }
 }</code></pre>
 <p>To be fair, our command is longer. But it <strong>is</strong> thinner as it now has less
@@ -410,10 +410,10 @@ responsibilities:</p>
 <ul><li>it retrieves the input</li>
 <li>creates the dependencies</li>
 <li>calls the services</li>
-</ul><p>If you run again <code>./fossil license "Lo&iuml;c Chardonnet" "2013-2014" -p="/tmp"</code>,
+</ul><p>If you run again <code>./fossil license "Loïc Chardonnet" "2013-2014" -p="/tmp"</code>,
 you won't see anything: <code>ConsoleLogger</code> hides informative messages by default.
 You need to pass the verbose option to see the message:</p>
-<pre><code>$ ./fossil license -v "Lo&iuml;c Chardonnet" "2013-2014" -p="/tmp"</code></pre>
+<pre><code>$ ./fossil license -v "Loïc Chardonnet" "2013-2014" -p="/tmp"</code></pre>
 <h3 id="registering-the-services">Registering the services<a href="#registering-the-services" class="anchor">#</a></h3>
 <p>The dependency creation isn't a responsibility a controller should have. We'll
 delegate this to the
@@ -425,48 +425,48 @@ delegate this to the
 <p>If you don't know yet this component, go read
 <a href="../../../2014/01/29/sf2-di-component-by-example.html">this helpful article</a>.</p>
 <p>We'll create a XML file to configure the registration of our services:</p>
-<pre><code>&lt;?xml version="1.0" ?&gt;
+<pre><code><?xml version="1.0" ?>
 
-&lt;!-- File: config/services.xml --&gt;
+<!-- File: config/services.xml -->
 
-&lt;container xmlns="http://symfony.com/schema/dic/services"
+<container xmlns="http://symfony.com/schema/dic/services"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
-    &lt;services&gt;
-        &lt;service id="symfony.application"
-            class="Symfony\Component\Console\Application"&gt;
-            &lt;argument key="name"&gt;Fossil&lt;/argument&gt;
-            &lt;argument key="version"&gt;2.0.0&lt;/argument&gt;
-            &lt;call method="add"&gt;
-                 &lt;argument type="service" id="fossil.license_command" /&gt;
-            &lt;/call&gt;
-        &lt;/service&gt;
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <service id="symfony.application"
+            class="Symfony\Component\Console\Application">
+            <argument key="name">Fossil</argument>
+            <argument key="version">2.0.0</argument>
+            <call method="add">
+                 <argument type="service" id="fossil.license_command" />
+            </call>
+        </service>
 
-        &lt;service id="fossil.license_command" class="Gnugat\Fossil\LicenseCommand"&gt;
-            &lt;argument type="service" id="fossil.documentation_writer" /&gt;
-        &lt;/service&gt;
+        <service id="fossil.license_command" class="Gnugat\Fossil\LicenseCommand">
+            <argument type="service" id="fossil.documentation_writer" />
+        </service>
 
-        &lt;service id="fossil.documentation_writer" class="Gnugat\Fossil\DocumentationWriter"&gt;
-            &lt;argument type="service" id="symfony.filesystem" /&gt;
-            &lt;argument type="service" id="symfony.console_logger" /&gt;
-        &lt;/service&gt;
+        <service id="fossil.documentation_writer" class="Gnugat\Fossil\DocumentationWriter">
+            <argument type="service" id="symfony.filesystem" />
+            <argument type="service" id="symfony.console_logger" />
+        </service>
 
-        &lt;service id="symfony.filesystem" class="Symfony\Component\Filesystem\Filesystem"&gt;
-        &lt;/service&gt;
+        <service id="symfony.filesystem" class="Symfony\Component\Filesystem\Filesystem">
+        </service>
 
-        &lt;service id="symfony.console_logger" class="Symfony\Component\Console\Logger\ConsoleLogger"&gt;
-            &lt;argument type="service" id="symfony.console_output" /&gt;
-        &lt;/service&gt;
+        <service id="symfony.console_logger" class="Symfony\Component\Console\Logger\ConsoleLogger">
+            <argument type="service" id="symfony.console_output" />
+        </service>
 
-        &lt;service id="symfony.console_output"
-            class="Symfony\Component\Console\Output\ConsoleOutput"&gt;
-        &lt;/service&gt;
-    &lt;/services&gt;
-&lt;/container&gt;</code></pre>
+        <service id="symfony.console_output"
+            class="Symfony\Component\Console\Output\ConsoleOutput">
+        </service>
+    </services>
+</container></code></pre>
 <p>As you can see, I've delegated <strong>every</strong> construction to the DIC (Dependency
 Injection Container), even the construction of the application. Now the command
 looks like this:</p>
-<pre><code>    &lt;?php
+<pre><code>    <?php
 // File: src/Gnugat/Fossil/LicenseCommand.php
 
 namespace Gnugat\Fossil;
@@ -484,37 +484,37 @@ class LicenseCommand extends Command
 
     public function __construct(DocumentationWriter $documentationWriter)
     {
-        $this-&gt;documentationWriter = $documentationWriter;
+        $this->documentationWriter = $documentationWriter;
 
         parent::__construct();
     }
 
     protected function configure()
     {
-        $this-&gt;setName('license');
-        $this-&gt;setDescription('Bootstraps the license file of your project');
+        $this->setName('license');
+        $this->setDescription('Bootstraps the license file of your project');
 
-        $this-&gt;addArgument('author', InputArgument::REQUIRED);
-        $this-&gt;addArgument('year', InputArgument::REQUIRED);
+        $this->addArgument('author', InputArgument::REQUIRED);
+        $this->addArgument('year', InputArgument::REQUIRED);
 
-        $this-&gt;addOption('path', 'p', InputOption::VALUE_REQUIRED, '', getcwd());
+        $this->addOption('path', 'p', InputOption::VALUE_REQUIRED, '', getcwd());
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $path = $input-&gt;getOption('path').'/LICENSE';
+        $path = $input->getOption('path').'/LICENSE';
         $license = implode(' ', array(
             'Copyright (c)',
-            $input-&gt;getArgument('author'),
-            $input-&gt;getArgument('year'),
+            $input->getArgument('author'),
+            $input->getArgument('year'),
         ));
 
-        $this-&gt;documentationWriter-&gt;write($path, $license.PHP_EOL);
+        $this->documentationWriter->write($path, $license.PHP_EOL);
     }
 }</code></pre>
 <p>And the console now contains the DIC initialization:</p>
 <pre><code>#!/usr/bin/env php
-&lt;?php
+<?php
 // File: fossil
 
 use Symfony\Component\Config\FileLocator;
@@ -525,13 +525,13 @@ require __DIR__.'/vendor/autoload.php';
 
 $container = new ContainerBuilder();
 $loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/config'));
-$loader-&gt;load('services.xml');
+$loader->load('services.xml');
 
-$output = $container-&gt;get('symfony.console_output');
+$output = $container->get('symfony.console_output');
 
-$application = $container-&gt;get('symfony.application');
-$application-&gt;run(null, $output);</code></pre>
-<p>And voil&agrave;! You now know how to create CLI applications :) .</p>
+$application = $container->get('symfony.application');
+$application->run(null, $output);</code></pre>
+<p>And voilà! You now know how to create CLI applications :) .</p>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>The Console component allows you to create CLI applications. The commands are a
 thin layer which gathers the input and call services. Those services can then

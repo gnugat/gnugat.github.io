@@ -45,27 +45,27 @@
 <a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">Bootstraping</a>.</p>
 <p>In the first article we bootstraped our project with the following files:</p>
 <pre><code>.
-&#9500;&#9472;&#9472; app
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_prod.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_test.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml.dist
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; logs
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; phpunit.xml.dist
-&#9500;&#9472;&#9472; composer.json
-&#9500;&#9472;&#9472; composer.lock
-&#9500;&#9472;&#9472; src
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Fortune
-&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
-&#9474;&nbsp;&nbsp;         &#9492;&#9472;&#9472; FortuneApplicationBundle.php
-&#9492;&#9472;&#9472; web
-    &#9492;&#9472;&#9472; app.php</code></pre>
+├── app
+│   ├── AppKernel.php
+│   ├── cache
+│   │   └── .gitkeep
+│   ├── config
+│   │   ├── config_prod.yml
+│   │   ├── config_test.yml
+│   │   ├── config.yml
+│   │   ├── parameters.yml.dist
+│   │   └── routing.yml
+│   ├── logs
+│   │   └── .gitkeep
+│   └── phpunit.xml.dist
+├── composer.json
+├── composer.lock
+├── src
+│   └── Fortune
+│       └── ApplicationBundle
+│           └── FortuneApplicationBundle.php
+└── web
+    └── app.php</code></pre>
 <p>Here's the <a href="https://github.com/gnugat/mastering-symfony2">repository where you can find the actual code</a>.</p>
 <p>In this one we'll implement the first User Story, by writing tests first.</p>
 <p><strong>Note</strong>: writing tests before writing any code is part of the
@@ -80,7 +80,7 @@ In order to make it available</code></pre>
 <p>Our first reflex will be to write a functional test. First create the directory:</p>
 <pre><code>mkdir -p src/Fortune/ApplicationBundle/Tests/Controller</code></pre>
 <p>Then the test class:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Fortune/ApplicationBundle/Tests/Controller/QuoteControllerTest.php
 
 namespace Fortune\ApplicationBundle\Tests\Controller;
@@ -92,19 +92,19 @@ class QuoteControllerTest extends WebTestCase
 {
     private function post($uri, array $data)
     {
-        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $headers = array('CONTENT_TYPE' => 'application/json');
         $content = json_encode($data);
         $client = static::createClient();
-        $client-&gt;request('POST', $uri, array(), array(), $headers, $content);
+        $client->request('POST', $uri, array(), array(), $headers, $content);
 
-        return $client-&gt;getResponse();
+        return $client->getResponse();
     }
 
     public function testSubmitNewQuote()
     {
-        $response = $this-&gt;post('/api/quotes', array('content' =&gt; '&lt;KnightOfNi&gt; Ni!'));
+        $response = $this->post('/api/quotes', array('content' => '<KnightOfNi> Ni!'));
 
-        $this-&gt;assertSame(Response::HTTP_CREATED, $response-&gt;getStatusCode());
+        $this->assertSame(Response::HTTP_CREATED, $response->getStatusCode());
     }
 }</code></pre>
 <h2 id="configuring-the-route">Configuring the route<a href="#configuring-the-route" class="anchor">#</a></h2>
@@ -121,7 +121,7 @@ submit_quote:
 <p>There wasn't any controllers until now, so we create the directory:</p>
 <pre><code>mkdir src/Fortune/ApplicationBundle/Controller</code></pre>
 <p>And finally the controller class:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
 
 namespace Fortune\ApplicationBundle\Controller;
@@ -135,7 +135,7 @@ class QuoteController extends Controller
 {
     public function submitAction(Request $request)
     {
-        $postedContent = $request-&gt;getContent();
+        $postedContent = $request->getContent();
         $postedValues = json_decode($postedContent, true);
 
         $answer['quote']['content'] = $postedValues['content'];
@@ -151,7 +151,7 @@ confident enough to commit our work:</p>
 git commit -m 'Created submission of quotes'</code></pre>
 <h2 id="testing-bad-cases">Testing bad cases<a href="#testing-bad-cases" class="anchor">#</a></h2>
 <p>The submitted content shouldn't be empty. Let's add a test for the bad cases:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Fortune/ApplicationBundle/Tests/Controller/QuoteControllerTest.php
 
 namespace Fortune\ApplicationBundle\Tests\Controller;
@@ -163,38 +163,38 @@ class QuoteControllerTest extends WebTestCase
 {
     private function post($uri, array $data)
     {
-        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $headers = array('CONTENT_TYPE' => 'application/json');
         $content = json_encode($data);
         $client = static::createClient();
-        $client-&gt;request('POST', $uri, array(), array(), $headers, $content);
+        $client->request('POST', $uri, array(), array(), $headers, $content);
 
-        return $client-&gt;getResponse();
+        return $client->getResponse();
     }
 
     public function testSubmitNewQuote()
     {
-        $response = $this-&gt;post('/api/quotes', array('content' =&gt; '&lt;KnightOfNi&gt; Ni!'));
+        $response = $this->post('/api/quotes', array('content' => '<KnightOfNi> Ni!'));
 
-        $this-&gt;assertSame(Response::HTTP_CREATED, $response-&gt;getStatusCode());
+        $this->assertSame(Response::HTTP_CREATED, $response->getStatusCode());
     }
 
     public function testSubmitEmptyQuote()
     {
-        $response = $this-&gt;post('/api/quotes', array('content' =&gt; ''));
+        $response = $this->post('/api/quotes', array('content' => ''));
 
-        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response-&gt;getStatusCode());
+        $this->assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
     }
 
     public function testSubmitNoQuote()
     {
-        $response = $this-&gt;post('/api/quotes', array());
+        $response = $this->post('/api/quotes', array());
 
-        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response-&gt;getStatusCode());
+        $this->assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
     }
 }</code></pre>
 <h2 id="checking-bad-cases">Checking bad cases<a href="#checking-bad-cases" class="anchor">#</a></h2>
 <p>Now let's fix the new tests:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
 
 namespace Fortune\ApplicationBundle\Controller;
@@ -208,11 +208,11 @@ class QuoteController extends Controller
 {
     public function submitAction(Request $request)
     {
-        $postedContent = $request-&gt;getContent();
+        $postedContent = $request->getContent();
         $postedValues = json_decode($postedContent, true);
 
         if (empty($postedValues['content'])) {
-            $answer = array('message' =&gt; 'Missing required parameter: content');
+            $answer = array('message' => 'Missing required parameter: content');
 
             return new JsonResponse($answer, Response::HTTP_UNPROCESSABLE_ENTITY);
         }

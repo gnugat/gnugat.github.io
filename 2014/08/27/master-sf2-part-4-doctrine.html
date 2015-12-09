@@ -47,45 +47,45 @@
 </ul><p>In the previous articles we created an API allowing us to submit and list
 quotes:</p>
 <pre><code>.
-&#9500;&#9472;&#9472; app
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; AppKernel.php
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; cache
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_prod.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config_test.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; config.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; parameters.yml.dist
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; routing.yml
-&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; logs
-&#9474;&nbsp;&nbsp; &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; .gitkeep
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; phpunit.xml.dist
-&#9500;&#9472;&#9472; composer.json
-&#9500;&#9472;&#9472; composer.lock
-&#9500;&#9472;&#9472; src
-&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; Fortune
-&#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; ApplicationBundle
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Controller
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteController.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; DependencyInjection
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; FortuneApplicationExtension.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Entity
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; QuoteFactory.php
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; QuoteGateway.php
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; Quote.php
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteRepository.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; FortuneApplicationBundle.php
-&#9474;&nbsp;&nbsp;         &#9500;&#9472;&#9472; Resources
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; config
-&#9474;&nbsp;&nbsp;         &#9474;&nbsp;&nbsp;     &#9492;&#9472;&#9472; services.xml
-&#9474;&nbsp;&nbsp;         &#9492;&#9472;&#9472; Tests
-&#9474;&nbsp;&nbsp;             &#9500;&#9472;&#9472; Controller
-&#9474;&nbsp;&nbsp;             &#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; QuoteControllerTest.php
-&#9474;&nbsp;&nbsp;             &#9492;&#9472;&#9472; Entity
-&#9474;&nbsp;&nbsp;                 &#9492;&#9472;&#9472; QuoteRepositoryTest.php
-&#9492;&#9472;&#9472; web
-    &#9492;&#9472;&#9472; app.php</code></pre>
+├── app
+│   ├── AppKernel.php
+│   ├── cache
+│   │   └── .gitkeep
+│   ├── config
+│   │   ├── config_prod.yml
+│   │   ├── config_test.yml
+│   │   ├── config.yml
+│   │   ├── parameters.yml
+│   │   ├── parameters.yml.dist
+│   │   └── routing.yml
+│   ├── logs
+│   │   └── .gitkeep
+│   └── phpunit.xml.dist
+├── composer.json
+├── composer.lock
+├── src
+│   └── Fortune
+│       └── ApplicationBundle
+│           ├── Controller
+│           │   └── QuoteController.php
+│           ├── DependencyInjection
+│           │   └── FortuneApplicationExtension.php
+│           ├── Entity
+│           │   ├── QuoteFactory.php
+│           │   ├── QuoteGateway.php
+│           │   ├── Quote.php
+│           │   └── QuoteRepository.php
+│           ├── FortuneApplicationBundle.php
+│           ├── Resources
+│           │   └── config
+│           │       └── services.xml
+│           └── Tests
+│               ├── Controller
+│               │   └── QuoteControllerTest.php
+│               └── Entity
+│                   └── QuoteRepositoryTest.php
+└── web
+    └── app.php</code></pre>
 <p>Here's the <a href="https://github.com/gnugat/mastering-symfony2">repository where you can find the actual code</a>.</p>
 <p>In this one we'll use real database persistence using
 <a href="http://www.doctrine-project.org/projects/orm.html">Doctrine ORM</a>, a third party
@@ -106,9 +106,9 @@ Container. It can be installed quickly:</p>
 <pre><code>composer require 'doctrine/doctrine-bundle:~1.2'</code></pre>
 <p>The bundle doesn't force you to use the ORM (you can simply use the DBAL), so we
 need to explicitly install it:</p>
-<pre><code>composer require 'doctrine/orm:~2.2,&gt;=2.2.3'</code></pre>
+<pre><code>composer require 'doctrine/orm:~2.2,>=2.2.3'</code></pre>
 <p>The bundle has to be registered in our application:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: app/AppKernel.php
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -127,7 +127,7 @@ class AppKernel extends Kernel
 
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
-        $loader-&gt;load(__DIR__.'/config/config_'.$this-&gt;getEnvironment().'.yml');
+        $loader->load(__DIR__.'/config/config_'.$this->getEnvironment().'.yml');
     }
 }</code></pre>
 <p>Its services depend on some configuration parameters, which we will add:</p>
@@ -201,7 +201,7 @@ Repository design pattern (the one with gateway and factory). In our case it
 corresponds to the gateway.</p>
 <p>As you can see, we've added a <code>createdAt</code> attribute to our entity. Let's update
 its code:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Fortune/ApplicationBundle/Entity/Quote.php
 
 namespace Fortune\ApplicationBundle\Entity;
@@ -214,9 +214,9 @@ class Quote
 
     public function __construct($id, $content)
     {
-        $this-&gt;id = $id;
-        $this-&gt;content = $content;
-        $this-&gt;createdAt = new \DateTime();
+        $this->id = $id;
+        $this->content = $content;
+        $this->createdAt = new \DateTime();
     }
 
     public static function fromContent($content)
@@ -226,17 +226,17 @@ class Quote
 
     public function getId()
     {
-        return $this-&gt;id;
+        return $this->id;
     }
 
     public function getContent()
     {
-        return $this-&gt;content;
+        return $this->content;
     }
 
     public function getCreatedAt()
     {
-        return $this-&gt;createdAt;
+        return $this->createdAt;
     }
 }</code></pre>
 <p><strong>Note</strong>: We've added <a href="http://verraes.net/2014/06/named-constructors-in-php/">a named constructor</a>
@@ -247,7 +247,7 @@ allowing you to create command line utilities. It can be used standalone, or
 in the full stack framework thanks to the FrameworkBundle. To create the
 console, we just need to create the following file:</p>
 <pre><code>#!/usr/bin/env php
-&lt;?php
+<?php
 // File: app/console
 
 set_time_limit(0);
@@ -261,7 +261,7 @@ use Symfony\Component\Console\Input\ArgvInput;
 $input = new ArgvInput();
 $kernel = new AppKernel('dev', true);
 $application = new Application($kernel);
-$application-&gt;run($input);</code></pre>
+$application->run($input);</code></pre>
 <p>The object <code>ArgvInput</code> contains the input given by the user (command name,
 arguments and options). Bundles can register commands in the application by
 fetching them from their <code>Command</code> directory.</p>
@@ -275,7 +275,7 @@ production.</p>
 <h2 id="adapting-the-gateway">Adapting the Gateway<a href="#adapting-the-gateway" class="anchor">#</a></h2>
 <p>Until now, our <code>QuoteGateway</code> was saving and retrieving the quotes from a file.
 We'll update it to be a Doctrine Repository:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Fortune/ApplicationBundle/Entity/QuoteGateway.php
 
 namespace Fortune\ApplicationBundle\Entity;
@@ -286,11 +286,11 @@ class QuoteGateway extends EntityRepository
 {
     public function insert($content)
     {
-        $entityManager = $this-&gt;getEntityManager();
+        $entityManager = $this->getEntityManager();
 
         $quote = Quote::fromContent($content);
-        $entityManager-&gt;persist($quote);
-        $entityManager-&gt;flush();
+        $entityManager->persist($quote);
+        $entityManager->flush();
 
         return $quote;
     }
@@ -298,36 +298,36 @@ class QuoteGateway extends EntityRepository
 <p>The <code>EntityManager</code> object does the actual persistence and will set the quote's
 ID. The <code>EntityRepository</code> already has a <code>findAll</code> method, so we can remove it.</p>
 <p>The last thing we need is to update the DIC's configuration:</p>
-<pre><code>&lt;?xml version="1.0" ?&gt;
-&lt;!-- File: src/Fortune/ApplicationBundle/Resources/config/services.xml --&gt;
+<pre><code><?xml version="1.0" ?>
+<!-- File: src/Fortune/ApplicationBundle/Resources/config/services.xml -->
 
-&lt;container xmlns="http://symfony.com/schema/dic/services"
+<container xmlns="http://symfony.com/schema/dic/services"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
-    &lt;services&gt;
-        &lt;service id="fortune_application.quote_factory"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <service id="fortune_application.quote_factory"
             class="Fortune\ApplicationBundle\Entity\QuoteFactory"
-        &gt;
-        &lt;/service&gt;
-        &lt;service id="fortune_application.quote_gateway"
+        >
+        </service>
+        <service id="fortune_application.quote_gateway"
             class="Fortune\ApplicationBundle\Entity\QuoteGateway"
             factory-service="doctrine"
-            factory-method="getRepository"&gt;
-            &lt;argument&gt;FortuneApplicationBundle:Quote&lt;/argument&gt;
-        &lt;/service&gt;
-        &lt;service id="fortune_application.quote_repository"
+            factory-method="getRepository">
+            <argument>FortuneApplicationBundle:Quote</argument>
+        </service>
+        <service id="fortune_application.quote_repository"
             class="Fortune\ApplicationBundle\Entity\QuoteRepository"
-        &gt;
-            &lt;argument type="service" id="fortune_application.quote_gateway" /&gt;
-            &lt;argument type="service" id="fortune_application.quote_factory" /&gt;
-        &lt;/service&gt;
-    &lt;/services&gt;
-&lt;/container&gt;</code></pre>
+        >
+            <argument type="service" id="fortune_application.quote_gateway" />
+            <argument type="service" id="fortune_application.quote_factory" />
+        </service>
+    </services>
+</container></code></pre>
 <p>The <code>doctrine</code> service manages the Doctrine Repositories. To manually get a
 repository you'd need to do somethig like
-<code>$container-&gt;get('doctrine')-&gt;getRepository('FortuneApplicationBundle:QuoteGateway')</code>,
+<code>$container->get('doctrine')->getRepository('FortuneApplicationBundle:QuoteGateway')</code>,
 the <code>factory-service</code> and <code>factory-method</code> attributes allow us to simply call
-container-&gt;get('fortune_application.quote_gateway')`.</p>
+container->get('fortune_application.quote_gateway')`.</p>
 <h2 id="mocking-the-database">Mocking the database<a href="#mocking-the-database" class="anchor">#</a></h2>
 <p>Database operations can be slow however we want our tests to run as fast as
 possible: <a href="http://blog.8thlight.com/uncle-bob/2014/05/10/WhenToMock.html">this is a good opportunity to use a test double</a>.</p>
@@ -336,7 +336,7 @@ more one: <a href="https://github.com/phpspec/prophecy">Prophecy</a>. First we i
 the PHPUnit integration of Prophecy:</p>
 <pre><code>composer require --dev 'phpspec/prophecy-phpunit:~1.0'</code></pre>
 <p>Then we update our test:</p>
-<pre><code>&lt;?php
+<pre><code><?php
 // File: src/Fortune/ApplicationBundle/Tests/Entity/QuoteRepositoryTest.php
 
 namespace Fortune\ApplicationBundle\Tests\Entity;
@@ -350,7 +350,7 @@ use Prophecy\PhpUnit\ProphecyTestCase;
 class QuoteRepositoryTest extends ProphecyTestCase
 {
     const ID = 42;
-    const CONTENT = '&lt;KnightOfNi&gt; Ni!';
+    const CONTENT = '<KnightOfNi> Ni!';
 
     private $gateway;
     private $repository;
@@ -359,22 +359,22 @@ class QuoteRepositoryTest extends ProphecyTestCase
     {
         parent::setUp();
         $gatewayClassname = 'Fortune\ApplicationBundle\Entity\QuoteGateway';
-        $this-&gt;gateway = $this-&gt;prophesize($gatewayClassname);
+        $this->gateway = $this->prophesize($gatewayClassname);
         $factory = new QuoteFactory();
-        $this-&gt;repository = new QuoteRepository($this-&gt;gateway-&gt;reveal(), $factory);
+        $this->repository = new QuoteRepository($this->gateway->reveal(), $factory);
     }
 
     public function testItPersistsTheQuote()
     {
         $quote = new Quote(self::ID, self::CONTENT);
-        $this-&gt;gateway-&gt;insert(self::CONTENT)-&gt;willReturn($quote);
-        $this-&gt;repository-&gt;insert(self::CONTENT);
+        $this->gateway->insert(self::CONTENT)->willReturn($quote);
+        $this->repository->insert(self::CONTENT);
 
-        $this-&gt;gateway-&gt;findAll()-&gt;willReturn(array($quote));
-        $quotes = $this-&gt;repository-&gt;findAll();
+        $this->gateway->findAll()->willReturn(array($quote));
+        $quotes = $this->repository->findAll();
         $foundQuote = $quotes['quotes'][self::ID];
 
-        $this-&gt;assertSame(self::CONTENT, $foundQuote['content']);
+        $this->assertSame(self::CONTENT, $foundQuote['content']);
     }
 }</code></pre>
 <p>We created a mock of <code>QuoteGateway</code> which returns a quote we created beforehand.</p>

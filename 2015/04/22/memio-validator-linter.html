@@ -56,7 +56,7 @@ to write constraints. Let's write one to check that method arguments are never s
 <p><strong>Note</strong>: This is one of the principle in <a href="http://williamdurand.fr/2013/06/03/object-calisthenics">object calisthenics</a>:
 <a href="http://williamdurand.fr/2013/06/03/object-calisthenics/#3-wrap-all-primitives-and-strings">wrap all primitives and string</a>.</p>
 </blockquote>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 require __DIR__.'/vendor/autoload.php';
 
@@ -68,9 +68,9 @@ class ArgumentCannotBeScalar implements Constraint
 {
     public function validate($model)
     {
-        $type = $model-&gt;getType();
+        $type = $model->getType();
         if (in_array($type, array('array', 'bool', 'callable', 'double', 'int', 'mixed', 'null', 'resource', 'string'), true)) {
-            return new SomeViolation(sprintf('Argument "%s" cannot be scalar', $model-&gt;getName()));
+            return new SomeViolation(sprintf('Argument "%s" cannot be scalar', $model->getName()));
         }
 
         return new NoneViolation();
@@ -86,7 +86,7 @@ aims <code>Argument</code> models, we'll register it in an <code>ArgumentValidat
 use Memio\Validator\ModelValidator\ArgumentValidator;
 
 $argumentValidator = new ArgumentValidator();
-$argumentValidator-&gt;add(new ArgumentCannotBeScalar());</code></pre>
+$argumentValidator->add(new ArgumentCannotBeScalar());</code></pre>
 <p>When building models, <code>Arguments</code> are burried in <code>Methods</code>, which themselves are burried in
 <code>Contracts</code> or <code>Objects</code> which in turn are burried in <code>File</code>.</p>
 <p>To make things easy, we'd like to simply give the top most model (e.g. <code>File</code>) to
@@ -112,16 +112,16 @@ $fileValidator = new FileValidator($contractValidator, $objectValidator);</code>
 use Memio\Validator\Validator;
 
 $calisthenicValidator = new Validator();
-$calisthenicValidator-&gt;add($argumentValidator);
-$calisthenicValidator-&gt;add($collectionValidator);
-$calisthenicValidator-&gt;add($methodValidator);
-$calisthenicValidator-&gt;add($contractValidator);
-$calisthenicValidator-&gt;add($objectValidator);
-$calisthenicValidator-&gt;add($fileValidator);</code></pre>
+$calisthenicValidator->add($argumentValidator);
+$calisthenicValidator->add($collectionValidator);
+$calisthenicValidator->add($methodValidator);
+$calisthenicValidator->add($contractValidator);
+$calisthenicValidator->add($objectValidator);
+$calisthenicValidator->add($fileValidator);</code></pre>
 <p>We can now validate our Models:</p>
 <pre><code class="language-php">// ...
 
-$calisthenicValidator-&gt;validate($file); // @throws Memio\Validator\InvalidModelException if one or more constraint fail</code></pre>
+$calisthenicValidator->validate($file); // @throws Memio\Validator\InvalidModelException if one or more constraint fail</code></pre>
 <p>The <code>InvalidModelException</code>'s message has one line per violation.</p>
 <h2 id="linter">Linter<a href="#linter" class="anchor">#</a></h2>
 <p>Out of the box, Memio provides a <a href="http://github.com/memio/linter">Linter</a> which
@@ -141,7 +141,7 @@ provides the following constraints:</p>
 tiresome.</p>
 <p>That's where <code>memio/memio</code>, the main central repository, starts to be useful by
 providing a simple way to get a ready to use linter:</p>
-<pre><code class="language-php">&lt;?php
+<pre><code class="language-php"><?php
 
 require __DIR__.'/vendor/autoload.php';
 
@@ -149,7 +149,7 @@ use Memio\Memio\Config\Build;
 
 $linter = Build::linter();
 
-$linter-&gt;validate($file); // @throws Memio\Validator\InvalidModelException if one or more constraint fail</code></pre>
+$linter->validate($file); // @throws Memio\Validator\InvalidModelException if one or more constraint fail</code></pre>
 <h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
 <p>Validator allows the creation of custom constraint to ensure that the build Models
 are valid. Linter is a set of constraints ready to use, allowing to prevent syntax errors

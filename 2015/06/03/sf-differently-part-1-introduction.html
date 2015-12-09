@@ -98,7 +98,7 @@ We've decided to create the following applications:</p>
 <li><code>acme/order-items-api</code> the dedicated API</li>
 <li><code>acme/items</code>, an API specific to the <code>item</code> and <code>item_category</code> tables</li>
 <li><code>acme/orders</code>, an API specific to the <code>order</code> table</li>
-</ul><p><img alt="Diagram" src="http://yuml.me/c0591d90"></p>
+</ul><p><img src="http://yuml.me/c0591d90" alt="Diagram"></p>
 <p>In this series, we'll focus on the creation of the Search endpoint in <code>acme/items</code>.</p>
 <h2 id="the-task">The task<a href="#the-task" class="anchor">#</a></h2>
 <p>The Search endpoint should allow:</p>
@@ -107,7 +107,7 @@ We've decided to create the following applications:</p>
 <li>ordering items, using a <code>sort</code> parameter</li>
 </ul><p>In this series, we'll focus on paginating items.</p>
 <p>Here's a valid <code>Request</code> sample:</p>
-<pre><code>GET /v1/items?page=2&amp;per_page=1 HTTP/1.1</code></pre>
+<pre><code>GET /v1/items?page=2&per_page=1 HTTP/1.1</code></pre>
 <p>It should return a <code>Response</code> similar to:</p>
 <pre><code>HTTP/1.1 200 OK
 Content-Type: application/json
