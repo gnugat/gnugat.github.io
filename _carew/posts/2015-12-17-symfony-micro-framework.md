@@ -192,7 +192,7 @@ So to sum up:
 
 ## Micro Framework Bundle
 
-By reducing the number of depdencies, we also drastically reduced the framework
+By reducing the number of dependencies, we also drastically reduced the framework
 footprint. This is not surprising as:
 
 * we've reduced the number of classes to autoload
@@ -296,7 +296,7 @@ The [Standard Edition](https://github.com/symfony/symfony-standard) and the
 [FrameworkBundle](https://github.com/symfony/symfony/tree/master/src/Symfony/Bundle/FrameworkBundle)
 follow a "solve 80% of use cases out of the box" philosohpy, which is better for new comers.
 
-However for experimented developers who're looking for a "add what you need" philosohpy,
+However for experimented developers who're looking for a "add what you need" philosophy,
 which is what micro-framework usually follow, using the [Empty Edition](http://github.com/gnugat/symfony-empty-edition)
 and [MicroFrameworkBundle](http://github.com/gnugat/micro-framework-bundle) can
 be a viable alternative (they are slimer in term of dependencies and faster).
