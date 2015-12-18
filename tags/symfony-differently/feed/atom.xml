@@ -5,8 +5,223 @@
     <link href="http://gnugat.github.io/feed/index.atom" rel="self" />
     <link href="http://gnugat.github.io/" />
         <id>http://gnugat.github.io/</id>
-            <updated>2015-11-26T00:00:00+00:00</updated>
+            <updated>2015-12-17T00:00:00+00:00</updated>
             <entry>
+        <title>Symfony Micro Framework</title>
+                <id>http://gnugat.github.io/2015/12/17/symfony-micro-framework.html</id>
+                <updated>2015-12-17T00:00:00+00:00</updated>
+        <author>
+            <name>Loïc Faugeron</name>
+            <email>faugeron.loic+blog@gmail.com</email>
+        </author>
+        <link rel="alternate" type="text/html" href="http://gnugat.github.io/2015/12/17/symfony-micro-framework.html"/>
+        <content type="html" xml:lang="en"><![CDATA[<blockquote>
+<p><strong>TD;DR</strong>: <a href="http://symfony.com">Symfony</a> has always been able to be used as a micro
+framework.
+For more "add what you need" micro-framework like spirit, use the <a href="http://github.com/gnugat/symfony-empty-edition">Empty Edition</a>
+and the <a href="http://github.com/gnugat/micro-framework-bundle">MicroFrameworkBundle</a>.</p>
+</blockquote>
+<p>There are many definitions out there to qualify a framework as being "micro", among
+them the following criterias often appear:</p>
+<ul><li>small API (usage of framework's code in your application)</li>
+<li>few Lines Of Code (LOC)</li>
+<li>few dependencies (how many tiord party libraries are used)</li>
+<li>small footprint (framework loading time)</li>
+</ul><p>Is Symfony a micro framework as well? Let's find out.</p>
+<blockquote>
+<p><strong>Note</strong>: To know more about how to determine if a framework is micro, read
+<a href="https://igor.io/archive.html">Igor Wiedler</a> article: <a href="https://igor.io/2013/09/02/how-heavy-is-silex.html">How heavy is Silex?</a>.</p>
+</blockquote>
+<h2 id="measuring">Measuring<a href="#measuring" class="anchor">#</a></h2>
+<p>While "Hello World" examples rarely reflect real world applications, it's going
+to be good enough to serve the purpose of this article: getting a good measure of
+Symfony's API, LOC, dependencies and footprint.</p>
+<p>Since dependencies and footprint are easy to measure, we're going to rely on it.
+However, all benchmarks are relative to the computer that executes them, so we need
+a point of reference: a flat PHP "Hello World" application:</p>
+<pre><code>// index.php
+
+echo 'Hello World';</code></pre>
+<p>Let's run the benchmark:</p>
+<pre><code>php -S localhost:2501 &
+ab -c 10 -t 10 'http://localhost:2501/index.php'
+killall php</code></pre>
+<p>Result: <strong>6 915.03</strong> Requests per second.</p>
+<h2 id="standard-edition">Standard Edition<a href="#standard-edition" class="anchor">#</a></h2>
+<p>To get the Standard Edition, we can use composer:</p>
+<pre><code>composer create-project symfony/framework-standard-edition
+cd framework-standard-edition</code></pre>
+<p>Since the standard edition follows a "solve 80% of use cases out of the box" philosohpy,
+it's almost ready, we just need to tweak the given controller:</p>
+<pre><code>// src/AppBundle/Controller/DefaultController.php
+
+namespace AppBundle\Controller;
+
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class DefaultController extends Controller
+{
+    /**
+     * @Route("/", name="homepage")
+     */
+    public function indexAction(Request $request)
+    {
+        return new Response('Hello World');
+    }
+}</code></pre>
+<p>Let's run the benchmark:</p>
+<pre><code>SYMFONY_ENV=prod composer update -o --no-dev
+php -S localhost:2502 -t web &
+ab -c 10 -t 10 'http://localhost:2502/app.php'
+killall php</code></pre>
+<p>Result: <strong>134.23</strong> Requests per second.</p>
+<p>We're also going to list the dependencies:</p>
+<pre><code>tree -d -L 2 vendor/ | grep '   ' | wc -l
+tree -d -L 2 vendor/ | grep '    ' | wc -l</code></pre>
+<p>We get 28 + 1, to which we need to substitute <code>symfony</code> with all the
+packages it replaces (44): 72.</p>
+<p>So to sum up:</p>
+<ul><li>API: 1 step to add a new route</li>
+<li>footprint: 52x slower than flat PHP</li>
+<li>size: 72 dependencies</li>
+</ul><h2 id="empty-edition">Empty Edition<a href="#empty-edition" class="anchor">#</a></h2>
+<p>As stated above the Standard Edition has a "solve 80% of use cases out of the box"
+philosophy, so it comes with many dependencies that might not fit our use. Micro
+framework usually follow a "add what you need philosophy", which is exactly what
+the Empty Edition is all about.</p>
+<p>Let's see if we can get more micro with it:</p>
+<pre><code>composer create-project gnugat/symfony-empty-edition
+cd symfony-empty-edition</code></pre>
+<p>The first step is to create a controller:</p>
+<pre><code>// src/AppBundle/Controller/HelloController.php
+
+namespace AppBundle\Controller;
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class HelloController
+{
+    public function world(Request $request)
+    {
+        return new Response('Hello World');
+    }
+}</code></pre>
+<p>Then we register it as a service:</p>
+<pre><code># app/config/services/controller.yml
+services:
+    app.hello_controller:
+        class: AppBundle\Controller\HelloController</code></pre>
+<p>Finally we register the route:</p>
+<pre><code># app/config/routings/app.yml
+hello_world:
+    path: /
+    defaults:
+        _controller: app.hello_controller:world
+    methods:
+        - GET</code></pre>
+<p>Let's run the benchmark:</p>
+<pre><code>composer update -o --no-dev
+php -S localhost:2503 -t web &
+ab -c 10 -t 10 'http://localhost:2503/app.php'
+killall php</code></pre>
+<p>Result: <strong>524.53</strong> Requests per second.</p>
+<p>We're also going to list the dependencies:</p>
+<pre><code>tree -d -L 2 vendor/ | grep '   ' | wc -l
+tree -d -L 2 vendor/ | grep '    ' | wc -l</code></pre>
+<p>We get 6 + 23 = 29.</p>
+<p>So to sum up:</p>
+<ul><li>API: 3 steps to add a new route</li>
+<li>footprint: 13x slower than flat PHP</li>
+<li>size: 29 dependencies</li>
+</ul><h2 id="micro-framework-bundle">Micro Framework Bundle<a href="#micro-framework-bundle" class="anchor">#</a></h2>
+<p>By reducing the number of depdencies, we also drastically reduced the framework
+footprint. This is not surprising as:</p>
+<ul><li>we've reduced the number of classes to autoload</li>
+<li>we've reduced the number of configuration (parameters and service definition) to set up</li>
+<li>we've reduced the bootload time of the Dependency Injection Container (less services to instantiate)</li>
+<li>we've reduced the number of event listeners called</li>
+</ul><p>Can we go further? Certainly: the FrameworkBundle also follows a
+"solve 80% of use cases out of the box" (includes Forms, Security, Templating, Translation, Assets, annotations, etc).</p>
+<p>By using a MicroFrameworkBundle that would provide the strict minimum and follow
+the micro framework philosophy of "add what you need" we can surely reduce further
+the number of dependencies. Hence <code>gnugat/micro-framework-bundle</code>:</p>
+<pre><code>composer require 'gnugat/micro-framework-bundle'
+composer remove 'symfony/framework-bundle'</code></pre>
+<p>Then we need to swap the bundle in the registration:</p>
+<pre><code>// app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        return array(
+            new Gnugat\MicroFrameworkBundle\GnugatMicroFrameworkBundle(),
+            new AppBundle\AppBundle(),
+        );
+    }
+
+    public function getRootDir()
+    {
+        return __DIR__;
+    }
+
+    public function getCacheDir()
+    {
+        return dirname(__DIR__).'/var/cache/'.$this->environment;
+    }
+
+    public function getLogDir()
+    {
+        return dirname(__DIR__).'/var/logs';
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader)
+    {
+        $loader->load($this->rootDir.'/config/config_'.$this->environment.'.yml');
+    }
+}</code></pre>
+<p>Finally we can get rid of some configuration:</p>
+<pre><code># app/config/config.yml
+imports:
+    - { resource: parameters.yml }
+    - { resource: services/ }</code></pre>
+<p>Let's benchmark our trimmed application:</p>
+<pre><code>rm -rf var/*
+composer update -o --no-dev
+php -S localhost:2504 -t web &
+ab -c 10 -t 10 'http://localhost:2504/app.php'
+killall php</code></pre>
+<p>Result: <strong>872.83</strong> Requests per second.</p>
+<p>We're also going to list the dependencies:</p>
+<pre><code>tree -d -L 2 vendor/ | grep '   ' | wc -l
+tree -d -L 2 vendor/ | grep '    ' | wc -l</code></pre>
+<p>We get 3 + 13 = 16.</p>
+<p>So to sum up:</p>
+<ul><li>API: 3 steps to add a new route</li>
+<li>footprint: 8x slower than flat PHP</li>
+<li>size: 13 dependencies</li>
+</ul><h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+<p>Symfony has always been able to be used as a micro framework bundle.</p>
+<p>The <a href="https://github.com/symfony/symfony-standard">Standard Edition</a> and the
+<a href="https://github.com/symfony/symfony/tree/master/src/Symfony/Bundle/FrameworkBundle">FrameworkBundle</a>
+follow a "solve 80% of use cases out of the box" philosohpy, which is better for new comers.</p>
+<p>However for experimented developers who're looking for a "add what you need" philosohpy,
+which is what micro-framework usually follow, using the <a href="http://github.com/gnugat/symfony-empty-edition">Empty Edition</a>
+and <a href="http://github.com/gnugat/micro-framework-bundle">MicroFrameworkBundle</a> can
+be a viable alternative (they are slimer in term of dependencies and faster).</p>
+<blockquote>
+<p><strong>Note</strong>: At the time of writing, MicroFrameworkBundle is still under development
+(version <code>0.1.0</code>). Use it at your own risk and contribute to it :) .</p>
+</blockquote>]]></content>
+    </entry>
+        <entry>
         <title>HTTP Cache</title>
                 <id>http://gnugat.github.io/2015/11/26/http-cache.html</id>
                 <updated>2015-11-26T00:00:00+00:00</updated>
