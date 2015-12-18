@@ -15,7 +15,7 @@ them the following criterias often appear:
 
 * small API (usage of framework's code in your application)
 * few Lines Of Code (LOC)
-* few dependencies (how many tiord party libraries are used)
+* few dependencies (how many third party libraries are used)
 * small footprint (framework loading time)
 
 Is Symfony a micro framework as well? Let's find out.
