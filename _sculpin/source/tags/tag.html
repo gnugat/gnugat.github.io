@@ -1,0 +1,28 @@
+---
+layout: page
+title: Tag
+generator: [posts_tag_index, pagination]
+---
+
+{% block head_meta %}
+    <link rel="alternate" type="application/atom+xml" href="{{ site.url }}/tags/{{ page.tag|url_encode(true) }}.xml" title="{{ site.title }} '{{ page.tag }}' tag feed" />
+    <meta name="robots" content="noindex, follow">
+{% endblock %}
+
+{% block page_title %}<h2>"{{ page.tag }}" tag</h2>{% endblock %}
+
+{% block content %}
+{% for post in page.tag_posts %}
+    <article>
+        <h3>
+            <a href="{{ site.url }}{{ post.url }}">{{ post.title|capitalize }}</a>
+            <span class="sub-title">{{ post.date | date('d/m/Y') }}</span>
+        </h3>
+        <nav>
+            {% for tag in post.meta.tags %}
+            <a class="button" href="{{ site.url }}/tags/{{ tag|url_encode(true) }}">{{ tag }}</a>
+            {% endfor %}
+        </nav>
+    </article>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,13 @@
+---
+layout: page
+title: Tags
+use:
+    - posts_tags
+---
+<h2>Tags</h2>
+
+<div>
+{% for tag,posts in data.posts_tags %}
+<a href="{{ site.url }}/tags/{{ tag|url_encode(true) }}">{{ tag }}</a>
+{% endfor %}
+</div>
