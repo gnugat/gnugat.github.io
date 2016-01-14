@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Decouple from Decoupling</title>
+    <title>Decouple from Decoupling &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2015/10/26/decouple-from-decoupling.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2015/10/26/decouple-from-decoupling.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,78 +30,97 @@
         <article>
             <header>
                 <h2>
-    Decouple from Decoupling    <span class="sub-title">26/10/2015</span>
+    Decouple from Decoupling
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/decoupling.html">Decoupling</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/decoupling">decoupling</a>
+                    </nav>
+                </header>
 
-            <p>In the last two articles, we've seen how to decouple our application:</p>
-<ul><li><a href="../../../2015/09/30/decouple-from-frameworks.html">from frameworks, using the Command Bus pattern</a></li>
-<li><a href="../../../2015/10/12/decouple-from-libraries.html">from libraries, using the Inversion of Control principle</a></li>
-</ul><p>Decoupling can be considered as a "Best Practice" as it is a good protection
+                <p>In the last two articles, we've seen how to decouple our application:</p>
+
+<ul>
+<li><a href="/2015/09/30/decouple-from-frameworks.html">from frameworks, using the Command Bus pattern</a></li>
+<li><a href="/2015/10/12/decouple-from-libraries.html">from libraries, using the Inversion of Control principle</a></li>
+</ul>
+
+<p>Decoupling can be considered as a "Best Practice" as it is a good protection
 against external changes, but it doesn't mean that it should always be applied
 everywhere.</p>
+
 <p>This article is about mitigating the usage of this tool.</p>
-<h2 id="clean-code">Clean Code<a href="#clean-code" class="anchor">#</a></h2>
+
+<h2 id="clean-code">Clean Code</h2>
+
 <p>Decoupling is an important part of clean code, as it can allow a better readability.</p>
+
 <p>For example instead of having a controller full of logic, we just have a Command
 class initialized with the input parameters that matter and a class name that describe
 the expected behavior. Inside the Command Handler, instead of having implementation
 details we have a sequence of service calls that decribe even further the behavior.</p>
+
 <p>Clean code is all about making the application easier to maintain so in theory
 this should be applied everywhere, but like every rules it can be abused and its
 usefulness depends on the type of the project.</p>
+
 <p>It might seem strange but some projects don't need to be maintained, for example
 Proof of Concepts are usually thrown away once the experience they were designed
 for are done, so it doesn't make sense to take the time to make them perfect.</p>
+
 <p>Some industry are also commissioned to bootstrap a project as fast as possible
 and are expected to pass over the project without any maintainance plan: usually
 the ones that promise the earlier delivery for the lowest price are selected.
 Again it doesn't make sense to take the time to create the most beautiful code
 if that's not what's been asked and paid for.</p>
-<h2 id="pragmatism">Pragmatism<a href="#pragmatism" class="anchor">#</a></h2>
+
+<h2 id="pragmatism">Pragmatism</h2>
+
 <p>Trying to use the right tool for the right job is an important part of being
 pragmatic.</p>
+
 <p>We've seen that some projects don't necessarly need decoupling as we don't expect
 to maintain them. But sometimes a project might need decoupling in some parts
 of it and not in other parts.</p>
+
 <p>As the saying goes, "Fool me once, shame on you, fool me twice, shame on me":
 since we can't know in advance which parts are going to change we might decide
 to couple things first. When an issue occurs due to the coupling, we can refactor
 to avoid further issues.</p>
+
 <p>Last but not least, we can't always decouple from everything: for example the
 programming language used can also release backward incompatible changes, or we
 might want to switch to an entirely different one. Is it worth decouling from the
 language?</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>Decoupling is a great tool that should be used when needed but the decision of
 when to use it depends on the context (project, team, industry, etc).</p>
+
 <p>The rule of thumb number one is: don't follow blindly rule of thumbs.</p>
 
+
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2015/10/12/decouple-from-libraries.html">Previous: Decouple from Libraries</a>
-        
-                        <a class="six columns button" href="../../../2015/11/05/porpaginas.html">Next: porpaginas</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/10/12/decouple-from-libraries.html" title="Decouple from Libraries">Previous &lt; Decouple from Libraries</a>
+                                        <a class="button six columns" href="/2015/11/05/porpaginas.html" title="porpaginas">Next &gt; porpaginas</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

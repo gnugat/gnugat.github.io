@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Pomm Foundation</title>
+    <title>Pomm Foundation &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2015/08/06/pomm-foundation.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2015/08/06/pomm-foundation.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,83 +30,106 @@
         <article>
             <header>
                 <h2>
-    Pomm Foundation    <span class="sub-title">06/08/2015</span>
+    Pomm Foundation
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/introducing-library.html">Introducing Library</a>
-                <a class="button" href="../../../tags/pomm.html">Pomm</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                        <a class="button " href="/tags/Pomm">Pomm</a>
+                    </nav>
+                </header>
 
-            <p><a href="http://www.pomm-project.org/">Pomm</a> is an interresting alternative to Doctrine
+                <p><a href="http://www.pomm-project.org/">Pomm</a> is an interresting alternative to Doctrine
 (<a href="http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/introduction.html">DBAL</a>
 or <a href="http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/tutorials/getting-started.html">ORM</a>), it specializes in one database vendor: <a href="http://www.postgresql.org/docs/9.4/static/intro-whatis.html">PostgreSQL</a>.</p>
+
 <p>In this article we'll quickly have a look at <a href="https://github.com/pomm-project/Foundation#foundation">Pomm Foundation</a>.</p>
-<h2 id="installation">Installation<a href="#installation" class="anchor">#</a></h2>
+
+<h2 id="installation">Installation</h2>
+
 <p>Pomm can be installed using <a href="https://getcomposer.org/download/">Composer</a>:</p>
-<pre><code>composer require pomm-project/foundation:^2.0@rc</code></pre>
+
+<pre><code>composer require pomm-project/foundation:^2.0@rc
+</code></pre>
+
 <p>Then we need to create a <code>QueryManager</code>:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 
 require __DIR__.'/vendor/autoload.php';
 
 $pomm = new PommProject\Foundation\Pomm(
-    'database_name' => array(
-        'dsn' => 'pgsql://database_user:database_pass@database_host:database_port/database_name',
-        'class:session_builder' => '\PommProject\Foundation\SessionBuilder',
+    'database_name' =&gt; array(
+        'dsn' =&gt; 'pgsql://database_user:database_pass@database_host:database_port/database_name',
+        'class:session_builder' =&gt; '\PommProject\Foundation\SessionBuilder',
     ),
 );
 
 /**
  * @var PommProject\Foundation\QueryManager\QueryManagerInterface
  */
-$queryManager = $pomm->getDefaultSession()->getQueryManager();</code></pre>
-<h2 id="usage">Usage<a href="#usage" class="anchor">#</a></h2>
+$queryManager = $pomm-&gt;getDefaultSession()-&gt;getQueryManager();
+</code></pre>
+
+<h2 id="usage">Usage</h2>
+
 <p>The <code>QueryManager</code> allows us to send query to our database:</p>
-<pre><code class="language-php">$items = $queryManager->query('SELECT * FROM item WHERE name = $1 AND description = $2', array(
+
+<pre><code class="php">$items = $queryManager-&gt;query('SELECT * FROM item WHERE name = $1 AND description = $2', array(
     'Arthur Dent',
     'Nobody expects the Spanish Inquisition!',
-));</code></pre>
+));
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: <a href="https://twitter.com/mvrhov/status/573098943321653248">Named parameters are not supported</a>.</p>
+  <p><strong>Note</strong>: <a href="https://twitter.com/mvrhov/status/573098943321653248">Named parameters are not supported</a>.</p>
 </blockquote>
+
 <p>The returned value is an iterator, each element is a row (an associative array):</p>
-<pre><code class="language-php">foreach ($items as $item) {
+
+<pre><code class="php">foreach ($items as $item) {
     echo $item['description'];
-}</code></pre>
+}
+</code></pre>
+
 <p>If you'd rather get all elements as an array, you can use <code>iterator_to_array</code>:</p>
-<pre><code class="language-php">$arrayItems = iterator_to_array($items);</code></pre>
+
+<pre><code class="php">$arrayItems = iterator_to_array($items);
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: Behind the scene the result is stored in a <code>resource</code>, which is usually more efficient than a PHP array.
-The iterator allows to get the rows from the <code>resource</code> one by one, which can save memory.</p>
+  <p><strong>Note</strong>: Behind the scene the result is stored in a <code>resource</code>, which is usually more efficient than a PHP array.
+  The iterator allows to get the rows from the <code>resource</code> one by one, which can save memory.</p>
 </blockquote>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>Pomm Foundation provides an efficient abstraction over <code>pg_*</code> functions.</p>
+
 <p>In comparison Doctrine DBAL uses <code>PDO</code> and tries to abstract vendor features,
 so if you're using PostgresSQL and don't need an ORM, you can give it a try!</p>
 
+
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2015/08/05/phinx.html">Previous: phinx</a>
-        
-                        <a class="six columns button" href="../../../2015/08/07/diactoros-psr7.html">Next: Diactoros (PSR-7)</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/08/05/phinx.html" title="phinx">Previous &lt; phinx</a>
+                                        <a class="button six columns" href="/2015/08/07/diactoros-psr7.html" title="Diactoros (PSR-7)">Next &gt; Diactoros (PSR-7)</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

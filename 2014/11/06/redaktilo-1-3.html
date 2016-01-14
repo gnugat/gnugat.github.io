@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Redaktilo 1.3</title>
+    <title>Redaktilo 1.3 &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2014/11/06/redaktilo-1-3.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2014/11/06/redaktilo-1-3.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,40 +30,54 @@
         <article>
             <header>
                 <h2>
-    Redaktilo 1.3    <span class="sub-title">06/11/2014</span>
+    Redaktilo 1.3
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/redaktilo.html">Redaktilo</a>
-                <a class="button" href="../../../tags/pet-project.html">Pet Project</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/redaktilo">redaktilo</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                    </nav>
+                </header>
 
-            <blockquote>
-<p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> is a library
-which wraps array manipulation to make it feel like using a text editor.</p>
+                <blockquote>
+  <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> is a library
+  which wraps array manipulation to make it feel like using a text editor.</p>
 </blockquote>
-<p><a href="../../../2014/05/09/redaktilo.html">Six months ago</a>, I talked about a
+
+<p><a href="/2014/05/09/redaktilo.html">Six months ago</a>, I talked about a
 <a href="https://github.com/gnugat/redaktilo">silly library</a> I was working on.</p>
+
 <p>I've just released it's version 1.3, so I figured that maybe it's time to talk
 about it as the mature and usefull project it has become.</p>
-<h2 id="statistics">Statistics<a href="#statistics" class="anchor">#</a></h2>
+
+<h2 id="statistics">Statistics</h2>
+
 <p>First, here's some meaningless figures:</p>
-<ul><li>fisrt commit: at 08:06:46, on the 24th thursday of April 2014</li>
+
+<ul>
+<li>fisrt commit: at 08:06:46, on the 24th thursday of April 2014</li>
 <li>number of releases: 36 (including 11 stable ones)</li>
 <li>number of contributors: 3 (<a href="http://loickpiera.com/">Loick Piera</a>, <a href="http://wouterj.nl/">WouterJ</a> and myself)</li>
 <li>lines of code (according to <a href="https://insight.sensiolabs.com/projects/fbe2d89f-f64d-45c2-a680-bbafac4b0d08/analyses/36">Insight, for version 1.3.0</a>): 1 183</li>
-</ul><h2 id="history">History<a href="#history" class="anchor">#</a></h2>
+</ul>
+
+<h2 id="history">History</h2>
+
 <p>In my two previous pet projects (GnugatWizardBundle and Fossil), as well as in
 professional projects, I've encountered the need to manipulate lines (from a
 file or a static string).</p>
+
 <p>I've done 3 different implementations, each less reusable than the other, so I
 started to think that there was something to do here.</p>
+
 <p>That's how <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> is born!</p>
-<h2 id="public-api">Public API<a href="#public-api" class="anchor">#</a></h2>
+
+<h2 id="public-api">Public API</h2>
+
 <p>My purpose was to create a single service which would be used as a text editor
 ("redaktilo" means "editor", in esperanto):</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 
 namespace Gnugat\Redaktilo;
 
@@ -90,9 +104,12 @@ class Editor
 
     // You can execute custom commands!
     public function run($name, array $input);
-}</code></pre>
+}
+</code></pre>
+
 <p>This service is <strong>stateless</strong>, it manipulates the following model:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 
 namespace Gnugat\Redaktilo;
 
@@ -109,71 +126,96 @@ class Text
     public function setCurrentLineNumber($lineNumber);
     public function getLine($lineNumber = null);
     public function setLine($line, $lineNumber = null);
-}</code></pre>
+}
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: The <code>File</code> model extends <code>Text</code> and adds <code>filename</code> getter and
-setter.</p>
+  <p><strong>Note</strong>: The <code>File</code> model extends <code>Text</code> and adds <code>filename</code> getter and
+  setter.</p>
 </blockquote>
+
 <p>As you can see, everything is centered around a current line, but specifying
 directly a line number is possible (that's the meaning of the <code>$location</code>
 argument).</p>
-<h2 id="facade-and-extension-points">Facade and extension points<a href="#facade-and-extension-points" class="anchor">#</a></h2>
+
+<h2 id="facade-and-extension-points">Facade and extension points</h2>
+
 <p>To be honest, <code>Editor</code> doesn't do anything, it just wraps some low level
 services. Amongst those, we have:</p>
-<ul><li><code>SearchEngine</code>: decides which <code>SearchStrategy</code> will be used</li>
+
+<ul>
+<li><code>SearchEngine</code>: decides which <code>SearchStrategy</code> will be used</li>
 <li><code>CommandInvoker</code>: executes a <code>Command</code></li>
-</ul><p>Those two are actually here to provide extension points: if you need to look for
+</ul>
+
+<p>Those two are actually here to provide extension points: if you need to look for
 a line with something else than a regular expression, you can create your own
 <code>SearchStrategy</code>, register it in <code>SearchEngine</code> and it will be available
 directly from the <code>Editor</code>!</p>
+
 <p>If the manipulations provided out of the box aren't sufficient, you can create
 your own <code>Command</code>, register it in <code>CommandInvoker</code> and it will be available
 directly from the <code>Editor</code>!</p>
+
 <p>Commands rely on user input, which is why Loïck worked on <code>InputSanitizer</code> to
 validate it. If the ones provided aren't enough, you can still create your own
 implementations.</p>
+
 <p>Finally, I'd like to highlight Wouter's work on the <code>EditorFatory</code> helper: it is
 really cumbersome to instantiate manually <code>Editor</code>... But thanks to this
 factory, you'll never have to do it by yourself!</p>
+
 <blockquote>
-<p><strong>Note</strong>: Working on a <a href="http://symfony.com">Symfony2</a> project? You can use
-<a href="https://github.com/gnugat/redaktilo-bundle">RedaktiloBundle</a>, which also
-provides tags to register custom search strategies and commands.</p>
+  <p><strong>Note</strong>: Working on a <a href="http://symfony.com">Symfony2</a> project? You can use
+  <a href="https://github.com/gnugat/redaktilo-bundle">RedaktiloBundle</a>, which also
+  provides tags to register custom search strategies and commands.</p>
 </blockquote>
-<h2 id="what-s-next">What's next?<a href="#what-s-next" class="anchor">#</a></h2>
+
+<h2 id="what%27s-next%3F">What's next?</h2>
+
 <p>Loïck is currently improving the library's exceptions for the version 1.4.</p>
+
 <p>For version 1.5, two new methods will be added to <code>Text</code>:
 <code>incrementCurrentLineNumber</code> and <code>decrementCurrentLineNumber</code>, to avoid the
 following:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 
 require __DIR__.'/vendor/autoload.php';
 
 use Gnugat\Redaktilo\EditorFactory;
 
 $editor = EditorFactory::createEditor();
-$file = $editor->open('/tmp/monty-python.txt');
+$file = $editor-&gt;open('/tmp/monty-python.txt');
 
 // Currently
-$currentLineNumber = $file->getCurrentLineNumber();
-$file->setCurrentLineNumber($currentLineNumber + 2);
+$currentLineNumber = $file-&gt;getCurrentLineNumber();
+$file-&gt;setCurrentLineNumber($currentLineNumber + 2);
 
 // Soon...
-$file->incrementCurrentLineNumber(2);</code></pre>
+$file-&gt;incrementCurrentLineNumber(2);
+</code></pre>
+
 <p>For the final version 1.6, a strong documentation of the deprecations will be
 done, leading the way to version 2.0 where those will be removed (50% of the code
 base will vanish!).</p>
+
 <blockquote>
-<p><strong>Note</strong>: As I'm using Redaktilo everyday, I might discover new improvements
-to be done, leading the given version numbers above to change.</p>
+  <p><strong>Note</strong>: As I'm using Redaktilo everyday, I might discover new improvements
+  to be done, leading the given version numbers above to change.</p>
 </blockquote>
-<h2 id="frequently-asked-questions">Frequently Asked Questions<a href="#frequently-asked-questions" class="anchor">#</a></h2>
-<h3 id="is-it-a-gui-cli-tool">Is it a GUI / CLI tool?<a href="#is-it-a-gui-cli-tool" class="anchor">#</a></h3>
+
+<h2 id="frequently-asked-questions">Frequently Asked Questions</h2>
+
+<h3 id="is-it-a-gui-%2F-cli-tool%3F">Is it a GUI / CLI tool?</h3>
+
 <p>A question I've been often asked, because describing Redaktilo as a text editor
 might be a bit misleading. It is a library which <strong>feels like</strong> an editor, but
 it is in no way an actual editor you might run.</p>
+
 <p>Here's an example of what you might be doing currently without Redaktilo:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 
 $lines = file('/tmp/monty-python.txt');
 $currentLineNumber = 42;
@@ -184,56 +226,67 @@ $currentLineNumber = key($found);
 
 array_splice($lines, $currentLineNumber + 1, 0, 'new line below "a knewt"');
 $content = implode("\n", $lines); // Let's hope it wasn't a file created on Windows.
-file_put_contents($content, '/tmp/monty-python');</code></pre>
+file_put_contents($content, '/tmp/monty-python');
+</code></pre>
+
 <p>With redaktilo:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 
 require __DIR__.'/vendor/autoload.php';
 
 use Gnugat\Redaktilo\EditorFactory;
 
 $editor = EditorFactory::createEditor();
-$file = $editor->open('/tmp/monty-python');
-$editor->jumpAbove($file, '/a knewt/', 42);
-$editor->insertBelow($file, 'new line below "a knewt"');
-$editor->save($file);</code></pre>
-<h3 id="is-it-a-code-editor">Is it a code editor?<a href="#is-it-a-code-editor" class="anchor">#</a></h3>
+$file = $editor-&gt;open('/tmp/monty-python');
+$editor-&gt;jumpAbove($file, '/a knewt/', 42);
+$editor-&gt;insertBelow($file, 'new line below "a knewt"');
+$editor-&gt;save($file);
+</code></pre>
+
+<h3 id="is-it-a-code-editor%3F">Is it a code editor?</h3>
+
 <p>Because the code example on the README is about inserting a new line in the
 <code>AppKernel</code> file of a Symfony2 application, I also get this question.</p>
+
 <p>Redaktilo can edit any text file, so it includes source files. But keep in mind
 that it only manipulates lines, when you might want to manipulate an AST to edit
 code.</p>
+
 <p>I'm working on a new silly project: <a href="https://github.com/gnugat/medio">Medio</a>.
 It heavily relies on Redaktilo to actually edit code: so you can make a code
 editor with it, but again before you start ask yourself if an AST wouldn't be
 better.</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>Redaktilo is a library which makes line manipulation dead easy! It provides
 extension points and will soon reach version 2 which will mark its final
 maturity point.</p>
+
 <p>Until then, you can still use it safely, it's been stable for 11 releases now.</p>
 
+
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2014/10/29/sf2-bundle-standalone.html">Previous: Symfony2 Bundle, standalone</a>
-        
-                        <a class="six columns button" href="../../../2014/11/15/sf2-quick-functional-tests.html">Next: Symfony2 - Quick functional tests</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2014/10/29/sf2-bundle-standalone.html" title="Symfony2 Bundle, standalone">Previous &lt; Symfony2 Bundle, standalone</a>
+                                        <a class="button six columns" href="/2014/11/15/sf2-quick-functional-tests.html" title="Symfony2 - Quick functional tests">Next &gt; Symfony2 - Quick functional tests</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Bootstrap the markdown files of your FOSS project</title>
+    <title>Bootstrap the markdown files of your FOSS project &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,105 +30,170 @@
         <article>
             <header>
                 <h2>
-    Bootstrap the markdown files of your FOSS project    <span class="sub-title">15/01/2014</span>
+    Bootstrap the markdown files of your FOSS project
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/introducing-tool.html">Introducing Tool</a>
-                <a class="button" href="../../../tags/pet-project.html">Pet Project</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/introducing%20tool">introducing tool</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button button-deprecated" href="/tags/deprecated">deprecated</a>
+                    </nav>
+                </header>
 
-            <p>The one thing that will make developers use your Free or Open Source Software
+                <blockquote>
+  <p><strong>Deprecated</strong>: Fossil is currently unmaintained.</p>
+</blockquote>
+
+<p>The one thing that will make developers use your Free or Open Source Software
 (FOSS) project is its documentation. Without it, how can they know what it does,
 or how to install it?</p>
+
 <p>Last summer <a href="http://williamdurand.fr/2013/07/04/on-open-sourcing-libraries/">William Durand wrote an article about it</a>,
 describing the minimum files your FOSS project should have, and what they should
 contain.</p>
+
 <p>After reading his article, maybe you did the same thing as me: you took your
 courage with both hands and wrote thoroughly a decent documentation for the
 project you were working on at the time.</p>
+
 <p>Because it was tedious, you decided to copy those markdown files into your new
 projects and adapt them.</p>
+
 <p>But this too was tedious...</p>
+
 <p>To solve this problem once for all I created <strong><a href="https://github.com/gnugat/fossil">fossil</a></strong>:
 it will bootstrap the markdown files of your FOSS projects, and it will even
 create an installer for you!</p>
+
 <p>It generates the following files out of skeletons:</p>
-<ul><li><code>CHANGELOG.md</code></li>
+
+<ul>
+<li><code>CHANGELOG.md</code></li>
 <li><code>CONTRIBUTING.md</code></li>
 <li><code>LICENSE</code></li>
 <li><code>README.md</code></li>
 <li><code>VERSIONING.md</code></li>
 <li><code>bin/installer.sh</code></li>
 <li><code>doc</code> (or <code>Resources/doc</code> if the project is a bundle) directory:
-<ul><li><code>01-introduction.md</code></li>
+
+<ul>
+<li><code>01-introduction.md</code></li>
 <li><code>02-installation.md</code></li>
 <li><code>03-usage.md</code></li>
 <li><code>04-tests.md</code></li>
 </ul></li>
-</ul><p>The best thing about it: you can run it on your new FOSS projects as well as
+</ul>
+
+<p>The best thing about it: you can run it on your new FOSS projects as well as
 with your existing ones! By default it does not replace existing files (if you
 want to, simply use the <code>-f</code> option).</p>
+
 <p><strong>Fossil</strong> supports different kind of projects: applications, libraries and
 Symfony2 bundles. Here's a quick usage guide.</p>
-<h2 id="applications">Applications<a href="#applications" class="anchor">#</a></h2>
+
+<h2 id="applications">Applications</h2>
+
 <p>The <code>doc</code> command allows you to generate the markdown files of your
 applications, which can be a web application or a CLI tool just like <strong>fossil</strong>.</p>
+
 <p>As you can see in the following example, it only requires 2 arguments:</p>
-<pre><code>fossil doc 'acme/application' 'The ACME company'</code></pre>
-<h3 id="the-github-repository-argument">The <a href="https://github.com/">Github</a> repository argument<a href="#the-github-repository-argument" class="anchor">#</a></h3>
+
+<pre><code>fossil doc 'acme/application' 'The ACME company'
+</code></pre>
+
+<h3 id="the-github-repository-argument">The <a href="https://github.com/">Github</a> repository argument</h3>
+
 <p>Applications are installed by cloning the github repository, which makes it as
 easy to update as to run <code>git pull</code>.</p>
+
 <p>This argument is used in the installer script as well as in the installation
 instructions.</p>
+
 <p>You don't need to write the whole github URL, simply give the username and the
 project name in the following format: <code>username/project-name</code></p>
-<h3 id="the-license-author-argument">The license author argument<a href="#the-license-author-argument" class="anchor">#</a></h3>
+
+<h3 id="the-license-author-argument">The license author argument</h3>
+
 <p>While the copyright's date can be computed, you need to provide the author's
 name to generate the <code>LICENSE</code> file.</p>
+
 <p>For now it only generates MIT licenses, but pull requests are welcomed :) .</p>
-<h3 id="the-path-option">The path option<a href="#the-path-option" class="anchor">#</a></h3>
+
+<h3 id="the-path-option">The path option</h3>
+
 <p>By default the files are created in the current directory, but you can target a
 specific path:</p>
-<pre><code>fossil doc 'acme/application' 'The ACME company' -p '/tmp/application'</code></pre>
-<h3 id="the-force-overwrite-option">The force overwrite option<a href="#the-force-overwrite-option" class="anchor">#</a></h3>
+
+<pre><code>fossil doc 'acme/application' 'The ACME company' -p '/tmp/application'
+</code></pre>
+
+<h3 id="the-force-overwrite-option">The force overwrite option</h3>
+
 <p>As mentioned earlier, <strong>fossil</strong> won't replace existing files by default: for
 instance if your project already has a <code>README.md</code> and a <code>LICENSE</code> file it will
 only generate the other ones.</p>
+
 <p>But if you want to throw them away, you can use this option:</p>
-<pre><code>fossil doc 'acme/project' 'The ACME company' -f</code></pre>
-<h2 id="libraries">Libraries<a href="#libraries" class="anchor">#</a></h2>
+
+<pre><code>fossil doc 'acme/project' 'The ACME company' -f
+</code></pre>
+
+<h2 id="libraries">Libraries</h2>
+
 <p>The <code>doc:library</code> command has the exact same arguments and options as the <code>doc</code>
 one:</p>
-<pre><code>fossil doc:library 'acme/library' 'The ACME company'</code></pre>
+
+<pre><code>fossil doc:library 'acme/library' 'The ACME company'
+</code></pre>
+
 <p>You can use the shortcut <code>d:l</code>:</p>
-<pre><code>fossil d:l 'acme/library' 'The ACME company'</code></pre>
+
+<pre><code>fossil d:l 'acme/library' 'The ACME company'
+</code></pre>
+
 <p>The difference between an application and a library lies in its installation:
 the library is installed using <a href="http://getcomposer.org/">composer</a>.</p>
-<h3 id="the-composer-package-option">The composer package option<a href="#the-composer-package-option" class="anchor">#</a></h3>
+
+<h3 id="the-composer-package-option">The composer package option</h3>
+
 <p>By default <strong>fossil</strong> assumes the composer package's name is the same as the
 Github repository name (in the example it would be <code>acme/library</code>).
 If it's not your case, use the following option:</p>
-<pre><code>fossil d:l 'acme/library' 'The ACME company' -c 'acme/composer-package'</code></pre>
-<h2 id="symfony2-bundles">Symfony2 Bundles<a href="#symfony2-bundles" class="anchor">#</a></h2>
+
+<pre><code>fossil d:l 'acme/library' 'The ACME company' -c 'acme/composer-package'
+</code></pre>
+
+<h2 id="symfony2-bundles">Symfony2 Bundles</h2>
+
 <p>The <code>doc:bundle</code> command has almost the same arguments and options as the
 <code>doc:library</code> one. It has an additional argument:</p>
-<pre><code>fossil doc:bundle 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle'</code></pre>
+
+<pre><code>fossil doc:bundle 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle'
+</code></pre>
+
 <p>You can use the shortcut <code>d:b</code>:</p>
-<pre><code>fossil d:b 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle'</code></pre>
+
+<pre><code>fossil d:b 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle'
+</code></pre>
+
 <p>The difference between a library and a bundle is the documentation directory,
 which is in <code>Resources/doc</code> instead of <code>doc</code>.</p>
-<h3 id="the-fully-qualified-classname-argument">The fully qualified classname argument<a href="#the-fully-qualified-classname-argument" class="anchor">#</a></h3>
+
+<h3 id="the-fully-qualified-classname-argument">The fully qualified classname argument</h3>
+
 <p>Another difference is the installation: the bundle needs to be added in the
 application's kernel.</p>
+
 <p>This will be detailed in the documentation, but it will also be taken care of
 by the installer.</p>
+
 <p>That's right, you read it right: when developers will run the installer, not
 only will it download the bundle using composer, but it will also add its fully
 qualified classname in the <code>app/AppKernel.php</code> file! Hooray!</p>
+
 <p>The application's kernel will look like this afterwards:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: app/AppKernel.php
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -142,21 +207,29 @@ class AppKernel extends Kernel
             new Acme\DemoBundle\AcmeDemoBundle(),
         );
 
-        if (in_array($this->getEnvironment(), array('dev', 'test'))) {
+        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
             // Other bundles...
         }
 
         return $bundles;
     }
-}</code></pre>
+}
+</code></pre>
+
 <p><em>Note</em>: because of the backslashes you should escape this argument using
 quotes, just like in the example.</p>
-<h3 id="the-development-tool-option">The development tool option<a href="#the-development-tool-option" class="anchor">#</a></h3>
+
+<h3 id="the-development-tool-option">The development tool option</h3>
+
 <p>By using this option, the bundle will be registered in the application only if
 it runs in development or test environment:</p>
-<pre><code>fossil d:b 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle' -d</code></pre>
+
+<pre><code>fossil d:b 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle' -d
+</code></pre>
+
 <p>The application's kernel will look like this afterwards:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: app/AppKernel.php
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -169,53 +242,64 @@ class AppKernel extends Kernel
             // Other bundles...
         );
 
-        if (in_array($this->getEnvironment(), array('dev', 'test'))) {
+        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
             // Other bundles...
             $bundles[] = new Acme\DemoBundle\AcmeDemoBundle();
         }
 
         return $bundles;
     }
-}</code></pre>
-<h2 id="you-still-need-to-write-the-documentation">You still need to write the documentation<a href="#you-still-need-to-write-the-documentation" class="anchor">#</a></h2>
+}
+</code></pre>
+
+<h2 id="you-still-need-to-write-the-documentation">You still need to write the documentation</h2>
+
 <p>After running <strong>fossil</strong> you still need to provide some information (for
 instance the elevator pitch in <code>README.md</code>) by editing those files:</p>
-<ul><li><code>README.md</code></li>
+
+<ul>
+<li><code>README.md</code></li>
 <li><code>doc/01-introduction.md</code></li>
 <li><code>doc/03-usage.md</code></li>
 <li><code>doc/04-tests.md</code></li>
-</ul><p>But is that enough? While I think <strong>fossil</strong> automates as much things as
+</ul>
+
+<p>But is that enough? While I think <strong>fossil</strong> automates as much things as
 possible, there's still some part of your project that needs specific
 documentation.</p>
+
 <p>For example you could add recipes which describe common tasks, or a glossary
 defining technical or business terms used in your project.</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>Bootstrap the markdown files of your new and your old FOSS projects using
 <strong><a href="https://github.com/gnugat/fossil">fossil</a></strong>, and then complete the
 documentation so everyone can see how awesome your work is!</p>
+
 <p>Happy hacking!</p>
 
+
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2014/01/08/technology-scouting.html">Previous: Technology scouting</a>
-        
-                        <a class="six columns button" href="../../../2014/01/22/ioc-di-and-service-locator.html">Next: Inversion of Control, Dependency Injection, Dependency Injection Container and Service Locator</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2014/01/08/technology-scouting.html" title="Technology scouting">Previous &lt; Technology scouting</a>
+                                        <a class="button six columns" href="/2014/01/22/ioc-di-and-service-locator.html" title="Inversion of Control, Dependency Injection, Dependency Injection Container and Service Locator">Next &gt; Inversion of Control, Dependency Injection, Dependency Injection Container and Service Locator</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

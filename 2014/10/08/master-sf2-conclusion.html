@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Master Symfony2 - Conclusion</title>
+    <title>Master Symfony2 - Conclusion &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2014/10/08/master-sf2-conclusion.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2014/10/08/master-sf2-conclusion.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,51 +30,75 @@
         <article>
             <header>
                 <h2>
-    Master Symfony2 - Conclusion    <span class="sub-title">08/10/2014</span>
+    Master Symfony2 - Conclusion
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/symfony.html">Symfony</a>
-                <a class="button" href="../../../tags/master-symfony2-series.html">Master Symfony2 Series</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Master%20Symfony2%20series">Master Symfony2 series</a>
+                    </nav>
+                </header>
 
-            <p>This is the conclusion of the series on mastering the
+                <p>This is the conclusion of the series on mastering the
 <a href="http://symfony.com/">Symfony2</a> framework. Have a look at the five articles:</p>
-<ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
-<li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
-<li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
-<li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
-<li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
-<li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
-</ul><p>It quickly sums up what we've seen and provides some directions to the next
+
+<ul>
+<li><a href="/2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
+<li><a href="/2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+<li><a href="/2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
+<li><a href="/2014/08/27/master-sf2-part-4-doctrine.htm">4: Doctrine</a></li>
+<li><a href="/2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
+<li><a href="/2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
+</ul>
+
+<p>It quickly sums up what we've seen and provides some directions to the next
 steps, for those interrested in learning more (there's always more!).</p>
-<h2 id="summary">Summary<a href="#summary" class="anchor">#</a></h2>
+
+<h2 id="summary">Summary</h2>
+
 <p>In these 6 articles, we've learned how to master Symfony2 through:</p>
-<ol><li>the usage of distributions to bootstrap our projects</li>
+
+<ol>
+<li>the usage of distributions to bootstrap our projects</li>
 <li>the writing of simple functional tests (we used TDD/PHPUnit but any methodology/Framework can be used)</li>
 <li>the creation of services and entities (where our business related code actually lies)</li>
 <li>the usage of a third party library (Doctrine)</li>
 <li>the extension of the framework via events (change the Request and Response at will)</li>
 <li>the configuration via annotations, allowing to reduce the distance with the code</li>
-</ol><p>As a bonus, we've also seen:</p>
-<ul><li>the Repository Design Pattern (retrieve data and format it before using it)</li>
+</ol>
+
+<p>As a bonus, we've also seen:</p>
+
+<ul>
+<li>the Repository Design Pattern (retrieve data and format it before using it)</li>
 <li>the Symfony Console Component, which can be used as a standalone library</li>
-</ul><h2 id="going-further">Going further<a href="#going-further" class="anchor">#</a></h2>
+</ul>
+
+<h2 id="going-further">Going further</h2>
+
 <p>There's still a deal lot more to learn, but with this series we've hopefully
 seen the strict minimum to create any day to day application with deep knowledge
 on how to extend the framework and where to put our code.</p>
+
 <p>We've seen Symfony as a full stack framework: it deals with the HTTP protocol
 for you. But the truth is that Symfony is a collection of third party libraries
 before anything else. Here's a short selection of its available components:</p>
-<ul><li>Validation: define constraints and check if the given variable complies to them</li>
+
+<ul>
+<li>Validation: define constraints and check if the given variable complies to them</li>
 <li>Form: define fields, generate the HTML form and populate variables from the request</li>
 <li>Yaml: parse a yaml file</li>
 <li>Security: check the identity users and their permissions</li>
-</ul><p>Do you want to go further? Then have a look a these fabulous resources:</p>
-<ul><li><a href="http://symfony.com/doc/current/index.html">The documentation</a></li>
+</ul>
+
+<p>Do you want to go further? Then have a look a these fabulous resources:</p>
+
+<ul>
+<li><a href="http://symfony.com/doc/current/index.html">The documentation</a></li>
 <li><a href="https://twitter.com/raulfraile">Raul Fraile</a> overview articles on the:
-<ul><li><a href="http://blog.servergrove.com/2013/09/23/symfony2-components-overview-httpfoundation/">HttpFoundation Component</a></li>
+
+<ul>
+<li><a href="http://blog.servergrove.com/2013/09/23/symfony2-components-overview-httpfoundation/">HttpFoundation Component</a></li>
 <li><a href="http://blog.servergrove.com/2013/09/30/symfony2-components-overview-httpkernel/">HttpKernel Component</a></li>
 <li><a href="http://blog.servergrove.com/2013/10/08/symfony2-components-overview-routing/">Routing Component</a></li>
 <li><a href="http://blog.servergrove.com/2013/10/23/symfony2-components-overview-eventdispatcher/">EventDispather Component</a></li>
@@ -89,36 +113,29 @@ before anything else. Here's a short selection of its available components:</p>
 <li><a href="https://twitter.com/khepin">Sebastien Armand</a>'s book <a href="http://www.amazon.co.uk/Extending-Symfony-Web-Application-Framework/dp/1783287195">Extending Symfony Web Application Framework</a></li>
 <li><a href="https://twitter.com/matthiasnoback">Matthias Noback</a>'s book <a href="http://www.amazon.co.uk/Year-With-Symfony-reusable-Symfony2/dp/9082120119">A Year with Symfony</a></li>
 <li><a href="https://twitter.com/kriswallsmith">Kris Walsmith</a> slides on the <a href="http://www.slideshare.net/kriswallsmith/love-and-loss-a-symfony-security-play">Security Component</a></li>
-</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
-<ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
-<li><a href="../../../2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
-<li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
-<li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
-<li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
-<li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
 </ul>
 
+
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2014/09/10/master-sf2-part-6-annotations.html">Previous: Master Symfony2 - part 6: Annotations</a>
-        
-                        <a class="six columns button" href="../../../2014/10/15/php-array-manipulation.html">Next: PHP array manipulation</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2014/09/10/master-sf2-part-6-annotations.html" title="Master Symfony2 - part 6: Annotations">Previous &lt; Master Symfony2 - part 6: Annotations</a>
+                                        <a class="button six columns" href="/2014/10/15/php-array-manipulation.html" title="PHP array manipulation">Next &gt; PHP array manipulation</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

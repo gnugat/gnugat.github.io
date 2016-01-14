@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2016-01-14T08:31:38+00:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[PHP generators and coroutines]]></title>
+            <link href="/2014/04/30/php-generators-and-coroutines.html"/>
+            <updated>2014-04-30T00:00:00+01:00</updated>
+            <id>/2014/04/30/php-generators-and-coroutines.html</id>
+            <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p>In PHP ~5.5, a function containing <code>yield</code> becomes an instance of the
+<a href="http://php.net/manual/en/class.generator.php"><code>Generator</code> class</a>, which acts
+like an iterator.</p>
+
+<p>Each <code>yield</code> occurence marks a position. Calling <code>next</code> will move from the
+current yield to the next one.</p>
+
+<p>Thanks to the <code>send</code> method, the <code>Generator</code> class acts also as a corroutine:
+you can send the returned value of the <code>yield</code> occurence.</p>
+
+<p>A <code>Generator</code> function cannot return a value.</p>
+
+<h2 id="generator-api">Generator API</h2>
+
+<pre><code class="php">class Generator
+{
+    public function current(); // The yielded value.
+    public function key();
+
+    public function valid(); // Has the iterator been closed?
+
+    public function next(); // Resumes execution.
+    public function rewind();
+
+    public function send($value); // Sends the value to be returned by the current yield, and resumes execution.
+    public function throw(Exception $e); // Replaces the current yield with `throw $e;`
+}
+</code></pre>
+
+<h2 id="examples">Examples</h2>
+
+<h3 id="simple-example">Simple example</h3>
+
+<pre><code class="php">function direct_generator()
+{
+    yield 1;
+    yield 'index' =&gt; 2;
+}
+
+$generator = direct_generator();
+echo $generator-&gt;current(); // outputs 1
+$generator-&gt;next();
+echo $generator-&gt;current(); // outputs 2
+echo $generator-&gt;key(); // outputs index
+
+</code></pre>
+
+<h3 id="range-example">Range example</h3>
+
+<p>The <code>foreach</code> loop internally calls <code>current</code>, <code>key</code>, <code>next</code> and <code>valid</code> methods:</p>
+
+<pre><code class="php">function xrange($start, $end)
+{
+    $value = $start;
+    while ($value &lt;= $end) {
+        yield $value;
+        $value++;
+    }
+}
+
+foreach(xrange(1, 2) as $value) {
+    echo $value; // outputs 1, then 2.
+}
+</code></pre>
+
+<h3 id="co-routine-example">Co-routine example</h3>
+
+<p>Calling the <code>send</code> method is like replacing the current <code>yield</code> with the given
+value.</p>
+
+<pre><code class="php">function holy_grail_countdown($number)
+{
+    while (0 &lt; $number) {
+        $reset = (yield $number);
+        $number = $reset ?: $number - 1;
+    }
+}
+
+$c = holy_grail_countdown(5);
+foreach ($c as $number) {
+    echo "$number\n"; // outputs 5, then 2 and finally 1.
+    if (5 === $number) {
+        $c-&gt;send(3);
+    }
+}
+</code></pre>
+
+<h2 id="links-to-use-cases">Links to use cases</h2>
+
+<p>I've first encountered generators and couritines in Python a long time ago, but
+never really grasped its utility.</p>
+
+<p>It's only recently that I've found some articles describing some usefull use
+cases, so I'm just going to share them with you:</p>
+
+<ul>
+<li><a href="http://eli.thegreenplace.net/2009/08/29/co-routines-as-an-alternative-to-state-machines/">co-routines as an alternative to state machines</a></li>
+<li><a href="http://nikic.github.io/2012/12/22/Cooperative-multitasking-using-coroutines-in-PHP.html">Cooperative multitasking using co-routines in PHP</a></li>
+<li><a href="http://stackoverflow.com/a/1347772">Python generators and co-routines</a></li>
+<li><a href="http://blog.ircmaxell.com/2012/07/what-generators-can-do-for-you.html">What generators can do for you</a></li>
+<li><a href="http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html">Coroutines in C</a></li>
+</ul>
+
+<p>Another helpful resource would be the <a href="https://wiki.php.net/rfc/generators">PHP's RFC</a>,
+which I find more explicative than the actual documentation.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Generators allow you to pause the execution of a function and resume back to
+where it stopped. Coroutines allow you to send a value while resuming back to
+it!</p>
+
+<p>If you have any comments or questions, feel free to notify me on
+<a href="https://twitter.com/epiloic">Twitter</a>.</p>
+]]></content>
+        </entry>
+    </feed>

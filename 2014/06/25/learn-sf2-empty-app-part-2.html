@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Learn Symfony2 - part 2: Empty application</title>
+    <title>Learn Symfony2 - part 2: Empty application &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2014/06/25/learn-sf2-empty-app-part-2.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2014/06/25/learn-sf2-empty-app-part-2.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,36 +30,49 @@
         <article>
             <header>
                 <h2>
-    Learn Symfony2 - part 2: Empty application    <span class="sub-title">25/06/2014</span>
+    Learn Symfony2 - part 2: Empty application
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/symfony.html">Symfony</a>
-                <a class="button" href="../../../tags/learn-symfony2-series.html">Learn Symfony2 Series</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Learn%20Symfony2%20series">Learn Symfony2 series</a>
+                    </nav>
+                </header>
 
-            <p>This is the second article of the series on learning
+                <p>This is the second article of the series on learning
 <a href="http://symfony.com/">the Symfony2 framework</a>.
-Have a look at the first one: <a href="../../../2014/06/18/learn-sf2-composer-part-1.html">Composer</a>.</p>
+Have a look at the first one: <a href="/2014/06/18/learn-sf2-composer-part-1.html">Composer</a>.</p>
+
 <p>In the first article we began to create an empty project with the following
 files:</p>
+
 <pre><code>.
 ├── composer.json
 ├── composer.lock
-└── .gitignore</code></pre>
+└── .gitignore
+</code></pre>
+
 <p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
 in git.</p>
+
 <p>Here's the <a href="https://github.com/gnugat/learning-symfony2/tree/1-composer">repository where you can find the actual code</a>.</p>
+
 <p>We'll now see how to create an empty Symfony2 application.</p>
-<h2 id="the-front-controller">The front controller<a href="#the-front-controller" class="anchor">#</a></h2>
+
+<h2 id="the-front-controller">The front controller</h2>
+
 <p>First things first, we will create an index file which will act as a front
 controller: it will be the only entry point of our application and will decide
 which page to display.</p>
+
 <p>Create its directory:</p>
-<pre><code>mkdir web</code></pre>
+
+<pre><code>mkdir web
+</code></pre>
+
 <p>Then the file:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: web/app.php
 
 use Symfony\Component\HttpFoundation\Request;
@@ -69,34 +82,49 @@ require_once __DIR__.'/../app/AppKernel.php';
 
 $kernel = new AppKernel('prod', false);
 $request = Request::createFromGlobals();
-$response = $kernel->handle($request);
-$response->send();
-$kernel->terminate($request, $response);</code></pre>
+$response = $kernel-&gt;handle($request);
+$response-&gt;send();
+$kernel-&gt;terminate($request, $response);
+</code></pre>
+
 <p>First it includes Composer's autoloader: it will require every files needed.</p>
+
 <p>Then we create an instance of our Kernel with the production environment and
 the debug utilities disabled. This class acts like a web server: it takes a
 HTTP request as input and returns a HTTP response as output.</p>
+
 <p><code>Request::createFromGlobals()</code> creates a representation of the HTTP request.
 It is filled from PHP's variable super globals (<code>$_GET</code>, <code>$_POST</code>, etc).</p>
+
 <p>The kernel then handles the request. To keep explanations short, let's simply
 say that it will find the controller associated to the requested URL. It is the
 controller's responsibility to return a representation of the HTTP response (see
 <code>Symfony\Component\HttpFoundation\Response</code>).</p>
-<p>The <code>$response->send()</code> method will simply call the PHP <code>header</code> function and
+
+<p>The <code>$response-&gt;send()</code> method will simply call the PHP <code>header</code> function and
 print a string representing the response's body (usually HTML, JSON or anything
 you want).</p>
-<p>Finally the <code>$kernel->terminate()</code> method will call any tasks which registered
+
+<p>Finally the <code>$kernel-&gt;terminate()</code> method will call any tasks which registered
 to the <code>kernel.terminate</code> event. This alows you to return a response as fast as
 possible and then execute some actions like sending emails.</p>
+
 <p><em>Note</em>: events aren't in the scope of this article, but they're worth
 mentioning.</p>
-<h2 id="creating-the-application-s-kernel">Creating the application's kernel<a href="#creating-the-application-s-kernel" class="anchor">#</a></h2>
+
+<h2 id="creating-the-application%27s-kernel">Creating the application's kernel</h2>
+
 <p><a href="http://symfony.com/doc/current/components/http_kernel/introduction.html">The HttpKernel component</a>
 provides you with a <code>Kernel</code> class, which we will extend.</p>
+
 <p>Create the following directory:</p>
-<pre><code>mkdir app</code></pre>
+
+<pre><code>mkdir app
+</code></pre>
+
 <p>And then the kernel file:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: app/AppKernel.php
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -113,49 +141,76 @@ class AppKernel extends Kernel
 
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
-        $loader->load(__DIR__.'/config/config.yml');
+        $loader-&gt;load(__DIR__.'/config/config.yml');
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>This class will load the project's configuration. This is also where you
 register the project's bundles. We'll talk more about bundles in the next
 article, for now the only thing you need to know is that they're like plugins.</p>
+
 <p>The Kernel has the responsibility to look at every registered bundle to retrieve
 their configuration.</p>
+
 <p>The <code>FrameworkBundle</code> defines some services and allows you to choose what to
 enable via configuration.</p>
+
 <p><em>Note</em>: Services are objects which do one thing and do it well. They provide
 exactly what they're called: a service. We'll learn more about them in one of
 the next article.</p>
+
 <p>We need to put some configuration in order to be able to make it work properly.</p>
+
 <p>Create its directory:</p>
-<pre><code>mkdir app/config</code></pre>
+
+<pre><code>mkdir app/config
+</code></pre>
+
 <p>And the the YAML file:</p>
+
 <pre><code># File: app/config/config.yml
 framework:
-    secret: "Three can keep a secret, if two of them are dead."</code></pre>
+    secret: "Three can keep a secret, if two of them are dead."
+</code></pre>
+
 <p>The <code>secret</code> parameter is used as a seed to generate random strings (for e.g.
 CSRF tokens).</p>
+
 <p>Now that we have our application structure, let's commit it:</p>
+
 <pre><code>git add -A
-git commit -m 'Created application structure'</code></pre>
-<h3 id="logs-and-cache">Logs and cache<a href="#logs-and-cache" class="anchor">#</a></h3>
+git commit -m 'Created application structure'
+</code></pre>
+
+<h3 id="logs-and-cache">Logs and cache</h3>
+
 <p>You'll also need to create <code>logs</code> and <code>cache</code> directories:</p>
+
 <pre><code>mkdir app/{cache,logs}
-touch app/{cache,logs}/.gitkeep</code></pre>
+touch app/{cache,logs}/.gitkeep
+</code></pre>
+
 <p>Git doesn't allow to commit empty directory, hence the <code>.gitkeep</code> files.</p>
+
 <p>Because files in these directories are temporaries, we'll ignore them:</p>
-<pre><code>echo '/app/cache/*' >> .gitignore
-echo '/app/logs/*' >> .gitignore
+
+<pre><code>echo '/app/cache/*' &gt;&gt; .gitignore
+echo '/app/logs/*' &gt;&gt; .gitignore
 git add -A
 git add -f app/cache/.gitkeep
 git add -f app/logs/.gitkeep
-git commit -m 'Created temporary directories'</code></pre>
-<h3 id="apache-configuration">Apache configuration<a href="#apache-configuration" class="anchor">#</a></h3>
+git commit -m 'Created temporary directories'
+</code></pre>
+
+<h3 id="apache-configuration">Apache configuration</h3>
+
 <p>In order for your website to be browsed, you'll need to configure your web
 server. This configuration is well explained
 <a href="http://symfony.com/doc/current/cookbook/configuration/web_server_configuration.html">in the documentation</a>,
 so here's a dump of an apache vhost:</p>
-<pre><code><VirtualHost *:80>
+
+<pre><code>&lt;VirtualHost *:80&gt;
     ServerName knight.local
 
     DocumentRoot /home/loic.chardonnet/Projects/gnugat/knight/web
@@ -163,56 +218,53 @@ so here's a dump of an apache vhost:</p>
     ErrorLog "/home/loic.chardonnet/Projects/gnugat/knight/app/logs/apache_errors.log"
     CustomLog "/home/loic.chardonnet/Projects/gnugat/knight/app/logs/apache_accesses.log" common
 
-    <Directory /home/loic.chardonnet/Projects/gnugat/knight/web>
+    &lt;Directory /home/loic.chardonnet/Projects/gnugat/knight/web&gt;
         Options Indexes FollowSymLinks MultiViews
         AllowOverride None
         Order allow,deny
         allow from all
-        <IfModule mod_rewrite.c>
+        &lt;IfModule mod_rewrite.c&gt;
             RewriteEngine On
             RewriteCond %{REQUEST_FILENAME} !-f
             RewriteRule ^(.*)$ /app.php [QSA,L]
-        </IfModule>
-    </Directory>
-</VirtualHost></code></pre>
+        &lt;/IfModule&gt;
+    &lt;/Directory&gt;
+&lt;/VirtualHost&gt;
+</code></pre>
+
 <p>If you run into some permission problem (like writing in <code>cache</code> and <code>logs</code>),
 you might consider to change <code>APACHE_RUN_USER</code> and <code>APACHE_RUN_GROUP</code>
 environment variables present in <code>/etc/apache2/envvars</code> to your own user and
 group.</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>A Symfony2 application follows this pattern: a front controller associate an URL
 to a controller which takes a HTTP request and returns a HTTP response.</p>
+
 <p>The next article will be all about bundles, so stay tuned :) .</p>
-<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
-<ul><li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
-<li><a href="../../../2014/07/12/learn-sf2-controllers-part-4.html">4: Controllers</a></li>
-<li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
-<li><a href="../../../2014/07/23/learn-sf2-conclusion.html">Conclusion</a></li>
-</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
-<ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
-</ul>
+
 
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2014/06/18/learn-sf2-composer-part-1.html">Previous: Learn Symfony2 - part 1: Composer</a>
-        
-                        <a class="six columns button" href="../../../2014/07/02/learn-sf2-bundles-part-3.html">Next: Learn Symfony2 - part 3: Bundles</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2014/06/18/learn-sf2-composer-part-1.html" title="Learn Symfony2 - part 1: Composer">Previous &lt; Learn Symfony2 - part 1: Composer</a>
+                                        <a class="button six columns" href="/2014/07/02/learn-sf2-bundles-part-3.html" title="Learn Symfony2 - part 3: Bundles">Next &gt; Learn Symfony2 - part 3: Bundles</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

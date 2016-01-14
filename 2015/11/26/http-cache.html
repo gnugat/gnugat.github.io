@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>HTTP Cache</title>
+    <title>HTTP Cache &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2015/11/26/http-cache.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2015/11/26/http-cache.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,114 +30,172 @@
         <article>
             <header>
                 <h2>
-    HTTP Cache    <span class="sub-title">26/11/2015</span>
+    HTTP Cache
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/http.html">Http</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/http">http</a>
+                    </nav>
+                </header>
 
-            <blockquote>
-<p><strong>TL;DR</strong>: Enable HTTP cache by setting one of the following header in your Responses:
-<code>Cache-Control</code>, <code>Expires</code>, <code>Last-Modified</code> or <code>Etag</code>.</p>
+                <blockquote>
+  <p><strong>TL;DR</strong>: Enable HTTP cache by setting one of the following header in your Responses:
+  <code>Cache-Control</code>, <code>Expires</code>, <code>Last-Modified</code> or <code>Etag</code>.</p>
 </blockquote>
+
 <p>The HTTP protocol specifies how to cache Responses:</p>
-<p><img src="http://www.websequencediagrams.com/cgi-bin/cdraw?lz=SFRUUCBHYXRld2F5IENhY2hlCgpDbGllbnQtPgAKBTogUmVxdWVzdAoAGQUtPlNlcnZlcjogRm9yd2FyZGVkIHIAGgcAFAYALQtzcG9uc2UAMQgAUQYAKw4AGggAZA5TYW1lAE0JAC8PAIEfBQAwCw&s=napkin" alt="sequence diagram"></p>
+
+<p><img src="http://www.websequencediagrams.com/cgi-bin/cdraw?lz=SFRUUCBHYXRld2F5IENhY2hlCgpDbGllbnQtPgAKBTogUmVxdWVzdAoAGQUtPlNlcnZlcjogRm9yd2FyZGVkIHIAGgcAFAYALQtzcG9uc2UAMQgAUQYAKw4AGggAZA5TYW1lAE0JAC8PAIEfBQAwCw&amp;s=napkin" alt="sequence diagram" /></p>
+
 <p>The following actors are involved:</p>
-<ul><li>client, usually a browser or a SDK</li>
+
+<ul>
+<li>client, usually a browser or a SDK</li>
 <li>reverse proxy (cache application), could be one (or even many) of:
-<ul><li><a href="http://nginx.org/en/">nginx</a></li>
+
+<ul>
+<li><a href="http://nginx.org/en/">nginx</a></li>
 <li><a href="https://www.varnish-cache.org/">Varnish</a></li>
 <li>a CDN like <a href="https://aws.amazon.com/cloudfront/">cloudfront</a></li>
 <li><code>AppCache</code> embed in <a href="http://symfony.com/doc/current/book/http_cache.html#symfony-reverse-proxy">Symfony</a></li>
 </ul></li>
 <li>application</li>
-</ul><p>Its advantages:</p>
-<ul><li>standard and widely adopted (highly documented on the web)</li>
+</ul>
+
+<p>Its advantages:</p>
+
+<ul>
+<li>standard and widely adopted (highly documented on the web)</li>
 <li>simple to set up (just add HTTP headers to Responses)</li>
 <li>improves the number of Request per second (avoids calling the dynamic logic)</li>
-</ul><p>Its drawbacks:</p>
-<ul><li>requires an extra application (the Reverse Proxy)</li>
+</ul>
+
+<p>Its drawbacks:</p>
+
+<ul>
+<li>requires an extra application (the Reverse Proxy)</li>
 <li>does not reduce network calls from a Client point of view</li>
 <li>needs more thinking (choose a strategy)</li>
-</ul><h2 id="cacheable-response">Cacheable Response<a href="#cacheable-response" class="anchor">#</a></h2>
+</ul>
+
+<h2 id="cacheable-response">Cacheable Response</h2>
+
 <p>A Response can be cached if the incoming Request complies to the following rules:</p>
-<ul><li>it has a <code>GET</code> or <code>HEAD</code> method</li>
+
+<ul>
+<li>it has a <code>GET</code> or <code>HEAD</code> method</li>
 <li>its URI is the same (that includes query parameters)</li>
 <li>its headers listed in <code>Vary</code> are the same</li>
 <li>it doesn't have a <code>Authorization</code> header</li>
-</ul><p>For example, the following Request can produce cacheable Responses:</p>
+</ul>
+
+<p>For example, the following Request can produce cacheable Responses:</p>
+
 <pre><code>GET /v1/items?page=1
 Accept: application/json
-Vary: Accept</code></pre>
+Vary: Accept
+</code></pre>
+
 <p>Sending the following Request would produce a different cacheable Response:</p>
+
 <pre><code>GET /v1/items?page=1
 Accept: text/html
-Vary: Accept</code></pre>
+Vary: Accept
+</code></pre>
+
 <p>To be cacheable, a Response should also have one of the headers described in the
 next section.</p>
+
 <blockquote>
-<p><strong>Note</strong>: Headers specified in <code>Vary</code> will have their value stored in the
-Reverse Proxy. Sensitive data (e.g. API keys, password, etc) shouldn't be used
-as a cache key.</p>
+  <p><strong>Note</strong>: Headers specified in <code>Vary</code> will have their value stored in the
+  Reverse Proxy. Sensitive data (e.g. API keys, password, etc) shouldn't be used
+  as a cache key.</p>
 </blockquote>
-<h2 id="strategies">Strategies<a href="#strategies" class="anchor">#</a></h2>
+
+<h2 id="strategies">Strategies</h2>
+
 <p>HTTP cache provides the possibility to choose different strategies:</p>
-<ul><li>Expiration (timeout or expiration date)</li>
+
+<ul>
+<li>Expiration (timeout or expiration date)</li>
 <li>Validation (modification date or hash comparison)</li>
-</ul><h3 id="expiration">Expiration<a href="#expiration" class="anchor">#</a></h3>
+</ul>
+
+<h3 id="expiration">Expiration</h3>
+
 <p>If a Response can be safely cached for a fixed period of time (e.g. 10 minutes),
 use <code>Cache-Control</code> HTTP Header:</p>
+
 <pre><code>HTTP/1.1 200 OK
 Cache-Control: max-age=600
 Content-Type: application/json
 
-{"id":42,"name":"Arthur Dent"}</code></pre>
+{"id":42,"name":"Arthur Dent"}
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: the Reverse Proxy will add a header to the Response indicating its age:</p>
+  <p><strong>Note</strong>: the Reverse Proxy will add a header to the Response indicating its age:</p>
+
 <pre><code>HTTP/1.1 200 OK
 Age: 23
 Cache-Control: max-age=600
 Content-Type: application/json
 
-{"id":42,"name":"Arthur Dent"}</code></pre>
+{"id":42,"name":"Arthur Dent"}
+</code></pre>
 </blockquote>
+
 <p>If a Response can be safely cached until a known date (e.g. the 30th of October 1998,
 at 2:19pm), use <code>Expires</code> HTTP Header:</p>
+
 <pre><code>HTTP/1.1 200 OK
 Expires: Fri, 30 Oct 1998 14:19:41 GMT
 Content-Type: application/json
 
-{"id":42,"name":"Arthur Dent"}</code></pre>
+{"id":42,"name":"Arthur Dent"}
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: the HTTP date format is required.</p>
+  <p><strong>Note</strong>: the HTTP date format is required.</p>
 </blockquote>
-<h3 id="validation">Validation<a href="#validation" class="anchor">#</a></h3>
+
+<h3 id="validation">Validation</h3>
+
 <p>The Reverse Proxy can serve stale cached copy and then asynchronously check with
 the Application if it needs to be refreshed, using <code>Last-Modified</code> (a date) or/and
 <code>ETag</code> (a hash) HTTP Headers:</p>
+
 <pre><code>HTTP/1.1 200 OK
 Last-Modified: Tue, 8 Sep 2015 13:35:23 GMT
 ETag: a3e455afd
 Content-Type: application/json
 
-{"id":42,"name":"Arthur Dent"}</code></pre>
+{"id":42,"name":"Arthur Dent"}
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: the Reverse Proxy will add a header to requests with <code>If-Modified-Since</code>
-(a date) or/and <code>If-None-Match</code> (a hash):</p>
+  <p><strong>Note</strong>: the Reverse Proxy will add a header to requests with <code>If-Modified-Since</code>
+  (a date) or/and <code>If-None-Match</code> (a hash):</p>
+
 <pre><code>GET /v1/users/42 HTTP/1.1
 If-Modified-Since: Tue, 8 Sep 2015 13:35:23 GMT
 If-None-Match: a3e455afd
-Accept: application/json</code></pre>
-<p>If the Response shouldn't be updated, the Server should return a <code>304 Not Modified</code>
-Response.</p>
+Accept: application/json
+</code></pre>
+  
+  <p>If the Response shouldn't be updated, the Server should return a <code>304 Not Modified</code>
+  Response.</p>
 </blockquote>
-<h2 id="cheatsheet">Cheatsheet<a href="#cheatsheet" class="anchor">#</a></h2>
-<h3 id="cache-control-values">Cache-Control values<a href="#cache-control-values" class="anchor">#</a></h3>
+
+<h2 id="cheatsheet">Cheatsheet</h2>
+
+<h3 id="cache-control-values">Cache-Control values</h3>
+
 <p>Keep in mind that <code>Cache-Control</code> header can be used by both the Reverse Proxy
 and the Client (e.g. a browser) to cache the Response.</p>
-<ul><li><code>max-age=[seconds]</code>: How long the Response should be cached</li>
+
+<ul>
+<li><code>max-age=[seconds]</code>: How long the Response should be cached</li>
 <li><code>s-maxage=[seconds]</code>: Same as max-age but for Reverse Proxy only</li>
 <li><code>private</code>: Only the Client can cache (default for authenticated Responses)</li>
 <li><code>public</code>: Proxy can also cache (for authenticated Responses)</li>
@@ -145,54 +203,69 @@ and the Client (e.g. a browser) to cache the Response.</p>
 <li><code>no-store</code>: Response should not be cached anywhere (e.g. because it contains sensitive data)</li>
 <li><code>must-revalidate</code>: Refresh the cached copy if it is stale</li>
 <li><code>proxy-revalidate</code>: Same as must-revalidate but for Reverse Proxy only</li>
-</ul><h3 id="http-date-format">HTTP date format<a href="#http-date-format" class="anchor">#</a></h3>
+</ul>
+
+<h3 id="http-date-format">HTTP date format</h3>
+
 <p>The date MUST be represented in Greenwich Mean Time (GMT), with the following format: <code>D, d M Y H:i:s GMT</code></p>
-<ul><li><code>D</code>: A textual representation of a day, three letters (<code>Mon</code> to <code>Sun</code>)</li>
+
+<ul>
+<li><code>D</code>: A textual representation of a day, three letters (<code>Mon</code> to <code>Sun</code>)</li>
 <li><code>d</code>: Day of the month, 2 digits with leading zeros (<code>01</code> to <code>31</code>)</li>
 <li><code>M</code>: A short textual representation of a month, three letters (<code>Jan</code> to <code>Dec</code>)</li>
 <li><code>Y</code>: A full numeric representation of a year, 4 digits (e.g. <code>1999</code>, <code>2003</code>)</li>
 <li><code>H</code>: 24-hour format of an hour with leading zeros (<code>00</code> to <code>23</code>)</li>
 <li><code>i</code>: Minutes with leading zeros (<code>00</code> to <code>59</code>)</li>
 <li><code>s</code>: Seconds, with leading zeros (<code>00</code> to <code>59</code>)</li>
-</ul><h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>The <code>Expires</code> header is usually used to cache responses for application which are
 updated on a regular date (synchronization with a source of the data).</p>
+
 <p>The <code>Last-Modified</code> header is used when the data has an <code>updated_at</code> field we can
 rely on.</p>
+
 <p>The <code>Etag</code> header is used when we can safely create a hash of the response and compare
 it with with the cached copy.</p>
+
 <blockquote>
-<p><strong>Note</strong>: With <code>Last-Modified</code> and <code>Etag</code>, the Reverse Proxy serves first the
-cached Reponse and then check asynchronously with the application if it is stale.</p>
+  <p><strong>Note</strong>: With <code>Last-Modified</code> and <code>Etag</code>, the Reverse Proxy serves first the
+  cached Reponse and then check asynchronously with the application if it is stale.</p>
 </blockquote>
+
 <p>Finally the <code>Cache-Control</code> header is usually used in any other situation.</p>
+
 <p>More readings about HTTP Cache can be found here:</p>
-<ul><li><a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13">HTTP 1.1 (RFC 2616), caching chapter</a></li>
+
+<ul>
+<li><a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13">HTTP 1.1 (RFC 2616), caching chapter</a></li>
 <li><a href="http://2ndscale.com/rtomayko/2008/things-caches-do">Things caches do</a></li>
 <li><a href="https://www.mnot.net/cache_docs/">Caching tutorial</a></li>
 </ul>
 
+
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2015/11/11/beyond-psr7.html">Previous: Beyond PSR-7</a>
-        
-                        <a class="six columns button" href="../../../2015/12/17/symfony-micro-framework.html">Next: Symfony Micro Framework</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/11/11/beyond-psr7.html" title="Beyond PSR-7">Previous &lt; Beyond PSR-7</a>
+                                        <a class="button six columns" href="/2015/12/23/symfony-micro-framework.html" title="Symfony Micro Framework">Next &gt; Symfony Micro Framework</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Symfony / Web Services - part 2.2: Creation, the pragmatic way</title>
+    <title>Symfony / Web Services - part 2.2: Creation, the pragmatic way &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,30 +30,41 @@
         <article>
             <header>
                 <h2>
-    Symfony / Web Services - part 2.2: Creation, the pragmatic way    <span class="sub-title">28/01/2015</span>
+    Symfony / Web Services - part 2.2: Creation, the pragmatic way
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/symfony.html">Symfony</a>
-                <a class="button" href="../../../tags/phpspec.html">Phpspec</a>
-                <a class="button" href="../../../tags/symfony-web-services-series.html">Symfony / Web Services Series</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/Symfony%20%2F%20Web%20Services%20series">Symfony / Web Services series</a>
+                    </nav>
+                </header>
 
-            <p>This is the third article of the series on managing Web Services in a
+                <p>This is the third article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the two first ones:</p>
-<ul><li><a href="../../../2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a></li>
-<li><a href="../../../2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">2.1 Creation bootstrap</a></li>
-</ul><p>You can check the code in the <a href="https://github.com/gnugat-examples/sf-ws">following repository</a>.</p>
+
+<ul>
+<li><a href="/2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a></li>
+<li><a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">2.1 Creation bootstrap</a></li>
+</ul>
+
+<p>You can check the code in the <a href="https://github.com/gnugat-examples/sf-ws">following repository</a>.</p>
+
 <p>In this post we'll see how to create profiles:</p>
-<ul><li><a href="#creating-the-controller">The controller</a></li>
+
+<ul>
+<li><a href="#creating-the-controller">The controller</a></li>
 <li><a href="#the-profile-entity">The profile entity</a></li>
 <li><a href="#linking-with-the-database">Linking with the database</a></li>
 <li><a href="#managing-errors">Managing errors</a></li>
 <li><a href="#conclusion">Conclusion</a></li>
-</ul><h2 id="creating-the-controller">Creating the controller<a href="#creating-the-controller" class="anchor">#</a></h2>
+</ul>
+
+<h2 id="creating-the-controller">Creating the controller</h2>
+
 <p>First things first, we'll write a functional test:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: tests/Controller/ProfileCreationControllerTest.php
 
 namespace AppBundle\Tests\Controller;
@@ -66,44 +77,62 @@ class ProfileCreationControllerTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->app = new \AppKernel('test', false);
-        $this->app->boot();
+        $this-&gt;app = new \AppKernel('test', false);
+        $this-&gt;app-&gt;boot();
     }
 
     public function testItCreatesProfiles()
     {
         $headers = array(
-            'CONTENT_TYPE' => 'application/json',
-            'PHP_AUTH_USER' => 'spanish_inquisition',
-            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('name' => 'Fawlty Towers'));
+        $body = json_encode(array('name' =&gt; 'Fawlty Towers'));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $response = $this->app->handle($request);
+        $response = $this-&gt;app-&gt;handle($request);
 
-        $this->assertSame(201, $response->getStatusCode(), $response->getContent());
+        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>The test should fail, because the route hasn't been found (<code>404 NOT FOUND</code>):</p>
-<pre><code>phpunit -c app</code></pre>
+
+<pre><code>phpunit -c app
+</code></pre>
+
 <p>Flabergast! The test fails with a <code>PHP Fatal error:  Class 'AppKernel' not found</code>!
 Let's fix this by adding the forgotten PHP tag opening in the bootstrap file:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: app/bootstrap.php
 
 require __DIR__.'/bootstrap.php.cache';
-require __DIR__.'/AppKernel.php';</code></pre>
+require __DIR__.'/AppKernel.php';
+</code></pre>
+
 <p>Let's check how the tests react:</p>
-<pre><code>phpunit -c app</code></pre>
+
+<pre><code>phpunit -c app
+</code></pre>
+
 <p>Another failure: the database doesn't exist. We need to create it for the test
 environment:</p>
-<pre><code>php app/console doctrine:database:create --env=test</code></pre>
+
+<pre><code>php app/console doctrine:database:create --env=test
+</code></pre>
+
 <p>Let's run the tests once again:</p>
-<pre><code>phpunit -c app</code></pre>
+
+<pre><code>phpunit -c app
+</code></pre>
+
 <p>This time the test fails for the right reason: the page doesn't exist.
 To fix this, we'll create an empty controller:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/Controller/ProfileCreationController.php;
 
 namespace AppBundle\Controller;
@@ -122,41 +151,68 @@ class ProfileCreationController extends Controller
      */
     public function createProfileAction(Request $request)
     {
-        $name = $request->request->get('name');
+        $name = $request-&gt;request-&gt;get('name');
         $createdProfile = array();
 
         return new JsonResponse($createdProfile, 201);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>This should make the test pass:</p>
-<pre><code>phpunit -c app</code></pre>
+
+<pre><code>phpunit -c app
+</code></pre>
+
 <p>If an error occurs (404 not found), then it might be because of the cache:</p>
+
 <pre><code>php app/console cache:clear --env=test
-phpunit -c app</code></pre>
+phpunit -c app
+</code></pre>
+
 <p>Running tests is becoming cumbersome, let's make it easy using a Makefile:</p>
+
 <pre><code># Makefile
 test:
     php app/console cache:clear --env=test
     php app/console doctrine:database:create --env=test
     phpunit -c app
-    php app/console doctrine:database:drop --force --env=test</code></pre>
+    php app/console doctrine:database:drop --force --env=test
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: mind the tabs, make doesn't support space indentation.</p>
+  <p><strong>Note</strong>: mind the tabs, make doesn't support space indentation.</p>
 </blockquote>
+
 <p>In order for this to work we'll need to drop the database (because it already exists):</p>
-<pre><code>php app/console doctrine:database:drop --force --env=test</code></pre>
+
+<pre><code>php app/console doctrine:database:drop --force --env=test
+</code></pre>
+
 <p>Tests can now be run using:</p>
-<pre><code>make test</code></pre>
+
+<pre><code>make test
+</code></pre>
+
 <p>Everything's fine, we can commit our work:</p>
+
 <pre><code>git add -A
-git commit -m 'Created profile creation endpoint'</code></pre>
-<h2 id="the-profile-entity">The profile entity<a href="#the-profile-entity" class="anchor">#</a></h2>
+git commit -m 'Created profile creation endpoint'
+</code></pre>
+
+<h2 id="the-profile-entity">The profile entity</h2>
+
 <p>At this point, we'll need to store the profile in a database. For this purpose,
 we'll use MySQL and Doctrine, so we'll need to create a profile entity.</p>
+
 <p>We'll first generate a skeleton of its specification using <a href="http://phpspec.net">phpspec</a>:</p>
-<pre><code>./bin/phpspec describe 'AppBundle\Entity\Profile'</code></pre>
+
+<pre><code>./bin/phpspec describe 'AppBundle\Entity\Profile'
+</code></pre>
+
 <p>Then we'll edit the specification:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: spec/AppBundle/Entity/ProfileSpec.php
 
 namespace spec\AppBundle\Entity;
@@ -169,21 +225,27 @@ class ProfileSpec extends ObjectBehavior
 
     function let()
     {
-        $this->beConstructedWith(self::NAME);
+        $this-&gt;beConstructedWith(self::NAME);
     }
 
     function it_can_be_converted_to_array()
     {
-        $this->toArray()->shouldBe(array(
-            'id' => null,
-            'name' => self::NAME,
+        $this-&gt;toArray()-&gt;shouldBe(array(
+            'id' =&gt; null,
+            'name' =&gt; self::NAME,
         ));
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Since we're happy with this step, we'll generate a skeleton of the code:</p>
-<pre><code>./bin/phpspec run</code></pre>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
 <p>Of course we need to edit it:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/Entity/Profile.php
 
 namespace AppBundle\Entity;
@@ -210,23 +272,32 @@ class Profile
 
     public function __construct($name)
     {
-        $this->name = $name;
+        $this-&gt;name = $name;
     }
 
     public function toArray()
     {
         return array(
-            'id' => $this->id,
-            'name' => $this->name,
+            'id' =&gt; $this-&gt;id,
+            'name' =&gt; $this-&gt;name,
         );
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Let's check if it satisfies our specification:</p>
-<pre><code>./bin/phpspec run</code></pre>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
 <p>It does! With this we can generate our database:</p>
+
 <pre><code>php app/console doctrine:database:create
-php app/console doctrine:schema:create</code></pre>
+php app/console doctrine:schema:create
+</code></pre>
+
 <p>Let's update our Makefile:</p>
+
 <pre><code># Makefile
 prod:
     php app/console cache:clear --env=prod
@@ -244,28 +315,42 @@ test:
     php app/console doctrine:schema:create --env=test
     phpunit -c app
     bin/phpspec run
-    php app/console doctrine:database:drop --force --env=test</code></pre>
+    php app/console doctrine:database:drop --force --env=test
+</code></pre>
+
 <p>This allows us to also run phpspec for tests. Installing a project should be as
 simple as:</p>
-<pre><code>make</code></pre>
+
+<pre><code>make
+</code></pre>
+
 <p>And for development we can use:</p>
-<pre><code>make dev</code></pre>
+
+<pre><code>make dev
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: trying to run a second time <code>make</code> or <code>make dev</code> will fail as the
-database already exists. We'll need to run respectively
-<code>php app/console doctrine:database:drop --force --env=prod</code> and
-<code>php app/console doctrine:database:drop --force --env=dev</code>, but we should really
-run those commands only once.</p>
+  <p><strong>Note</strong>: trying to run a second time <code>make</code> or <code>make dev</code> will fail as the
+  database already exists. We'll need to run respectively
+  <code>php app/console doctrine:database:drop --force --env=prod</code> and
+  <code>php app/console doctrine:database:drop --force --env=dev</code>, but we should really
+  run those commands only once.</p>
 </blockquote>
+
 <p>It is time to commit our progress:</p>
+
 <pre><code>git add -A
-git commit -m 'Created Profile entity'</code></pre>
-<h2 id="linking-with-the-database">Linking with the database<a href="#linking-with-the-database" class="anchor">#</a></h2>
+git commit -m 'Created Profile entity'
+</code></pre>
+
+<h2 id="linking-with-the-database">Linking with the database</h2>
+
 <p>The only thing missing in our application is the actual creation of the profile.
 Before doing anything with the code, we'll need to update our functional test:
 we don't want the data to be actually persisted, as it would make the test fail
 on a second run:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: tests/Controller/ProfileCreationControllerTest.php
 
 namespace AppBundle\Tests\Controller;
@@ -279,36 +364,39 @@ class ProfileCreationControllerTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->app = new \AppKernel('test', true);
-        $this->app->boot();
+        $this-&gt;app = new \AppKernel('test', true);
+        $this-&gt;app-&gt;boot();
 
-        $this->em = $this->app->getContainer()->get('doctrine.orm.entity_manager');
-        $this->em->beginTransaction();
+        $this-&gt;em = $this-&gt;app-&gt;getContainer()-&gt;get('doctrine.orm.entity_manager');
+        $this-&gt;em-&gt;beginTransaction();
     }
 
     public function testItCreatesProfiles()
     {
         $headers = array(
-            'CONTENT_TYPE' => 'application/json',
-            'PHP_AUTH_USER' => 'spanish_inquisition',
-            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('name' => 'Fawlty Towers'));
+        $body = json_encode(array('name' =&gt; 'Fawlty Towers'));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $response = $this->app->handle($request);
+        $response = $this-&gt;app-&gt;handle($request);
 
-        $this->assertSame(201, $response->getStatusCode(), $response->getContent());
+        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
     }
 
     protected function tearDown()
     {
-        $this->em->rollback();
-        $this->em->close();
+        $this-&gt;em-&gt;rollback();
+        $this-&gt;em-&gt;close();
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Let's update the controller:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/Controller/ProfileCreationController.php;
 
 namespace AppBundle\Controller;
@@ -328,24 +416,34 @@ class ProfileCreationController extends Controller
      */
     public function createProfileAction(Request $request)
     {
-        $em = $this->get('doctrine.orm.entity_manager');
+        $em = $this-&gt;get('doctrine.orm.entity_manager');
 
-        $createdProfile = new Profile($request->request->get('name'));
-        $em->persist($createdProfile);
-        $em->flush();
+        $createdProfile = new Profile($request-&gt;request-&gt;get('name'));
+        $em-&gt;persist($createdProfile);
+        $em-&gt;flush();
 
-        return new JsonResponse($createdProfile->toArray(), 201);
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Time to run the tests:</p>
-<pre><code>make test</code></pre>
+
+<pre><code>make test
+</code></pre>
+
 <p>All green! We can commit:</p>
+
 <pre><code>git add -A
-git commit -m 'Saved created profile in database'</code></pre>
-<h2 id="managing-errors">Managing errors<a href="#managing-errors" class="anchor">#</a></h2>
+git commit -m 'Saved created profile in database'
+</code></pre>
+
+<h2 id="managing-errors">Managing errors</h2>
+
 <p>Our endpoint should return an error if the "name" parameter is missing. Let's add
 a functional test for this:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: tests/Controller/ProfileCreationControllerTest.php
 
 namespace AppBundle\Tests\Controller;
@@ -359,53 +457,59 @@ class ProfileCreationControllerTest extends PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->app = new \AppKernel('test', true);
-        $this->app->boot();
+        $this-&gt;app = new \AppKernel('test', true);
+        $this-&gt;app-&gt;boot();
 
-        $this->em = $this->app->getContainer()->get('doctrine.orm.entity_manager');
-        $this->em->beginTransaction();
+        $this-&gt;em = $this-&gt;app-&gt;getContainer()-&gt;get('doctrine.orm.entity_manager');
+        $this-&gt;em-&gt;beginTransaction();
     }
 
     public function testItCreatesProfiles()
     {
         $headers = array(
-            'CONTENT_TYPE' => 'application/json',
-            'PHP_AUTH_USER' => 'spanish_inquisition',
-            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('name' => 'Fawlty Towers'));
+        $body = json_encode(array('name' =&gt; 'Fawlty Towers'));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $response = $this->app->handle($request);
+        $response = $this-&gt;app-&gt;handle($request);
 
-        $this->assertSame(201, $response->getStatusCode(), $response->getContent());
+        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
     }
 
     public function testItFailsIfNameIsMissing()
     {
         $headers = array(
-            'CONTENT_TYPE' => 'application/json',
-            'PHP_AUTH_USER' => 'spanish_inquisition',
-            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('no-name' => ''));
+        $body = json_encode(array('no-name' =&gt; ''));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $response = $this->app->handle($request);
+        $response = $this-&gt;app-&gt;handle($request);
 
-        $this->assertSame(422, $response->getStatusCode(), $response->getContent());
+        $this-&gt;assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
     }
 
     protected function tearDown()
     {
-        $this->em->rollback();
-        $this->em->close();
+        $this-&gt;em-&gt;rollback();
+        $this-&gt;em-&gt;close();
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>It should make our tests fail:</p>
-<pre><code>make test</code></pre>
+
+<pre><code>make test
+</code></pre>
+
 <p>We can make this test pass by adding a simple check:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/Controller/ProfileCreationController.php;
 
 namespace AppBundle\Controller;
@@ -424,29 +528,36 @@ class ProfileCreationController extends Controller
      */
     public function createProfileAction(Request $request)
     {
-        $em = $this->get('doctrine.orm.entity_manager');
+        $em = $this-&gt;get('doctrine.orm.entity_manager');
 
-        $name = $request->request->get('name');
+        $name = $request-&gt;request-&gt;get('name');
         if (null === $name) {
-            return new JsonResponse(array('error' => 'The "name" parameter is missing from the request\'s body'), 422);
+            return new JsonResponse(array('error' =&gt; 'The "name" parameter is missing from the request\'s body'), 422);
         }
         $createdProfile = new Profile($name);
-        $em->persist($createdProfile);
-        $em->flush();
+        $em-&gt;persist($createdProfile);
+        $em-&gt;flush();
 
-        return new JsonResponse($createdProfile->toArray(), 201);
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Let's see:</p>
+
 <pre><code>php app/console doctrine:database:drop --force --env=test
-make test</code></pre>
+make test
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: Because our last test failed, the database hasn't been removed, so we
-need to do it manually.</p>
+  <p><strong>Note</strong>: Because our last test failed, the database hasn't been removed, so we
+  need to do it manually.</p>
 </blockquote>
+
 <p>Looks nice! Our endpoint should also fail when a profile with the same name
 already exist:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: tests/Controller/ProfileCreationControllerTest.php
 
 namespace AppBundle\Tests\Controller;
@@ -460,69 +571,75 @@ class ProfileCreationControllerTest extends PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->app = new \AppKernel('test', true);
-        $this->app->boot();
+        $this-&gt;app = new \AppKernel('test', true);
+        $this-&gt;app-&gt;boot();
 
-        $this->em = $this->app->getContainer()->get('doctrine.orm.entity_manager');
-        $this->em->beginTransaction();
+        $this-&gt;em = $this-&gt;app-&gt;getContainer()-&gt;get('doctrine.orm.entity_manager');
+        $this-&gt;em-&gt;beginTransaction();
     }
 
     public function testItCreatesProfiles()
     {
         $headers = array(
-            'CONTENT_TYPE' => 'application/json',
-            'PHP_AUTH_USER' => 'spanish_inquisition',
-            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('name' => 'Fawlty Towers'));
+        $body = json_encode(array('name' =&gt; 'Fawlty Towers'));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $response = $this->app->handle($request);
+        $response = $this-&gt;app-&gt;handle($request);
 
-        $this->assertSame(201, $response->getStatusCode(), $response->getContent());
+        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
     }
 
     public function testItFailsIfNameIsMissing()
     {
         $headers = array(
-            'CONTENT_TYPE' => 'application/json',
-            'PHP_AUTH_USER' => 'spanish_inquisition',
-            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('no-name' => ''));
+        $body = json_encode(array('no-name' =&gt; ''));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $response = $this->app->handle($request);
+        $response = $this-&gt;app-&gt;handle($request);
 
-        $this->assertSame(422, $response->getStatusCode(), $response->getContent());
+        $this-&gt;assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
     }
 
     public function testItFailsIfNameAlreadyExists()
     {
         $headers = array(
-            'CONTENT_TYPE' => 'application/json',
-            'PHP_AUTH_USER' => 'spanish_inquisition',
-            'PHP_AUTH_PW' => 'NobodyExpectsIt!',
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
         );
-        $body = json_encode(array('name' => 'Provençal le Gaulois'));
+        $body = json_encode(array('name' =&gt; 'Provençal le Gaulois'));
         $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
 
-        $this->app->handle($request);
-        $response = $this->app->handle($request);
+        $this-&gt;app-&gt;handle($request);
+        $response = $this-&gt;app-&gt;handle($request);
 
-        $this->assertSame(422, $response->getStatusCode(), $response->getContent());
+        $this-&gt;assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
     }
 
     protected function tearDown()
     {
-        $this->em->rollback();
-        $this->em->close();
+        $this-&gt;em-&gt;rollback();
+        $this-&gt;em-&gt;close();
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Our tests should be broken again:</p>
-<pre><code>make test</code></pre>
+
+<pre><code>make test
+</code></pre>
+
 <p>Another check can fix this awful situation:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/Controller/ProfileCreationController.php;
 
 namespace AppBundle\Controller;
@@ -541,60 +658,72 @@ class ProfileCreationController extends Controller
      */
     public function createProfileAction(Request $request)
     {
-        $em = $this->get('doctrine.orm.entity_manager');
+        $em = $this-&gt;get('doctrine.orm.entity_manager');
 
-        $name = $request->request->get('name');
+        $name = $request-&gt;request-&gt;get('name');
         if (null === $name) {
-            return new JsonResponse(array('error' => 'The "name" parameter is missing from the request\'s body'), 422);
+            return new JsonResponse(array('error' =&gt; 'The "name" parameter is missing from the request\'s body'), 422);
         }
-        if (null !== $em->getRepository('AppBundle:Profile')->findOneByName($name)) {
-            return new JsonResponse(array('error' => 'The name "'.$name.'" is already taken'), 422);
+        if (null !== $em-&gt;getRepository('AppBundle:Profile')-&gt;findOneByName($name)) {
+            return new JsonResponse(array('error' =&gt; 'The name "'.$name.'" is already taken'), 422);
         }
         $createdProfile = new Profile($name);
-        $em->persist($createdProfile);
-        $em->flush();
+        $em-&gt;persist($createdProfile);
+        $em-&gt;flush();
 
-        return new JsonResponse($createdProfile->toArray(), 201);
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Are we there yet?</p>
+
 <pre><code>php app/console doctrine:database:drop --force --env=test
-make test</code></pre>
+make test
+</code></pre>
+
 <p>Yes we are. Here's our last commit for this time:</p>
+
 <pre><code>git add -A
-git commit -m 'Added error checks'</code></pre>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+git commit -m 'Added error checks'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>Creating an endpoint with Symfony is pretty straighfoward: it all comes down to
 HTTP knowledge.</p>
+
 <p>Our codebase is very small due to the simplicity of our examples, but in a real
 life application we'll need to add more complexity as new requirements appear.</p>
+
 <p>The pragmatic approach is good for now, but at some point we'll need to refactor
 our code by creating some services, each with their specific responsibilities,
 to prevent our application from becoming a <a href="https://speakerdeck.com/richardmiller/atm">big ball of mud</a>
 where everything is hard to read, impossible to test and expensive to change.</p>
-<p>This will the subject of <a href="../../../2015/03/04/sf-ws-part-2-3-creation-refactoring.html">next week</a> article.</p>
+
+<p>This will the subject of <a href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html">the next article</a>.</p>
+
 
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">Previous: Symfony / Web Services - part 2.1: Creation bootstrap</a>
-        
-                        <a class="six columns button" href="../../../2015/03/04/sf-ws-part-2-3-creation-refactoring.html">Next: Symfony / Web Services - part 2.3: Creation, refactoring</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html" title="Symfony / Web Services - part 2.1: Creation bootstrap">Previous &lt; Symfony / Web Services - part 2.1: Creation bootstrap</a>
+                                        <a class="button six columns" href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html" title="Symfony / Web Services - part 2.3: Creation, refactoring">Next &gt; Symfony / Web Services - part 2.3: Creation, refactoring</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Master Symfony2 - part 2: Test Driven Development</title>
+    <title>Master Symfony2 - part 2: Test Driven Development &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2014/08/13/master-sf2-part-2-tdd.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,20 +30,22 @@
         <article>
             <header>
                 <h2>
-    Master Symfony2 - part 2: Test Driven Development    <span class="sub-title">13/08/2014</span>
+    Master Symfony2 - part 2: Test Driven Development
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/symfony.html">Symfony</a>
-                <a class="button" href="../../../tags/tdd.html">Tdd</a>
-                <a class="button" href="../../../tags/master-symfony2-series.html">Master Symfony2 Series</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/TDD">TDD</a>
+                        <a class="button " href="/tags/Master%20Symfony2%20series">Master Symfony2 series</a>
+                    </nav>
+                </header>
 
-            <p>This is the second article of the series on mastering the
+                <p>This is the second article of the series on mastering the
 <a href="http://symfony.com/">Symfony2</a> framework. Have a look at the first one:
-<a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">Bootstraping</a>.</p>
+<a href="/2014/08/05/master-sf2-part-1-bootstraping.html">Bootstraping</a>.</p>
+
 <p>In the first article we bootstraped our project with the following files:</p>
+
 <pre><code>.
 ├── app
 │   ├── AppKernel.php
@@ -65,22 +67,36 @@
 │       └── ApplicationBundle
 │           └── FortuneApplicationBundle.php
 └── web
-    └── app.php</code></pre>
+    └── app.php
+</code></pre>
+
 <p>Here's the <a href="https://github.com/gnugat/mastering-symfony2">repository where you can find the actual code</a>.</p>
+
 <p>In this one we'll implement the first User Story, by writing tests first.</p>
+
 <p><strong>Note</strong>: writing tests before writing any code is part of the
-<a href="../../../2014/02/19/test-driven-development.html">Test Driven Development (TDD) methodology</a>.</p>
-<h2 id="defining-the-user-story">Defining the User Story<a href="#defining-the-user-story" class="anchor">#</a></h2>
+<a href="/2014/02/19/test-driven-development.html">Test Driven Development (TDD) methodology</a>.</p>
+
+<h2 id="defining-the-user-story">Defining the User Story</h2>
+
 <p>With the help of our Scrum Master, our Product Owner (Nostradamus) managed to
 write the following user story:</p>
+
 <pre><code>As a User
 I want to be able to submit a new quote
-In order to make it available</code></pre>
-<h2 id="writing-the-test">Writing the test<a href="#writing-the-test" class="anchor">#</a></h2>
+In order to make it available
+</code></pre>
+
+<h2 id="writing-the-test">Writing the test</h2>
+
 <p>Our first reflex will be to write a functional test. First create the directory:</p>
-<pre><code>mkdir -p src/Fortune/ApplicationBundle/Tests/Controller</code></pre>
+
+<pre><code>mkdir -p src/Fortune/ApplicationBundle/Tests/Controller
+</code></pre>
+
 <p>Then the test class:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: src/Fortune/ApplicationBundle/Tests/Controller/QuoteControllerTest.php
 
 namespace Fortune\ApplicationBundle\Tests\Controller;
@@ -92,36 +108,47 @@ class QuoteControllerTest extends WebTestCase
 {
     private function post($uri, array $data)
     {
-        $headers = array('CONTENT_TYPE' => 'application/json');
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
         $content = json_encode($data);
         $client = static::createClient();
-        $client->request('POST', $uri, array(), array(), $headers, $content);
+        $client-&gt;request('POST', $uri, array(), array(), $headers, $content);
 
-        return $client->getResponse();
+        return $client-&gt;getResponse();
     }
 
     public function testSubmitNewQuote()
     {
-        $response = $this->post('/api/quotes', array('content' => '<KnightOfNi> Ni!'));
+        $response = $this-&gt;post('/api/quotes', array('content' =&gt; '&lt;KnightOfNi&gt; Ni!'));
 
-        $this->assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+        $this-&gt;assertSame(Response::HTTP_CREATED, $response-&gt;getStatusCode());
     }
-}</code></pre>
-<h2 id="configuring-the-route">Configuring the route<a href="#configuring-the-route" class="anchor">#</a></h2>
+}
+</code></pre>
+
+<h2 id="configuring-the-route">Configuring the route</h2>
+
 <p>Now we need to link the <code>/quotes</code> URL to a controller, so let's edit the
 configuration:</p>
+
 <pre><code># File: app/config/routing.yml
 submit_quote:
     path: /api/quotes
     methods:
         - POST
     defaults:
-        _controller: FortuneApplicationBundle:Quote:submit</code></pre>
-<h2 id="creating-the-controller">Creating the controller<a href="#creating-the-controller" class="anchor">#</a></h2>
+        _controller: FortuneApplicationBundle:Quote:submit
+</code></pre>
+
+<h2 id="creating-the-controller">Creating the controller</h2>
+
 <p>There wasn't any controllers until now, so we create the directory:</p>
-<pre><code>mkdir src/Fortune/ApplicationBundle/Controller</code></pre>
+
+<pre><code>mkdir src/Fortune/ApplicationBundle/Controller
+</code></pre>
+
 <p>And finally the controller class:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
 
 namespace Fortune\ApplicationBundle\Controller;
@@ -135,23 +162,33 @@ class QuoteController extends Controller
 {
     public function submitAction(Request $request)
     {
-        $postedContent = $request->getContent();
+        $postedContent = $request-&gt;getContent();
         $postedValues = json_decode($postedContent, true);
 
         $answer['quote']['content'] = $postedValues['content'];
 
         return new JsonResponse($answer, Response::HTTP_CREATED);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Now let's run our tests:</p>
-<pre><code>./vendor/bin/phpunit -c app</code></pre>
+
+<pre><code>./vendor/bin/phpunit -c app
+</code></pre>
+
 <p><a href="https://www.youtube.com/watch?v=lFeLDc2CzOs">All green</a>! This makes us
 confident enough to commit our work:</p>
+
 <pre><code>git add -A
-git commit -m 'Created submission of quotes'</code></pre>
-<h2 id="testing-bad-cases">Testing bad cases<a href="#testing-bad-cases" class="anchor">#</a></h2>
+git commit -m 'Created submission of quotes'
+</code></pre>
+
+<h2 id="testing-bad-cases">Testing bad cases</h2>
+
 <p>The submitted content shouldn't be empty. Let's add a test for the bad cases:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: src/Fortune/ApplicationBundle/Tests/Controller/QuoteControllerTest.php
 
 namespace Fortune\ApplicationBundle\Tests\Controller;
@@ -163,38 +200,42 @@ class QuoteControllerTest extends WebTestCase
 {
     private function post($uri, array $data)
     {
-        $headers = array('CONTENT_TYPE' => 'application/json');
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
         $content = json_encode($data);
         $client = static::createClient();
-        $client->request('POST', $uri, array(), array(), $headers, $content);
+        $client-&gt;request('POST', $uri, array(), array(), $headers, $content);
 
-        return $client->getResponse();
+        return $client-&gt;getResponse();
     }
 
     public function testSubmitNewQuote()
     {
-        $response = $this->post('/api/quotes', array('content' => '<KnightOfNi> Ni!'));
+        $response = $this-&gt;post('/api/quotes', array('content' =&gt; '&lt;KnightOfNi&gt; Ni!'));
 
-        $this->assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+        $this-&gt;assertSame(Response::HTTP_CREATED, $response-&gt;getStatusCode());
     }
 
     public function testSubmitEmptyQuote()
     {
-        $response = $this->post('/api/quotes', array('content' => ''));
+        $response = $this-&gt;post('/api/quotes', array('content' =&gt; ''));
 
-        $this->assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
+        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response-&gt;getStatusCode());
     }
 
     public function testSubmitNoQuote()
     {
-        $response = $this->post('/api/quotes', array());
+        $response = $this-&gt;post('/api/quotes', array());
 
-        $this->assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response->getStatusCode());
+        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response-&gt;getStatusCode());
     }
-}</code></pre>
-<h2 id="checking-bad-cases">Checking bad cases<a href="#checking-bad-cases" class="anchor">#</a></h2>
+}
+</code></pre>
+
+<h2 id="checking-bad-cases">Checking bad cases</h2>
+
 <p>Now let's fix the new tests:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
 
 namespace Fortune\ApplicationBundle\Controller;
@@ -208,11 +249,11 @@ class QuoteController extends Controller
 {
     public function submitAction(Request $request)
     {
-        $postedContent = $request->getContent();
+        $postedContent = $request-&gt;getContent();
         $postedValues = json_decode($postedContent, true);
 
         if (empty($postedValues['content'])) {
-            $answer = array('message' => 'Missing required parameter: content');
+            $answer = array('message' =&gt; 'Missing required parameter: content');
 
             return new JsonResponse($answer, Response::HTTP_UNPROCESSABLE_ENTITY);
         }
@@ -220,48 +261,49 @@ class QuoteController extends Controller
 
         return new JsonResponse($answer, Response::HTTP_CREATED);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Finally run the tests:</p>
-<pre><code>./vendor/bin/phpunit -c app</code></pre>
+
+<pre><code>./vendor/bin/phpunit -c app
+</code></pre>
+
 <p>All green! Let's call it a day and commit our work:</p>
+
 <pre><code>git add -A
-git commit -m 'Managed submission of empty/no quotes'</code></pre>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+git commit -m 'Managed submission of empty/no quotes'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>For those who didn't practice a lot with Symfony2, this article should have
 demonstrated how quick and simple it is to implement the first User Story
 (test and code alike).</p>
+
 <p>In the next article, we'll learn how to work with services.</p>
-<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
-<ul><li><a href="../../../2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
-<li><a href="../../../2014/08/27/master-sf2-part-4-doctrine.html">4: Doctrine</a></li>
-<li><a href="../../../2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
-<li><a href="../../../2014/09/10/master-sf2-part-6-annotations.html">6: Annotations</a></li>
-<li><a href="../../../2014/10/08/master-sf2-conclusion.html">Conclusion</a></li>
-</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
-<ul><li><a href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
-</ul>
+
 
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2014/08/05/master-sf2-part-1-bootstraping.html">Previous: Master Symfony2 - part 1: Bootstraping</a>
-        
-                        <a class="six columns button" href="../../../2014/08/22/master-sf2-part-3-services.html">Next: Master Symfony2 - part 3: Services</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2014/08/05/master-sf2-part-1-bootstraping.html" title="Master Symfony2 - part 1: Bootstraping">Previous &lt; Master Symfony2 - part 1: Bootstraping</a>
+                                        <a class="button six columns" href="/2014/08/22/master-sf2-part-3-services.html" title="Master Symfony2 - part 3: Services">Next &gt; Master Symfony2 - part 3: Services</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

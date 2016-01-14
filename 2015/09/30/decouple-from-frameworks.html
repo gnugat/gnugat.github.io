@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Decouple from Frameworks</title>
+    <title>Decouple from Frameworks &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2015/09/30/decouple-from-frameworks.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2015/09/30/decouple-from-frameworks.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,24 +30,26 @@
         <article>
             <header>
                 <h2>
-    Decouple from Frameworks    <span class="sub-title">30/09/2015</span>
+    Decouple from Frameworks
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/decoupling.html">Decoupling</a>
-                <a class="button" href="../../../tags/symfony.html">Symfony</a>
-                <a class="button" href="../../../tags/phpspec.html">Phpspec</a>
-                <a class="button" href="../../../tags/phpunit.html">Phpunit</a>
-                <a class="button" href="../../../tags/command-bus.html">Command Bus</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/decoupling">decoupling</a>
+                        <a class="button " href="/tags/symfony">symfony</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/phpunit">phpunit</a>
+                        <a class="button " href="/tags/command%20bus">command bus</a>
+                    </nav>
+                </header>
 
-            <p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
+                <p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
 While necessary, those concerns don't add any value to your project: the business
 need will not be fulfilled by creating an empty application.</p>
+
 <p>As always, different responsibilities mean also different reasons to change: frameworks
 have a history of Backward Compatibility (BC) breaks and they do so regardless of your
 project.</p>
+
 <p>Take for example <a href="http://symfony.com/">Symfony</a>: it only started to follow <a href="http://semver.org/">Semantic Versioning</a>
 from version 2.3. The upgrade to version 3 has been made easier by allowing developers
 to know what was deprecated, but the removal of those features still means a lot of
@@ -58,25 +60,38 @@ between <code>symfony/http-foundation</code> and <code>psr/http-message</code>, 
 want to fall back behind (<a href="http://framework.zend.com/blog/announcing-the-zend-framework-3-roadmap.html">Zend 3 is fully based on PSR-7</a>)
 it might have to introduce another big BC break (event listeners with the Request
 and Response <a href="http://evertpot.com/psr-7-issues/">are not possible the way they are now with PSR-7</a>).</p>
+
 <p>Migrating Symfony applications (from symfony1, from symfony 2.0, etc) is so hard
 that it is a business on its own.</p>
+
 <p>Does that mean that we shouldn't use any frameworks? Should we just don't care and
 embrace fully frameworks?</p>
+
 <p>This article will explain how to avoid both extremes, by decoupling from the framework.
 It can be done by restricting the framework to its infrastructure responsibilities
 (HTTP, CLI), by only using its entry points (Controller, Command) and by using
 the Command Bus pattern.</p>
-<h2 id="fortune-our-example">Fortune: our example<a href="#fortune-our-example" class="anchor">#</a></h2>
+
+<h2 id="fortune%3A-our-example">Fortune: our example</h2>
+
 <p>We're going to build part of a <a href="https://en.wikipedia.org/wiki/Fortune_%28Unix%29">fortune</a>
 application for our example, more precisely we're going to build an endpoint allowing us to
 submit quotes.</p>
+
 <p>To do so, we'll bootstrap a symfony application using the <a href="https://github.com/gnugat/symfony-empty-edition">Empty Edition</a>:</p>
+
 <pre><code>composer create-project gnugat/symfony-empty-edition fortune
-cd fortune</code></pre>
+cd fortune
+</code></pre>
+
 <p>We'll need to install our test frameworks:</p>
+
 <pre><code>composer require --dev phpunit/phpunit
-composer require --dev phpspec/phpspec</code></pre>
+composer require --dev phpspec/phpspec
+</code></pre>
+
 <p>Then add them to our test script:</p>
+
 <pre><code>#!/usr/bin/env sh
 
 # bin/test.sh
@@ -85,31 +100,38 @@ echo ''
 echo '// Building test environment'
 
 rm -rf app/cache/test app/logs/*test.log
-composer --quiet --no-interaction install --optimize-autoloader  > /dev/null
+composer --quiet --no-interaction install --optimize-autoloader  &gt; /dev/null
 php app/console --env=test --quiet cache:clear
 
 echo ''
 echo ' [OK] Test environment built'
 echo ''
 
-vendor/bin/phpspec --format=dot && vendor/bin/phpunit</code></pre>
-<p>Finally we'll configure PHPUnit:</p>
-<pre><code class="language-xml"><?xml version="1.0" encoding="UTF-8"?>
+vendor/bin/phpspec --format=dot &amp;&amp; vendor/bin/phpunit
+</code></pre>
 
-<!-- phpunit.xml.dist -->
-<!-- http://phpunit.de/manual/current/en/appendixes.configuration.html -->
-<phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="app/bootstrap.php">
-    <testsuites>
-        <testsuite name="System Tests">
-            <directory>tests</directory>
-        </testsuite>
-    </testsuites>
-</phpunit></code></pre>
-<h2 id="request-listener">Request listener<a href="#request-listener" class="anchor">#</a></h2>
+<p>Finally we'll configure PHPUnit:</p>
+
+<pre><code class="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- phpunit.xml.dist --&gt;
+&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
+&lt;phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="app/bootstrap.php"&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="System Tests"&gt;
+            &lt;directory&gt;tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;
+</code></pre>
+
+<h2 id="request-listener">Request listener</h2>
+
 <p>Our endpoint will receive JSON encoded content. PHP does not populate <code>$_POST</code> with
-this data, causing an empty <code>$request->request</code>. We can create an event listener
+this data, causing an empty <code>$request-&gt;request</code>. We can create an event listener
 to fix this issue:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // src/AppBundle/EventListener/JsonRequestListener.php
 
 namespace AppBundle\EventListener;
@@ -121,42 +143,53 @@ class JsonRequestListener
 {
     public function onKernelRequest(GetResponseEvent $event)
     {
-        $request = $event->getRequest();
-        $hasBeenSubmited = in_array($request->getMethod(), array('PATCH', 'POST', 'PUT'), true);
-        $isJson = (1 === preg_match('#application/json#', $request->headers->get('Content-Type')));
+        $request = $event-&gt;getRequest();
+        $hasBeenSubmited = in_array($request-&gt;getMethod(), array('PATCH', 'POST', 'PUT'), true);
+        $isJson = (1 === preg_match('#application/json#', $request-&gt;headers-&gt;get('Content-Type')));
         if (!$hasBeenSubmited || !$isJson) {
             return;
         }
-        $data = json_decode($request->getContent(), true);
+        $data = json_decode($request-&gt;getContent(), true);
         if (JSON_ERROR_NONE !== json_last_error()) {
-            $event->setResponse(new Response('{"error":"Invalid or malformed JSON"}', 400, array('Content-Type' => 'application/json')));
+            $event-&gt;setResponse(new Response('{"error":"Invalid or malformed JSON"}', 400, array('Content-Type' =&gt; 'application/json')));
         }
-        $request->request->add($data ?: array());
+        $request-&gt;request-&gt;add($data ?: array());
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>This logic is infrastructure related, so it makes sense to keep it in <code>AppBundle</code>.</p>
+
 <p>To enable it, configure it in the Dependency Injection Container:</p>
+
 <pre><code># app/config/services/event_listener.yml
 
 services:
     app.json_request_listener:
         class: AppBundle\EventListener\JsonRequestListener
         tags:
-            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }</code></pre>
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+</code></pre>
+
 <p>We also need to make sure files in <code>app/config/services</code> are imported:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // app/config/importer.php
 
 use Symfony\Component\Finder\Finder;
 
 $finder = new Finder();
-$files = $finder->files()->name('*.yml')->in(__DIR__.'/services');
+$files = $finder-&gt;files()-&gt;name('*.yml')-&gt;in(__DIR__.'/services');
 foreach ($files as $file) {
-    $loader->import($file->getRealpath());
-}</code></pre>
-<h2 id="controller">Controller<a href="#controller" class="anchor">#</a></h2>
+    $loader-&gt;import($file-&gt;getRealpath());
+}
+</code></pre>
+
+<h2 id="controller">Controller</h2>
+
 <p>Our first step will be to describe how the endpoint should work, with a test:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // tests/AppBundle/Controller/QuoteControllerTest.php
 
 namespace tests\AppBundle\Controller;
@@ -171,8 +204,8 @@ class QuoteControllerTest extends PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->app = new AppKernel('test', false);
-        $this->app->boot();
+        $this-&gt;app = new AppKernel('test', false);
+        $this-&gt;app-&gt;boot();
     }
 
     /**
@@ -180,25 +213,32 @@ class QuoteControllerTest extends PHPUnit_Framework_TestCase
      */
     public function it_submits_a_new_quote()
     {
-        $headers = array('CONTENT_TYPE' => 'application/json');
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
         $request = Request::create('/v1/quotes', 'POST', array(), array(), array(), $headers, json_encode(array(
-            'quote' => 'Nobody expects the spanish inquisition',
+            'quote' =&gt; 'Nobody expects the spanish inquisition',
         )));
 
-        $response = $this->app->handle($request);
+        $response = $this-&gt;app-&gt;handle($request);
 
-        self::assertSame(201, $response->getStatusCode(), $response->getContent());
+        self::assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
     }
-}</code></pre>
+}
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: Testing only the status code is called "Smoke Testing" and is a very
-efficient way to check if the application is broken.
-Testing the content would be tedious and would make our test fragile as it might change often.</p>
+  <p><strong>Note</strong>: Testing only the status code is called "Smoke Testing" and is a very
+  efficient way to check if the application is broken.
+  Testing the content would be tedious and would make our test fragile as it might change often.</p>
 </blockquote>
+
 <p>Let's run it:</p>
-<pre><code>./bin/test.sh</code></pre>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
 <p>The tests fail because the controller doesn't exist. Let's fix that:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // src/AppBundle/Controller/QuoteController.php
 
 namespace AppBundle\Controller;
@@ -214,28 +254,34 @@ class QuoteController
 
     public function __construct(SubmitNewQuoteHandler $submitNewQuoteHandler)
     {
-        $this->submitNewQuoteHandler = $submitNewQuoteHandler;
+        $this-&gt;submitNewQuoteHandler = $submitNewQuoteHandler;
     }
 
     public function submitNewAction(Request $request)
     {
         $sumbitNewQuote = new SubmitNewQuote(
-            $request->request->get('quote')
+            $request-&gt;request-&gt;get('quote')
         );
-        $newQuote = $this->submitNewQuoteHandler->handle($sumbitNewQuote);
+        $newQuote = $this-&gt;submitNewQuoteHandler-&gt;handle($sumbitNewQuote);
 
-        return new Response(json_encode($newQuote), 201, array('Content-Type' => 'application/json'));
+        return new Response(json_encode($newQuote), 201, array('Content-Type' =&gt; 'application/json'));
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Now we need to configure the controller as a service:</p>
+
 <pre><code># app/config/services/controller.yml
 
 services:
     app.quote_controller:
         class: AppBundle\Controller\QuoteController
         arguments:
-            - "@app.submit_new_quote_handler"</code></pre>
+            - "@app.submit_new_quote_handler"
+</code></pre>
+
 <p>Then we need to configure the route:</p>
+
 <pre><code># app/config/routings/quote.yml
 
 submit_new_quote:
@@ -243,26 +289,42 @@ submit_new_quote:
     defaults:
         _controller: app.quote_controller:submitNew
     methods:
-        - POST</code></pre>
+        - POST
+</code></pre>
+
 <p>This file needs to be imported:</p>
+
 <pre><code># app/config/routing.yml
 
 quote:
-    resource: routings/quote.yml</code></pre>
+    resource: routings/quote.yml
+</code></pre>
+
 <p>Finally we can run the test again:</p>
-<pre><code>./bin/test.sh</code></pre>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
 <p>It now fails for a different reason: <code>SubmitNewQuote</code> and its handler class don't exist.</p>
-<h2 id="command-from-commandbus">Command (from CommandBus)<a href="#command-from-commandbus" class="anchor">#</a></h2>
+
+<h2 id="command-from-commandbus">Command (from CommandBus)</h2>
+
 <p><code>SubmitNewQuote</code> is a Data Transfer Object (DTO): its responsibility is to wrap
 input parameters in a well named class (in this case a class that describes the action intended).
 It's also the best place to do some basic validation on the input parameters.</p>
+
 <blockquote>
-<p><strong>Note</strong>: In the Command Bus pattern, <code>SubmitNewQuote</code> would be a Command (different from the CLI Command).</p>
+  <p><strong>Note</strong>: In the Command Bus pattern, <code>SubmitNewQuote</code> would be a Command (different from the CLI Command).</p>
 </blockquote>
+
 <p>We'll write a test for this, but first we'll bootstrap the test class:</p>
-<pre><code>vendor/bin/phpspec describe 'Acme\Fortune\Quote\SubmitNewQuote'</code></pre>
+
+<pre><code>vendor/bin/phpspec describe 'Acme\Fortune\Quote\SubmitNewQuote'
+</code></pre>
+
 <p>Now we can decribe the different validation rules:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // spec/Acme/Fortune/Quote/SubmitNewQuoteSpec.php
 
 namespace spec\Acme\Fortune\Quote;
@@ -275,38 +337,48 @@ class SubmitNewQuoteSpec extends ObjectBehavior
 
     function it_fails_if_required_quote_parameter_is_missing()
     {
-        $this->beConstructedWith(null);
+        $this-&gt;beConstructedWith(null);
 
-        $this->shouldThrow('Acme\Fortune\Exception\ValidationFailedException')->duringInstantiation();
+        $this-&gt;shouldThrow('Acme\Fortune\Exception\ValidationFailedException')-&gt;duringInstantiation();
     }
 
     function it_fails_if_quote_parameter_is_empty()
     {
-        $this->beConstructedWith('');
+        $this-&gt;beConstructedWith('');
 
-        $this->shouldThrow('Acme\Fortune\Exception\ValidationFailedException')->duringInstantiation();
+        $this-&gt;shouldThrow('Acme\Fortune\Exception\ValidationFailedException')-&gt;duringInstantiation();
     }
-}</code></pre>
+}
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: Since this class has nothing to do with Symfony, we don't put it in <code>AppBundle</code>.
-By keeping it in its own namespace, we protect it from framework directory tree changes,
-for example before <code>AppBundle</code> the norm was <code>Acme\FortuneBundle</code>. We also allow ourselves
-to move it to another framework (e.g. Laravel, Zend, etc).</p>
+  <p><strong>Note</strong>: Since this class has nothing to do with Symfony, we don't put it in <code>AppBundle</code>.
+  By keeping it in its own namespace, we protect it from framework directory tree changes,
+  for example before <code>AppBundle</code> the norm was <code>Acme\FortuneBundle</code>. We also allow ourselves
+  to move it to another framework (e.g. Laravel, Zend, etc).</p>
 </blockquote>
+
 <p>Let's run the tests:</p>
-<pre><code>./bin/test.sh</code></pre>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
 <p>It fails because the exception doesn't exist yet:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // src/Acme/Fortune/Exception/ValidationFailedException.php
 
 namespace Acme\Fortune\Exception;
 
 class ValidationFailedException extends FortuneException
 {
-}</code></pre>
+}
+</code></pre>
+
 <p>We're making it a sub type of <code>FortuneException</code>: that way we can catch all exceptions
 related to our code (all other exceptions can be considered as Internal Server Errors).</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // src/Acme/Fortune/Exception/FortuneException.php
 
 namespace Acme\Fortune\Exception;
@@ -315,9 +387,12 @@ use DomainException;
 
 class FortuneException extends DomainException
 {
-}</code></pre>
+}
+</code></pre>
+
 <p>Now we need to create the Command:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // src/Acme/Fortune/Quote/SubmitNewQuote.php
 
 namespace Acme\Fortune\Quote;
@@ -334,15 +409,23 @@ class SubmitNewQuote
         if ('' === $quote) {
             throw new ValidationFailedException('Invalid "quote" parameter: must not be empty');
         }
-        $this->quote = (string) $quote;
+        $this-&gt;quote = (string) $quote;
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Running the tests again:</p>
-<pre><code>./bin/test.sh</code></pre>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
 <p>Everything seems fine.</p>
-<h2 id="exception-listener">Exception listener<a href="#exception-listener" class="anchor">#</a></h2>
+
+<h2 id="exception-listener">Exception listener</h2>
+
 <p>Instead of catching exceptions in our controllers we can create an event listener:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // src/AppBundle/EventListener/FortuneExceptionListener.php
 
 namespace AppBundle\EventListener;
@@ -355,17 +438,21 @@ class FortuneExceptionListener
 {
     public function onKernelException(GetResponseForExceptionEvent $event)
     {
-        $exception = $event->getException();
+        $exception = $event-&gt;getException();
         if (!$exception instanceof FortuneException) {
             return;
         }
-        $content = json_encode(array('error' => $exception->getMessage()));
+        $content = json_encode(array('error' =&gt; $exception-&gt;getMessage()));
         $statusCode = Response::HTTP_UNPROCESSABLE_ENTITY;
-        $event->setResponse(new Response($content, $statusCode, array('Content-Type' => 'application/json')));
+        $event-&gt;setResponse(new Response($content, $statusCode, array('Content-Type' =&gt; 'application/json')));
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>This lowers the risk of forgetting to catch an exception and it also keeps our controller slim.</p>
+
 <p>Let's enable it in the DIC:</p>
+
 <pre><code># app/config/services/event_listener.yml
 
 services:
@@ -377,21 +464,30 @@ services:
     app.json_request_listener:
         class: AppBundle\EventListener\JsonRequestListener
         tags:
-            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }</code></pre>
-<h2 id="command-handler">Command Handler<a href="#command-handler" class="anchor">#</a></h2>
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+</code></pre>
+
+<h2 id="command-handler">Command Handler</h2>
+
 <p><code>SubmitNewQuoteHandler</code>'s responsibility is to validate <code>SubmitNewQuote</code> data against
 business rules (e.g. no quote duplicates, author must exist, etc) and to call the
 appropriate services to process it.
 Reading its code feels like reading the details of a use case:</p>
+
 <blockquote>
-<p>To handle the submission of a new quote,
-we need to generate a unique identifier
-and then we need to save the new quote.</p>
+  <p>To handle the submission of a new quote,
+  we need to generate a unique identifier
+  and then we need to save the new quote.</p>
 </blockquote>
+
 <p>Let's bootstrap its test:</p>
-<pre><code>vendor/bin/phpspec describe 'Acme\Fortune\Quote\SubmitNewQuoteHandler'</code></pre>
+
+<pre><code>vendor/bin/phpspec describe 'Acme\Fortune\Quote\SubmitNewQuoteHandler'
+</code></pre>
+
 <p>Then edit the test:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // spec/Acme/Fortune/Quote/SubmitNewQuoteHandlerSpec.php
 
 namespace spec\Acme\Fortune\Quote;
@@ -408,29 +504,35 @@ class SubmitNewQuoteHandlerSpec extends ObjectBehavior
 
     function let(SaveNewQuote $saveNewQuote, UniqueIdentifierGenerator $uniqueIdentifierGenerator)
     {
-        $this->beConstructedWith($saveNewQuote, $uniqueIdentifierGenerator);
+        $this-&gt;beConstructedWith($saveNewQuote, $uniqueIdentifierGenerator);
     }
 
     function it_saves_new_quote(SaveNewQuote $saveNewQuote, UniqueIdentifierGenerator $uniqueIdentifierGenerator)
     {
         $submitNewQuote = new SubmitNewQuote(self::QUOTE);
         $quote = array(
-            'id' => self::ID,
-            'quote' => self::QUOTE,
+            'id' =&gt; self::ID,
+            'quote' =&gt; self::QUOTE,
         );
 
-        $uniqueIdentifierGenerator->generate()->willReturn(self::ID);
-        $saveNewQuote->save($quote)->shouldBeCalled();
+        $uniqueIdentifierGenerator-&gt;generate()-&gt;willReturn(self::ID);
+        $saveNewQuote-&gt;save($quote)-&gt;shouldBeCalled();
 
-        $this->handle($submitNewQuote)->shouldBe($quote);
+        $this-&gt;handle($submitNewQuote)-&gt;shouldBe($quote);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Let's run the tests:</p>
-<pre><code>./bin/test.sh</code></pre>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
 <p>After generating interfaces for <code>SaveNewQuote</code> and <code>UniqueIdentifierGenerator</code>
 and after bootstrapping the code for <code>SubmitNewQuoteHandler</code>, the test will fail
 because we need to complete it:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // src/Acme/Fortune/Quote/SubmitNewQuoteHandler.php
 
 namespace Acme\Fortune\Quote;
@@ -445,55 +547,75 @@ class SubmitNewQuoteHandler
 
     public function __construct(SaveNewQuote $saveNewQuote, UniqueIdentifierGenerator $uniqueIdentifierGenerator)
     {
-        $this->saveNewQuote = $saveNewQuote;
-        $this->uniqueIdentifierGenerator = $uniqueIdentifierGenerator;
+        $this-&gt;saveNewQuote = $saveNewQuote;
+        $this-&gt;uniqueIdentifierGenerator = $uniqueIdentifierGenerator;
     }
 
     public function handle(SubmitNewQuote $sumbitNewQuote)
     {
         $quote = array(
-            'id' => $this->uniqueIdentifierGenerator->generate(),
-            'quote' => $sumbitNewQuote->quote,
+            'id' =&gt; $this-&gt;uniqueIdentifierGenerator-&gt;generate(),
+            'quote' =&gt; $sumbitNewQuote-&gt;quote,
         );
-        $this->saveNewQuote->save($quote);
+        $this-&gt;saveNewQuote-&gt;save($quote);
 
         return $quote;
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Now we can configure the service:</p>
-<pre><code class="language-php"># app/config/services/quote.yml
+
+<pre><code class="php"># app/config/services/quote.yml
 
 services:
     app.submit_new_quote_handler:
         class: Acme\Fortune\Quote\SubmitNewQuoteHandler
         arguments:
             - "@app.save_new_quote"
-            - "@app.unique_identifier_generator"</code></pre>
+            - "@app.unique_identifier_generator"
+</code></pre>
+
 <p>Finally can run the tests one last time:</p>
-<pre><code>./bin/test.sh</code></pre>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
 <p>Allmost green!</p>
+
 <p>They fail because <code>app.save_new_quote</code> and <code>app.unique_identifier_generator</code> don't
 exist yet. They will be the topic of another article ;) .</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>By restricting frameworks to their entry points (Controllers, Commands, etc) and
 using the Command Bus to define our project entry points (domain boundaries) we
 are able to decouple from the framework, allowing us to restrict the impact of BC breaks.</p>
+
 <p>Of course, all projects are different and this solution might not be possible everywhere.
 RAD development is a robust solution for web agencies, especially if they are chosen
 to bootstrap a project as fast as possible and then need to pass the project over
 to their customer after a short period.</p>
+
 <p>On the other hand some companies are creating projects they will have to maintain
 for decades and those are also in need of delivering a first version early.
 Decoupling from the framework isn't something that slows down development, and there
 are ways to still release early (e.g. define Minimum Valuable Product and deliver
 small features iterations by iterations).</p>
+
 <blockquote>
-<p><strong>Note</strong>: There are a couple of bundles that provides Symfony with a Command Bus, among them:</p>
-<ul><li><a href="../../../2015/09/09/tactician.html">Tactician</a></li>
-<li><a href="../../../2015/08/04/simple-bus.html">SimpleBus</a></li>
-</ul></blockquote>
+  <p><strong>Note</strong>: There are a couple of bundles that provides Symfony with a Command Bus, among them:</p>
+  
+  <ul>
+  <li><a href="/2015/09/09/tactician.html">Tactician</a></li>
+  <li><a href="/2015/08/04/simple-bus.html">SimpleBus</a></li>
+  </ul>
+</blockquote>
+
 <p>If you're interrested on the subject, here's some resources:</p>
-<ul><li>The framework as an implementation detail
+
+<ul>
+<li>The framework as an implementation detail
 (<a href="http://www.slideshare.net/marcello.duarte/the-framework-as-an-implementation-detail">slides</a>
 and <a href="https://www.youtube.com/watch?v=0L_9NutiJlc">video</a>),
 by <a href="http://marcelloduarte.net/">Marcello Duarte</a>
@@ -504,27 +626,27 @@ by <a href="https://sites.google.com/site/unclebobconsultingllc/">Robert Cecil M
 by <a href="https://twitter.com/mrkrstphr">Kristopher Wilson</a></li>
 </ul>
 
+
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2015/09/23/phpunit-with-phpspec.html">Previous: PHPUnit with phpspec</a>
-        
-                        <a class="six columns button" href="../../../2015/10/12/decouple-from-libraries.html">Next: Decouple from Libraries</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/09/23/phpunit-with-phpspec.html" title="PHPUnit with phpspec">Previous &lt; PHPUnit with phpspec</a>
+                                        <a class="button six columns" href="/2015/10/12/decouple-from-libraries.html" title="Decouple from Libraries">Next &gt; Decouple from Libraries</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Symfony / Web Services - part 3.3: Consuming, remote calls</title>
+    <title>Symfony / Web Services - part 3.3: Consuming, remote calls &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2015/03/25/sf-ws-part-3-3-consuming-remote.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,60 +30,85 @@
         <article>
             <header>
                 <h2>
-    Symfony / Web Services - part 3.3: Consuming, remote calls    <span class="sub-title">25/03/2015</span>
+    Symfony / Web Services - part 3.3: Consuming, remote calls
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/symfony.html">Symfony</a>
-                <a class="button" href="../../../tags/phpspec.html">Phpspec</a>
-                <a class="button" href="../../../tags/symfony-web-services-series.html">Symfony / Web Services Series</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/Symfony%20%2F%20Web%20Services%20series">Symfony / Web Services series</a>
+                    </nav>
+                </header>
 
-            <p>This is the seventh article of the series on managing Web Services in a
+                <p>This is the seventh article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the six first ones:</p>
-<ul><li><a href="../../../2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a></li>
-<li><a href="../../../2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">2.1 Creation bootstrap</a></li>
-<li><a href="../../../2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">2.2 Creation, the pragmatic way</a></li>
-<li><a href="../../../2015/03/04/sf-ws-part-2-3-creation-refactoring.html">2.3 Creation, refactoring</a></li>
-<li><a href="../../../2015/03/11/sf-ws-part-3-1-consuming-request-handler.html">3.1 Consuming, RequestHandler</a></li>
-<li><a href="../../../2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">3.2 Consuming, Guzzle</a></li>
-</ul><p>You can check the code in the <a href="https://github.com/gnugat-examples/sf-cs">following repository</a>.</p>
+
+<ul>
+<li><a href="/2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a></li>
+<li><a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">2.1 Creation bootstrap</a></li>
+<li><a href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">2.2 Creation, the pragmatic way</a></li>
+<li><a href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html">2.3 Creation, refactoring</a></li>
+<li><a href="/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html">3.1 Consuming, RequestHandler</a></li>
+<li><a href="/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">3.2 Consuming, Guzzle</a></li>
+</ul>
+
+<p>You can check the code in the <a href="https://github.com/gnugat-examples/sf-cs">following repository</a>.</p>
+
 <p>In the previous article, we've created a Guzzle RequestHandler: we are now able
 to make remote calls using a third party library, but without the cost of coupling
 ourselves to it. If Guzzle 6 is released we'll have to change only one class, instead
 of everywhere in our application.</p>
+
 <p>In this article, we'll create the actual remote calls.</p>
-<h2 id="credential-configuration">Credential configuration<a href="#credential-configuration" class="anchor">#</a></h2>
+
+<h2 id="credential-configuration">Credential configuration</h2>
+
 <p>The web service we want to call requires us to authenticate. Those credentials
 shouldn't be hardcoded, we'll create new parameters for them (same goes for the URL):</p>
+
 <pre><code># File: app/config/parameters.yml.dist
     ws_url: http://example.com
     ws_username: username
-    ws_password: ~</code></pre>
+    ws_password: ~
+</code></pre>
+
 <p>We can then set those values in the actual parameter file:</p>
+
 <pre><code># File: app/config/parameters.yml
     ws_url: "http://ws.local/app_dev.php"
     ws_username: spanish_inquisition
-    ws_password: "NobodyExpectsIt!"</code></pre>
+    ws_password: "NobodyExpectsIt!"
+</code></pre>
+
 <p>Note that because our password contains a character which is reserved in YAML (<code>!</code>),
 we need to put the value between double quotes (same goes for <code>%</code> and <code>@</code>).</p>
+
 <p>Let's commit this:</p>
+
 <pre><code>git add -A
-git commit -m 'Added credentials configuration'</code></pre>
-<h2 id="profile-gateway">Profile Gateway<a href="#profile-gateway" class="anchor">#</a></h2>
+git commit -m 'Added credentials configuration'
+</code></pre>
+
+<h2 id="profile-gateway">Profile Gateway</h2>
+
 <p>We can create a <a href="http://martinfowler.com/eaaCatalog/gateway.html">Gateway</a>
 specialized in calling the profile web service:</p>
-<pre><code>./bin/phpspec describe 'AppBundle\Profile\ProfileGateway'</code></pre>
+
+<pre><code>./bin/phpspec describe 'AppBundle\Profile\ProfileGateway'
+</code></pre>
+
 <p>Usually we categorize our Symfony applications by Pattern: we'd create a <code>Gateway</code>
 directory with all the Gateway service. However this can become quite cubersome
 when the application grows, services are usually linked to a model meaning that
 we'd have to jump from the <code>Model</code> (or <code>Entity</code>) directory to the <code>Gateway</code> one,
 then go to the <code>Factory</code> directory, etc...</p>
+
 <p>Here we've chosen an alternative: group services by model. All <code>Profile</code> services
 can be found in the same directory.</p>
+
 <p>Let's write the Gateway's specification:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: spec/AppBundle/Profile/ProfileGatewaySpec.php
 
 namespace spec\AppBundle\Profile;
@@ -104,28 +129,34 @@ class ProfileGatewaySpec extends ObjectBehavior
 
     function let(RequestHandler $requestHandler)
     {
-        $this->beConstructedWith($requestHandler, self::URL, self::USERNAME, self::PASSWORD);
+        $this-&gt;beConstructedWith($requestHandler, self::URL, self::USERNAME, self::PASSWORD);
     }
 
     function it_creates_profiles(RequestHandler $requestHandler, Response $response)
     {
         $profile = array(
-            'id' => self::ID,
-            'name' => self::NAME,
+            'id' =&gt; self::ID,
+            'name' =&gt; self::NAME,
         );
 
         $request = Argument::type('AppBundle\RequestHandler\Request');
-        $requestHandler->handle($request)->willReturn($response);
-        $response->getBody()->willReturn($profile);
+        $requestHandler-&gt;handle($request)-&gt;willReturn($response);
+        $response-&gt;getBody()-&gt;willReturn($profile);
 
-        $this->create(self::NAME)->shouldBe($profile);
+        $this-&gt;create(self::NAME)-&gt;shouldBe($profile);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>We can now generate the code's skeleton:</p>
-<pre><code>./bin/phpspec run</code></pre>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
 <p>It constructs a <code>Request</code> object, gives it to <code>RequestHandler</code> and then returns the
 <code>Response</code>'s body:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/Profile/ProfileGateway.php
 
 namespace AppBundle\Profile;
@@ -142,40 +173,52 @@ class ProfileGateway
 
     public function __construct(RequestHandler $requestHandler, $url, $username, $password)
     {
-        $this->requestHandler = $requestHandler;
-        $this->username = $username;
-        $this->password = $password;
+        $this-&gt;requestHandler = $requestHandler;
+        $this-&gt;username = $username;
+        $this-&gt;password = $password;
     }
 
     public function create($name)
     {
-        $request = new Request('POST', $this->url.'/api/v1/profiles');
-        $request->setHeader('Authorization', 'Basic '.base64_encode($this->username.':'.$this->password));
-        $request->setHeader('Content-Type', 'application/json');
-        $request->setBody(json_encode(array('name' => $name)));
+        $request = new Request('POST', $this-&gt;url.'/api/v1/profiles');
+        $request-&gt;setHeader('Authorization', 'Basic '.base64_encode($this-&gt;username.':'.$this-&gt;password));
+        $request-&gt;setHeader('Content-Type', 'application/json');
+        $request-&gt;setBody(json_encode(array('name' =&gt; $name)));
 
-        $response = $this->requestHandler->handle($request);
+        $response = $this-&gt;requestHandler-&gt;handle($request);
 
-        return $response->getBody();
+        return $response-&gt;getBody();
     }
-}</code></pre>
+}
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: Managing URLs can become quite tricky when the number of routes grows.
-Sometimes we'll want HTTPS, sometimes HTTP. Sometimes we'll want the first version
-of the API, sometimes the pre production one. And what should we do when we'll
-need query parameters?</p>
-<p>Usually I don't bother with those until the need is actually there, then I create
-a <code>UrlGenerator</code> which works a bit like Symfony's one and relies on a configuration array.</p>
+  <p><strong>Note</strong>: Managing URLs can become quite tricky when the number of routes grows.
+  Sometimes we'll want HTTPS, sometimes HTTP. Sometimes we'll want the first version
+  of the API, sometimes the pre production one. And what should we do when we'll
+  need query parameters?</p>
+  
+  <p>Usually I don't bother with those until the need is actually there, then I create
+  a <code>UrlGenerator</code> which works a bit like Symfony's one and relies on a configuration array.</p>
 </blockquote>
+
 <p>Let's check our tests:</p>
-<pre><code>./bin/phpspec run</code></pre>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
 <p>All green!</p>
+
 <pre><code>git add -A
-git commit -m 'Created ProfileGateway'</code></pre>
-<h2 id="create-profile-command">Create Profile Command<a href="#create-profile-command" class="anchor">#</a></h2>
+git commit -m 'Created ProfileGateway'
+</code></pre>
+
+<h2 id="create-profile-command">Create Profile Command</h2>
+
 <p>Our application happens to be a Command Line Interface (CLI). We want to write a
 command to create profiles, and as usual we'll begin with a test:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: tests/Command/CreateProfileCommandTest.php
 
 namespace AppBundle\Tests\Command;
@@ -193,25 +236,28 @@ class CreateProfileCommandTest extends PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $kernel = new \AppKernel('test', false);
-        $this->app = new Application($kernel);
-        $this->app->setAutoExit(false);
-        $this->output = new NullOutput();
+        $this-&gt;app = new Application($kernel);
+        $this-&gt;app-&gt;setAutoExit(false);
+        $this-&gt;output = new NullOutput();
     }
 
     public function testItRunsSuccessfully()
     {
         $input = new ArrayInput(array(
-            'commandName' => 'app:profile:create',
-            'name' => 'Igor',
+            'commandName' =&gt; 'app:profile:create',
+            'name' =&gt; 'Igor',
         ));
 
-        $exitCode = $this->app->run($input, $this->output);
+        $exitCode = $this-&gt;app-&gt;run($input, $this-&gt;output);
 
-        $this->assertSame(0, $exitCode);
+        $this-&gt;assertSame(0, $exitCode);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Let's make this test pass:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/Command/CreateProfileCommand.php
 
 namespace AppBundle\Command;
@@ -226,22 +272,25 @@ class CreateProfileCommand extends ContainerAwareCommand
 {
     protected function configure()
     {
-        $this->setName('app:profile:create');
-        $this->setDescription('Create a new profile');
+        $this-&gt;setName('app:profile:create');
+        $this-&gt;setDescription('Create a new profile');
 
-        $this->addArgument('name', InputArgument::REQUIRED);
+        $this-&gt;addArgument('name', InputArgument::REQUIRED);
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $profileGateway = $this->getContainer()->get('app.profile_gateway');
+        $profileGateway = $this-&gt;getContainer()-&gt;get('app.profile_gateway');
 
-        $profile = $profileGateway->create($input->getArgument('name'));
+        $profile = $profileGateway-&gt;create($input-&gt;getArgument('name'));
 
-        $output->writeln(sprintf('Profile #%s "%s" created', $profile['id'], $profile['name']));
+        $output-&gt;writeln(sprintf('Profile #%s "%s" created', $profile['id'], $profile['name']));
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>We'll need to define <code>ProfileGateway</code> as a service:</p>
+
 <pre><code># File: app/config/services.yml
 imports:
     - { resource: services/request_handler.yml }
@@ -253,81 +302,107 @@ services:
             - "@app.request_handler"
             - "%ws_url%"
             - "%ws_username%"
-            - "%ws_password%"</code></pre>
+            - "%ws_password%"
+</code></pre>
+
 <p>By having a look <code>ProfileGateway</code> we can spot a mistake, the initialization or URL
 is missing from the constructor:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/Profile/ProfileGateway.php
 
     public function __construct(RequestHandler $requestHandler, $url, $username, $password)
     {
-        $this->requestHandler = $requestHandler;
-        $this->username = $username;
-        $this->password = $password;
-        $this->url = $url;
-    }</code></pre>
+        $this-&gt;requestHandler = $requestHandler;
+        $this-&gt;username = $username;
+        $this-&gt;password = $password;
+        $this-&gt;url = $url;
+    }
+</code></pre>
+
 <p>Another mistake lies in <code>JsonResponseListener</code>, each Guzzle header is an array:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/RequestHandler/Listener/JsonResponseListener.php
 
-        $contentType = $response->getHeader('Content-Type');
+        $contentType = $response-&gt;getHeader('Content-Type');
         if (false === strpos($contentType[0], 'application/json')) {
             return;
-        }</code></pre>
+        }
+</code></pre>
+
 <p>With these fixes, the test should pass:</p>
-<pre><code>phpunit -c app</code></pre>
+
+<pre><code>phpunit -c app
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: if we get a <code>You have requested a non-existent service "app.profile_gateway"</code>
-error, we might need to clear the cache for test environment: <code>php app/console cache:clear --env=test</code>.</p>
-<p><strong>Note</strong>: if we get a Guzzle exception, we need to check that the previous application installed
-("ws.local"), and that its database is created:</p>
+  <p><strong>Note</strong>: if we get a <code>You have requested a non-existent service "app.profile_gateway"</code>
+  error, we might need to clear the cache for test environment: <code>php app/console cache:clear --env=test</code>.</p>
+  
+  <p><strong>Note</strong>: if we get a Guzzle exception, we need to check that the previous application installed
+  ("ws.local"), and that its database is created:</p>
+
 <pre><code>cd ../ws
 php app/console doctrine:database:create
 php app/console doctrine:schema:create
-cd ../cs</code></pre>
+cd ../cs
+</code></pre>
 </blockquote>
+
 <p>We can now save our work:</p>
+
 <pre><code>git add -A
-git commit -m 'Created CreateProfileCommand'</code></pre>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+git commit -m 'Created CreateProfileCommand'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>We have now an application that consumes a web service. We have decoupled it from
 third party libraries using RequestHandler and isolated the endpoint logic in a
 Gateway class.</p>
+
 <p>There's a lot to say about the test we wrote: it makes a network call which is slow, unreliable
 and it isn't immutable. If we try to run again our test, it will fail!
 To fix this we have many possibilities:</p>
-<ul><li>mock the endpoints, it will make the tests faster and immutable but if the endpoints change our tests will still pass</li>
+
+<ul>
+<li>mock the endpoints, it will make the tests faster and immutable but if the endpoints change our tests will still pass</li>
 <li>cleanup the created profile by aking another network call, it will make the test even slower</li>
-</ul><p>At this point it depends on how confident we are in the web services and what we want to test.</p>
+</ul>
+
+<p>At this point it depends on how confident we are in the web services and what we want to test.</p>
+
 <p>We should also write more test on edge cases: what happens with the wrong credentials?
 What happens if the endpoints cannot be reached (request timeout, connection timeout, etc)?
 What happens when we try to create a profile which already exists?</p>
+
 <p>As it happens, this is also the conclusion of this series on managing Web Services in a
 Symfony environment. There's a lot more to say for example about caching remote resources
 in a local database, about self discovering APIs and about micro services, but I feel
 those should each have their own series of article :) .</p>
 
+
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">Previous: Symfony / Web Services - part 3.2: Consuming, Guzzle</a>
-        
-                        <a class="six columns button" href="../../../2015/04/01/hello-world-best-practices.html">Next: Hello World, best practices - part 1.1.1</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html" title="Symfony / Web Services - part 3.2: Consuming, Guzzle">Previous &lt; Symfony / Web Services - part 3.2: Consuming, Guzzle</a>
+                                        <a class="button six columns" href="/2015/04/01/hello-world-best-practices.html" title="Hello World, best practices - part 1.1.1">Next &gt; Hello World, best practices - part 1.1.1</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

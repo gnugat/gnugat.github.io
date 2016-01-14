@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Introducing Memio, code generator</title>
+    <title>Introducing Memio, code generator &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2015/04/08/introducing-memio-code-generator.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2015/04/08/introducing-memio-code-generator.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,109 +30,158 @@
         <article>
             <header>
                 <h2>
-    Introducing Memio, code generator    <span class="sub-title">08/04/2015</span>
+    Introducing Memio, code generator
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/memio.html">Memio</a>
-                <a class="button" href="../../../tags/pet-project.html">Pet Project</a>
-                <a class="button" href="../../../tags/introducing-library.html">Introducing Library</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+                </header>
 
-            <blockquote>
-<p><strong>TL;DR</strong>: Work in Progress: Memio, a library for PHP code generation.</p>
+                <blockquote>
+  <p><strong>TL;DR</strong>: Work in Progress: Memio, a library for PHP code generation.</p>
 </blockquote>
+
 <p>Code generators write code for you, so you don't have to! There's many kinds out there:</p>
-<ul><li>the ones that bootstrap code but can't add anything to it later</li>
+
+<ul>
+<li>the ones that bootstrap code but can't add anything to it later</li>
 <li>the ones that create code but you can't add anything to it later</li>
 <li>the ones that can add new things to existing files</li>
 <li>the ones that will completly change the style of existing file if they add anything to it</li>
-</ul><p>Many frameworks provide code generators, because they can be a real time saver by
+</ul>
+
+<p>Many frameworks provide code generators, because they can be a real time saver by
 automating repetitive boring tasks (e.g. bootstraping a CRUD controller). The only
 issue is that usually we can't customize them.</p>
+
 <p>For example with <a href="https://github.com/sensiolabs/SensioGeneratorBundle">GeneratorBundle</a>,
 it's impossible to create REST controllers.</p>
+
 <p>Some of them provide templates but don't template engines, like <a href="http://phpspec.net/">phpspec</a>
 for example: this is a step forward but that's not enough.</p>
+
 <p>Now let's have a look at code generator libraries: the main ones don't allow an easy
 way to customize the coding style of generated code:</p>
-<ul><li><a href="http://framework.zend.com/manual/current/en/modules/zend.code.generator.examples.html">Zend Code Generator</a></li>
+
+<ul>
+<li><a href="http://framework.zend.com/manual/current/en/modules/zend.code.generator.examples.html">Zend Code Generator</a></li>
 <li><a href="https://github.com/nikic/PHP-Parser">PHP Parser</a></li>
-</ul><p>Some of them do use a template engine, but you need to write a lot of code in order to use
+</ul>
+
+<p>Some of them do use a template engine, but you need to write a lot of code in order to use
 them:</p>
-<ul><li><a href="https://github.com/cedriclombardot/TwigGenerator">TwigGenerator</a></li>
-</ul><p>Don't panic! Memio is a code generator library that uses a template engine and provide
+
+<ul>
+<li><a href="https://github.com/cedriclombardot/TwigGenerator">TwigGenerator</a></li>
+</ul>
+
+<p>Don't panic! Memio is a code generator library that uses a template engine and provide
 out of the box templates, generators and even validation!</p>
+
 <p>Started in september 2014 under the name "Medio", it has now matured enough to be soon
 released in stable version (1.0.0).</p>
+
 <p>Let's have a look at what's going to be achieved with it.</p>
-<h2 id="improving-phpspec">Improving phpspec<a href="#improving-phpspec" class="anchor">#</a></h2>
+
+<h2 id="improving-phpspec">Improving phpspec</h2>
+
 <p>The <a href="https://github.com/ciaranmcnulty/phpspec-typehintedmethods">phpspec typehint extension</a> was
 a good playground for Memio: it allowed to test generation of a method argument by:</p>
-<ul><li>adding typehints when needed</li>
+
+<ul>
+<li>adding typehints when needed</li>
 <li>naming object arguments after their types</li>
-</ul><p>Once Memio is stable, it will provide its own phpspec extension that aims at:</p>
-<ul><li>generating argument's PHPdoc</li>
+</ul>
+
+<p>Once Memio is stable, it will provide its own phpspec extension that aims at:</p>
+
+<ul>
+<li>generating argument's PHPdoc</li>
 <li>generating use statements for object arguments (no more fully qualified classnames)</li>
 <li>generating dependency injection</li>
-</ul><p>Curious about this last bullet point? Then read on.</p>
-<h2 id="automating-dependency-injection">Automating Dependency Injection<a href="#automating-dependency-injection" class="anchor">#</a></h2>
+</ul>
+
+<p>Curious about this last bullet point? Then read on.</p>
+
+<h2 id="automating-dependency-injection">Automating Dependency Injection</h2>
+
 <p>There are many ways to use constructors, and one of them is dependency injection:
 each argument is stored in a property and the class can then use them.</p>
+
 <blockquote>
-<p><strong>Note</strong>: Remember, Dependency Injection is a fancy word for passing arguments.</p>
+  <p><strong>Note</strong>: Remember, Dependency Injection is a fancy word for passing arguments.</p>
 </blockquote>
+
 <p>When doing so, we need to write a lot of boilerplate code:</p>
-<ul><li>add argument to constructor (with PHPdoc, typehint, name after the type)</li>
+
+<ul>
+<li>add argument to constructor (with PHPdoc, typehint, name after the type)</li>
 <li>add property initialization in constructor body</li>
 <li>add property (with PHPdoc)</li>
 <li>add use statement, if necessary</li>
-</ul><p>Memio will automate this in its phpspec extension.</p>
-<h2 id="possibly-more">Possibly more?<a href="#possibly-more" class="anchor">#</a></h2>
+</ul>
+
+<p>Memio will automate this in its phpspec extension.</p>
+
+<h2 id="possibly-more%3F">Possibly more?</h2>
+
 <p>We talked about GeneratorBundle: the issue is that we can't define our own templates.
 Well Memio could solve this issue in a reusable way!</p>
+
 <p>Usually each applications have its own style, its own requirements, etc. In short:
 we can't use the same code generator between projects. But if we focus on a single
 project, then we can start using the same code generator to boostrap many classes:
 endpoint/page controllers, entities, etc. The possibilities are endless!</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>Memio, once stable, will provide a powerful and reusable way of generating code.</p>
+
 <p>What's left to do before the release of v1.0? Mainly splitting the main package
 (<code>memio/memio</code>) into small ones (<code>model</code>, <code>template-engine</code>, <code>validator</code>, etc).
 The main package would become a "standard edition", allowing developers to select
 the features they want, for example the template engine (as <a href="https://github.com/memio/memio/issues/51">requested</a>
 by <a href="https://github.com/webmozart">webmozart</a>).</p>
+
 <p>Stay tuned!</p>
-<h3 id="thanks">Thanks<a href="#thanks" class="anchor">#</a></h3>
+
+<h3 id="thanks">Thanks</h3>
+
 <p>I'd like to thank the following early contributors:</p>
-<ul><li><a href="https://github.com/funivan">funivan</a></li>
+
+<ul>
+<li><a href="https://github.com/funivan">funivan</a></li>
 <li><a href="https://github.com/pyrech">pyrech</a></li>
 <li><a href="https://github.com/tigitz">tigitz</a></li>
 <li><a href="https://github.com/TomasVotruba">TomasVotruba</a></li>
-</ul><p>Keep up the good work!</p>
+</ul>
+
+<p>Keep up the good work!</p>
+
 
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2015/04/01/hello-world-best-practices.html">Previous: Hello World, best practices - part 1.1.1</a>
-        
-                        <a class="six columns button" href="../../../2015/04/15/memio-models.html">Next: Memio models</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/04/01/hello-world-best-practices.html" title="Hello World, best practices - part 1.1.1">Previous &lt; Hello World, best practices - part 1.1.1</a>
+                                        <a class="button six columns" href="/2015/04/15/memio-models.html" title="Memio models">Next &gt; Memio models</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

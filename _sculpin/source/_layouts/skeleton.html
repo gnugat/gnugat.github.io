@@ -1,0 +1,73 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}{{ page.title }}{% endblock %} &mdash; {{ site.title }} &mdash; {{ site.subtitle }}</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="{{ page.url }}"/>
+    {% block head_meta %}
+    <link rel="alternate" href="{{ site.url }}/feed/atom.xml" type="application/atom+xml" title="{{ site.title }}"/>
+    {% endblock %}
+
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="{{ site.url }}/css/normalize.css">
+    <link rel="stylesheet" href="{{ site.url }}/css/skeleton.css">
+    <link rel="stylesheet" href="{{ site.url }}/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="{{ site.url }}/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="{{ site.url }}/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                {% block page_title %}<h2>{{ page.title }}</h2>{% endblock %}
+                {% block article_header %}
+                {% endblock %}
+            </header>
+
+            {% block content_wrapper %}
+            {% endblock %}
+
+            <footer>
+                {% block article_footer %}
+                {% endblock %}
+                <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="{{ site.url }}/about">About</a>
+                <a class="button three columns" href="{{ site.url }}/">Articles</a>
+                <a class="button three columns" href="{{ site.url }}/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="{{ site.url }}/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

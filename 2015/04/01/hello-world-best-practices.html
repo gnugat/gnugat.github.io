@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Hello World, best practices - part 1.1.1</title>
+    <title>Hello World, best practices - part 1.1.1 &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2015/04/01/hello-world-best-practices.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2015/04/01/hello-world-best-practices.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,74 +30,95 @@
         <article>
             <header>
                 <h2>
-    Hello World, best practices - part 1.1.1    <span class="sub-title">01/04/2015</span>
+    Hello World, best practices - part 1.1.1
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/april-fool.html">April Fool</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/april%20fool">april fool</a>
+                    </nav>
+                </header>
 
-            <blockquote>
-<p><strong>TL;DR</strong>: Happy April Fool joke!</p>
+                <blockquote>
+  <p><strong>TL;DR</strong>: Happy April Fool joke!</p>
 </blockquote>
+
 <p>Hello World applications are often used to showcase framework capabilities, but
 they usually fail to do so! This is because real world applications are never that simple.</p>
+
 <p>In this series of articles, we will demonstrate how to build a real world Hello World application.</p>
+
 <p>The first part will include the following standard technologies:</p>
-<ul><li>AngularJs, to write the frontend</li>
+
+<ul>
+<li>AngularJs, to write the frontend</li>
 <li><a href="http://www.pomm-project.org/">PostgreSQL</a>, for the database</li>
 <li><a href="http://labs.octivi.com/handling-1-billion-requests-a-week-with-symfony2/">Redis</a>, a cache to reduce the high cost of querying the database</li>
 <li>IIS, as a web server</li>
 <li><a href="http://odolbeau.fr/blog/when-monolog-meet-elk.html">Logstash/Elasticsearch/Kibana</a>, to monitor our application</li>
-</ul><p>In the second part, we'll take things to the advanced level:</p>
-<ul><li><a href="http://williamdurand.fr/2012/08/02/rest-apis-with-symfony2-the-right-way/">FOSRestBundle</a> to create a HATEOS compliant API with Symfony</li>
+</ul>
+
+<p>In the second part, we'll take things to the advanced level:</p>
+
+<ul>
+<li><a href="http://williamdurand.fr/2012/08/02/rest-apis-with-symfony2-the-right-way/">FOSRestBundle</a> to create a HATEOS compliant API with Symfony</li>
 <li><a href="http://homakov.blogspot.fr/2013/03/oauth1-oauth2-oauth.html">OAuth2</a> to manage authentication</li>
 <li><a href="http://www.slideshare.net/cakper/2014-0821-symfony-uk-meetup-scaling-symfony2-apps-with-rabbit-mq?related=1">Oldsound/RabbitMQBundle</a>, to keep our database and cache up to date</li>
 <li><a href="https://twitter.com/m_lukaszewski/status/583143784394985473">Laravel 5</a> to create a backend</li>
-</ul><p>In the conlusion we'll explore Docker, <a href="http://www.slideshare.net/giorrrgio/import-golang-struct-microservice">Go Martini</a> (for faster GET endpoints),
+</ul>
+
+<p>In the conlusion we'll explore Docker, <a href="http://www.slideshare.net/giorrrgio/import-golang-struct-microservice">Go Martini</a> (for faster GET endpoints),
 <a href="http://www.crummy.com/software/BeautifulSoup/">Python beautiful soup</a> (for web crawling) and NodeJs (to monitor our queues).</p>
+
 <p>Of course we're going to use <a href="https://cukes.info/blog/2015/03/24/single-source-of-truth">full stack BDD</a> all along!</p>
+
 <p>Get ready for the best "Hello World" application you've ever seen!</p>
-<h2 id="april-fool">April Fool<a href="#april-fool" class="anchor">#</a></h2>
+
+<h2 id="april-fool">April Fool</h2>
+
 <p>This was my April Fool joke, no let's get serious and build  what I think is the best
 Hello World application:</p>
-<pre><code class="language-php"><?php
 
-echo 'Hello world';</code></pre>
+<pre><code class="php">&lt;?php
+
+echo 'Hello world';
+</code></pre>
+
 <p>Note that there's no symfony, no RabbitMQ, no nothing involved. That's because
 a Hello World application doesn't require anything else, those tools were design
 to solve issues that we don't have here.</p>
+
 <p>If you're concerned about our Hello World application's performance, well you shouldn't be.
 First of all, it's a Hello World application... As far as I'm concerned it prints
 pretty much instantly this way.</p>
+
 <p>Second of all, you shouldn't worry about performance when building an application.
 This is something you should start worrying only when you have performance issues.
 The best thing you could do, is build the application in a way that will allow you
 to change it afterwards, if the need comes (and it usually will: requirements are changing by nature).</p>
+
 <p>I hope you enjoyed it :) .</p>
 
+
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2015/03/25/sf-ws-part-3-3-consuming-remote.html">Previous: Symfony / Web Services - part 3.3: Consuming, remote calls</a>
-        
-                        <a class="six columns button" href="../../../2015/04/08/introducing-memio-code-generator.html">Next: Introducing Memio, code generator</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/03/25/sf-ws-part-3-3-consuming-remote.html" title="Symfony / Web Services - part 3.3: Consuming, remote calls">Previous &lt; Symfony / Web Services - part 3.3: Consuming, remote calls</a>
+                                        <a class="button six columns" href="/2015/04/08/introducing-memio-code-generator.html" title="Introducing Memio, code generator">Next &gt; Introducing Memio, code generator</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

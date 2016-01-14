@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Symfony2 - Quick functional tests</title>
+    <title>Symfony2 - Quick functional tests &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2014/11/15/sf2-quick-functional-tests.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2014/11/15/sf2-quick-functional-tests.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,64 +30,80 @@
         <article>
             <header>
                 <h2>
-    Symfony2 - Quick functional tests    <span class="sub-title">15/11/2014</span>
+    Symfony2 - Quick functional tests
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/symfony.html">Symfony</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                    </nav>
+                </header>
 
-            <blockquote>
-<p><strong>TL;DR</strong>: Only check the status and exit code, don't use the given <code>TestCase</code>.</p>
+                <blockquote>
+  <p><strong>TL;DR</strong>: Only check the status and exit code, don't use the given <code>TestCase</code>.</p>
 </blockquote>
+
 <p>Provided that your controllers and commands are thin and they rely on services
 which are heavily unit tested, only checking the status and exit code in your
 functional test should be entirely sufficient.</p>
+
 <blockquote>
-<p><strong>Note</strong>: Checking at least the status and exit code is recommended by
-<a href="http://symfony.com/doc/current/best_practices/tests.html#functional-tests">Symfony's Official Best Practices</a>.</p>
+  <p><strong>Note</strong>: Checking at least the status and exit code is recommended by
+  <a href="http://symfony.com/doc/current/best_practices/tests.html#functional-tests">Symfony's Official Best Practices</a>.</p>
 </blockquote>
+
 <p>In this article, we will see how easy and quick it is to write them.</p>
-<h2 id="making-the-kernel-available">Making the Kernel available<a href="#making-the-kernel-available" class="anchor">#</a></h2>
+
+<h2 id="making-the-kernel-available">Making the Kernel available</h2>
+
 <p>If you're familiar with <a href="http://symfony.com">Symfony2</a>, you might use one of
 the given <code>KernelTestCase</code> to write your tests with <a href="http://phpunit.de">PHPUnit</a>.</p>
+
 <p>The whole purpose of this file is to create an instance of the application's
 Kernel, by guessing its localization. The problem with this approach is that it
 ties you to the PHPUnit test framework. If you have a look at its code, you'll
 also find it a bit complicated.</p>
+
 <blockquote>
-<p><strong>Note</strong>: <code>WebTestCase</code> also makes available a <a href="http://symfony.com/doc/current/book/testing.html#functional-tests">crawler</a>,
-which we don't need as we only intend on checking the status code, not the body.</p>
+  <p><strong>Note</strong>: <code>WebTestCase</code> also makes available a <a href="http://symfony.com/doc/current/book/testing.html#functional-tests">crawler</a>,
+  which we don't need as we only intend on checking the status code, not the body.</p>
 </blockquote>
+
 <p>Let's take an easier way: we will create a bootstrap file which requires the
 kernel's file:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: app/bootstrap.php
 
 require __DIR__.'/bootstrap.php.cache';
-require __DIR__.'/AppKernel.php';</code></pre>
+require __DIR__.'/AppKernel.php';
+</code></pre>
+
 <p>Now all you need to do for your tests is to use this file. For example with
 PHPUnit:</p>
-<pre><code class="language-xml"><?xml version="1.0" encoding="UTF-8"?>
 
-<!-- File: app/phpunit.xml.dist -->
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<pre><code class="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- File: app/phpunit.xml.dist --&gt;
+&lt;phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.3/phpunit.xsd"
     backupGlobals="false"
     colors="true"
     bootstrap="./bootstrap.php"
->
-    <testsuites>
-        <testsuite name="Test Suite">
-            <directory>./src/AppBundle/Tests</directory>
-        </testsuite>
-    </testsuites>
-</phpunit></code></pre>
-<h2 id="testing-commands">Testing commands<a href="#testing-commands" class="anchor">#</a></h2>
+&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="Test Suite"&gt;
+            &lt;directory&gt;./src/AppBundle/Tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;
+</code></pre>
+
+<h2 id="testing-commands">Testing commands</h2>
+
 <p>Now let's say we're testing the famous <a href="https://github.com/sensiolabs/SensioDistributionBundle/tree/master/Resources/skeleton/acme-demo-bundle/Acme/DemoBundle">AcmeDemoBundle</a>,
 and its <a href="https://github.com/sensiolabs/SensioDistributionBundle/blob/master/Resources/skeleton/acme-demo-bundle/Acme/DemoBundle/Command/HelloWorldCommand.php">hello world command</a>:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 
 namespace Acme\DemoBundle\Tests\Command;
 
@@ -103,32 +119,38 @@ class HelloWorldCommandTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $kernel = new \AppKernel('test', false);
-        $this->app = new Application($kernel);
-        $this->app->setAutoExit(false);
-        $this->output = new NullOutput();
+        $this-&gt;app = new Application($kernel);
+        $this-&gt;app-&gt;setAutoExit(false);
+        $this-&gt;output = new NullOutput();
     }
 
     public function testItRunsSuccessfully()
     {
         $input = new ArrayInput(array(
-            'commandName' => 'acme:hello',
-            'name' => 'Igor',
+            'commandName' =&gt; 'acme:hello',
+            'name' =&gt; 'Igor',
         ));
 
-        $exitCode = $this->app->run($input, $this->output);
+        $exitCode = $this-&gt;app-&gt;run($input, $this-&gt;output);
 
-        $this->assertSame(0, $exitCode);
+        $this-&gt;assertSame(0, $exitCode);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>As you can see our test is neatly structured in 3 parts: input definition, the
 actual call and finally the check.</p>
+
 <blockquote>
-<p><strong>Note</strong>: the <code>setAutoExit</code> method will ensure that the application doesn't
-call PHP's <code>exit</code>. The <code>NullOutput</code> ensures that nothing is displayed.</p>
+  <p><strong>Note</strong>: the <code>setAutoExit</code> method will ensure that the application doesn't
+  call PHP's <code>exit</code>. The <code>NullOutput</code> ensures that nothing is displayed.</p>
 </blockquote>
-<h2 id="testing-controllers">Testing controllers<a href="#testing-controllers" class="anchor">#</a></h2>
+
+<h2 id="testing-controllers">Testing controllers</h2>
+
 <p>Once again let's test AcmeDemoBundle, this time the <a href="https://github.com/sensiolabs/SensioDistributionBundle/blob/master/Resources/skeleton/acme-demo-bundle/Acme/DemoBundle/Controller/DemoController.php">demo controller</a>:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 
 namespace Acme\DemoBundle\Tests\Controller;
 
@@ -140,70 +162,75 @@ class DemoControllerTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->app = new \AppKernel('test', false);
-        $this->app->boot();
+        $this-&gt;app = new \AppKernel('test', false);
+        $this-&gt;app-&gt;boot();
     }
 
     public function testHomepage()
     {
         $request = new Request::create('/', 'GET');
 
-        $response = $this->app->handle($request);
+        $response = $this-&gt;app-&gt;handle($request);
 
-        $this->assertTrue($response->isSuccessful());
+        $this-&gt;assertTrue($response-&gt;isSuccessful());
     }
 
     public function testItSaysHello()
     {
         $request = new Request('/hello/igor', 'GET');
 
-        $response = $this->app->handle($request);
+        $response = $this-&gt;app-&gt;handle($request);
 
-        $this->assertTrue($response->isSuccessful());
+        $this-&gt;assertTrue($response-&gt;isSuccessful());
     }
 
     public function testItSendsEmail()
     {
         $request = new Request('/contact', 'POST', array(
-            'email' => 'igor@example.com',
-            'content' => 'Hello',
+            'email' =&gt; 'igor@example.com',
+            'content' =&gt; 'Hello',
         ));
 
-        $response = $this->app->handle($request);
+        $response = $this-&gt;app-&gt;handle($request);
 
-        $this->assertTrue($response->isSuccessful());
+        $this-&gt;assertTrue($response-&gt;isSuccessful());
     }
-}</code></pre>
+}
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: The <code>boot</code> method makes the container available.</p>
+  <p><strong>Note</strong>: The <code>boot</code> method makes the container available.</p>
 </blockquote>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>We stripped Symfony2 to its bare minimum and as a result we are now able to
 write functional tests without any effort.</p>
+
 <p>I hope you enjoyed this article, please feel free to
 <a href="https://twitter.com/epiloic">tweet me</a> for any comment and question.</p>
 
+
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2014/11/06/redaktilo-1-3.html">Previous: Redaktilo 1.3</a>
-        
-                        <a class="six columns button" href="../../../2014/11/21/read-it-later.html">Next: Read it Later</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2014/11/06/redaktilo-1-3.html" title="Redaktilo 1.3">Previous &lt; Redaktilo 1.3</a>
+                                        <a class="button six columns" href="/2014/11/21/read-it-later.html" title="Read it Later">Next &gt; Read it Later</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

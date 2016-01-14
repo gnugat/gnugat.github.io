@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Memio models</title>
+    <title>Memio models &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2015/04/15/memio-models.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2015/04/15/memio-models.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,41 +30,59 @@
         <article>
             <header>
                 <h2>
-    Memio models    <span class="sub-title">15/04/2015</span>
+    Memio models
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/memio.html">Memio</a>
-                <a class="button" href="../../../tags/pet-project.html">Pet Project</a>
-                <a class="button" href="../../../tags/introducing-library.html">Introducing Library</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+                </header>
 
-            <blockquote>
-<p><strong>TL;DR</strong>: Describe code by building <a href="http://github.com/memio/model">models</a>.</p>
+                <blockquote>
+  <p><strong>TL;DR</strong>: Describe code by building <a href="http://github.com/memio/model">models</a>.</p>
 </blockquote>
+
 <p>Memio is a highly opinionated PHP code generation library, its version 1.0.0 (stable)
 is going to be released soon: currently the main package <code>memio/memio</code> is being
 split into smaller packages.</p>
+
 <p>In this article, we'll have a look at the very first package to be ready: <code>memio/model</code>.</p>
-<h2 id="describing-code">Describing code<a href="#describing-code" class="anchor">#</a></h2>
+
+<h2 id="describing-code">Describing code</h2>
+
 <p>Let's have a look at the following method:</p>
-<pre><code class="language-php">    public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = true)
+
+<pre><code class="php">    public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = true)
     {
-    }</code></pre>
+    }
+</code></pre>
+
 <p>We have many things here:</p>
-<ul><li>a method named <code>handle</code> which is:
-<ul><li>public</li>
+
+<ul>
+<li>a method named <code>handle</code> which is:
+
+<ul>
+<li>public</li>
 <li>non static</li>
 <li>non final</li>
 <li>non abstract</li>
 </ul></li>
-</ul><p>It has the following arguments:</p>
-<ul><li>a <code>Request</code> object named <code>request</code></li>
+</ul>
+
+<p>It has the following arguments:</p>
+
+<ul>
+<li>a <code>Request</code> object named <code>request</code></li>
 <li>an integer named <code>type</code> which defaults to <code>self::MASTER_REQUEST</code></li>
 <li>a boolean named <code>catch</code> which defaults to <code>true</code></li>
-</ul><p>Memio provides models that allow us to describe this method by constructing objects:</p>
-<pre><code class="language-php"><?php
+</ul>
+
+<p>Memio provides models that allow us to describe this method by constructing objects:</p>
+
+<pre><code class="php">&lt;?php
 
 use Memio\Model\Argument;
 use Memio\Model\Method;
@@ -72,34 +90,51 @@ use Memio\Model\Method;
 require __DIR__.'/vendor/autoload.php';
 
 $method = Method::make('handle')
-    ->addArgument(Argument::make('Request', 'request'))
-    ->addArgument(Argument::make('int', 'type')
-        ->setDefaultValue('self::MASTER_REQUEST')
+    -&gt;addArgument(Argument::make('Request', 'request'))
+    -&gt;addArgument(Argument::make('int', 'type')
+        -&gt;setDefaultValue('self::MASTER_REQUEST')
     )
-    ->addArgument(Argument::make('bool', 'catch')
-        ->setDefaultValue('true')
+    -&gt;addArgument(Argument::make('bool', 'catch')
+        -&gt;setDefaultValue('true')
     )
-;</code></pre>
+;
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: Static constructors are used to allow fluent interface (chaining calls).
-From PHP 5.6 it is possible to do the following:
-<code>(new Method('handle'))->addArgument(new Argument('Request', 'request'));</code></p>
+  <p><strong>Note</strong>: Static constructors are used to allow fluent interface (chaining calls).
+  From PHP 5.6 it is possible to do the following:
+  <code>(new Method('handle'))-&gt;addArgument(new Argument('Request', 'request'));</code></p>
 </blockquote>
-<h2 id="building-models-dynamically">Building models dynamically<a href="#building-models-dynamically" class="anchor">#</a></h2>
+
+<h2 id="building-models-dynamically">Building models dynamically</h2>
+
 <p>Usually models aren't built manually, they could be constructed using:</p>
-<ul><li>a configuration (a PHP array, a YAML file, etc)</li>
+
+<ul>
+<li>a configuration (a PHP array, a YAML file, etc)</li>
 <li>parameters (from CLI input, a web request, etc)</li>
 <li>existing code (using <a href="http://nikic.github.io/aboutMe.html">nikic</a>'s <a href="https://github.com/nikic/PHP-Parser">PHP-Parser</a> for instance)</li>
-</ul><p>Here's a usage example. When running the test suite, <a href="http://phpspec.net">phpspec</a>
+</ul>
+
+<p>Here's a usage example. When running the test suite, <a href="http://phpspec.net">phpspec</a>
 generates missing methods in our code (amongst many other nice things).</p>
+
 <p>If the following call is found in a test:</p>
-<pre><code class="language-php">        $this->handle($request);</code></pre>
+
+<pre><code class="php">        $this-&gt;handle($request);
+</code></pre>
+
 <p>And if the <code>handle</code> method isn't defined in the class currently tested, then phpspec
 gathers the following parameters:</p>
-<ul><li><code>$methodName</code>, which here is set to <code>'handle'</code></li>
+
+<ul>
+<li><code>$methodName</code>, which here is set to <code>'handle'</code></li>
 <li><code>$arguments</code>, which here is set to <code>array($request)</code></li>
-</ul><p>Let's re-write its generator using Memio:</p>
-<pre><code class="language-php"><?php
+</ul>
+
+<p>Let's re-write its generator using Memio:</p>
+
+<pre><code class="php">&lt;?php
 
 use Memio\Model\Argument;
 use Memio\Model\Method;
@@ -112,54 +147,73 @@ function phpspec_generator($methodName, array $arguments) {
     foreach ($arguments as $argument) {
         $type = is_object($argument) ? get_class($argument) : gettype($argument);
         $argumentName = 'argument'.$index++;
-        $method->addArgument(new Argument($type, $argumentName));
+        $method-&gt;addArgument(new Argument($type, $argumentName));
     }
 
     return $method
-}</code></pre>
+}
+</code></pre>
+
 <p>Pretty straightforward!</p>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>Models are Memio's core, almost every memio packages will rely on them:</p>
-<ul><li><code>memio/linter</code> will scan models to detect errors (e.g. abstract methods in a final class)</li>
+
+<ul>
+<li><code>memio/linter</code> will scan models to detect errors (e.g. abstract methods in a final class)</li>
 <li><code>memio/twig-template</code> will use them to actually generate the corresponding code</li>
-</ul><p>For now they can describe:</p>
-<ul><li>a method argument (typehint when needed, default value)</li>
+</ul>
+
+<p>For now they can describe:</p>
+
+<ul>
+<li>a method argument (typehint when needed, default value)</li>
 <li>a method (with PHPdoc, visibility, staticness, abstracness and if it's final)</li>
 <li>a property (with PHPdoc, visibility, staticness, default value)</li>
 <li>a constant</li>
 <li>a class (with PHPdoc, parents, interfaces, abstractness and if it's final)</li>
 <li>an interface (with PHPdoc, parent interfaces)</li>
 <li>a file (with license header, namespace, use statements)</li>
-</ul><p>There are some limitations:</p>
-<ul><li>it can only describe a method's body using a string (e.g. <code>$toto = 42;\necho $toto;</code>)</li>
+</ul>
+
+<p>There are some limitations:</p>
+
+<ul>
+<li>it can only describe a method's body using a string (e.g. <code>$toto = 42;\necho $toto;</code>)</li>
 <li>a file must have a class or an interface</li>
-</ul><p>For now, it will be sufficient to start working on exciting projects!</p>
+</ul>
+
+<p>For now, it will be sufficient to start working on exciting projects!</p>
+
 <p>If you'd like to find out more about Memio Models, have a look at the documentation:</p>
-<ul><li><a href="http://memio.github.io/memio/doc/01-model-tutorial.html">regular Models</a></li>
+
+<ul>
+<li><a href="http://memio.github.io/memio/doc/01-model-tutorial.html">regular Models</a></li>
 <li><a href="http://memio.github.io/memio/doc/02-phpdoc-tutorial.html">PHPdoc Models</a></li>
 </ul>
 
+
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2015/04/08/introducing-memio-code-generator.html">Previous: Introducing Memio, code generator</a>
-        
-                        <a class="six columns button" href="../../../2015/04/22/memio-validator-linter.html">Next: Memio validator and linter</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/04/08/introducing-memio-code-generator.html" title="Introducing Memio, code generator">Previous &lt; Introducing Memio, code generator</a>
+                                        <a class="button six columns" href="/2015/04/22/memio-validator-linter.html" title="Memio validator and linter">Next &gt; Memio validator and linter</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

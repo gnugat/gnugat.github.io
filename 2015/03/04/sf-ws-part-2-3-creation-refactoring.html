@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Symfony / Web Services - part 2.3: Creation, refactoring</title>
+    <title>Symfony / Web Services - part 2.3: Creation, refactoring &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,66 +30,96 @@
         <article>
             <header>
                 <h2>
-    Symfony / Web Services - part 2.3: Creation, refactoring    <span class="sub-title">04/03/2015</span>
+    Symfony / Web Services - part 2.3: Creation, refactoring
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/symfony.html">Symfony</a>
-                <a class="button" href="../../../tags/phpspec.html">Phpspec</a>
-                <a class="button" href="../../../tags/symfony-web-services-series.html">Symfony / Web Services Series</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/Symfony%20%2F%20Web%20Services%20series">Symfony / Web Services series</a>
+                    </nav>
+                </header>
 
-            <p>This is the fourth article of the series on managing Web Services in a
+                <p>This is the fourth article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the three first ones:</p>
-<ul><li><a href="../../../2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a></li>
-<li><a href="../../../2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">2.1 Creation bootstrap</a></li>
-<li><a href="../../../2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">2.2 Creation, the pragmatic way</a></li>
-</ul><p>You can check the code in the <a href="https://github.com/gnugat-examples/sf-ws">following repository</a>.</p>
+
+<ul>
+<li><a href="/2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a></li>
+<li><a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">2.1 Creation bootstrap</a></li>
+<li><a href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">2.2 Creation, the pragmatic way</a></li>
+</ul>
+
+<p>You can check the code in the <a href="https://github.com/gnugat-examples/sf-ws">following repository</a>.</p>
+
 <p>In the previous post we've created a first endpoint by taking a few shortcuts.
 As we wouldn't want to get technical debt, we're going to refactor it.</p>
-<h2 id="the-controller-responsibility">The controller responsibility<a href="#the-controller-responsibility" class="anchor">#</a></h2>
+
+<h2 id="the-controller-responsibility">The controller responsibility</h2>
+
 <p>In order to <a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">avoid the mud</a>,
 we need to remove the logic from the controller. But which logic?</p>
+
 <p>In <a href="https://symfony.com">Symfony</a>, controllers receive a Request and return a Response
 (this follows the HTTP protocol). It is also the glue between the framework and our application.</p>
+
 <p>From this we can assume that its responsibility is to:</p>
-<ol><li>extract the parameters from the Request</li>
+
+<ol>
+<li>extract the parameters from the Request</li>
 <li>give it to our application</li>
 <li>get a result and build the Response with it</li>
-</ol><p>The request's parameters could be legion, we woudln't like to have a method with too many arguments.
+</ol>
+
+<p>The request's parameters could be legion, we woudln't like to have a method with too many arguments.
 A way to solve this would be to create a Data Transfer Object (DTO): we would put all those parameters
 in it and give it to the appropriate service.</p>
-<h2 id="command-bus">Command Bus<a href="#command-bus" class="anchor">#</a></h2>
+
+<h2 id="command-bus">Command Bus</h2>
+
 <p>The Command Bus pattern is very fitting for this purpose: the DTO is called a Command, its name should
 communicate our intention (in our example <code>CreateProfile</code>). It also has the responsibility of
 validating user's input (for example converting IDs into integers).</p>
+
 <p>Each Command is associated to only one CommandHandler service which do the actual logic.</p>
+
 <p>Finally, there's the CommandBus: it finds the appropriate CommandHandler for the given Command
 and executes it. It also executes some routines before and after the call (for example we can flush doctrine
 after each commands).</p>
+
 <blockquote>
-<p><strong>Note</strong>: CommandHandlers don't return anything.</p>
+  <p><strong>Note</strong>: CommandHandlers don't return anything.</p>
 </blockquote>
+
 <p>If you want to find out more on the Command Bus pattern, I'd recommend you to
 have a look at this series by Matthias Noback:</p>
-<ol><li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/a-wave-of-command-buses/">a wave of command buses</a></li>
+
+<ol>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/a-wave-of-command-buses/">a wave of command buses</a></li>
 <li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/responsibilities-of-the-command-bus/">responsibilities of the command bus</a></li>
 <li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/from-commands-to-events/">from commands to events</a></li>
 <li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/some-questions-about-the-command-bus/">some questions about the command bus</a></li>
 <li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/collecting-events-and-the-events-aware-command-bus/">collectiong events and the event dispatching comand bus</a></li>
-</ol><p>Since commands are all about sending a message, you can also read Mathias Verraes article on
+</ol>
+
+<p>Since commands are all about sending a message, you can also read Mathias Verraes article on
 <a href="http://verraes.net/2015/01/messaging-flavours">Messaging flavours</a>. He also wrote a nice
 article on <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command and Model validation</a>.</p>
-<h2 id="simplebus">SimpleBus<a href="#simplebus" class="anchor">#</a></h2>
+
+<h2 id="simplebus">SimpleBus</h2>
+
 <p><a href="http://simplebus.github.io/MessageBus">SimpleBus</a> is a small library that fits our purpose:</p>
+
 <pre><code>composer require simple-bus/doctrine-orm-bridge
-composer require simple-bus/symfony-bridge</code></pre>
+composer require simple-bus/symfony-bridge
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: It requires at least PHP 5.4.</p>
+  <p><strong>Note</strong>: It requires at least PHP 5.4.</p>
 </blockquote>
+
 <p>You need to register the bundle in our application's kernel:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: app/AppKernel.php
 
 use Symfony\Component\HttpKernel\Kernel;
@@ -114,7 +144,7 @@ class AppKernel extends Kernel
             new AppBundle\AppBundle(),
         );
 
-        if (in_array($this->getEnvironment(), array('dev', 'test'))) {
+        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
             $bundles[] = new Symfony\Bundle\DebugBundle\DebugBundle();
             $bundles[] = new Symfony\Bundle\WebProfilerBundle\WebProfilerBundle();
             $bundles[] = new Sensio\Bundle\DistributionBundle\SensioDistributionBundle();
@@ -126,15 +156,22 @@ class AppKernel extends Kernel
 
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
-        $loader->load(__DIR__.'/config/config_'.$this->getEnvironment().'.yml');
+        $loader-&gt;load(__DIR__.'/config/config_'.$this-&gt;getEnvironment().'.yml');
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Let's commit this installation:</p>
+
 <pre><code>git add -A
-git commit -m 'Installed SimpleBus'</code></pre>
-<h2 id="create-profile">Create Profile<a href="#create-profile" class="anchor">#</a></h2>
+git commit -m 'Installed SimpleBus'
+</code></pre>
+
+<h2 id="create-profile">Create Profile</h2>
+
 <p>We didn't create a <code>ProfileRepository</code> earlier, but we're going to need it now:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/Entity/ProfileRepository.php
 
 namespace AppBundle\Entity;
@@ -143,10 +180,13 @@ use Doctrine\ORM\EntityRepository;
 
 class ProfileRepository extends EntityRepository
 {
-}</code></pre>
+}
+</code></pre>
+
 <p>We should name the Command after the action we want to do. In our case we want
 to create a profile:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle\CommandBus/CreateProfile.php
 
 namespace AppBundle\CommandBus;
@@ -159,14 +199,20 @@ class CreateProfile implements Message
 
     public function __construct($name)
     {
-        $this->name = $name;
+        $this-&gt;name = $name;
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>We then need a CommandHandler to do the actual creation. Since there will be some logic,
 let's create a specification:</p>
-<pre><code>./bin/phpspec describe 'AppBundle\CommandBus\CreateProfileHandler'</code></pre>
+
+<pre><code>./bin/phpspec describe 'AppBundle\CommandBus\CreateProfileHandler'
+</code></pre>
+
 <p>And now we can describe it:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: spec/AppBundle/CommandBus/CreateProfileHandlerSpec.php
 
 namespace spec\AppBundle\CommandBus;
@@ -183,22 +229,28 @@ class CreateProfileHandlerSpec extends ObjectBehavior
 
     function let(ObjectManager $objectManager, ProfileRepository $profileRepository)
     {
-        $this->beConstructedWith($objectManager, $profileRepository);
+        $this-&gt;beConstructedWith($objectManager, $profileRepository);
     }
 
     function it_creates_a_profile(ObjectManager $objectManager, ProfileRepository $profileRepository)
     {
-        $profileRepository->findOneBy(array('name' => self::NAME))->willReturn(null);
+        $profileRepository-&gt;findOneBy(array('name' =&gt; self::NAME))-&gt;willReturn(null);
         $createdProfile = Argument::type('AppBundle\Entity\Profile');
-        $objectManager->persist($createdProfile)->shouldBeCalled();
+        $objectManager-&gt;persist($createdProfile)-&gt;shouldBeCalled();
 
-        $this->handle(new CreateProfile(self::NAME));
+        $this-&gt;handle(new CreateProfile(self::NAME));
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>This allows us to generate the code's skeleton:</p>
-<pre><code>./bin/phpspec run</code></pre>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
 <p>And to finally write the code to make the test pass:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/CommandBus/CreateProfileHandler.php
 
 namespace AppBundle\CommandBus;
@@ -216,26 +268,36 @@ class CreateProfileHandler implements MessageHandler
 
     public function __construct(ObjectManager $objectManager, ProfileRepository $profileRepository)
     {
-        $this->objectManager = $objectManager;
-        $this->profileRepository = $profileRepository;
+        $this-&gt;objectManager = $objectManager;
+        $this-&gt;profileRepository = $profileRepository;
     }
 
     public function handle(Message $message)
     {
-        $profile = $this->profileRepository->findOneBy(array('name' => $message->name));
-        $newProfile = new Profile($message->name);
-        $this->objectManager->persist($newProfile);
+        $profile = $this-&gt;profileRepository-&gt;findOneBy(array('name' =&gt; $message-&gt;name));
+        $newProfile = new Profile($message-&gt;name);
+        $this-&gt;objectManager-&gt;persist($newProfile);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Let's check the tests:</p>
-<pre><code>./bin/phpspec run</code></pre>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
 <p>All green, we can commit:</p>
+
 <pre><code>git add -A
-git commit -m 'Created CreateProfileHandler'</code></pre>
-<h2 id="name-duplication">Name duplication<a href="#name-duplication" class="anchor">#</a></h2>
+git commit -m 'Created CreateProfileHandler'
+</code></pre>
+
+<h2 id="name-duplication">Name duplication</h2>
+
 <p>Domain validation (e.g. name duplication check) should be handled by the CommandHandler
 (previously it was done in the controller):</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: spec/AppBundle/CommandBus/CreateProfileHandlerSpec.php
 
 namespace spec\AppBundle\CommandBus;
@@ -252,33 +314,37 @@ class CreateProfileHandlerSpec extends ObjectBehavior
 
     function let(ObjectManager $objectManager, ProfileRepository $profileRepository)
     {
-        $this->beConstructedWith($objectManager, $profileRepository);
+        $this-&gt;beConstructedWith($objectManager, $profileRepository);
     }
 
     function it_creates_a_profile(ObjectManager $objectManager, ProfileRepository $profileRepository)
     {
-        $profileRepository->findOneBy(array('name' => self::NAME))->willReturn(null);
+        $profileRepository-&gt;findOneBy(array('name' =&gt; self::NAME))-&gt;willReturn(null);
         $createdProfile = Argument::type('AppBundle\Entity\Profile');
-        $objectManager->persist($createdProfile)->shouldBeCalled();
+        $objectManager-&gt;persist($createdProfile)-&gt;shouldBeCalled();
 
-        $this->handle(new CreateProfile(self::NAME));
+        $this-&gt;handle(new CreateProfile(self::NAME));
     }
 
     function it_cannot_create_the_profile_if_the_name_has_already_been_registered(ProfileRepository $profileRepository)
     {
         $profile = Argument::type('AppBundle\Entity\Profile');
-        $profileRepository->findOneBy(array('name' => self::NAME))->willReturn($profile);
+        $profileRepository-&gt;findOneBy(array('name' =&gt; self::NAME))-&gt;willReturn($profile);
 
         $domainException = '\DomainException';
-        $this->shouldThrow($domainException)->duringHandle(new CreateProfile(self::NAME));
+        $this-&gt;shouldThrow($domainException)-&gt;duringHandle(new CreateProfile(self::NAME));
     }
-}</code></pre>
+}
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: We try to be as descriptive as necessary in the test methods (a bad example
-would have been <code>testThrowsDomainException</code>).</p>
+  <p><strong>Note</strong>: We try to be as descriptive as necessary in the test methods (a bad example
+  would have been <code>testThrowsDomainException</code>).</p>
 </blockquote>
+
 <p>Here's the code to make the test pass:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/CommandBus/CreateProfileHandler.php
 
 namespace AppBundle\CommandBus;
@@ -296,29 +362,39 @@ class CreateProfileHandler implements MessageHandler
 
     public function __construct(ObjectManager $objectManager, ProfileRepository $profileRepository)
     {
-        $this->objectManager = $objectManager;
-        $this->profileRepository = $profileRepository;
+        $this-&gt;objectManager = $objectManager;
+        $this-&gt;profileRepository = $profileRepository;
     }
 
     public function handle(Message $message)
     {
-        $profile = $this->profileRepository->findOneBy(array('name' => $message->name));
+        $profile = $this-&gt;profileRepository-&gt;findOneBy(array('name' =&gt; $message-&gt;name));
         if (null !== $profile) {
-            throw new \DomainException(sprintf('The name "%s" is already taken', $message->name));
+            throw new \DomainException(sprintf('The name "%s" is already taken', $message-&gt;name));
         }
-        $newProfile = new Profile($message->name);
-        $this->objectManager->persist($newProfile);
+        $newProfile = new Profile($message-&gt;name);
+        $this-&gt;objectManager-&gt;persist($newProfile);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Let's check the tests:</p>
-<pre><code>./bin/phpspec run</code></pre>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
 <p>They pass!</p>
+
 <pre><code>git add -A
-git commit -m 'Added check on name duplication'</code></pre>
-<h2 id="input-validation">Input validation<a href="#input-validation" class="anchor">#</a></h2>
+git commit -m 'Added check on name duplication'
+</code></pre>
+
+<h2 id="input-validation">Input validation</h2>
+
 <p>Input validation (e.g. presence of name parameter) should be done in the Command
 (previously it was done in the controller):</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle\CommandBus/CreateProfile.php
 
 namespace AppBundle\CommandBus;
@@ -334,16 +410,23 @@ class CreateProfile implements Message
         if (null === $name) {
             throw new \DomainException('The "name" parameter is missing from the request\'s body');
         }
-        $this->name = $name;
+        $this-&gt;name = $name;
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Let's commit it:</p>
+
 <pre><code>git add -A
-git commit -m 'Added check on name presence in the request'</code></pre>
-<h2 id="domainexceptionlistener">DomainExceptionListener<a href="#domainexceptionlistener" class="anchor">#</a></h2>
+git commit -m 'Added check on name presence in the request'
+</code></pre>
+
+<h2 id="domainexceptionlistener">DomainExceptionListener</h2>
+
 <p>Our Command and CommandHandler both throw a DomainException, we can catch it in an
 exception listener and create a nice response:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/EventListener/DomainExceptionListener.php
 
 namespace AppBundle\EventListener;
@@ -359,15 +442,18 @@ class DomainExceptionListener
      */
     public function onKernelException(GetResponseForExceptionEvent $event)
     {
-        $exception = $event->getException();
+        $exception = $event-&gt;getException();
         if (!$exception instanceof DomainException) {
             return;
         }
-        $error = $exception->getMessage();
-        $event->setResponse(new JsonResponse(array('error' => $error), 422));
+        $error = $exception-&gt;getMessage();
+        $event-&gt;setResponse(new JsonResponse(array('error' =&gt; $error), 422));
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>It needs to be registerd in the Dependency Injection Container:</p>
+
 <pre><code># File: app/config/services.yml
 services:
     app.submit_json_listener:
@@ -383,12 +469,19 @@ services:
     app.domain_exception_listener:
         class: AppBundle\EventListener\DomainExceptionListener
         tags:
-            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 10 }</code></pre>
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 10 }
+</code></pre>
+
 <p>We can save it:</p>
+
 <pre><code>git add -A
-git commit -m 'Created DomainExceptionListener'</code></pre>
-<h2 id="using-the-command">Using the command<a href="#using-the-command" class="anchor">#</a></h2>
+git commit -m 'Created DomainExceptionListener'
+</code></pre>
+
+<h2 id="using-the-command">Using the command</h2>
+
 <p>Now that our CommandHandler is ready, we'll define it as a service with its repository:</p>
+
 <pre><code># File: app/config/services.yml
 services:
     app.submit_json_listener:
@@ -418,9 +511,12 @@ services:
             - "@doctrine.orm.entity_manager"
             - "@app.profile_repository"
         tags:
-            - { name: command_handler, handles: AppBundle\CommandBus\CreateProfile }</code></pre>
+            - { name: command_handler, handles: AppBundle\CommandBus\CreateProfile }
+</code></pre>
+
 <p>And call it in the controller:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/Controller/ProfileCreationController.php;
 
 namespace AppBundle\Controller;
@@ -440,21 +536,25 @@ class ProfileCreationController extends Controller
      */
     public function createProfileAction(Request $request)
     {
-        $name = $request->request->get('name');
+        $name = $request-&gt;request-&gt;get('name');
 
-        $this->get('command_bus')->handle(new CreateProfile($name));
-        $createdProfile = $this->get('app.profile_repository')->findOneBy(array('name' => $name));
+        $this-&gt;get('command_bus')-&gt;handle(new CreateProfile($name));
+        $createdProfile = $this-&gt;get('app.profile_repository')-&gt;findOneBy(array('name' =&gt; $name));
 
-        return new JsonResponse($createdProfile->toArray(), 201);
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
     }
-}</code></pre>
+}
+</code></pre>
+
 <blockquote>
-<p><strong>Note</strong>: Since the CommandHandler doesn't return anything, we need to call the repository
-to get the created profile.</p>
+  <p><strong>Note</strong>: Since the CommandHandler doesn't return anything, we need to call the repository
+  to get the created profile.</p>
 </blockquote>
+
 <p>As it happens, we've forgotten to set <code>ProfileRepository</code> in <code>Profile</code>'s <code>Entity</code> annotation.
 Let's fix it now:</p>
-<pre><code class="language-php"><?php
+
+<pre><code class="php">&lt;?php
 // File: src/AppBundle/Entity/Profile.php
 
 namespace AppBundle\Entity;
@@ -481,65 +581,81 @@ class Profile
 
     public function __construct($name)
     {
-        $this->name = $name;
+        $this-&gt;name = $name;
     }
 
     public function toArray()
     {
         return array(
-            'id' => $this->id,
-            'name' => $this->name,
+            'id' =&gt; $this-&gt;id,
+            'name' =&gt; $this-&gt;name,
         );
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>Did we break anything?</p>
-<pre><code>make test</code></pre>
+
+<pre><code>make test
+</code></pre>
+
 <p>No, all tests are super green!</p>
+
 <pre><code>git add -A
-git commit -m 'Used CreateProfileHandler in controller'</code></pre>
-<h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+git commit -m 'Used CreateProfileHandler in controller'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>Technical debt is something we should be able to manage. When the time comes to refactor,
 design patterns can be a helpful tool.</p>
+
 <p>CommandBus is a nice pattern which allows us to remove imperative logic from the controllers.
 It's easy to write unit test for CommandHandlers, and they can be reused
 (creating a profile is surely something we can need elsewhere in our application).</p>
+
 <p>This article concludes the second part of this series on web services in a Symfony environment.
-In the <a href="../../../2015/03/11/sf-ws-part-3-1-consuming-request-handler.html">next one</a>,
+In the <a href="/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html">next one</a>,
 we'll start a new application which consumes the one we just created.</p>
+
 <blockquote>
-<p><strong>Note</strong>: The web service we described also had a removal endpoint. Since there's not much else
-to learn, it won't be created in this series.</p>
+  <p><strong>Note</strong>: The web service we described also had a removal endpoint. Since there's not much else
+  to learn, it won't be created in this series.</p>
 </blockquote>
-<h3 id="going-further">Going further<a href="#going-further" class="anchor">#</a></h3>
+
+<h3 id="going-further">Going further</h3>
+
 <p>A lot of things can be improved in the current application, here's some tips for those
 who'd like to practice:</p>
-<ul><li>name duplication is actually a "Conflict" type of error, not "Unprocessable Entity"</li>
+
+<ul>
+<li>name duplication is actually a "Conflict" type of error, not "Unprocessable Entity"</li>
 <li>we could use Symfony's validation component (use <code>validator</code> in the CommandHandler and set annotations in the Command)</li>
 <li>we could create a CommandBus that always validate the Command using Symfony's validation component</li>
 <li>we can create our own DomainException to avoid catching ones that could be thrown by third party libraries</li>
 </ul>
 
+
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">Previous: Symfony / Web Services - part 2.2: Creation, the pragmatic way</a>
-        
-                        <a class="six columns button" href="../../../2015/03/11/sf-ws-part-3-1-consuming-request-handler.html">Next: Symfony / Web Services - part 3.1: Consuming, RequestHandler</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html" title="Symfony / Web Services - part 2.2: Creation, the pragmatic way">Previous &lt; Symfony / Web Services - part 2.2: Creation, the pragmatic way</a>
+                                        <a class="button six columns" href="/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html" title="Symfony / Web Services - part 3.1: Consuming, RequestHandler">Next &gt; Symfony / Web Services - part 3.1: Consuming, RequestHandler</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

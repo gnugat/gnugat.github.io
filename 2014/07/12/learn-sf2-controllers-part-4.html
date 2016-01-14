@@ -2,27 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Learn Symfony2 - part 4: Controllers</title>
+    <title>Learn Symfony2 - part 4: Controllers &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/2014/07/12/learn-sf2-controllers-part-4.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="../../../css/normalize.css">
-    <link rel="stylesheet" href="../../../css/skeleton.css">
-    <link rel="stylesheet" href="../../../css/dop-dop-dop.css">
-    <link rel="stylesheet" href="../../../css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="../../../index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
@@ -30,23 +30,28 @@
         <article>
             <header>
                 <h2>
-    Learn Symfony2 - part 4: Controllers    <span class="sub-title">12/07/2014</span>
+    Learn Symfony2 - part 4: Controllers
+    <span class="sub-title">14/01/2016</span>
 </h2>
-                    <nav>
-                        <a class="button" href="../../../tags/symfony.html">Symfony</a>
-                <a class="button" href="../../../tags/learn-symfony2-series.html">Learn Symfony2 Series</a>
-                    </ul>
-    <hr />
-            </header>
+                            <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Learn%20Symfony2%20series">Learn Symfony2 series</a>
+                    </nav>
+                </header>
 
-            <p>This is the fourth article of the series on learning
+                <p>This is the fourth article of the series on learning
 <a href="http://symfony.com/">the Symfony2 framework</a>.
 Have a look at the three first ones:</p>
-<ol><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">Composer</a></li>
-<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">Empty application</a></li>
-<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">Bundles</a></li>
-</ol><p>In the previous articles we created a one-bundled empty application with the
+
+<ol>
+<li><a href="/2014/06/18/learn-sf2-composer-part-1.html">Composer</a></li>
+<li><a href="/2014/06/25/learn-sf2-empty-app-part-2.html">Empty application</a></li>
+<li><a href="/2014/07/02/learn-sf2-bundles-part-3.html">Bundles</a></li>
+</ol>
+
+<p>In the previous articles we created a one-bundled empty application with the
 following files:</p>
+
 <pre><code>.
 ├── app
 │   ├── AppKernel.php
@@ -64,39 +69,60 @@ following files:</p>
 │           └── KnightApplicationBundle.php
 ├── .gitignore
 └── web
-    └── app.php</code></pre>
+    └── app.php
+</code></pre>
+
 <p>Running <code>composer install</code> should create a <code>vendor</code> directory, which we ignored
 with git.</p>
+
 <p>Here's the <a href="https://github.com/gnugat/learning-symfony2/releases/tag/3-bundles">repository where you can find the actual code</a>.</p>
+
 <p>In this article, we'll learn more about the routing and the controllers.</p>
-<h2 id="discovering-routing-and-controller">Discovering routing and controller<a href="#discovering-routing-and-controller" class="anchor">#</a></h2>
+
+<h2 id="discovering-routing-and-controller">Discovering routing and controller</h2>
+
 <p>In order to get familiar with the routing and controllers, we will create a
 route which returns nothing. The first thing to do is to configure the router:</p>
+
 <pre><code># File: app/config/app.yml
 framework:
     secret: "Three can keep a secret, if two of them are dead."
     router:
-        resource: %kernel.root_dir%/config/routing.yml</code></pre>
+        resource: %kernel.root_dir%/config/routing.yml
+</code></pre>
+
 <p>We can now write our routes in a separate file:</p>
+
 <pre><code># File: app/config/routing.yml
 what_john_snow_knows:
     path: /api/ygritte
     methods:
         - GET
     defaults:
-        _controller: KnightApplicationBundle:Api:ygritte</code></pre>
+        _controller: KnightApplicationBundle:Api:ygritte
+</code></pre>
+
 <p>As you can see, a route has:</p>
-<ul><li>a name (<code>what_john_snow_knows</code>)</li>
+
+<ul>
+<li>a name (<code>what_john_snow_knows</code>)</li>
 <li>a path (<code>/api/ygritte</code>)</li>
 <li>one or many HTTP verbs (<code>GET</code>)</li>
 <li>a controller <code>Knight\ApplicationBundle\Controller\ApiController::ygritteAction()</code></li>
-</ul><p><em>Note</em>: the <code>_controller</code> parameter is a shortcut composed of three parts, which
+</ul>
+
+<p><em>Note</em>: the <code>_controller</code> parameter is a shortcut composed of three parts, which
 are the name of the bundle, then the unprefixed controller name and finally the
 unprefixed method name.</p>
+
 <p>Now we need to create the following directory:</p>
-<pre><code>mkdir src/Knight/ApplicationBundle/Controller</code></pre>
+
+<pre><code>mkdir src/Knight/ApplicationBundle/Controller
+</code></pre>
+
 <p>And to create the controller class:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: src/Knight/ApplicationBundle/Controller/ApiController.php
 
 namespace Knight\ApplicationBundle\Controller;
@@ -111,31 +137,48 @@ class ApiController extends Controller
     {
         return new Response('', Response::HTTP_NO_CONTENT);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>To test it, I'd advise you to use a HTTP client. Let's install
 <a href="http://httpie.org">HTTPie, the CLI HTTP client</a>:</p>
+
 <pre><code>sudo apt-get install python-pip
-sudo pip install --upgrade httpie</code></pre>
+sudo pip install --upgrade httpie
+</code></pre>
+
 <p>We can now test our webservice:</p>
-<pre><code>http GET knight.local/api/ygritte</code></pre>
+
+<pre><code>http GET knight.local/api/ygritte
+</code></pre>
+
 <p>The first line should be <code>HTTP/1.1 204 No Content</code>.</p>
-<h2 id="posting-data">Posting data<a href="#posting-data" class="anchor">#</a></h2>
+
+<h2 id="posting-data">Posting data</h2>
+
 <p>Our scrum master and product owner managed to write a user story for us:</p>
+
 <pre><code>As a Knight of Ni
 I want a webservice which says "ni"
-In order to get a shrubbery</code></pre>
+In order to get a shrubbery
+</code></pre>
+
 <p>This means we're going to need the following route:</p>
+
 <pre><code># File: app/config/routing.yml
 ni:
     path: /api/ni
     methods:
         - POST
     defaults:
-        _controller: KnightApplicationBundle:Api:ni</code></pre>
+        _controller: KnightApplicationBundle:Api:ni
+</code></pre>
+
 <p>Our controller will retrieve the posted value (named <code>offering</code>), check if it
 is a <code>shrubbery</code> and send back a response containing either <code>Ni</code> (on error) or
 <code>Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv</code> (on success):</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 // File: src/Knight/ApplicationBundle/Controller/ApiController.php
 
 namespace Knight\ApplicationBundle\Controller;
@@ -149,10 +192,10 @@ class ApiController extends Controller
 {
     public function niAction(Request $request)
     {
-        $postedContent = $request->getContent();
+        $postedContent = $request-&gt;getContent();
         $postedValues = json_decode($postedContent, true);
 
-        $answer = array('answer' => 'Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv');
+        $answer = array('answer' =&gt; 'Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv');
         $statusCode = Response::HTTP_OK;
         if (!isset($postedValues['offering']) || 'shrubbery' !== $postedValues['offering']) {
             $answer['answer'] = 'Ni';
@@ -161,12 +204,19 @@ class ApiController extends Controller
 
         return new JsonResponse($answer, $statusCode);
     }
-}</code></pre>
+}
+</code></pre>
+
 <p>The <code>JsonResponse</code> class will convert the array into JSON and set the proper
 HTTP headers.</p>
+
 <p>If we try to submit something fishy like this:</p>
-<pre><code>http POST knight.local/api/ni offering=hareng</code></pre>
+
+<pre><code>http POST knight.local/api/ni offering=hareng
+</code></pre>
+
 <p>Then we should have a response similar to:</p>
+
 <pre><code>HTTP/1.1 422 Unprocessable Entity
 Cache-Control: no-cache
 Content-Type: application/json
@@ -176,10 +226,16 @@ Transfer-Encoding: chunked
 
 {
     "answer": "Ni"
-}</code></pre>
+}
+</code></pre>
+
 <p>And when we submit the correct offering:</p>
-<pre><code>http POST knight.local/api/ni offering=shrubbery</code></pre>
+
+<pre><code>http POST knight.local/api/ni offering=shrubbery
+</code></pre>
+
 <p>Then we should have something similar to:</p>
+
 <pre><code>HTTP/1.1 200 OK
 Cache-Control: no-cache
 Content-Type: application/json
@@ -189,10 +245,14 @@ Transfer-Encoding: chunked
 
 {
     "answer": "Ecky-ecky-ecky-ecky-pikang-zoop-boing-goodem-zoo-owli-zhiv"
-}</code></pre>
-<h2 id="request-s-api">Request's API<a href="#request-s-api" class="anchor">#</a></h2>
+}
+</code></pre>
+
+<h2 id="request%27s-api">Request's API</h2>
+
 <p>Here's part of the Request's API:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 
 namespace Symfony\Component\HttpFoundation;
 
@@ -216,29 +276,43 @@ class Request
     );
 
     public function getContent($asResource = false);
-}</code></pre>
+}
+</code></pre>
+
 <p>We used <code>createFromGlobals</code> in our front controller (<code>web/app.php</code>), it does
 excalty what it says: it initializes the Request from the PHP superglobals
 (<code>$_POST</code>, <code>$_GET</code>, etc).</p>
+
 <p>The <code>create</code> method is really handful in tests as we won't need to override the
 values in PHP's superglobals.</p>
+
 <p>The attributes here listed are all instances of
 <code>Symfony\Component\HttpFoundation\ParameterBag</code>, which is like an object
 oriented array with <code>set</code>, <code>has</code> and <code>get</code> methods (amongst others).</p>
+
 <p>When you submit a form, your browser automatically sets the HTTP request's
 header <code>Content-Type</code> to <code>application/x-www-form-urlencoded</code>, and the form
 values are sent in the request's content like this:</p>
-<pre><code>offering=hareng</code></pre>
+
+<pre><code>offering=hareng
+</code></pre>
+
 <p>PHP understands this and will put the values in the <code>$_POST</code> superglobal. This
 mean you could retrieve it like this:</p>
-<pre><code>$request->request->get('offering');</code></pre>
+
+<pre><code>$request-&gt;request-&gt;get('offering');
+</code></pre>
+
 <p>However, when we submit something in JSON with the <code>Content-Type</code> set to
 <code>application/json</code>, PHP doesn't populate <code>$_POST</code>. You need to retrieve the raw
 data with <code>getContent</code> and to convert it using <code>json_decode</code>, as we did in our
 controller.</p>
-<h2 id="response-s-api">Response's API<a href="#response-s-api" class="anchor">#</a></h2>
+
+<h2 id="response%27s-api">Response's API</h2>
+
 <p>Here's a part of the Response's API:</p>
-<pre><code><?php
+
+<pre><code>&lt;?php
 
 namespace Symfony\Component\HttpFoundation;
 
@@ -260,59 +334,66 @@ class Response
     public function getStatusCode();
 
     public function isSuccessful();
-}</code></pre>
+}
+</code></pre>
+
 <p>There's a lot of HTTP status code constants, so I've selected only those I'd use
 the most.</p>
+
 <p>You can set and get the Response's headers via a public property which is also
 a <code>ParameterBag</code>.</p>
+
 <p>The constructor allows you to set the content, status code and headers.</p>
+
 <p>The three other methods are mostly used in tests. There's a lot of <code>is</code> methods
 to check the type of the request, but usually you'll just want to make sure the
 response is successful.</p>
+
 <p>You can find other types of responses:</p>
-<ul><li><code>JsonResponse</code>: sets the <code>Content-Type</code> and converts the content into JSON</li>
+
+<ul>
+<li><code>JsonResponse</code>: sets the <code>Content-Type</code> and converts the content into JSON</li>
 <li><code>BinaryFileResponse</code>: sets headers and attaches a file to the response</li>
 <li><code>RedirectResponse</code>: sets the target location for a redirection</li>
 <li><code>StreamedResponse</code>: useful for streaming large files</li>
-</ul><h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
 <p>Symfony2 is an HTTP framework which primary's public API are the controllers:
 those receive a Request as parameter and return a Response. All you have to do
 is to create a controller, write some configuration in order to link
 it to an URL and you're done!</p>
+
 <p>Do not forget to commit your work:</p>
+
 <pre><code>git add -A
-git commit -m 'Created Ni route and controller'</code></pre>
+git commit -m 'Created Ni route and controller'
+</code></pre>
+
 <p>The next article should be about tests: stay tuned!</p>
-<h3 id="next-articles">Next articles<a href="#next-articles" class="anchor">#</a></h3>
-<ul><li><a href="../../../2014/07/20/learn-sf2-tests-part-5.html">5: Tests</a></li>
-<li><a href="../../../2014/07/23/learn-sf2-conclusion.html">Conclusion</a></li>
-</ul><h3 id="previous-articles">Previous articles<a href="#previous-articles" class="anchor">#</a></h3>
-<ul><li><a href="../../../2014/06/18/learn-sf2-composer-part-1.html">1: Composer</a></li>
-<li><a href="../../../2014/06/25/learn-sf2-empty-app-part-2.html">2: Empty application</a></li>
-<li><a href="../../../2014/07/02/learn-sf2-bundles-part-3.html">3: Bundles</a></li>
-</ul>
+
 
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="../../../2014/07/02/learn-sf2-bundles-part-3.html">Previous: Learn Symfony2 - part 3: Bundles</a>
-        
-                        <a class="six columns button" href="../../../2014/07/20/learn-sf2-tests-part-5.html">Next: Learn Symfony2 - part 5: Tests</a>
-            </nav>
-                <hr />
+                            <nav class="row">
+                            <a class="button six columns" href="/2014/07/02/learn-sf2-bundles-part-3.html" title="Learn Symfony2 - part 3: Bundles">Previous &lt; Learn Symfony2 - part 3: Bundles</a>
+                                        <a class="button six columns" href="/2014/07/20/learn-sf2-tests-part-5.html" title="Learn Symfony2 - part 5: Tests">Next &gt; Learn Symfony2 - part 5: Tests</a>
+                    </nav>
+                    <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="../../../about.html">About</a>
-                <a class="button three columns" href="../../../archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="../../../js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];

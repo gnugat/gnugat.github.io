@@ -2,269 +2,1103 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Symfony Micro Framework</title>
+    <title>Articles &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="http://gnugat.github.io/index.html"/>
-    <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Technical Blog"/>
-
+    <link rel="canonical" href="/"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
-    <link rel="stylesheet" href="./css/normalize.css">
-    <link rel="stylesheet" href="./css/skeleton.css">
-    <link rel="stylesheet" href="./css/dop-dop-dop.css">
-    <link rel="stylesheet" href="./css/highlight_8_8_0_monokai_sublime.min.css">
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
 </head>
 <body>
     <div class="container">
         <header class="title">
             <h1>
-                <a href="index.html">Loïc Faugeron</a>
+                <a href="/">Loïc Faugeron</a>
                 <span class="sub-title">Technical Blog</span>
             </h1>
         </header>
 
         <article>
             <header>
-                <h2>
-    <a href="2015/12/17/symfony-micro-framework.html">Symfony Micro Framework</a>    <span class="sub-title">17/12/2015</span>
-</h2>
-                    <nav>
-        <a class="button" href="tags/symfony.html">Symfony</a>
-    </ul>
-    <hr />
-            </header>
+                <h2>Articles</h2>                                            </header>
 
-            <p><blockquote>
-<p><strong>TD;DR</strong>: <a href="http://symfony.com">Symfony</a> has always been able to be used as a micro
-framework.
-For more "add what you need" micro-framework like spirit, use the <a href="http://github.com/gnugat/symfony-empty-edition">Empty Edition</a>
-and the <a href="http://github.com/gnugat/micro-framework-bundle">MicroFrameworkBundle</a>.</p>
-</blockquote>
-<p>There are many definitions out there to qualify a framework as being "micro", among
-them the following criterias often appear:</p>
-<ul><li>small API (usage of framework's code in your application)</li>
-<li>few Lines Of Code (LOC)</li>
-<li>few dependencies (how many tiord party libraries are used)</li>
-<li>small footprint (framework loading time)</li>
-</ul><p>Is Symfony a micro framework as well? Let's find out.</p>
-<blockquote>
-<p><strong>Note</strong>: To know more about how to determine if a framework is micro, read
-<a href="https://igor.io/archive.html">Igor Wiedler</a> article: <a href="https://igor.io/2013/09/02/how-heavy-is-silex.html">How heavy is Silex?</a>.</p>
-</blockquote>
-<h2 id="measuring">Measuring<a href="#measuring" class="anchor">#</a></h2>
-<p>While "Hello World" examples rarely reflect real world applications, it's going
-to be good enough to serve the purpose of this article: getting a good measure of
-Symfony's API, LOC, dependencies and footprint.</p>
-<p>Since dependencies and footprint are easy to measure, we're going to rely on it.
-However, all benchmarks are relative to the computer that executes them, so we need
-a point of reference: a flat PHP "Hello World" application:</p>
-<pre><code>// index.php
+                <p></p>
 
-echo 'Hello World';</code></pre>
-<p>Let's run the benchmark:</p>
-<pre><code>php -S localhost:2501 &
-ab -c 10 -t 10 'http://localhost:2501/index.php'
-killall php</code></pre>
-<p>Result: <strong>6 915.03</strong> Requests per second.</p>
-<h2 id="standard-edition">Standard Edition<a href="#standard-edition" class="anchor">#</a></h2>
-<p>To get the Standard Edition, we can use composer:</p>
-<pre><code>composer create-project symfony/framework-standard-edition
-cd framework-standard-edition</code></pre>
-<p>Since the standard edition follows a "solve 80% of use cases out of the box" philosohpy,
-it's almost ready, we just need to tweak the given controller:</p>
-<pre><code>// src/AppBundle/Controller/DefaultController.php
+<article>
+        <h3>
+            <a href="/2015/12/23/symfony-micro-framework.html">Symfony micro framework</a>
+            <span class="sub-title">23/12/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/symfony">symfony</a>
+                    </nav>
+    </article>
 
-namespace AppBundle\Controller;
+<p></p>
 
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+<article>
+        <h3>
+            <a href="/2015/11/26/http-cache.html">Http cache</a>
+            <span class="sub-title">26/11/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/http">http</a>
+                    </nav>
+    </article>
 
-class DefaultController extends Controller
-{
-    /**
-     * @Route("/", name="homepage")
-     */
-    public function indexAction(Request $request)
-    {
-        return new Response('Hello World');
-    }
-}</code></pre>
-<p>Let's run the benchmark:</p>
-<pre><code>SYMFONY_ENV=prod composer update -o --no-dev
-php -S localhost:2502 -t web &
-ab -c 10 -t 10 'http://localhost:2502/app.php'
-killall php</code></pre>
-<p>Result: <strong>134.23</strong> Requests per second.</p>
-<p>We're also going to list the dependencies:</p>
-<pre><code>tree -d -L 2 vendor/ | grep '   ' | wc -l
-tree -d -L 2 vendor/ | grep '    ' | wc -l</code></pre>
-<p>We get 28 + 1, to which we need to substitute <code>symfony</code> with all the
-packages it replaces (44): 72.</p>
-<p>So to sum up:</p>
-<ul><li>API: 1 step to add a new route</li>
-<li>footprint: 52x slower than flat PHP</li>
-<li>size: 72 dependencies</li>
-</ul><h2 id="empty-edition">Empty Edition<a href="#empty-edition" class="anchor">#</a></h2>
-<p>As stated above the Standard Edition has a "solve 80% of use cases out of the box"
-philosophy, so it comes with many dependencies that might not fit our use. Micro
-framework usually follow a "add what you need philosophy", which is exactly what
-the Empty Edition is all about.</p>
-<p>Let's see if we can get more micro with it:</p>
-<pre><code>composer create-project gnugat/symfony-empty-edition
-cd symfony-empty-edition</code></pre>
-<p>The first step is to create a controller:</p>
-<pre><code>// src/AppBundle/Controller/HelloController.php
+<p></p>
 
-namespace AppBundle\Controller;
+<article>
+        <h3>
+            <a href="/2015/11/11/beyond-psr7.html">Beyond psr-7</a>
+            <span class="sub-title">11/11/2015</span>
+        </h3>
+        <nav>
+                    </nav>
+    </article>
 
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+<p></p>
 
-class HelloController
-{
-    public function world(Request $request)
-    {
-        return new Response('Hello World');
-    }
-}</code></pre>
-<p>Then we register it as a service:</p>
-<pre><code># app/config/services/controller.yml
-services:
-    app.hello_controller:
-        class: AppBundle\Controller\HelloController</code></pre>
-<p>Finally we register the route:</p>
-<pre><code># app/config/routings/app.yml
-hello_world:
-    path: /
-    defaults:
-        _controller: app.hello_controller:world
-    methods:
-        - GET</code></pre>
-<p>Let's run the benchmark:</p>
-<pre><code>composer update -o --no-dev
-php -S localhost:2503 -t web &
-ab -c 10 -t 10 'http://localhost:2503/app.php'
-killall php</code></pre>
-<p>Result: <strong>524.53</strong> Requests per second.</p>
-<p>We're also going to list the dependencies:</p>
-<pre><code>tree -d -L 2 vendor/ | grep '   ' | wc -l
-tree -d -L 2 vendor/ | grep '    ' | wc -l</code></pre>
-<p>We get 6 + 23 = 29.</p>
-<p>So to sum up:</p>
-<ul><li>API: 3 steps to add a new route</li>
-<li>footprint: 13x slower than flat PHP</li>
-<li>size: 29 dependencies</li>
-</ul><h2 id="micro-framework-bundle">Micro Framework Bundle<a href="#micro-framework-bundle" class="anchor">#</a></h2>
-<p>By reducing the number of depdencies, we also drastically reduced the framework
-footprint. This is not surprising as:</p>
-<ul><li>we've reduced the number of classes to autoload</li>
-<li>we've reduced the number of configuration (parameters and service definition) to set up</li>
-<li>we've reduced the bootload time of the Dependency Injection Container (less services to instantiate)</li>
-<li>we've reduced the number of event listeners called</li>
-</ul><p>Can we go further? Certainly: the FrameworkBundle also follows a
-"solve 80% of use cases out of the box" (includes Forms, Security, Templating, Translation, Assets, annotations, etc).</p>
-<p>By using a MicroFrameworkBundle that would provide the strict minimum and follow
-the micro framework philosophy of "add what you need" we can surely reduce further
-the number of dependencies. Hence <code>gnugat/micro-framework-bundle</code>:</p>
-<pre><code>composer require 'gnugat/micro-framework-bundle'
-composer remove 'symfony/framework-bundle'</code></pre>
-<p>Then we need to swap the bundle in the registration:</p>
-<pre><code>// app/AppKernel.php
+<article>
+        <h3>
+            <a href="/2015/11/05/porpaginas.html">Porpaginas</a>
+            <span class="sub-title">05/11/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                        <a class="button " href="/tags/porpaginas">porpaginas</a>
+                    </nav>
+    </article>
 
-use Symfony\Component\HttpKernel\Kernel;
-use Symfony\Component\Config\Loader\LoaderInterface;
+<p></p>
 
-class AppKernel extends Kernel
-{
-    public function registerBundles()
-    {
-        return array(
-            new Gnugat\MicroFrameworkBundle\GnugatMicroFrameworkBundle(),
-            new AppBundle\AppBundle(),
-        );
-    }
+<article>
+        <h3>
+            <a href="/2015/10/26/decouple-from-decoupling.html">Decouple from decoupling</a>
+            <span class="sub-title">26/10/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/decoupling">decoupling</a>
+                    </nav>
+    </article>
 
-    public function getRootDir()
-    {
-        return __DIR__;
-    }
+<p></p>
 
-    public function getCacheDir()
-    {
-        return dirname(__DIR__).'/var/cache/'.$this->environment;
-    }
+<article>
+        <h3>
+            <a href="/2015/10/12/decouple-from-libraries.html">Decouple from libraries</a>
+            <span class="sub-title">12/10/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/decoupling">decoupling</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/phpunit">phpunit</a>
+                        <a class="button " href="/tags/guzzle">guzzle</a>
+                        <a class="button " href="/tags/inversion%20of%20control">inversion of control</a>
+                    </nav>
+    </article>
 
-    public function getLogDir()
-    {
-        return dirname(__DIR__).'/var/logs';
-    }
+<p></p>
 
-    public function registerContainerConfiguration(LoaderInterface $loader)
-    {
-        $loader->load($this->rootDir.'/config/config_'.$this->environment.'.yml');
-    }
-}</code></pre>
-<p>Finally we can get rid of some configuration:</p>
-<pre><code># app/config/config.yml
-imports:
-    - { resource: parameters.yml }
-    - { resource: services/ }</code></pre>
-<p>Let's benchmark our trimmed application:</p>
-<pre><code>rm -rf var/*
-composer update -o --no-dev
-php -S localhost:2504 -t web &
-ab -c 10 -t 10 'http://localhost:2504/app.php'
-killall php</code></pre>
-<p>Result: <strong>872.83</strong> Requests per second.</p>
-<p>We're also going to list the dependencies:</p>
-<pre><code>tree -d -L 2 vendor/ | grep '   ' | wc -l
-tree -d -L 2 vendor/ | grep '    ' | wc -l</code></pre>
-<p>We get 3 + 13 = 16.</p>
-<p>So to sum up:</p>
-<ul><li>API: 3 steps to add a new route</li>
-<li>footprint: 8x slower than flat PHP</li>
-<li>size: 13 dependencies</li>
-</ul><h2 id="conclusion">Conclusion<a href="#conclusion" class="anchor">#</a></h2>
-<p>Symfony has always been able to be used as a micro framework bundle.</p>
-<p>The <a href="https://github.com/symfony/symfony-standard">Standard Edition</a> and the
-<a href="https://github.com/symfony/symfony/tree/master/src/Symfony/Bundle/FrameworkBundle">FrameworkBundle</a>
-follow a "solve 80% of use cases out of the box" philosohpy, which is better for new comers.</p>
-<p>However for experimented developers who're looking for a "add what you need" philosohpy,
-which is what micro-framework usually follow, using the <a href="http://github.com/gnugat/symfony-empty-edition">Empty Edition</a>
-and <a href="http://github.com/gnugat/micro-framework-bundle">MicroFrameworkBundle</a> can
-be a viable alternative (they are slimer in term of dependencies and faster).</p>
-<blockquote>
-<p><strong>Note</strong>: At the time of writing, MicroFrameworkBundle is still under development
-(version <code>0.1.0</code>). Use it at your own risk and contribute to it :) .</p>
-</blockquote></p>
+<article>
+        <h3>
+            <a href="/2015/09/30/decouple-from-frameworks.html">Decouple from frameworks</a>
+            <span class="sub-title">30/09/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/decoupling">decoupling</a>
+                        <a class="button " href="/tags/symfony">symfony</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/phpunit">phpunit</a>
+                        <a class="button " href="/tags/command%20bus">command bus</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/09/23/phpunit-with-phpspec.html">Phpunit with phpspec</a>
+            <span class="sub-title">23/09/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/phpunit">phpunit</a>
+                        <a class="button " href="/tags/TDD">TDD</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/09/09/tactician.html">Tactician</a>
+            <span class="sub-title">09/09/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                        <a class="button " href="/tags/Tactician">Tactician</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/08/25/cqrs.html">Command/query responsibility segregation</a>
+            <span class="sub-title">25/08/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/design%20principle">design principle</a>
+                        <a class="button " href="/tags/cqrs">cqrs</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/08/07/diactoros-psr7.html">Diactoros (psr-7)</a>
+            <span class="sub-title">07/08/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                        <a class="button " href="/tags/Diactoros">Diactoros</a>
+                        <a class="button " href="/tags/PSR-7">PSR-7</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/08/06/pomm-foundation.html">Pomm foundation</a>
+            <span class="sub-title">06/08/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                        <a class="button " href="/tags/Pomm">Pomm</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/08/05/phinx.html">Phinx</a>
+            <span class="sub-title">05/08/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                        <a class="button " href="/tags/phinx">phinx</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/08/04/simple-bus.html">Simple bus</a>
+            <span class="sub-title">04/08/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                        <a class="button " href="/tags/Simple%20Bus">Simple Bus</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/08/03/phpspec.html">Phpspec</a>
+            <span class="sub-title">03/08/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/08/02/sf-differently-part-3-conclusion.html">Symfony differently - part 3: conclusion</a>
+            <span class="sub-title">02/08/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Symfony%20Differently">Symfony Differently</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/06/10/sf-differently-part-2-bootstrap.html">Symfony differently - part 2: bootstrap</a>
+            <span class="sub-title">10/06/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Symfony%20Differently">Symfony Differently</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/06/03/sf-differently-part-1-introduction.html">Symfony differently - part 1: introduction</a>
+            <span class="sub-title">03/06/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Symfony%20Differently">Symfony Differently</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/05/28/spec-gen-0-3.html">Specgen v0.3</a>
+            <span class="sub-title">28/05/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/SpecGen">SpecGen</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/05/20/spec-gen-0-2.html">Specgen v0.2</a>
+            <span class="sub-title">20/05/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/SpecGen">SpecGen</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/05/13/memio-spec-gen.html">Memio specgen v0.1</a>
+            <span class="sub-title">13/05/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/SpecGen">SpecGen</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/05/06/memio.html">Memio v1.0</a>
+            <span class="sub-title">06/05/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/04/29/memio-pretty-printer.html">Memio pretty printer</a>
+            <span class="sub-title">29/04/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/04/22/memio-validator-linter.html">Memio validator and linter</a>
+            <span class="sub-title">22/04/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/04/15/memio-models.html">Memio models</a>
+            <span class="sub-title">15/04/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/04/08/introducing-memio-code-generator.html">Introducing memio, code generator</a>
+            <span class="sub-title">08/04/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/04/01/hello-world-best-practices.html">Hello world, best practices - part 1.1.1</a>
+            <span class="sub-title">01/04/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/april%20fool">april fool</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/03/25/sf-ws-part-3-3-consuming-remote.html">Symfony / web services - part 3.3: consuming, remote calls</a>
+            <span class="sub-title">25/03/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/Symfony%20%2F%20Web%20Services%20series">Symfony / Web Services series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">Symfony / web services - part 3.2: consuming, guzzle</a>
+            <span class="sub-title">18/03/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/Symfony%20%2F%20Web%20Services%20series">Symfony / Web Services series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html">Symfony / web services - part 3.1: consuming, requesthandler</a>
+            <span class="sub-title">11/03/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/Symfony%20%2F%20Web%20Services%20series">Symfony / Web Services series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html">Symfony / web services - part 2.3: creation, refactoring</a>
+            <span class="sub-title">04/03/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/Symfony%20%2F%20Web%20Services%20series">Symfony / Web Services series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">Symfony / web services - part 2.2: creation, the pragmatic way</a>
+            <span class="sub-title">28/01/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/Symfony%20%2F%20Web%20Services%20series">Symfony / Web Services series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">Symfony / web services - part 2.1: creation bootstrap</a>
+            <span class="sub-title">21/01/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Symfony%20%2F%20Web%20Services%20series">Symfony / Web Services series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/01/14/sf-ws-part-1-introduction.html">Symfony / web services - part 1: introduction</a>
+            <span class="sub-title">14/01/2015</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Symfony%20%2F%20Web%20Services%20series">Symfony / Web Services series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2015/01/07/links-from-2014.html">Links from 2014</a>
+            <span class="sub-title">07/01/2015</span>
+        </h3>
+        <nav>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/12/17/semantic-versioning.html">Semantic versioning</a>
+            <span class="sub-title">17/12/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20methodology">introducing methodology</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/12/10/keep-it-simple-and-git.html">Keep it simple and git</a>
+            <span class="sub-title">10/12/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20methodology">introducing methodology</a>
+                        <a class="button " href="/tags/git">git</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/12/03/lightweight-console-lib.html">Lightweight console library</a>
+            <span class="sub-title">03/12/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/11/26/find-all-available-fqcn.html">Find all available fully qualified classnames</a>
+            <span class="sub-title">26/11/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/php">php</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/11/21/read-it-later.html">Read it later</a>
+            <span class="sub-title">21/11/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20methodology">introducing methodology</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/11/15/sf2-quick-functional-tests.html">Symfony2 - quick functional tests</a>
+            <span class="sub-title">15/11/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/11/06/redaktilo-1-3.html">Redaktilo 1.3</a>
+            <span class="sub-title">06/11/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/redaktilo">redaktilo</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/10/29/sf2-bundle-standalone.html">Symfony2 bundle, standalone</a>
+            <span class="sub-title">29/10/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/10/15/php-array-manipulation.html">Php array manipulation</a>
+            <span class="sub-title">15/10/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/redaktilo">redaktilo</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/php">php</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/10/08/master-sf2-conclusion.html">Master symfony2 - conclusion</a>
+            <span class="sub-title">08/10/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Master%20Symfony2%20series">Master Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/09/10/master-sf2-part-6-annotations.html">Master symfony2 - part 6: annotations</a>
+            <span class="sub-title">10/09/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Master%20Symfony2%20series">Master Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/09/03/master-sf2-part-5-events.html">Master symfony2 - part 5: events</a>
+            <span class="sub-title">03/09/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Master%20Symfony2%20series">Master Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/08/27/master-sf2-part-4-doctrine.html">Master symfony2 - part 4: doctrine</a>
+            <span class="sub-title">27/08/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Master%20Symfony2%20series">Master Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/08/22/master-sf2-part-3-services.html">Master symfony2 - part 3: services</a>
+            <span class="sub-title">22/08/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Master%20Symfony2%20series">Master Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/08/13/master-sf2-part-2-tdd.html">Master symfony2 - part 2: test driven development</a>
+            <span class="sub-title">13/08/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/TDD">TDD</a>
+                        <a class="button " href="/tags/Master%20Symfony2%20series">Master Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/08/05/master-sf2-part-1-bootstraping.html">Master symfony2 - part 1: bootstraping</a>
+            <span class="sub-title">05/08/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Master%20Symfony2%20series">Master Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/07/23/learn-sf2-conclusion.html">Learn symfony2 - conclusion</a>
+            <span class="sub-title">23/07/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Learn%20Symfony2%20series">Learn Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/07/20/learn-sf2-tests-part-5.html">Learn symfony2 - part 5: tests</a>
+            <span class="sub-title">20/07/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Learn%20Symfony2%20series">Learn Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/07/12/learn-sf2-controllers-part-4.html">Learn symfony2 - part 4: controllers</a>
+            <span class="sub-title">12/07/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Learn%20Symfony2%20series">Learn Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/07/02/learn-sf2-bundles-part-3.html">Learn symfony2 - part 3: bundles</a>
+            <span class="sub-title">02/07/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Learn%20Symfony2%20series">Learn Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/06/25/learn-sf2-empty-app-part-2.html">Learn symfony2 - part 2: empty application</a>
+            <span class="sub-title">25/06/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Learn%20Symfony2%20series">Learn Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/06/18/learn-sf2-composer-part-1.html">Learn symfony2 - part 1: composer</a>
+            <span class="sub-title">18/06/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Learn%20Symfony2%20series">Learn Symfony2 series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/06/04/php-tokenizer.html">Php tokenizer</a>
+            <span class="sub-title">04/06/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/php">php</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/05/27/redaktilo-0-7.html">Redaktilo v0.7</a>
+            <span class="sub-title">27/05/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/redaktilo">redaktilo</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/05/21/facade-design-pattern-by-example.html">Facade design pattern, by example</a>
+            <span class="sub-title">21/05/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/design%20pattern">design pattern</a>
+                        <a class="button " href="/tags/redaktilo">redaktilo</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/05/14/open-closed-principle-by-example.html">Open/closed principle, by example</a>
+            <span class="sub-title">14/05/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/design%20principle">design principle</a>
+                        <a class="button " href="/tags/redaktilo">redaktilo</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/05/09/redaktilo.html">Redaktilo: because your code too needs an editor</a>
+            <span class="sub-title">09/05/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/redaktilo">redaktilo</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/04/30/php-generators-and-coroutines.html">Php generators and coroutines</a>
+            <span class="sub-title">30/04/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/PHP">PHP</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/04/23/sf2-sessions-introduction.html">Symfony2 sessions introduction</a>
+            <span class="sub-title">23/04/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/04/16/pomodoro-manage-your-breaks-improve-your-focus.html">Pomodoro: manage your breaks, improve your focus</a>
+            <span class="sub-title">16/04/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20methodology">introducing methodology</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/04/09/sf2-console-component-by-example.html">Symfony2 console component, by example</a>
+            <span class="sub-title">09/04/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/04/02/tests-cheat-sheet.html">Tests cheat sheet</a>
+            <span class="sub-title">02/04/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Tests%20series">Tests series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/03/26/behat-quick-tour.html">Behat: a quick tour</a>
+            <span class="sub-title">26/03/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Tests%20series">Tests series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/03/19/behavior-driven-development-story-bdd.html">Behavior driven development: story bdd</a>
+            <span class="sub-title">19/03/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Tests%20series">Tests series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/03/11/phpspec-quick-tour.html">Phpspec: a quick tour</a>
+            <span class="sub-title">11/03/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Tests%20series">Tests series</a>
+                        <a class="button " href="/tags/introducing%20tool">introducing tool</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/03/05/spec-bdd.html">Spec bdd</a>
+            <span class="sub-title">05/03/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Tests%20series">Tests series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/02/26/tdd-just-do-it.html">Tdd: just do it!</a>
+            <span class="sub-title">26/02/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Tests%20series">Tests series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/02/19/test-driven-development.html">Test driven development</a>
+            <span class="sub-title">19/02/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Tests%20series">Tests series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/02/12/tests-tools-overview.html">Tests: tools overview</a>
+            <span class="sub-title">12/02/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Tests%20series">Tests series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/02/05/tests-introduction.html">Tests: introduction</a>
+            <span class="sub-title">05/02/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/Tests%20series">Tests series</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/01/29/sf2-di-component-by-example.html">Symfony2 dependency injection component, by example</a>
+            <span class="sub-title">29/01/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/01/22/ioc-di-and-service-locator.html">Inversion of control, dependency injection, dependency injection container and service locator</a>
+            <span class="sub-title">22/01/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/design%20pattern">design pattern</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html">Bootstrap the markdown files of your foss project</a>
+            <span class="sub-title">15/01/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20tool">introducing tool</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button button-deprecated" href="/tags/deprecated">deprecated</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/01/08/technology-scouting.html">Technology scouting</a>
+            <span class="sub-title">08/01/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20methodology">introducing methodology</a>
+                        <a class="button button-deprecated" href="/tags/deprecated">deprecated</a>
+                    </nav>
+    </article>
+
+<p></p>
+
+<article>
+        <h3>
+            <a href="/2014/01/01/carew-static-site-generator.html">Carew, the static site generator</a>
+            <span class="sub-title">01/01/2014</span>
+        </h3>
+        <nav>
+                        <a class="button " href="/tags/introducing%20tool">introducing tool</a>
+                    </nav>
+    </article>
+
+<p></p>
+
 
             <footer>
-                    <nav class="row">
-                        <a class="six columns button" href="2015/11/26/http-cache.html">Previous: HTTP Cache</a>
-        
-        <a class="six columns button" href="2015/12/17/symfony-micro-framework.html">Get this article's URL</a>
-    </nav>
-                <hr />
+                                                <hr />
             </footer>
         </article>
 
         <footer>
             <nav class="row">
-                <a class="button three columns" href="about.html">About</a>
-                <a class="button three columns" href="archive.html">Archive</a>
-                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_carew">Sources</a>
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
             </nav>
         </footer>
     </div>
 
-    <script src="./js/highlight_8_8_0.min.js"></script>
+    <script src="/js/highlight_9_0_0.min.js"></script>
     <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
     <script type="text/javascript">
         var _gaq = _gaq || [];
