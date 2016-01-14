@@ -1,0 +1,501 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Symfony2 Bundle, standalone &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2014/10/29/sf2-bundle-standalone.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Symfony2 Bundle, standalone
+    <span class="sub-title">14/01/2016</span>
+</h2>
+                            <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                    </nav>
+                </header>
+
+                <blockquote>
+  <p><strong>TL;DR</strong>: Create an empty application in your bundle to allow people to test
+  it (manually or automatically) outside of an actual application.</p>
+</blockquote>
+
+<p><a href="http://symfony.com">Symfony2</a> bundles are a great way to:</p>
+
+<ul>
+<li>configure the application's Dependency Injection Container (DIC)</li>
+<li>provide it with resources (mainly templates and assets)</li>
+<li>register entry points (like controllers and commands)</li>
+</ul>
+
+<p>In this article, we will see how to make sure a third party bundle actually work
+by creating an embed application. We will then have a look at its practical use:</p>
+
+<ol>
+<li><a href="#minimal-bundle">Minimal Bundle</a></li>
+<li><a href="#embed-application">Embed Application</a></li>
+<li><a href="#manual-tests">Manual tests</a>
+
+<ul>
+<li><a href="#running-commands">Running commands</a></li>
+<li><a href="#browsing-pages">Browsing pages</a></li>
+</ul></li>
+<li><a href="#automated-tests">Automated tests</a>
+
+<ul>
+<li><a href="#container-tests">Container tests</a></li>
+<li><a href="#functional-cli-tests">Functional CLI tests</a></li>
+<li><a href="#functional-web-tests">Functional web tests</a></li>
+</ul></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ol>
+
+<h2 id="minimal-bundle">Minimal Bundle</h2>
+
+<p>Creating a bundle is fairly easy as you just need to create the following class:</p>
+
+<pre><code class="php">&lt;?php
+// File: AcmeStandaloneBundle.php
+
+namespace Acme\StandaloneBundle;
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+
+class AcmeStandaloneBundle extends Bundle
+{
+}
+</code></pre>
+
+<p>It also needs a <code>composer.json</code> file, so it can be distributed all around the
+world:</p>
+
+<pre><code class="json">{
+    "name": "acme/standalone-bundle",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Acme\\StandaloneBundle\\": ""
+        }
+    },
+    "require": {
+        "symfony/http-kernel": "~2.3"
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: to release it, you would then need to create a git repository and
+  to register it in <a href="https://packagist.org/">Packagist</a>.</p>
+</blockquote>
+
+<h2 id="embed-application">Embed Application</h2>
+
+<p>Now how can we make sure our bundle would work in an application? We could:</p>
+
+<ol>
+<li>use an existing application</li>
+<li>make the bundle's sources available in it somehow:
+
+<ul>
+<li>creating the bundle in the application</li>
+<li>or making a symbolic link that points to the bundle</li>
+</ul></li>
+<li>register it in its <code>app/AppKernel.php</code> file and have a look...</li>
+</ol>
+
+<p>But we can do better!</p>
+
+<p>We can create the smallest Symfony2 application ever <strong>inside</strong> our bundle:</p>
+
+<pre><code class="php">&lt;?php
+// File: Tests/app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        return array(
+            new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
+            new Acme\StandaloneBundle\AcmeStandaloneBundle(),
+        );
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader)
+    {
+        $loader-&gt;load(__DIR__.'/config.yml');
+    }
+}
+</code></pre>
+
+<p><a href="https://github.com/symfony/FrameworkBundle">FrameworkBundle</a> requires the
+following configuration parameter in order to work:</p>
+
+<pre><code class="yaml"># File: Tests/app/config.yml
+framework:
+    secret: "Three can keep a secret, if two of them are dead."
+</code></pre>
+
+<p>I'd also advise you to create an autoload file to make things easier:</p>
+
+<pre><code class="php">&lt;?php
+// File: Tests/app/autoload.php
+
+$loader = require __DIR__.'/../../vendor/autoload.php';
+require __DIR__.'/AppKernel.php';
+</code></pre>
+
+<p>The last step is to add the new dependency in the <code>composer.json</code> file:</p>
+
+<pre><code class="json">{
+    "name": "acme/standalone-bundle",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Acme\\StandaloneBundle\\": ""
+        }
+    },
+    "require": {
+        "symfony/http-kernel": "~2.3"
+    },
+    "require-dev": {
+        "symfony/framework-bundle": "~2.3"
+    }
+}
+</code></pre>
+
+<p>We would also need to ignore the following directories:</p>
+
+<pre><code># File: .gitignore
+
+/Tests/app/cache
+/Tests/app/logs
+</code></pre>
+
+<p>And that's it, we now have a minimalistic embed application in our bundle.
+As it can now be ran on its own, it has become a <strong>Standalone Bundle</strong>!</p>
+
+<p>Let's see the practical use.</p>
+
+<h2 id="manual-tests">Manual tests</h2>
+
+<p>Because your bundle now doesn't need any existing applications to be used,
+people will be able to test it manually and do some demonstrations with it.</p>
+
+<h3 id="running-commands">Running commands</h3>
+
+<p>Let's pretend we created a command in our bundle. We'd like to run it just to
+make sure everything works as expected. For this we'll need to create an
+embed console:</p>
+
+<pre><code class="php">&lt;?php
+// File: Tests/app/console.php
+
+set_time_limit(0);
+
+require_once __DIR__.'/autoload.php';
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+
+$kernel = new AppKernel('dev', true);
+$application = new Application($kernel);
+$application-&gt;run();
+</code></pre>
+
+<p>That's it! You can now run:</p>
+
+<pre><code>php Tests/app/console.php
+</code></pre>
+
+<h3 id="browsing-pages">Browsing pages</h3>
+
+<p>Let's pretend we created a controller which returns some JSON data. We'd like to
+browse it just to make sure everyting works as expected. For this, we'll need to
+create an embed web app:</p>
+
+<pre><code class="php">&lt;?php
+// File: Tests/app/web.php
+
+use Symfony\Component\HttpFoundation\Request;
+
+require_once __DIR__.'/autoload.php';
+
+$kernel = new AppKernel('prod', false);
+$request = Request::createFromGlobals();
+$response = $kernel-&gt;handle($request);
+$response-&gt;send();
+</code></pre>
+
+<p>That's it! You can now run:</p>
+
+<pre><code>php Tests/app/console.php server:run -d Tests/app
+</code></pre>
+
+<p>And browse your application.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: If you use a templating engine like Twig to render HTML pages,
+  or if you use the Symfony2 Form Component in your bundle, don't forget to add
+  the dependencies to your <code>composer.json</code> file and to register the appropriate
+  bundles to the embed <code>AppKernel</code>.</p>
+</blockquote>
+
+<h2 id="automated-tests">Automated tests</h2>
+
+<p>Manual tests are great to get a quick idea of what your bundle does.
+But an embed application is also great to write automated tests.</p>
+
+<h3 id="container-tests">Container tests</h3>
+
+<p>Let's pretend we created a service which is defined in the DIC. We'd like to
+make sure it is properly configured (for e.g. checking if we forgot to inject a
+dependency). For this, we'll need to created a simple test:</p>
+
+<pre><code class="php">&lt;?php
+// File: Tests/ServiceTest.php
+
+namespace Acme\StandaloneBundle\Tests;
+
+class ServiceTest extends \PHPUnit_Framework_TestCase
+{
+    private $container;
+
+    protected function setUp()
+    {
+        $kernel = new \AppKernel('test', true);
+        $kernel-&gt;boot();
+
+        $this-&gt;container = $kernel-&gt;getContainer();
+    }
+
+    public function testServiceIsDefinedInContainer()
+    {
+        $service = $this-&gt;container-&gt;get('acme_standalone.service');
+
+        $this-&gt;assertInstanceOf('Acme\StandaloneBundle\Service', $service);
+    }
+}
+</code></pre>
+
+<p>We need to add <a href="https://phpunit.de/">PHPUnit</a> as a development dependency:</p>
+
+<pre><code class="json">{
+    "name": "acme/standalone-bundle",
+    "type": "symfony-bundle",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Acme\\StandaloneBundle\\": ""
+        }
+    },
+    "require": {
+        "symfony/http-kernel": "~2.3"
+    },
+    "require-dev": {
+        "symfony/framework-bundle": "~2.3",
+        "phpunit/phpunit": "~4.3"
+    }
+}
+</code></pre>
+
+<p>Finally we need to configure PHPUnit to use our autoload:</p>
+
+<pre><code class="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- http://phpunit.de/manual/4.3/en/appendixes.configuration.html --&gt;
+&lt;phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.3/phpunit.xsd"
+    backupGlobals="false"
+    colors="true"
+    bootstrap="./Tests/app/autoload.php"
+&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="Test Suite"&gt;
+            &lt;directory&gt;./Tests/&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;
+</code></pre>
+
+<p>That's it! You can now run:</p>
+
+<pre><code>./vendor/bin/phpunit
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: You can of course use any testing framework of your choice.</p>
+</blockquote>
+
+<h3 id="functional-cli-tests">Functional CLI tests</h3>
+
+<p>Let's pretend we created a command. We'd like to run it automatically and check
+its exit code to make sure it works. For this, we'll need to created a simple
+test:</p>
+
+<pre><code class="php">&lt;?php
+// File: Tests/ServiceTest.php
+
+namespace Acme\StandaloneBundle\Tests\Command;
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
+
+class DemoCommandTest extends \PHPUnit_Framework_TestCase
+{
+    private $application;
+
+    protected function setUp()
+    {
+        $kernel = new AppKernel('dev', true);
+        $this-&gt;application = new Application($kernel);
+    }
+
+    public function testItRunsSuccessfully()
+    {
+        $output = new NullOutput();
+        $input = new ArrayInput(
+            'command_name' =&gt; 'acme:demo',
+            'argument' =&gt; 'value',
+            '--option' =&gt; 'value',
+        );
+        $exitCode = $this-&gt;application-&gt;run($input, $output);
+
+        $this-&gt;assertSame(0, $exitCode);
+    }
+}
+</code></pre>
+
+<p>And that's it!</p>
+
+<h3 id="functional-web-tests">Functional web tests</h3>
+
+<p>Let's pretend we created a controller which returns some JSON data. We'd like to
+browse it automatically and check its status code to make sure it works. For
+this, we'll need to created a simple test:</p>
+
+<pre><code class="php">&lt;?php
+// File: Tests/ServiceTest.php
+
+namespace Acme\StandaloneBundle\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
+
+class DemoControllerTest extends \PHPUnit_Framework_TestCase
+{
+    private $client;
+
+    protected function setUp()
+    {
+        $kernel = new AppKernel('test', true);
+        $kernel-&gt;boot();
+
+        $this-&gt;client = $kernel-&gt;getContainer()-&gt;get('test.client');
+    }
+
+    public function testItRunsSuccessfully()
+    {
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $content = array('parameter' =&gt; 'value');
+        $response = $this-&gt;client-&gt;request(
+            'POST',
+            '/demo',
+            array(),
+            array(),
+            $headers,
+            $content
+        );
+
+        $this-&gt;assertTrue($response-&gt;isSuccessful());
+    }
+}
+</code></pre>
+
+<p>The <code>test.client</code> service is only available when the <code>test</code> configuration
+parameter is set.</p>
+
+<pre><code class="yaml"># File: Tests/app/config.yml
+framework:
+    secret: "Three can keep a secret, if two of them are dead."
+    test: ~
+</code></pre>
+
+<p>And that's it!</p>
+
+<blockquote>
+  <p><strong>Note</strong>: When creating APIs, you might want to test the precise status code.</p>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Creating an embed application in a third party bundle is fairly easy and brings
+many advantages as it enables demonstrations and simple automated tests.</p>
+
+<p>I hope you enjoyed this article, if you have any questions or comments, please
+<a href="https://twitter.com/epiloic">let me know</a>.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2014/10/15/php-array-manipulation.html" title="PHP array manipulation">Previous &lt; PHP array manipulation</a>
+                                        <a class="button six columns" href="/2014/11/06/redaktilo-1-3.html" title="Redaktilo 1.3">Next &gt; Redaktilo 1.3</a>
+                    </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Diactoros (PSR-7) &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2015/08/07/diactoros-psr7.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Diactoros (PSR-7)
+    <span class="sub-title">14/01/2016</span>
+</h2>
+                            <nav>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                        <a class="button " href="/tags/Diactoros">Diactoros</a>
+                        <a class="button " href="/tags/PSR-7">PSR-7</a>
+                    </nav>
+                </header>
+
+                <p><a href="https://github.com/zendframework/zend-diactoros">Zend Diactoros</a> is a lightweight
+library providing implementations for <a href="http://www.php-fig.org/psr/psr-7/">PSR-7 interfaces</a>.</p>
+
+<p>It can be installed using <a href="https://getcomposer.org/download/">Composer</a>:</p>
+
+<pre><code>composer require zendframework/zend-diactoros:^1.0
+</code></pre>
+
+<h2 id="example">Example</h2>
+
+<p>We'd like to retrieve data from remote endpoints, using our internal <code>RequestHandler</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Vendor\Project;
+
+use Psr\Http\Message\RequestInterface;
+
+interface RequestHandler
+{
+    // @return \Psr\Http\Message\ResponseInterface
+    public function handle(RequestInterface $request);
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: For the sake of our example we use this interface, but in your application
+  you'd use an actual HTTP client (e.g. <a href="http://guzzle.readthedocs.org/en/latest/">Guzzle</a>).</p>
+</blockquote>
+
+<p><code>RequestHandler</code> expects a <code>Request</code> parameter, so we're going to build it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Vendor\Project;
+
+use Zend\Diactoros\Request;
+use Zend\Diactoros\Stream;
+
+class MemberGateway
+{
+    private $requestHandler;
+    private $username;
+    private $password;
+
+    public function __construct(RequestHandler $requestHandler, $username, $password)
+    {
+        $this-&gt;requestHandler = $requestHandler;
+        $this-&gt;username = $username;
+        $this-&gt;password = $password;
+    }
+
+    public function findOne($id)
+    {
+        $request = new Request('http://example.com/members/'.$id, 'GET', 'php://memory', array(
+            'Authorization' =&gt; 'Basic '.base64_encode($this-&gt;username.':'.$this-&gt;password),
+        ));
+        $item = json_decode($this-&gt;requestHandler-&gt;handle($request)-&gt;getBody()-&gt;__toString(), true);
+
+        return array(
+            'id' =&gt; $item['id'],
+            'name' =&gt; $item['name'],
+            'description' =&gt; $item['description'],
+        );
+    }
+
+    public function createOne($name, $description)
+    {
+        $body = new Stream('php://memory', 'w');
+        $body-&gt;write(json_encode(array(
+            'name' =&gt; $name,
+            'description' =&gt; $description,
+        )));
+        $request = new Request('http://example.com/members/'.$id, 'GET', $body, array(
+            'Authorization' =&gt; 'Basic '.base64_encode($this-&gt;username.':'.$this-&gt;password),
+        ));
+        $item = json_decode($this-&gt;requestHandler-&gt;handle($request)-&gt;getBody()-&gt;__toString(), true);
+
+        return array(
+            'id' =&gt; $item['id'],
+            'name' =&gt; $item['name'],
+            'description' =&gt; $item['description'],
+        );
+    }
+}
+</code></pre>
+
+<p>The body of <code>Request</code> and <code>Response</code> is wrapped in a <code>Stream</code> (as specified in PSR-7).</p>
+
+<h2 id="tips">Tips</h2>
+
+<p>If the <code>Request</code> body should be empty, simply pass <code>php://memory</code>.</p>
+
+<p>If the <code>Response</code> has a body, we can convert the <code>Stream</code> into a string using <code>__toString</code>.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Zend Diactoros is becoming the de facto PSR-7 implementation, for example it's
+used in <a href="http://symfony.com/blog/psr-7-support-in-symfony-is-here">Symfony</a>.</p>
+
+<p>You should give it a try!</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/08/06/pomm-foundation.html" title="Pomm Foundation">Previous &lt; Pomm Foundation</a>
+                                        <a class="button six columns" href="/2015/08/25/cqrs.html" title="Command/Query Responsibility Segregation">Next &gt; Command/Query Responsibility Segregation</a>
+                    </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,483 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Symfony / Web Services - part 3.1: Consuming, RequestHandler &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Symfony / Web Services - part 3.1: Consuming, RequestHandler
+    <span class="sub-title">14/01/2016</span>
+</h2>
+                            <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/Symfony%20%2F%20Web%20Services%20series">Symfony / Web Services series</a>
+                    </nav>
+                </header>
+
+                <p>This is the fifth article of the series on managing Web Services in a
+<a href="https://symfony.com">Symfony</a> environment. Have a look at the four first ones:</p>
+
+<ul>
+<li><a href="/2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a></li>
+<li><a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">2.1 Creation bootstrap</a></li>
+<li><a href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">2.2 Creation, the pragmatic way</a></li>
+<li><a href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html">2.3 Creation, refactoring</a></li>
+</ul>
+
+<p>Our purpose in this third section is to create an application that consumes the
+<a href="https://github.com/gnugat-examples/sf-ws">previously created web services</a>.</p>
+
+<p>But for now, we'll just bootstrap it, and start to create a RequestHandler!</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>We will follow the exact same steps as in <a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">the chapter 2.1</a>:</p>
+
+<ol>
+<li>Installing the standard edition</li>
+<li>Twitching for tests</li>
+</ol>
+
+<p>Instead of calling our application <code>ws</code>, we'll call it <code>cs</code> (like Consuming Service).</p>
+
+<h2 id="making-remote-calls-with-guzzle">Making remote calls with Guzzle</h2>
+
+<p>Is the application boostrapped yet? If it is, then we can continue.</p>
+
+<p>In order to consume web services, we need to be able to make remote requests. PHP
+provides some native functions for this (<code>file_get_contents</code>, <code>stream_socket_client</code>,
+<code>fopen</code>, etc) and we can find many libraries as well (<a href="https://github.com/kriswallsmith/Buzz">Buzz</a>,
+<a href="http://phphttpclient.com/">HTTP Full</a>, <a href="http://reactphp.org/">React</a>, etc).</p>
+
+<p>For this series, we'll use <a href="http://guzzle.readthedocs.org/en/latest/">Guzzle</a>:</p>
+
+<pre><code>composer require guzzlehttp/guzzle:~5.0
+</code></pre>
+
+<p>Let's commit it for now:</p>
+
+<pre><code>git add -A
+git commit -m 'Installed Guzzle'
+</code></pre>
+
+<h2 id="creating-a-request-handler">Creating a Request Handler</h2>
+
+<p>Sometimes we need to decouple our application from the third party libraries it depends on.</p>
+
+<p>For example let's say that we were using Guzzle 4, but we'd like to use Amazon Web Service (AWS)
+S3 in our project. The issue? It's version 2 depends on Guzzle 3 and its version 3
+depends on Guzzle 5. We now need to upgrade our usage of Guzzle everywhere in our
+application.</p>
+
+<p><a href="http://knowyourmeme.com/photos/141710-true-story"><img src="http://i0.kym-cdn.com/photos/images/newsfeed/000/141/710/7nTnr.png?1309357850" alt="True story" /></a></p>
+
+<p>To minimize this, we can centralize the usage of Guzzle in one single file. In order
+to be able to do so, we'll create a RequestHandler:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/RequestHandler/RequestHandler.php
+
+namespace AppBundle\RequestHandler;
+
+interface RequestHandler
+{
+    // @return Response
+    public function handle(Request $request);
+}
+</code></pre>
+
+<p>In our application we can rely on this interface: we own it and it has few chances to change.
+We'll now create an object that describes the request to send:</p>
+
+<pre><code>./bin/phpspec describe 'AppBundle\RequestHandler\Request'
+</code></pre>
+
+<p>A minimalistic raw HTTP request looks like the following:</p>
+
+<pre><code>GET /api/v1/profiles HTTP/1.1
+</code></pre>
+
+<p>Since we don't really care about the protocol's version we can define the constructor
+with two arguments:</p>
+
+<pre><code class="php">// File: spec/AppBundle/RequestHandler/RequestSpec.php
+
+    function it_has_a_verb_and_an_uri()
+    {
+        $this-&gt;beConstructedWith('GET', '/api/v1/profiles');
+
+        $this-&gt;getVerb()-&gt;shouldBe('GET');
+        $this-&gt;getUri()-&gt;shouldBe('/api/v1/profiles');
+    }
+</code></pre>
+
+<p>Running the specifications will bootstrap the class for us:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>We can now make the test pass by writing the code:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/RequestHandler/Request.php
+
+namespace AppBundle\RequestHandler;
+
+class Request
+{
+    private $verb;
+    private $uri;
+
+    public function __construct($verb, $uri)
+    {
+        $this-&gt;verb = $verb;
+        $this-&gt;uri = $uri;
+    }
+
+    public function getVerb()
+    {
+        return $this-&gt;verb;
+    }
+
+    public function getUri()
+    {
+        return $this-&gt;uri;
+    }
+}
+</code></pre>
+
+<p>Let's check if it's enough for now:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>All green, we can commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Created Request'
+</code></pre>
+
+<h2 id="request-headers">Request headers</h2>
+
+<p>A request usually has headers:</p>
+
+<pre><code class="php">// File: spec/AppBundle/RequestHandler/RequestSpec.php
+
+    function it_can_have_headers()
+    {
+        $this-&gt;beConstructedWith('GET', '/api/v1/profiles');
+        $this-&gt;setHeader('Content-Type', 'application/json');
+
+        $this-&gt;getHeaders()-&gt;shouldBe(array('Content-Type' =&gt; 'application/json'));
+    }
+</code></pre>
+
+<p>Let's boostrap them:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>And complete the code:</p>
+
+<pre><code class="php">// File: src/AppBundle/RequestHandler/Request.php
+
+    private $headers = array();
+
+    public function setHeader($name, $value)
+    {
+        $this-&gt;headers[$name] = $value;
+    }
+
+    public function getHeaders()
+    {
+        return $this-&gt;headers;
+    }
+</code></pre>
+
+<p>This makes the test pass:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>That's worth a commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Added headers to Request'
+</code></pre>
+
+<h2 id="request-body">Request body</h2>
+
+<p>The last addition to our request will be the possibility to add a body:</p>
+
+<pre><code class="php">// File: spec/AppBundle/RequestHandler/RequestSpec.php
+
+    function it_can_have_a_body()
+    {
+        $this-&gt;beConstructedWith('GET', '/api/v1/profiles');
+        $this-&gt;setBody('{"wound":"just a flesh one"}');
+
+        $this-&gt;getBody()-&gt;shouldBe('{"wound":"just a flesh one"}');
+    }
+</code></pre>
+
+<p>As usual we bootstrap it:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>And then we complete it:</p>
+
+<pre><code class="php">// File: src/AppBundle/RequestHandler/Request.php
+
+    private $body;
+
+    public function setBody($body)
+    {
+        $this-&gt;body = $body;
+    }
+
+    public function getBody()
+    {
+        return $this-&gt;body;
+    }
+</code></pre>
+
+<p>Let's make our console green:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>Let's make our console grin:</p>
+
+<pre><code>git add -A
+git commit -m 'Added body to Request'
+</code></pre>
+
+<h2 id="creating-a-response">Creating a Response</h2>
+
+<p><code>RequestHandler</code> should return a <code>Response</code> object:</p>
+
+<pre><code>./bin/phpspec describe 'AppBundle\RequestHandler\Response'
+</code></pre>
+
+<p>A minimalistic raw HTTP response looks like the following:</p>
+
+<pre><code>HTTP/1.1 204 NO CONTENT
+</code></pre>
+
+<p>Since we don't care about both the protocol's version and the reason, we can
+define the constructor with a single argument:</p>
+
+<pre><code class="php">// File: spec/AppBundle/RequestHandler/ResponseSpec.php
+
+    function it_has_a_status_code()
+    {
+        $this-&gt;beConstructedWith(204);
+
+        $this-&gt;getStatusCode()-&gt;shouldBe(204);
+    }
+</code></pre>
+
+<p>Running the specifications will bootstrap the class for us:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>We can now make the test pass by writing the code:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/RequestHandler/Response.php
+
+namespace AppBundle\RequestHandler;
+
+class Response
+{
+    private $statusCode;
+
+    public function __construct($statusCode)
+    {
+        $this-&gt;statusCode = $statusCode;
+    }
+
+    public function getStatusCode()
+    {
+        return $this-&gt;statusCode;
+    }
+}
+</code></pre>
+
+<p>Let's check if it's enough for now:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>All green, we can commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Created Response'
+</code></pre>
+
+<h2 id="response-headers">Response headers</h2>
+
+<p>A response can also have headers:</p>
+
+<pre><code class="php">// File: spec/AppBundle/RequestHandler/ResponseSpec.php
+
+    function it_can_have_headers()
+    {
+        $this-&gt;beConstructedWith(204);
+        $this-&gt;setHeaders(array('Content-Type' =&gt; 'application/json'));
+
+        $this-&gt;getHeader('Content-Type')-&gt;shouldBe('application/json');
+    }
+</code></pre>
+
+<p>Let's boostrap them:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>And complete the code:</p>
+
+<pre><code class="php">// File: src/AppBundle/RequestHandler/Response.php
+
+    private $headers = array();
+
+    public function setHeaders(array $headers)
+    {
+        $this-&gt;headers = $headers;
+    }
+
+    public function getHeader($name)
+    {
+        return (isset($this-&gt;headers[$name]) ? $this-&gt;headers[$name] : null);
+    }
+</code></pre>
+
+<p>This makes the test pass:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>That's worth a commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Added headers to Response'
+</code></pre>
+
+<h2 id="response-body">Response body</h2>
+
+<p>Last but not least, the response's body:</p>
+
+<pre><code class="php">// File: spec/AppBundle/RequestHandler/ResponseSpec.php
+
+    function it_can_have_a_body()
+    {
+        $this-&gt;beConstructedWith(200);
+        $this-&gt;setBody('{"wound":"just a flesh one"}');
+
+        $this-&gt;getBody()-&gt;shouldBe('{"wound":"just a flesh one"}');
+    }
+</code></pre>
+
+<p>As usual we bootstrap it:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>And then we complete it:</p>
+
+<pre><code class="php">// File: src/AppBundle/RequestHandler/Response.php
+
+    private $body;
+
+    public function setBody($body)
+    {
+        $this-&gt;body = $body;
+    }
+
+    public function getBody()
+    {
+        return $this-&gt;body;
+    }
+</code></pre>
+
+<p>Let's make our console green:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>Let's make our console grin:</p>
+
+<pre><code>git add -A
+git commit -m 'Added body to Response'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We've bootstrapped an application, and created a RequestHandler which will help us
+to avoid coupling with Guzzle. In the <a href="/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">next article</a>,
+we'll talk about middleware and start to create some RequestHandler
+implementations (yes, more than one!).</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html" title="Symfony / Web Services - part 2.3: Creation, refactoring">Previous &lt; Symfony / Web Services - part 2.3: Creation, refactoring</a>
+                                        <a class="button six columns" href="/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html" title="Symfony / Web Services - part 3.2: Consuming, Guzzle">Next &gt; Symfony / Web Services - part 3.2: Consuming, Guzzle</a>
+                    </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

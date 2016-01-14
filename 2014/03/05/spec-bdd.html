@@ -1,0 +1,158 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>spec BDD &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2014/03/05/spec-bdd.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    spec BDD
+    <span class="sub-title">14/01/2016</span>
+</h2>
+                            <nav>
+                        <a class="button " href="/tags/Tests%20series">Tests series</a>
+                    </nav>
+                </header>
+
+                <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p>This article is part of a series on Tests in general and on how to practice
+them:</p>
+
+<ol>
+<li><a href="/2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="/2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+<li><a href="/2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+<li><a href="/2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+<li><a href="/2014/03/05/spec-bdd.html">spec BDD</a></li>
+<li><a href="/2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="/2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
+<li><a href="/2014/03/26/behat-quick-tour.html">Behat: a quick tour</a></li>
+<li><a href="/2014/04/02/tests-cheat-sheet.html">Conclusion</a></li>
+</ol>
+
+<p>In this article, we'll talk about Behavior Driven Development (BDD). There's no
+special skills required to read on, although some notions on although some
+notions on <a href="/2014/02/05/tests-introduction">tests</a> and
+<a href="/2014/02/19/test-driven-development">Test Driven Development</a>
+(TDD) would be a plus.</p>
+
+<h2 id="from-tdd-to-bdd">From TDD to BDD</h2>
+
+<p><a href="http://dannorth.net/about/">Dan North</a>, a fervent TDDist, felt that there was
+something missing about this practice:</p>
+
+<ul>
+<li>you don't know where to start (which test should be written first?)</li>
+<li>you don't know when to stop (should I test getters/setters?)</li>
+<li>you don't know what defines a failure (compilation error? typo?)</li>
+</ul>
+
+<p>While being an adapt of the concept, he felt that there was missing some
+important guidelines, and that his tests didn't answered the right questions.</p>
+
+<p>Around 2006, he wrote an article called
+<a href="http://dannorth.net/about/">introducing BDD</a>, in which he explained his unease
+and how to fix it: instead of writing tests from a technical point of view he
+decided to write them from a business point of view.</p>
+
+<h2 id="from-unit-tests-to-specification">From unit tests to specification</h2>
+
+<p>The first step to test the behavior of a class is to write a specification.
+Because xUnit frameworks were in vogue, developers had the habit of making a
+parallel between their Systems Under Test (SUT) and their Test Suites:</p>
+
+<ul>
+<li>suffix the SUT's name with <code>Test</code> to name the Test Suite</li>
+<li>prefix the SUT's method names with <code>test</code> to name the Test Suite's methods</li>
+</ul>
+
+<p>In the Software world, a lot of problems can be solved by giving descriptive
+names. And this is what Dan North did: Test Suites became Specification. Why?
+Because it forces you to say "this method should do this" instead of writting
+"test method".</p>
+
+<p>To be more precise, Dan Nort stated that "test method names should be
+sentences". Which means that test method names should be
+<a href="http://en.wikipedia.org/wiki/Snake_case">snake_cased</a>, as underscores give more
+spaces to words (they're basically spaces).</p>
+
+<p>And that's pretty much it!</p>
+
+<h2 id="is-that-all%3F">Is that all?</h2>
+
+<p>Yes! Well, no. I mean... This is only the first part of BDD: it's called specBDD
+(guess why ;) ). I'll write about the second part
+(<a href="/2014/03/19/behavior-driven-development-story-bdd">story BDD</a>)
+in a future article.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>BDD is just TDD, but tests become specifications and test methods are sentences
+which start with "it_should".</p>
+
+<p>I hope you enjoyed this article. If you want to make any comment, you're welcome
+to do so on <a href="https://twitter.com/epiloic">Twitter</a>.</p>
+
+<p>To keep good habits, in the <a href="/2014/03/11/phpspec-quick-tour">next article</a>
+we'll switch to the technical mode and see some <a href="http://www.phpspec.net/">phpspec</a>!</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2014/02/26/tdd-just-do-it.html" title="TDD: just do it!">Previous &lt; TDD: just do it!</a>
+                                        <a class="button six columns" href="/2014/03/11/phpspec-quick-tour.html" title="phpspec: a quick tour">Next &gt; phpspec: a quick tour</a>
+                    </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,3010 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2016-01-14T08:31:38+00:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Symfony / Web Services - part 3.3: Consuming, remote calls]]></title>
+            <link href="/2015/03/25/sf-ws-part-3-3-consuming-remote.html"/>
+            <updated>2015-03-25T00:00:00+00:00</updated>
+            <id>/2015/03/25/sf-ws-part-3-3-consuming-remote.html</id>
+            <content type="html"><![CDATA[<p>This is the seventh article of the series on managing Web Services in a
+<a href="https://symfony.com">Symfony</a> environment. Have a look at the six first ones:</p>
+
+<ul>
+<li><a href="/2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a></li>
+<li><a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">2.1 Creation bootstrap</a></li>
+<li><a href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">2.2 Creation, the pragmatic way</a></li>
+<li><a href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html">2.3 Creation, refactoring</a></li>
+<li><a href="/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html">3.1 Consuming, RequestHandler</a></li>
+<li><a href="/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">3.2 Consuming, Guzzle</a></li>
+</ul>
+
+<p>You can check the code in the <a href="https://github.com/gnugat-examples/sf-cs">following repository</a>.</p>
+
+<p>In the previous article, we've created a Guzzle RequestHandler: we are now able
+to make remote calls using a third party library, but without the cost of coupling
+ourselves to it. If Guzzle 6 is released we'll have to change only one class, instead
+of everywhere in our application.</p>
+
+<p>In this article, we'll create the actual remote calls.</p>
+
+<h2 id="credential-configuration">Credential configuration</h2>
+
+<p>The web service we want to call requires us to authenticate. Those credentials
+shouldn't be hardcoded, we'll create new parameters for them (same goes for the URL):</p>
+
+<pre><code># File: app/config/parameters.yml.dist
+    ws_url: http://example.com
+    ws_username: username
+    ws_password: ~
+</code></pre>
+
+<p>We can then set those values in the actual parameter file:</p>
+
+<pre><code># File: app/config/parameters.yml
+    ws_url: "http://ws.local/app_dev.php"
+    ws_username: spanish_inquisition
+    ws_password: "NobodyExpectsIt!"
+</code></pre>
+
+<p>Note that because our password contains a character which is reserved in YAML (<code>!</code>),
+we need to put the value between double quotes (same goes for <code>%</code> and <code>@</code>).</p>
+
+<p>Let's commit this:</p>
+
+<pre><code>git add -A
+git commit -m 'Added credentials configuration'
+</code></pre>
+
+<h2 id="profile-gateway">Profile Gateway</h2>
+
+<p>We can create a <a href="http://martinfowler.com/eaaCatalog/gateway.html">Gateway</a>
+specialized in calling the profile web service:</p>
+
+<pre><code>./bin/phpspec describe 'AppBundle\Profile\ProfileGateway'
+</code></pre>
+
+<p>Usually we categorize our Symfony applications by Pattern: we'd create a <code>Gateway</code>
+directory with all the Gateway service. However this can become quite cubersome
+when the application grows, services are usually linked to a model meaning that
+we'd have to jump from the <code>Model</code> (or <code>Entity</code>) directory to the <code>Gateway</code> one,
+then go to the <code>Factory</code> directory, etc...</p>
+
+<p>Here we've chosen an alternative: group services by model. All <code>Profile</code> services
+can be found in the same directory.</p>
+
+<p>Let's write the Gateway's specification:</p>
+
+<pre><code class="php">&lt;?php
+// File: spec/AppBundle/Profile/ProfileGatewaySpec.php
+
+namespace spec\AppBundle\Profile;
+
+use AppBundle\RequestHandler\RequestHandler;
+use AppBundle\RequestHandler\Response;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class ProfileGatewaySpec extends ObjectBehavior
+{
+    const URL = 'http://example.com';
+    const USERNAME = 'spanish inquisition';
+    const PASSWORD = 'nobody expects it';
+
+    const ID = 42;
+    const NAME = 'Arthur';
+
+    function let(RequestHandler $requestHandler)
+    {
+        $this-&gt;beConstructedWith($requestHandler, self::URL, self::USERNAME, self::PASSWORD);
+    }
+
+    function it_creates_profiles(RequestHandler $requestHandler, Response $response)
+    {
+        $profile = array(
+            'id' =&gt; self::ID,
+            'name' =&gt; self::NAME,
+        );
+
+        $request = Argument::type('AppBundle\RequestHandler\Request');
+        $requestHandler-&gt;handle($request)-&gt;willReturn($response);
+        $response-&gt;getBody()-&gt;willReturn($profile);
+
+        $this-&gt;create(self::NAME)-&gt;shouldBe($profile);
+    }
+}
+</code></pre>
+
+<p>We can now generate the code's skeleton:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>It constructs a <code>Request</code> object, gives it to <code>RequestHandler</code> and then returns the
+<code>Response</code>'s body:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Profile/ProfileGateway.php
+
+namespace AppBundle\Profile;
+
+use AppBundle\RequestHandler\Request;
+use AppBundle\RequestHandler\RequestHandler;
+
+class ProfileGateway
+{
+    private $requestHandler;
+    private $url;
+    private $username;
+    private $password;
+
+    public function __construct(RequestHandler $requestHandler, $url, $username, $password)
+    {
+        $this-&gt;requestHandler = $requestHandler;
+        $this-&gt;username = $username;
+        $this-&gt;password = $password;
+    }
+
+    public function create($name)
+    {
+        $request = new Request('POST', $this-&gt;url.'/api/v1/profiles');
+        $request-&gt;setHeader('Authorization', 'Basic '.base64_encode($this-&gt;username.':'.$this-&gt;password));
+        $request-&gt;setHeader('Content-Type', 'application/json');
+        $request-&gt;setBody(json_encode(array('name' =&gt; $name)));
+
+        $response = $this-&gt;requestHandler-&gt;handle($request);
+
+        return $response-&gt;getBody();
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Managing URLs can become quite tricky when the number of routes grows.
+  Sometimes we'll want HTTPS, sometimes HTTP. Sometimes we'll want the first version
+  of the API, sometimes the pre production one. And what should we do when we'll
+  need query parameters?</p>
+  
+  <p>Usually I don't bother with those until the need is actually there, then I create
+  a <code>UrlGenerator</code> which works a bit like Symfony's one and relies on a configuration array.</p>
+</blockquote>
+
+<p>Let's check our tests:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>All green!</p>
+
+<pre><code>git add -A
+git commit -m 'Created ProfileGateway'
+</code></pre>
+
+<h2 id="create-profile-command">Create Profile Command</h2>
+
+<p>Our application happens to be a Command Line Interface (CLI). We want to write a
+command to create profiles, and as usual we'll begin with a test:</p>
+
+<pre><code class="php">&lt;?php
+// File: tests/Command/CreateProfileCommandTest.php
+
+namespace AppBundle\Tests\Command;
+
+use PHPUnit_Framework_TestCase;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Output\NullOutput;
+use Symfony\Component\Console\Input\ArrayInput;
+
+class CreateProfileCommandTest extends PHPUnit_Framework_TestCase
+{
+    private $app;
+    private $output;
+
+    protected function setUp()
+    {
+        $kernel = new \AppKernel('test', false);
+        $this-&gt;app = new Application($kernel);
+        $this-&gt;app-&gt;setAutoExit(false);
+        $this-&gt;output = new NullOutput();
+    }
+
+    public function testItRunsSuccessfully()
+    {
+        $input = new ArrayInput(array(
+            'commandName' =&gt; 'app:profile:create',
+            'name' =&gt; 'Igor',
+        ));
+
+        $exitCode = $this-&gt;app-&gt;run($input, $this-&gt;output);
+
+        $this-&gt;assertSame(0, $exitCode);
+    }
+}
+</code></pre>
+
+<p>Let's make this test pass:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Command/CreateProfileCommand.php
+
+namespace AppBundle\Command;
+
+use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class CreateProfileCommand extends ContainerAwareCommand
+{
+    protected function configure()
+    {
+        $this-&gt;setName('app:profile:create');
+        $this-&gt;setDescription('Create a new profile');
+
+        $this-&gt;addArgument('name', InputArgument::REQUIRED);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $profileGateway = $this-&gt;getContainer()-&gt;get('app.profile_gateway');
+
+        $profile = $profileGateway-&gt;create($input-&gt;getArgument('name'));
+
+        $output-&gt;writeln(sprintf('Profile #%s "%s" created', $profile['id'], $profile['name']));
+    }
+}
+</code></pre>
+
+<p>We'll need to define <code>ProfileGateway</code> as a service:</p>
+
+<pre><code># File: app/config/services.yml
+imports:
+    - { resource: services/request_handler.yml }
+
+services:
+    app.profile_gateway:
+        class: AppBundle\Profile\ProfileGateway
+        arguments:
+            - "@app.request_handler"
+            - "%ws_url%"
+            - "%ws_username%"
+            - "%ws_password%"
+</code></pre>
+
+<p>By having a look <code>ProfileGateway</code> we can spot a mistake, the initialization or URL
+is missing from the constructor:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Profile/ProfileGateway.php
+
+    public function __construct(RequestHandler $requestHandler, $url, $username, $password)
+    {
+        $this-&gt;requestHandler = $requestHandler;
+        $this-&gt;username = $username;
+        $this-&gt;password = $password;
+        $this-&gt;url = $url;
+    }
+</code></pre>
+
+<p>Another mistake lies in <code>JsonResponseListener</code>, each Guzzle header is an array:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/RequestHandler/Listener/JsonResponseListener.php
+
+        $contentType = $response-&gt;getHeader('Content-Type');
+        if (false === strpos($contentType[0], 'application/json')) {
+            return;
+        }
+</code></pre>
+
+<p>With these fixes, the test should pass:</p>
+
+<pre><code>phpunit -c app
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: if we get a <code>You have requested a non-existent service "app.profile_gateway"</code>
+  error, we might need to clear the cache for test environment: <code>php app/console cache:clear --env=test</code>.</p>
+  
+  <p><strong>Note</strong>: if we get a Guzzle exception, we need to check that the previous application installed
+  ("ws.local"), and that its database is created:</p>
+
+<pre><code>cd ../ws
+php app/console doctrine:database:create
+php app/console doctrine:schema:create
+cd ../cs
+</code></pre>
+</blockquote>
+
+<p>We can now save our work:</p>
+
+<pre><code>git add -A
+git commit -m 'Created CreateProfileCommand'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We have now an application that consumes a web service. We have decoupled it from
+third party libraries using RequestHandler and isolated the endpoint logic in a
+Gateway class.</p>
+
+<p>There's a lot to say about the test we wrote: it makes a network call which is slow, unreliable
+and it isn't immutable. If we try to run again our test, it will fail!
+To fix this we have many possibilities:</p>
+
+<ul>
+<li>mock the endpoints, it will make the tests faster and immutable but if the endpoints change our tests will still pass</li>
+<li>cleanup the created profile by aking another network call, it will make the test even slower</li>
+</ul>
+
+<p>At this point it depends on how confident we are in the web services and what we want to test.</p>
+
+<p>We should also write more test on edge cases: what happens with the wrong credentials?
+What happens if the endpoints cannot be reached (request timeout, connection timeout, etc)?
+What happens when we try to create a profile which already exists?</p>
+
+<p>As it happens, this is also the conclusion of this series on managing Web Services in a
+Symfony environment. There's a lot more to say for example about caching remote resources
+in a local database, about self discovering APIs and about micro services, but I feel
+those should each have their own series of article :) .</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Symfony / Web Services - part 3.2: Consuming, Guzzle]]></title>
+            <link href="/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html"/>
+            <updated>2015-03-18T00:00:00+00:00</updated>
+            <id>/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html</id>
+            <content type="html"><![CDATA[<p>This is the sixth article of the series on managing Web Services in a
+<a href="https://symfony.com">Symfony</a> environment. Have a look at the five first ones:</p>
+
+<ul>
+<li><a href="/2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a></li>
+<li><a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">2.1 Creation bootstrap</a></li>
+<li><a href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">2.2 Creation, the pragmatic way</a></li>
+<li><a href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html">2.3 Creation, refactoring</a></li>
+<li><a href="/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html">3.1 Consuming, RequestHandler</a></li>
+</ul>
+
+<p>You can check the code in the <a href="https://github.com/gnugat-examples/sf-cs">following repository</a>.</p>
+
+<p>In the previous article, we've bootstrapped an application with a RequestHandler,
+allowing us to be decoupled from the third part library we'll choose to request
+remote endpoints.</p>
+
+<p>In this article, we'll create a Guzzle 5 implementation.</p>
+
+<h2 id="guzzle-request-handler">Guzzle Request Handler</h2>
+
+<p>As usual, we first describe the class we want to create:</p>
+
+<pre><code>./bin/phpspec describe 'AppBundle\RequestHandler\Middleware\GuzzleRequestHandler'
+</code></pre>
+
+<p>Our Guzzle implementation will translate our <code>Request</code> into a guzzle one, and a
+guzzle response into our <code>Response</code>:</p>
+
+<pre><code class="php">&lt;?php
+// spec/AppBundle/RequestHandler/Middleware/GuzzleRequestHandlerSpec.php
+
+namespace spec\AppBundle\RequestHandler\Middleware;
+
+use AppBundle\RequestHandler\Request;
+use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Message\RequestInterface;
+use GuzzleHttp\Message\ResponseInterface;
+use GuzzleHttp\Stream\StreamInterface;
+use PhpSpec\ObjectBehavior;
+
+class GuzzleRequestHandlerSpec extends ObjectBehavior
+{
+    const VERB = 'POST';
+    const URI = '/api/v1/profiles';
+
+    const HEADER_NAME = 'Content-Type';
+    const HEADER_VALUE = 'application/json';
+
+    const BODY = '{"username":"King Arthur"}';
+
+    function let(ClientInterface $client)
+    {
+        $this-&gt;beConstructedWith($client);
+    }
+
+    function it_is_a_request_handler()
+    {
+        $this-&gt;shouldImplement('AppBundle\RequestHandler\RequestHandler');
+    }
+
+    function it_uses_guzzle_to_do_the_actual_request(
+        ClientInterface $client,
+        RequestInterface $guzzleRequest,
+        ResponseInterface $guzzleResponse,
+        StreamInterface $stream
+    )
+    {
+        $request = new Request(self::VERB, self::URI);
+        $request-&gt;setHeader(self::HEADER_NAME, self::HEADER_VALUE);
+        $request-&gt;setBody(self::BODY);
+
+        $client-&gt;createRequest(self::VERB, self::URI, array(
+            'headers' =&gt; array(self::HEADER_NAME =&gt; self::HEADER_VALUE),
+            'body' =&gt; self::BODY,
+        ))-&gt;willReturn($guzzleRequest);
+        $client-&gt;send($guzzleRequest)-&gt;willReturn($guzzleResponse);
+        $guzzleResponse-&gt;getStatusCode()-&gt;willReturn(201);
+        $guzzleResponse-&gt;getHeaders()-&gt;willReturn(array('Content-Type' =&gt; 'application/json'));
+        $guzzleResponse-&gt;getBody()-&gt;willReturn($stream);
+        $stream-&gt;__toString()-&gt;willReturn('{"id":42,"username":"King Arthur"}');
+
+        $this-&gt;handle($request)-&gt;shouldHaveType('AppBundle\RequestHandler\Response');
+    }
+}
+</code></pre>
+
+<p>Time to boostrap this implementation:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>And to actually write it:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/RequestHandler/Middleware/GuzzleRequestHandler.php
+
+namespace AppBundle\RequestHandler\Middleware;
+
+use AppBundle\RequestHandler\Request;
+use AppBundle\RequestHandler\RequestHandler;
+use AppBundle\RequestHandler\Response;
+use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Message\RequestInterface;
+use GuzzleHttp\Message\ResponseInterface;
+use GuzzleHttp\Stream\StreamInterface;
+
+class GuzzleRequestHandler implements RequestHandler
+{
+    private $client;
+
+    public function __construct(ClientInterface $client)
+    {
+        $this-&gt;client = $client;
+    }
+
+    public function handle(Request $request)
+    {
+        $guzzleRequest = $this-&gt;client-&gt;createRequest($request-&gt;getVerb(), $request-&gt;getUri(), array(
+            'headers' =&gt; $request-&gt;getHeaders(),
+            'body' =&gt; $request-&gt;getBody(),
+        ));
+        $guzzleResponse = $this-&gt;client-&gt;send($guzzleRequest);
+        $response = new Response($guzzleResponse-&gt;getStatusCode());
+        $response-&gt;setHeaders($guzzleResponse-&gt;getHeaders());
+        $response-&gt;setBody($guzzleResponse-&gt;getBody()-&gt;__toString());
+
+        return $response;
+    }
+}
+</code></pre>
+
+<p>Let's check it:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>Brilliant!</p>
+
+<pre><code>git add -A
+git commit -m 'Created GuzzleRequestHandler'
+</code></pre>
+
+<h2 id="event-middleware">Event Middleware</h2>
+
+<p>In the future we'd like to be able to hook in the <code>RequestHandler</code>'s workflow,
+for example if the Response's body is in JSON, convert it into an array.</p>
+
+<p>This kind of thing can be done by sending events, in our case when a Response is received:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/RequestHandler/ReceivedResponse.php
+
+namespace AppBundle\RequestHandler\Event;
+
+use AppBundle\RequestHandler\Response;
+use Symfony\Component\EventDispatcher\Event;
+
+class ReceivedResponse extends Event
+{
+    private $response;
+
+    public function __construct(Response $response)
+    {
+        $this-&gt;response = $response;
+    }
+
+    public function getResponse()
+    {
+        return $this-&gt;response;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: This is a simple Data Transfer Object (DTO), it doesn't contain any
+  logic and never will. This means that we don't have to write any tests for it.</p>
+</blockquote>
+
+<p>We could add an <code>EventDispatcher</code> in <code>GuzzleRequestHandler</code>, or we could create
+a middleware: a RequestHandler that dispatches events and then calls another RequestHandler
+(e.g. <code>GuzzleRequestHandler</code>):</p>
+
+<pre><code>./bin/phpspec describe 'AppBundle\RequestHandler\Middleware\EventRequestHandler'
+</code></pre>
+
+<p>This way if we want to throw away <code>GuzzleRequestHandler</code> and replace it with something
+else, we don't have to write again the dispatching code. Here's the specification:</p>
+
+<pre><code class="php">&lt;?php
+// File: spec/AppBundle/RequestHandler/Middleware/EventRequestHandlerSpec.php
+
+namespace spec\AppBundle\RequestHandler\Middleware;
+
+use AppBundle\RequestHandler\Request;
+use AppBundle\RequestHandler\RequestHandler;
+use AppBundle\RequestHandler\Response;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+
+class EventRequestHandlerSpec extends ObjectBehavior
+{
+    function let(EventDispatcherInterface $eventDispatcher, RequestHandler $requestHandler)
+    {
+        $this-&gt;beConstructedWith($eventDispatcher, $requestHandler);
+    }
+
+    function it_is_a_request_handler()
+    {
+        $this-&gt;shouldImplement('AppBundle\RequestHandler\RequestHandler');
+    }
+
+    function it_dispatches_events(
+        EventDispatcherInterface $eventDispatcher,
+        Request $request,
+        RequestHandler $requestHandler,
+        Response $response
+    )
+    {
+        $requestHandler-&gt;handle($request)-&gt;willReturn($response);
+        $receivedResponse = Argument::type('AppBundle\RequestHandler\Event\ReceivedResponse');
+        $eventDispatcher-&gt;dispatch('request_handler.received_response', $receivedResponse)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($request)-&gt;shouldBe($response);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: We could improve this middleware by dispatching an event before giving
+  the request to the RequestHandler. We could also catch exceptions coming from
+  the RequestHandler and dispatch an event.</p>
+</blockquote>
+
+<p>Time to bootstrap the code:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>And to make the test pass:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/RequestHandler/Middleware/EventRequestHandler.php
+
+namespace AppBundle\RequestHandler\Middleware;
+
+use AppBundle\RequestHandler\Event\ReceivedResponse;
+use AppBundle\RequestHandler\Request;
+use AppBundle\RequestHandler\RequestHandler;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+
+class EventRequestHandler implements RequestHandler
+{
+    private $eventDispatcher;
+    private $requestHandler;
+
+    public function __construct(EventDispatcherInterface $eventDispatcher, RequestHandler $requestHandler)
+    {
+        $this-&gt;eventDispatcher = $eventDispatcher;
+        $this-&gt;requestHandler = $requestHandler;
+    }
+
+    public function handle(Request $request)
+    {
+        $response = $this-&gt;requestHandler-&gt;handle($request);
+        $this-&gt;eventDispatcher-&gt;dispatch('request_handler.received_response', new ReceivedResponse($response));
+
+        return $response;
+    }
+}
+</code></pre>
+
+<p>Did we succeed?</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>Yes, we did:</p>
+
+<pre><code>git add -A
+git commit -m 'Created EventRequestHandler'
+</code></pre>
+
+<h2 id="json-response-listener">Json Response Listener</h2>
+
+<p>When a Response contains a JSON body, we need to:</p>
+
+<ul>
+<li>check the content type</li>
+<li>decode the body</li>
+<li>check that the JSON syntax is valid</li>
+</ul>
+
+<p>With this in mind, we can describe the listerner:</p>
+
+<pre><code>./bin/phpspec describe 'AppBundle\RequestHandler\Listener\JsonResponseListener'
+</code></pre>
+
+<p>Now we can write the specification:</p>
+
+<pre><code class="php">&lt;?php
+// src: spec/AppBundle/RequestHandler/Listener/JsonResponseListenerSpec.php
+
+namespace spec\AppBundle\RequestHandler\Listener;
+
+use AppBundle\RequestHandler\Event\ReceivedResponse;
+use AppBundle\RequestHandler\Response;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class JsonResponseListenerSpec extends ObjectBehavior
+{
+    function it_handles_json_response(ReceivedResponse $receivedResponse, Response $response)
+    {
+        $receivedResponse-&gt;getResponse()-&gt;willReturn($response);
+        $response-&gt;getHeader('Content-Type')-&gt;willReturn('application/json');
+        $response-&gt;getBody()-&gt;willReturn('{"data":[]}');
+        $response-&gt;setBody(array('data' =&gt; array()))-&gt;shouldBeCalled();
+
+        $this-&gt;onReceivedResponse($receivedResponse);
+    }
+
+    function it_does_not_handle_non_json_response(ReceivedResponse $receivedResponse, Response $response)
+    {
+        $receivedResponse-&gt;getResponse()-&gt;willReturn($response);
+        $response-&gt;getHeader('Content-Type')-&gt;willReturn('text/html');
+        $response-&gt;getBody()-&gt;shouldNotBeCalled();
+
+        $this-&gt;onReceivedResponse($receivedResponse);
+    }
+
+    function it_fails_to_handle_invalid_json(ReceivedResponse $receivedResponse, Response $response)
+    {
+        $receivedResponse-&gt;getResponse()-&gt;willReturn($response);
+        $response-&gt;getHeader('Content-Type')-&gt;willReturn('application/json');
+        $response-&gt;getBody()-&gt;willReturn('{"data":[');
+
+        $exception = 'Exception';
+        $this-&gt;shouldThrow($exception)-&gt;duringOnReceivedResponse($receivedResponse);
+    }
+}
+</code></pre>
+
+<p>Time to implement the code:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/RequestHandler/Listener/JsonResponseListener.php
+
+namespace AppBundle\RequestHandler\Listener;
+
+use AppBundle\RequestHandler\Event\ReceivedResponse;
+use Exception;
+
+class JsonResponseListener
+{
+    public function onReceivedResponse(ReceivedResponse $receivedResponse)
+    {
+        $response = $receivedResponse-&gt;getResponse();
+        $contentType = $response-&gt;getHeader('Content-Type');
+        if (false === strpos($response-&gt;getHeader('Content-Type'), 'application/json')) {
+            return;
+        }
+        $body = $response-&gt;getBody();
+        $json = json_decode($body, true);
+        if (json_last_error()) {
+            throw new Exception("Invalid JSON: $body");
+        }
+        $response-&gt;setBody($json);
+    }
+}
+</code></pre>
+
+<p>Is it enough to make the tests pass?</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>Yes, we can commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Created JsonResponseListener'
+</code></pre>
+
+<h2 id="creating-services">Creating services</h2>
+
+<p>In order to be able to use this code in our Symfony application, we need to
+define those classes as services. Since we'll have a lot of definitions, we'll
+create a <code>services</code> directory:</p>
+
+<pre><code>mkdir app/config/services
+</code></pre>
+
+<p>We'll update <code>services.yml</code> to include our new file:</p>
+
+<pre><code># File: app/config/services.yml
+imports:
+    - { resource: services/request_handler.yml }
+</code></pre>
+
+<p>And finally we'll create the <code>request_handler.yml</code> file:</p>
+
+<pre><code>touch app/config/services/request_handler.yml
+</code></pre>
+
+<p>The first service we'll define is Guzzle:</p>
+
+<pre><code>#file: app/config/services/request_handler.yml
+services:
+    guzzle.client:
+        class: GuzzleHttp\Client
+</code></pre>
+
+<p>This allows us to define the GuzzleRequestHandler:</p>
+
+<pre><code>#file: app/config/services/request_handler.yml
+
+    app.guzzle_request_handler:
+        class: AppBundle\RequestHandler\Middleware\GuzzleRequestHandler
+        arguments:
+            - "@guzzle.client"
+</code></pre>
+
+<p>We want to wrap each of these GuzzleRequestHandler calls with events, so we define
+EventRequestHandler like this:</p>
+
+<pre><code>#file: app/config/services/request_handler.yml
+
+    app.event_request_handler:
+        class: AppBundle\RequestHandler\Middleware\EventRequestHandler
+        arguments:
+            - "@event_dispatcher"
+            - "@app.guzzle_request_handler"
+</code></pre>
+
+<p>In the future we might add more middlewares (e.g. RetryRequestHandler, StopwatchRequestHandler, etc),
+so we want to avoid using a service that points directly to an implementation. We
+can define an alias:</p>
+
+<pre><code>#file: app/config/services/request_handler.yml
+
+    app.request_handler:
+        alias: app.event_request_handler
+</code></pre>
+
+<p>Finally, we want to define our listener:</p>
+
+<pre><code>#file: app/config/services/request_handler.yml
+
+    app.request_handler.json_response_listener:
+        class: AppBundle\RequestHandler\Listener\JsonResponseListener
+        tags:
+            - { name: kernel.event_listener, event: request_handler.received_response, method: onReceivedResponse }
+</code></pre>
+
+<p>And that's it!</p>
+
+<pre><code>git add -A
+git commit -m 'Defined RequestHandler as a service'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We can now send remote request using Guzzle, without coupling ourself to the library.
+We even implemented an EventRequestHandler to allow extension points, it also provides
+us an example on how to write more RequestHandler middlewares.</p>
+
+<p>In the next article we'll start using RequestHandler in a specific kind of service:
+Gateways.</p>
+
+<h3 id="http-adapter">HTTP Adapter</h3>
+
+<p>You might be interested in <a href="https://github.com/egeloen/ivory-http-adapter">Ivory HttpAdapter</a>,
+a library very similar to our RequestHandler: it sends remote request through a
+given client (it supports many of them). It also provides events to hook into its workflow!</p>
+
+<p>Personnaly, I'd rather create my own RequestHandler, as my purpose is to decouple
+the application from an external library like Guzzle: using a third party library
+to do so seems a bit ironic.
+As you can see there's little effort involved, and it has the advantage of providing
+the strict minimum the application needs.</p>
+
+<h3 id="psr-7">PSR-7</h3>
+
+<p><a href="https://github.com/php-fig/fig-standards/blob/master/proposed/http-message.md">PSR-7</a>
+is a standard currently under review: it defines how frameworks should ideally
+implement the HTTP protocole.</p>
+
+<p>Since it's not yet accepted, it is subject to change so I wouldn't recommend to follow it yet.
+Our RequestHandler kind of implement the HTTP protocole, but I'd rather not make
+it PSR-7 compliant, as it requires the implementation of many features we don't
+really need.</p>
+
+<p>To get a balanced opinion on the matter, I'd recommend you to read:</p>
+
+<ul>
+<li><a href="https://mwop.net/blog/2015-01-26-psr-7-by-example.html">PSR-7 By Example</a></li>
+<li><a href="http://evertpot.com/psr-7-issues/">PSR-7 is imminent, and here's my issues with it.</a></li>
+</ul>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Symfony / Web Services - part 3.1: Consuming, RequestHandler]]></title>
+            <link href="/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html"/>
+            <updated>2015-03-11T00:00:00+00:00</updated>
+            <id>/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html</id>
+            <content type="html"><![CDATA[<p>This is the fifth article of the series on managing Web Services in a
+<a href="https://symfony.com">Symfony</a> environment. Have a look at the four first ones:</p>
+
+<ul>
+<li><a href="/2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a></li>
+<li><a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">2.1 Creation bootstrap</a></li>
+<li><a href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">2.2 Creation, the pragmatic way</a></li>
+<li><a href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html">2.3 Creation, refactoring</a></li>
+</ul>
+
+<p>Our purpose in this third section is to create an application that consumes the
+<a href="https://github.com/gnugat-examples/sf-ws">previously created web services</a>.</p>
+
+<p>But for now, we'll just bootstrap it, and start to create a RequestHandler!</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>We will follow the exact same steps as in <a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">the chapter 2.1</a>:</p>
+
+<ol>
+<li>Installing the standard edition</li>
+<li>Twitching for tests</li>
+</ol>
+
+<p>Instead of calling our application <code>ws</code>, we'll call it <code>cs</code> (like Consuming Service).</p>
+
+<h2 id="making-remote-calls-with-guzzle">Making remote calls with Guzzle</h2>
+
+<p>Is the application boostrapped yet? If it is, then we can continue.</p>
+
+<p>In order to consume web services, we need to be able to make remote requests. PHP
+provides some native functions for this (<code>file_get_contents</code>, <code>stream_socket_client</code>,
+<code>fopen</code>, etc) and we can find many libraries as well (<a href="https://github.com/kriswallsmith/Buzz">Buzz</a>,
+<a href="http://phphttpclient.com/">HTTP Full</a>, <a href="http://reactphp.org/">React</a>, etc).</p>
+
+<p>For this series, we'll use <a href="http://guzzle.readthedocs.org/en/latest/">Guzzle</a>:</p>
+
+<pre><code>composer require guzzlehttp/guzzle:~5.0
+</code></pre>
+
+<p>Let's commit it for now:</p>
+
+<pre><code>git add -A
+git commit -m 'Installed Guzzle'
+</code></pre>
+
+<h2 id="creating-a-request-handler">Creating a Request Handler</h2>
+
+<p>Sometimes we need to decouple our application from the third party libraries it depends on.</p>
+
+<p>For example let's say that we were using Guzzle 4, but we'd like to use Amazon Web Service (AWS)
+S3 in our project. The issue? It's version 2 depends on Guzzle 3 and its version 3
+depends on Guzzle 5. We now need to upgrade our usage of Guzzle everywhere in our
+application.</p>
+
+<p><a href="http://knowyourmeme.com/photos/141710-true-story"><img src="http://i0.kym-cdn.com/photos/images/newsfeed/000/141/710/7nTnr.png?1309357850" alt="True story" /></a></p>
+
+<p>To minimize this, we can centralize the usage of Guzzle in one single file. In order
+to be able to do so, we'll create a RequestHandler:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/RequestHandler/RequestHandler.php
+
+namespace AppBundle\RequestHandler;
+
+interface RequestHandler
+{
+    // @return Response
+    public function handle(Request $request);
+}
+</code></pre>
+
+<p>In our application we can rely on this interface: we own it and it has few chances to change.
+We'll now create an object that describes the request to send:</p>
+
+<pre><code>./bin/phpspec describe 'AppBundle\RequestHandler\Request'
+</code></pre>
+
+<p>A minimalistic raw HTTP request looks like the following:</p>
+
+<pre><code>GET /api/v1/profiles HTTP/1.1
+</code></pre>
+
+<p>Since we don't really care about the protocol's version we can define the constructor
+with two arguments:</p>
+
+<pre><code class="php">// File: spec/AppBundle/RequestHandler/RequestSpec.php
+
+    function it_has_a_verb_and_an_uri()
+    {
+        $this-&gt;beConstructedWith('GET', '/api/v1/profiles');
+
+        $this-&gt;getVerb()-&gt;shouldBe('GET');
+        $this-&gt;getUri()-&gt;shouldBe('/api/v1/profiles');
+    }
+</code></pre>
+
+<p>Running the specifications will bootstrap the class for us:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>We can now make the test pass by writing the code:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/RequestHandler/Request.php
+
+namespace AppBundle\RequestHandler;
+
+class Request
+{
+    private $verb;
+    private $uri;
+
+    public function __construct($verb, $uri)
+    {
+        $this-&gt;verb = $verb;
+        $this-&gt;uri = $uri;
+    }
+
+    public function getVerb()
+    {
+        return $this-&gt;verb;
+    }
+
+    public function getUri()
+    {
+        return $this-&gt;uri;
+    }
+}
+</code></pre>
+
+<p>Let's check if it's enough for now:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>All green, we can commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Created Request'
+</code></pre>
+
+<h2 id="request-headers">Request headers</h2>
+
+<p>A request usually has headers:</p>
+
+<pre><code class="php">// File: spec/AppBundle/RequestHandler/RequestSpec.php
+
+    function it_can_have_headers()
+    {
+        $this-&gt;beConstructedWith('GET', '/api/v1/profiles');
+        $this-&gt;setHeader('Content-Type', 'application/json');
+
+        $this-&gt;getHeaders()-&gt;shouldBe(array('Content-Type' =&gt; 'application/json'));
+    }
+</code></pre>
+
+<p>Let's boostrap them:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>And complete the code:</p>
+
+<pre><code class="php">// File: src/AppBundle/RequestHandler/Request.php
+
+    private $headers = array();
+
+    public function setHeader($name, $value)
+    {
+        $this-&gt;headers[$name] = $value;
+    }
+
+    public function getHeaders()
+    {
+        return $this-&gt;headers;
+    }
+</code></pre>
+
+<p>This makes the test pass:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>That's worth a commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Added headers to Request'
+</code></pre>
+
+<h2 id="request-body">Request body</h2>
+
+<p>The last addition to our request will be the possibility to add a body:</p>
+
+<pre><code class="php">// File: spec/AppBundle/RequestHandler/RequestSpec.php
+
+    function it_can_have_a_body()
+    {
+        $this-&gt;beConstructedWith('GET', '/api/v1/profiles');
+        $this-&gt;setBody('{"wound":"just a flesh one"}');
+
+        $this-&gt;getBody()-&gt;shouldBe('{"wound":"just a flesh one"}');
+    }
+</code></pre>
+
+<p>As usual we bootstrap it:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>And then we complete it:</p>
+
+<pre><code class="php">// File: src/AppBundle/RequestHandler/Request.php
+
+    private $body;
+
+    public function setBody($body)
+    {
+        $this-&gt;body = $body;
+    }
+
+    public function getBody()
+    {
+        return $this-&gt;body;
+    }
+</code></pre>
+
+<p>Let's make our console green:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>Let's make our console grin:</p>
+
+<pre><code>git add -A
+git commit -m 'Added body to Request'
+</code></pre>
+
+<h2 id="creating-a-response">Creating a Response</h2>
+
+<p><code>RequestHandler</code> should return a <code>Response</code> object:</p>
+
+<pre><code>./bin/phpspec describe 'AppBundle\RequestHandler\Response'
+</code></pre>
+
+<p>A minimalistic raw HTTP response looks like the following:</p>
+
+<pre><code>HTTP/1.1 204 NO CONTENT
+</code></pre>
+
+<p>Since we don't care about both the protocol's version and the reason, we can
+define the constructor with a single argument:</p>
+
+<pre><code class="php">// File: spec/AppBundle/RequestHandler/ResponseSpec.php
+
+    function it_has_a_status_code()
+    {
+        $this-&gt;beConstructedWith(204);
+
+        $this-&gt;getStatusCode()-&gt;shouldBe(204);
+    }
+</code></pre>
+
+<p>Running the specifications will bootstrap the class for us:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>We can now make the test pass by writing the code:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/RequestHandler/Response.php
+
+namespace AppBundle\RequestHandler;
+
+class Response
+{
+    private $statusCode;
+
+    public function __construct($statusCode)
+    {
+        $this-&gt;statusCode = $statusCode;
+    }
+
+    public function getStatusCode()
+    {
+        return $this-&gt;statusCode;
+    }
+}
+</code></pre>
+
+<p>Let's check if it's enough for now:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>All green, we can commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Created Response'
+</code></pre>
+
+<h2 id="response-headers">Response headers</h2>
+
+<p>A response can also have headers:</p>
+
+<pre><code class="php">// File: spec/AppBundle/RequestHandler/ResponseSpec.php
+
+    function it_can_have_headers()
+    {
+        $this-&gt;beConstructedWith(204);
+        $this-&gt;setHeaders(array('Content-Type' =&gt; 'application/json'));
+
+        $this-&gt;getHeader('Content-Type')-&gt;shouldBe('application/json');
+    }
+</code></pre>
+
+<p>Let's boostrap them:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>And complete the code:</p>
+
+<pre><code class="php">// File: src/AppBundle/RequestHandler/Response.php
+
+    private $headers = array();
+
+    public function setHeaders(array $headers)
+    {
+        $this-&gt;headers = $headers;
+    }
+
+    public function getHeader($name)
+    {
+        return (isset($this-&gt;headers[$name]) ? $this-&gt;headers[$name] : null);
+    }
+</code></pre>
+
+<p>This makes the test pass:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>That's worth a commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Added headers to Response'
+</code></pre>
+
+<h2 id="response-body">Response body</h2>
+
+<p>Last but not least, the response's body:</p>
+
+<pre><code class="php">// File: spec/AppBundle/RequestHandler/ResponseSpec.php
+
+    function it_can_have_a_body()
+    {
+        $this-&gt;beConstructedWith(200);
+        $this-&gt;setBody('{"wound":"just a flesh one"}');
+
+        $this-&gt;getBody()-&gt;shouldBe('{"wound":"just a flesh one"}');
+    }
+</code></pre>
+
+<p>As usual we bootstrap it:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>And then we complete it:</p>
+
+<pre><code class="php">// File: src/AppBundle/RequestHandler/Response.php
+
+    private $body;
+
+    public function setBody($body)
+    {
+        $this-&gt;body = $body;
+    }
+
+    public function getBody()
+    {
+        return $this-&gt;body;
+    }
+</code></pre>
+
+<p>Let's make our console green:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>Let's make our console grin:</p>
+
+<pre><code>git add -A
+git commit -m 'Added body to Response'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We've bootstrapped an application, and created a RequestHandler which will help us
+to avoid coupling with Guzzle. In the <a href="/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">next article</a>,
+we'll talk about middleware and start to create some RequestHandler
+implementations (yes, more than one!).</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Symfony / Web Services - part 2.3: Creation, refactoring]]></title>
+            <link href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html"/>
+            <updated>2015-03-04T00:00:00+00:00</updated>
+            <id>/2015/03/04/sf-ws-part-2-3-creation-refactoring.html</id>
+            <content type="html"><![CDATA[<p>This is the fourth article of the series on managing Web Services in a
+<a href="https://symfony.com">Symfony</a> environment. Have a look at the three first ones:</p>
+
+<ul>
+<li><a href="/2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a></li>
+<li><a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">2.1 Creation bootstrap</a></li>
+<li><a href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html">2.2 Creation, the pragmatic way</a></li>
+</ul>
+
+<p>You can check the code in the <a href="https://github.com/gnugat-examples/sf-ws">following repository</a>.</p>
+
+<p>In the previous post we've created a first endpoint by taking a few shortcuts.
+As we wouldn't want to get technical debt, we're going to refactor it.</p>
+
+<h2 id="the-controller-responsibility">The controller responsibility</h2>
+
+<p>In order to <a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">avoid the mud</a>,
+we need to remove the logic from the controller. But which logic?</p>
+
+<p>In <a href="https://symfony.com">Symfony</a>, controllers receive a Request and return a Response
+(this follows the HTTP protocol). It is also the glue between the framework and our application.</p>
+
+<p>From this we can assume that its responsibility is to:</p>
+
+<ol>
+<li>extract the parameters from the Request</li>
+<li>give it to our application</li>
+<li>get a result and build the Response with it</li>
+</ol>
+
+<p>The request's parameters could be legion, we woudln't like to have a method with too many arguments.
+A way to solve this would be to create a Data Transfer Object (DTO): we would put all those parameters
+in it and give it to the appropriate service.</p>
+
+<h2 id="command-bus">Command Bus</h2>
+
+<p>The Command Bus pattern is very fitting for this purpose: the DTO is called a Command, its name should
+communicate our intention (in our example <code>CreateProfile</code>). It also has the responsibility of
+validating user's input (for example converting IDs into integers).</p>
+
+<p>Each Command is associated to only one CommandHandler service which do the actual logic.</p>
+
+<p>Finally, there's the CommandBus: it finds the appropriate CommandHandler for the given Command
+and executes it. It also executes some routines before and after the call (for example we can flush doctrine
+after each commands).</p>
+
+<blockquote>
+  <p><strong>Note</strong>: CommandHandlers don't return anything.</p>
+</blockquote>
+
+<p>If you want to find out more on the Command Bus pattern, I'd recommend you to
+have a look at this series by Matthias Noback:</p>
+
+<ol>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/a-wave-of-command-buses/">a wave of command buses</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/responsibilities-of-the-command-bus/">responsibilities of the command bus</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/from-commands-to-events/">from commands to events</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/some-questions-about-the-command-bus/">some questions about the command bus</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/collecting-events-and-the-events-aware-command-bus/">collectiong events and the event dispatching comand bus</a></li>
+</ol>
+
+<p>Since commands are all about sending a message, you can also read Mathias Verraes article on
+<a href="http://verraes.net/2015/01/messaging-flavours">Messaging flavours</a>. He also wrote a nice
+article on <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command and Model validation</a>.</p>
+
+<h2 id="simplebus">SimpleBus</h2>
+
+<p><a href="http://simplebus.github.io/MessageBus">SimpleBus</a> is a small library that fits our purpose:</p>
+
+<pre><code>composer require simple-bus/doctrine-orm-bridge
+composer require simple-bus/symfony-bridge
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: It requires at least PHP 5.4.</p>
+</blockquote>
+
+<p>You need to register the bundle in our application's kernel:</p>
+
+<pre><code class="php">&lt;?php
+// File: app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        $bundles = array(
+            new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
+            new Symfony\Bundle\SecurityBundle\SecurityBundle(),
+            new Symfony\Bundle\TwigBundle\TwigBundle(),
+            new Symfony\Bundle\MonologBundle\MonologBundle(),
+            new Symfony\Bundle\SwiftmailerBundle\SwiftmailerBundle(),
+            new Symfony\Bundle\AsseticBundle\AsseticBundle(),
+            new Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
+            new Sensio\Bundle\FrameworkExtraBundle\SensioFrameworkExtraBundle(),
+            new SimpleBus\SymfonyBridge\SimpleBusCommandBusBundle(),
+            new SimpleBus\SymfonyBridge\SimpleBusEventBusBundle(),
+            new SimpleBus\SymfonyBridge\DoctrineOrmBridgeBundle(),
+            new AppBundle\AppBundle(),
+        );
+
+        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
+            $bundles[] = new Symfony\Bundle\DebugBundle\DebugBundle();
+            $bundles[] = new Symfony\Bundle\WebProfilerBundle\WebProfilerBundle();
+            $bundles[] = new Sensio\Bundle\DistributionBundle\SensioDistributionBundle();
+            $bundles[] = new Sensio\Bundle\GeneratorBundle\SensioGeneratorBundle();
+        }
+
+        return $bundles;
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader)
+    {
+        $loader-&gt;load(__DIR__.'/config/config_'.$this-&gt;getEnvironment().'.yml');
+    }
+}
+</code></pre>
+
+<p>Let's commit this installation:</p>
+
+<pre><code>git add -A
+git commit -m 'Installed SimpleBus'
+</code></pre>
+
+<h2 id="create-profile">Create Profile</h2>
+
+<p>We didn't create a <code>ProfileRepository</code> earlier, but we're going to need it now:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Entity/ProfileRepository.php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\EntityRepository;
+
+class ProfileRepository extends EntityRepository
+{
+}
+</code></pre>
+
+<p>We should name the Command after the action we want to do. In our case we want
+to create a profile:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle\CommandBus/CreateProfile.php
+
+namespace AppBundle\CommandBus;
+
+use SimpleBus\Message\Message;
+
+class CreateProfile implements Message
+{
+    public $name;
+
+    public function __construct($name)
+    {
+        $this-&gt;name = $name;
+    }
+}
+</code></pre>
+
+<p>We then need a CommandHandler to do the actual creation. Since there will be some logic,
+let's create a specification:</p>
+
+<pre><code>./bin/phpspec describe 'AppBundle\CommandBus\CreateProfileHandler'
+</code></pre>
+
+<p>And now we can describe it:</p>
+
+<pre><code class="php">&lt;?php
+// File: spec/AppBundle/CommandBus/CreateProfileHandlerSpec.php
+
+namespace spec\AppBundle\CommandBus;
+
+use AppBundle\CommandBus\CreateProfile;
+use AppBundle\Entity\ProfileRepository;
+use Doctrine\Common\Persistence\ObjectManager;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class CreateProfileHandlerSpec extends ObjectBehavior
+{
+    const NAME = 'John Cleese';
+
+    function let(ObjectManager $objectManager, ProfileRepository $profileRepository)
+    {
+        $this-&gt;beConstructedWith($objectManager, $profileRepository);
+    }
+
+    function it_creates_a_profile(ObjectManager $objectManager, ProfileRepository $profileRepository)
+    {
+        $profileRepository-&gt;findOneBy(array('name' =&gt; self::NAME))-&gt;willReturn(null);
+        $createdProfile = Argument::type('AppBundle\Entity\Profile');
+        $objectManager-&gt;persist($createdProfile)-&gt;shouldBeCalled();
+
+        $this-&gt;handle(new CreateProfile(self::NAME));
+    }
+}
+</code></pre>
+
+<p>This allows us to generate the code's skeleton:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>And to finally write the code to make the test pass:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/CommandBus/CreateProfileHandler.php
+
+namespace AppBundle\CommandBus;
+
+use AppBundle\Entity\Profile;
+use AppBundle\Entity\ProfileRepository;
+use Doctrine\Common\Persistence\ObjectManager;
+use SimpleBus\Message\Handler\MessageHandler;
+use SimpleBus\Message\Message;
+
+class CreateProfileHandler implements MessageHandler
+{
+    private $objectManager;
+    private $profileRepository;
+
+    public function __construct(ObjectManager $objectManager, ProfileRepository $profileRepository)
+    {
+        $this-&gt;objectManager = $objectManager;
+        $this-&gt;profileRepository = $profileRepository;
+    }
+
+    public function handle(Message $message)
+    {
+        $profile = $this-&gt;profileRepository-&gt;findOneBy(array('name' =&gt; $message-&gt;name));
+        $newProfile = new Profile($message-&gt;name);
+        $this-&gt;objectManager-&gt;persist($newProfile);
+    }
+}
+</code></pre>
+
+<p>Let's check the tests:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>All green, we can commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Created CreateProfileHandler'
+</code></pre>
+
+<h2 id="name-duplication">Name duplication</h2>
+
+<p>Domain validation (e.g. name duplication check) should be handled by the CommandHandler
+(previously it was done in the controller):</p>
+
+<pre><code class="php">&lt;?php
+// File: spec/AppBundle/CommandBus/CreateProfileHandlerSpec.php
+
+namespace spec\AppBundle\CommandBus;
+
+use AppBundle\CommandBus\CreateProfile;
+use AppBundle\Entity\ProfileRepository;
+use Doctrine\Common\Persistence\ObjectManager;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class CreateProfileHandlerSpec extends ObjectBehavior
+{
+    const NAME = 'John Cleese';
+
+    function let(ObjectManager $objectManager, ProfileRepository $profileRepository)
+    {
+        $this-&gt;beConstructedWith($objectManager, $profileRepository);
+    }
+
+    function it_creates_a_profile(ObjectManager $objectManager, ProfileRepository $profileRepository)
+    {
+        $profileRepository-&gt;findOneBy(array('name' =&gt; self::NAME))-&gt;willReturn(null);
+        $createdProfile = Argument::type('AppBundle\Entity\Profile');
+        $objectManager-&gt;persist($createdProfile)-&gt;shouldBeCalled();
+
+        $this-&gt;handle(new CreateProfile(self::NAME));
+    }
+
+    function it_cannot_create_the_profile_if_the_name_has_already_been_registered(ProfileRepository $profileRepository)
+    {
+        $profile = Argument::type('AppBundle\Entity\Profile');
+        $profileRepository-&gt;findOneBy(array('name' =&gt; self::NAME))-&gt;willReturn($profile);
+
+        $domainException = '\DomainException';
+        $this-&gt;shouldThrow($domainException)-&gt;duringHandle(new CreateProfile(self::NAME));
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: We try to be as descriptive as necessary in the test methods (a bad example
+  would have been <code>testThrowsDomainException</code>).</p>
+</blockquote>
+
+<p>Here's the code to make the test pass:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/CommandBus/CreateProfileHandler.php
+
+namespace AppBundle\CommandBus;
+
+use AppBundle\Entity\Profile;
+use AppBundle\Entity\ProfileRepository;
+use Doctrine\Common\Persistence\ObjectManager;
+use SimpleBus\Message\Handler\MessageHandler;
+use SimpleBus\Message\Message;
+
+class CreateProfileHandler implements MessageHandler
+{
+    private $objectManager;
+    private $profileRepository;
+
+    public function __construct(ObjectManager $objectManager, ProfileRepository $profileRepository)
+    {
+        $this-&gt;objectManager = $objectManager;
+        $this-&gt;profileRepository = $profileRepository;
+    }
+
+    public function handle(Message $message)
+    {
+        $profile = $this-&gt;profileRepository-&gt;findOneBy(array('name' =&gt; $message-&gt;name));
+        if (null !== $profile) {
+            throw new \DomainException(sprintf('The name "%s" is already taken', $message-&gt;name));
+        }
+        $newProfile = new Profile($message-&gt;name);
+        $this-&gt;objectManager-&gt;persist($newProfile);
+    }
+}
+</code></pre>
+
+<p>Let's check the tests:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>They pass!</p>
+
+<pre><code>git add -A
+git commit -m 'Added check on name duplication'
+</code></pre>
+
+<h2 id="input-validation">Input validation</h2>
+
+<p>Input validation (e.g. presence of name parameter) should be done in the Command
+(previously it was done in the controller):</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle\CommandBus/CreateProfile.php
+
+namespace AppBundle\CommandBus;
+
+use SimpleBus\Message\Message;
+
+class CreateProfile implements Message
+{
+    public $name;
+
+    public function __construct($name)
+    {
+        if (null === $name) {
+            throw new \DomainException('The "name" parameter is missing from the request\'s body');
+        }
+        $this-&gt;name = $name;
+    }
+}
+</code></pre>
+
+<p>Let's commit it:</p>
+
+<pre><code>git add -A
+git commit -m 'Added check on name presence in the request'
+</code></pre>
+
+<h2 id="domainexceptionlistener">DomainExceptionListener</h2>
+
+<p>Our Command and CommandHandler both throw a DomainException, we can catch it in an
+exception listener and create a nice response:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/EventListener/DomainExceptionListener.php
+
+namespace AppBundle\EventListener;
+
+use DomainException;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
+
+class DomainExceptionListener
+{
+    /**
+     * @param GetResponseForExceptionEvent $event
+     */
+    public function onKernelException(GetResponseForExceptionEvent $event)
+    {
+        $exception = $event-&gt;getException();
+        if (!$exception instanceof DomainException) {
+            return;
+        }
+        $error = $exception-&gt;getMessage();
+        $event-&gt;setResponse(new JsonResponse(array('error' =&gt; $error), 422));
+    }
+}
+</code></pre>
+
+<p>It needs to be registerd in the Dependency Injection Container:</p>
+
+<pre><code># File: app/config/services.yml
+services:
+    app.submit_json_listener:
+        class: AppBundle\EventListener\SubmitJsonListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    app.forbidden_exception_listener:
+        class: AppBundle\EventListener\ForbiddenExceptionListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 10 }
+
+    app.domain_exception_listener:
+        class: AppBundle\EventListener\DomainExceptionListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 10 }
+</code></pre>
+
+<p>We can save it:</p>
+
+<pre><code>git add -A
+git commit -m 'Created DomainExceptionListener'
+</code></pre>
+
+<h2 id="using-the-command">Using the command</h2>
+
+<p>Now that our CommandHandler is ready, we'll define it as a service with its repository:</p>
+
+<pre><code># File: app/config/services.yml
+services:
+    app.submit_json_listener:
+        class: AppBundle\EventListener\SubmitJsonListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    app.forbidden_exception_listener:
+        class: AppBundle\EventListener\ForbiddenExceptionListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 10 }
+
+    app.domain_exception_listener:
+        class: AppBundle\EventListener\DomainExceptionListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 10 }
+
+    app.profile_repository:
+        class: AppBundle\Entity\ProfileRepository
+        factory_service: doctrine.orm.default_entity_manager
+        factory_method: getRepository
+        arguments: ['AppBundle:Profile']
+
+    app.create_profile_handler:
+        class: AppBundle\CommandBus\CreateProfileHandler
+        arguments:
+            - "@doctrine.orm.entity_manager"
+            - "@app.profile_repository"
+        tags:
+            - { name: command_handler, handles: AppBundle\CommandBus\CreateProfile }
+</code></pre>
+
+<p>And call it in the controller:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Controller/ProfileCreationController.php;
+
+namespace AppBundle\Controller;
+
+use AppBundle\CommandBus\CreateProfile;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationController extends Controller
+{
+    /**
+     * @Route("/api/v1/profiles")
+     * @Method({"POST"})
+     */
+    public function createProfileAction(Request $request)
+    {
+        $name = $request-&gt;request-&gt;get('name');
+
+        $this-&gt;get('command_bus')-&gt;handle(new CreateProfile($name));
+        $createdProfile = $this-&gt;get('app.profile_repository')-&gt;findOneBy(array('name' =&gt; $name));
+
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Since the CommandHandler doesn't return anything, we need to call the repository
+  to get the created profile.</p>
+</blockquote>
+
+<p>As it happens, we've forgotten to set <code>ProfileRepository</code> in <code>Profile</code>'s <code>Entity</code> annotation.
+Let's fix it now:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Entity/Profile.php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Table(name="profile")
+ * @ORM\Entity(repositoryClass="AppBundle\Entity\ProfileRepository")
+ */
+class Profile
+{
+    /**
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @ORM\Column(name="name", type="string", unique=true)
+     */
+    private $name;
+
+    public function __construct($name)
+    {
+        $this-&gt;name = $name;
+    }
+
+    public function toArray()
+    {
+        return array(
+            'id' =&gt; $this-&gt;id,
+            'name' =&gt; $this-&gt;name,
+        );
+    }
+}
+</code></pre>
+
+<p>Did we break anything?</p>
+
+<pre><code>make test
+</code></pre>
+
+<p>No, all tests are super green!</p>
+
+<pre><code>git add -A
+git commit -m 'Used CreateProfileHandler in controller'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Technical debt is something we should be able to manage. When the time comes to refactor,
+design patterns can be a helpful tool.</p>
+
+<p>CommandBus is a nice pattern which allows us to remove imperative logic from the controllers.
+It's easy to write unit test for CommandHandlers, and they can be reused
+(creating a profile is surely something we can need elsewhere in our application).</p>
+
+<p>This article concludes the second part of this series on web services in a Symfony environment.
+In the <a href="/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html">next one</a>,
+we'll start a new application which consumes the one we just created.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: The web service we described also had a removal endpoint. Since there's not much else
+  to learn, it won't be created in this series.</p>
+</blockquote>
+
+<h3 id="going-further">Going further</h3>
+
+<p>A lot of things can be improved in the current application, here's some tips for those
+who'd like to practice:</p>
+
+<ul>
+<li>name duplication is actually a "Conflict" type of error, not "Unprocessable Entity"</li>
+<li>we could use Symfony's validation component (use <code>validator</code> in the CommandHandler and set annotations in the Command)</li>
+<li>we could create a CommandBus that always validate the Command using Symfony's validation component</li>
+<li>we can create our own DomainException to avoid catching ones that could be thrown by third party libraries</li>
+</ul>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Symfony / Web Services - part 2.2: Creation, the pragmatic way]]></title>
+            <link href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html"/>
+            <updated>2015-01-28T00:00:00+00:00</updated>
+            <id>/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html</id>
+            <content type="html"><![CDATA[<p>This is the third article of the series on managing Web Services in a
+<a href="https://symfony.com">Symfony</a> environment. Have a look at the two first ones:</p>
+
+<ul>
+<li><a href="/2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a></li>
+<li><a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">2.1 Creation bootstrap</a></li>
+</ul>
+
+<p>You can check the code in the <a href="https://github.com/gnugat-examples/sf-ws">following repository</a>.</p>
+
+<p>In this post we'll see how to create profiles:</p>
+
+<ul>
+<li><a href="#creating-the-controller">The controller</a></li>
+<li><a href="#the-profile-entity">The profile entity</a></li>
+<li><a href="#linking-with-the-database">Linking with the database</a></li>
+<li><a href="#managing-errors">Managing errors</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="creating-the-controller">Creating the controller</h2>
+
+<p>First things first, we'll write a functional test:</p>
+
+<pre><code class="php">&lt;?php
+// File: tests/Controller/ProfileCreationControllerTest.php
+
+namespace AppBundle\Tests\Controller;
+
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationControllerTest extends \PHPUnit_Framework_TestCase
+{
+    private $app;
+
+    protected function setUp()
+    {
+        $this-&gt;app = new \AppKernel('test', false);
+        $this-&gt;app-&gt;boot();
+    }
+
+    public function testItCreatesProfiles()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+        );
+        $body = json_encode(array('name' =&gt; 'Fawlty Towers'));
+        $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+}
+</code></pre>
+
+<p>The test should fail, because the route hasn't been found (<code>404 NOT FOUND</code>):</p>
+
+<pre><code>phpunit -c app
+</code></pre>
+
+<p>Flabergast! The test fails with a <code>PHP Fatal error:  Class 'AppKernel' not found</code>!
+Let's fix this by adding the forgotten PHP tag opening in the bootstrap file:</p>
+
+<pre><code class="php">&lt;?php
+// File: app/bootstrap.php
+
+require __DIR__.'/bootstrap.php.cache';
+require __DIR__.'/AppKernel.php';
+</code></pre>
+
+<p>Let's check how the tests react:</p>
+
+<pre><code>phpunit -c app
+</code></pre>
+
+<p>Another failure: the database doesn't exist. We need to create it for the test
+environment:</p>
+
+<pre><code>php app/console doctrine:database:create --env=test
+</code></pre>
+
+<p>Let's run the tests once again:</p>
+
+<pre><code>phpunit -c app
+</code></pre>
+
+<p>This time the test fails for the right reason: the page doesn't exist.
+To fix this, we'll create an empty controller:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Controller/ProfileCreationController.php;
+
+namespace AppBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationController extends Controller
+{
+    /**
+     * @Route("/api/v1/profiles")
+     * @Method({"POST"})
+     */
+    public function createProfileAction(Request $request)
+    {
+        $name = $request-&gt;request-&gt;get('name');
+        $createdProfile = array();
+
+        return new JsonResponse($createdProfile, 201);
+    }
+}
+</code></pre>
+
+<p>This should make the test pass:</p>
+
+<pre><code>phpunit -c app
+</code></pre>
+
+<p>If an error occurs (404 not found), then it might be because of the cache:</p>
+
+<pre><code>php app/console cache:clear --env=test
+phpunit -c app
+</code></pre>
+
+<p>Running tests is becoming cumbersome, let's make it easy using a Makefile:</p>
+
+<pre><code># Makefile
+test:
+    php app/console cache:clear --env=test
+    php app/console doctrine:database:create --env=test
+    phpunit -c app
+    php app/console doctrine:database:drop --force --env=test
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: mind the tabs, make doesn't support space indentation.</p>
+</blockquote>
+
+<p>In order for this to work we'll need to drop the database (because it already exists):</p>
+
+<pre><code>php app/console doctrine:database:drop --force --env=test
+</code></pre>
+
+<p>Tests can now be run using:</p>
+
+<pre><code>make test
+</code></pre>
+
+<p>Everything's fine, we can commit our work:</p>
+
+<pre><code>git add -A
+git commit -m 'Created profile creation endpoint'
+</code></pre>
+
+<h2 id="the-profile-entity">The profile entity</h2>
+
+<p>At this point, we'll need to store the profile in a database. For this purpose,
+we'll use MySQL and Doctrine, so we'll need to create a profile entity.</p>
+
+<p>We'll first generate a skeleton of its specification using <a href="http://phpspec.net">phpspec</a>:</p>
+
+<pre><code>./bin/phpspec describe 'AppBundle\Entity\Profile'
+</code></pre>
+
+<p>Then we'll edit the specification:</p>
+
+<pre><code class="php">&lt;?php
+// File: spec/AppBundle/Entity/ProfileSpec.php
+
+namespace spec\AppBundle\Entity;
+
+use PhpSpec\ObjectBehavior;
+
+class ProfileSpec extends ObjectBehavior
+{
+    const NAME = 'Arthur Dent';
+
+    function let()
+    {
+        $this-&gt;beConstructedWith(self::NAME);
+    }
+
+    function it_can_be_converted_to_array()
+    {
+        $this-&gt;toArray()-&gt;shouldBe(array(
+            'id' =&gt; null,
+            'name' =&gt; self::NAME,
+        ));
+    }
+}
+</code></pre>
+
+<p>Since we're happy with this step, we'll generate a skeleton of the code:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>Of course we need to edit it:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Entity/Profile.php
+
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+ * @ORM\Table(name="profile")
+ * @ORM\Entity
+ */
+class Profile
+{
+    /**
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    /**
+     * @ORM\Column(name="name", type="string", unique=true)
+     */
+    private $name;
+
+    public function __construct($name)
+    {
+        $this-&gt;name = $name;
+    }
+
+    public function toArray()
+    {
+        return array(
+            'id' =&gt; $this-&gt;id,
+            'name' =&gt; $this-&gt;name,
+        );
+    }
+}
+</code></pre>
+
+<p>Let's check if it satisfies our specification:</p>
+
+<pre><code>./bin/phpspec run
+</code></pre>
+
+<p>It does! With this we can generate our database:</p>
+
+<pre><code>php app/console doctrine:database:create
+php app/console doctrine:schema:create
+</code></pre>
+
+<p>Let's update our Makefile:</p>
+
+<pre><code># Makefile
+prod:
+    php app/console cache:clear --env=prod
+    php app/console doctrine:database:create --env=prod
+    php app/console doctrine:schema:create --env=prod
+
+dev:
+    php app/console cache:clear --env=dev
+    php app/console doctrine:database:create --env=dev
+    php app/console doctrine:schema:create --env=dev
+
+test:
+    php app/console cache:clear --env=test
+    php app/console doctrine:database:create --env=test
+    php app/console doctrine:schema:create --env=test
+    phpunit -c app
+    bin/phpspec run
+    php app/console doctrine:database:drop --force --env=test
+</code></pre>
+
+<p>This allows us to also run phpspec for tests. Installing a project should be as
+simple as:</p>
+
+<pre><code>make
+</code></pre>
+
+<p>And for development we can use:</p>
+
+<pre><code>make dev
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: trying to run a second time <code>make</code> or <code>make dev</code> will fail as the
+  database already exists. We'll need to run respectively
+  <code>php app/console doctrine:database:drop --force --env=prod</code> and
+  <code>php app/console doctrine:database:drop --force --env=dev</code>, but we should really
+  run those commands only once.</p>
+</blockquote>
+
+<p>It is time to commit our progress:</p>
+
+<pre><code>git add -A
+git commit -m 'Created Profile entity'
+</code></pre>
+
+<h2 id="linking-with-the-database">Linking with the database</h2>
+
+<p>The only thing missing in our application is the actual creation of the profile.
+Before doing anything with the code, we'll need to update our functional test:
+we don't want the data to be actually persisted, as it would make the test fail
+on a second run:</p>
+
+<pre><code>&lt;?php
+// File: tests/Controller/ProfileCreationControllerTest.php
+
+namespace AppBundle\Tests\Controller;
+
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationControllerTest extends \PHPUnit_Framework_TestCase
+{
+    private $app;
+    private $em;
+
+    protected function setUp()
+    {
+        $this-&gt;app = new \AppKernel('test', true);
+        $this-&gt;app-&gt;boot();
+
+        $this-&gt;em = $this-&gt;app-&gt;getContainer()-&gt;get('doctrine.orm.entity_manager');
+        $this-&gt;em-&gt;beginTransaction();
+    }
+
+    public function testItCreatesProfiles()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+        );
+        $body = json_encode(array('name' =&gt; 'Fawlty Towers'));
+        $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+
+    protected function tearDown()
+    {
+        $this-&gt;em-&gt;rollback();
+        $this-&gt;em-&gt;close();
+    }
+}
+</code></pre>
+
+<p>Let's update the controller:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Controller/ProfileCreationController.php;
+
+namespace AppBundle\Controller;
+
+use AppBundle\Entity\Profile;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationController extends Controller
+{
+    /**
+     * @Route("/api/v1/profiles")
+     * @Method({"POST"})
+     */
+    public function createProfileAction(Request $request)
+    {
+        $em = $this-&gt;get('doctrine.orm.entity_manager');
+
+        $createdProfile = new Profile($request-&gt;request-&gt;get('name'));
+        $em-&gt;persist($createdProfile);
+        $em-&gt;flush();
+
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+    }
+}
+</code></pre>
+
+<p>Time to run the tests:</p>
+
+<pre><code>make test
+</code></pre>
+
+<p>All green! We can commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Saved created profile in database'
+</code></pre>
+
+<h2 id="managing-errors">Managing errors</h2>
+
+<p>Our endpoint should return an error if the "name" parameter is missing. Let's add
+a functional test for this:</p>
+
+<pre><code>&lt;?php
+// File: tests/Controller/ProfileCreationControllerTest.php
+
+namespace AppBundle\Tests\Controller;
+
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationControllerTest extends PHPUnit_Framework_TestCase
+{
+    private $app;
+    private $em;
+
+    protected function setUp()
+    {
+        $this-&gt;app = new \AppKernel('test', true);
+        $this-&gt;app-&gt;boot();
+
+        $this-&gt;em = $this-&gt;app-&gt;getContainer()-&gt;get('doctrine.orm.entity_manager');
+        $this-&gt;em-&gt;beginTransaction();
+    }
+
+    public function testItCreatesProfiles()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+        );
+        $body = json_encode(array('name' =&gt; 'Fawlty Towers'));
+        $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+
+    public function testItFailsIfNameIsMissing()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+        );
+        $body = json_encode(array('no-name' =&gt; ''));
+        $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        $this-&gt;assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+
+    protected function tearDown()
+    {
+        $this-&gt;em-&gt;rollback();
+        $this-&gt;em-&gt;close();
+    }
+}
+</code></pre>
+
+<p>It should make our tests fail:</p>
+
+<pre><code>make test
+</code></pre>
+
+<p>We can make this test pass by adding a simple check:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Controller/ProfileCreationController.php;
+
+namespace AppBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationController extends Controller
+{
+    /**
+     * @Route("/api/v1/profiles")
+     * @Method({"POST"})
+     */
+    public function createProfileAction(Request $request)
+    {
+        $em = $this-&gt;get('doctrine.orm.entity_manager');
+
+        $name = $request-&gt;request-&gt;get('name');
+        if (null === $name) {
+            return new JsonResponse(array('error' =&gt; 'The "name" parameter is missing from the request\'s body'), 422);
+        }
+        $createdProfile = new Profile($name);
+        $em-&gt;persist($createdProfile);
+        $em-&gt;flush();
+
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+    }
+}
+</code></pre>
+
+<p>Let's see:</p>
+
+<pre><code>php app/console doctrine:database:drop --force --env=test
+make test
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Because our last test failed, the database hasn't been removed, so we
+  need to do it manually.</p>
+</blockquote>
+
+<p>Looks nice! Our endpoint should also fail when a profile with the same name
+already exist:</p>
+
+<pre><code>&lt;?php
+// File: tests/Controller/ProfileCreationControllerTest.php
+
+namespace AppBundle\Tests\Controller;
+
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationControllerTest extends PHPUnit_Framework_TestCase
+{
+    private $app;
+    private $em;
+
+    protected function setUp()
+    {
+        $this-&gt;app = new \AppKernel('test', true);
+        $this-&gt;app-&gt;boot();
+
+        $this-&gt;em = $this-&gt;app-&gt;getContainer()-&gt;get('doctrine.orm.entity_manager');
+        $this-&gt;em-&gt;beginTransaction();
+    }
+
+    public function testItCreatesProfiles()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+        );
+        $body = json_encode(array('name' =&gt; 'Fawlty Towers'));
+        $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+
+    public function testItFailsIfNameIsMissing()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+        );
+        $body = json_encode(array('no-name' =&gt; ''));
+        $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        $this-&gt;assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+
+    public function testItFailsIfNameAlreadyExists()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+            'PHP_AUTH_USER' =&gt; 'spanish_inquisition',
+            'PHP_AUTH_PW' =&gt; 'NobodyExpectsIt!',
+        );
+        $body = json_encode(array('name' =&gt; 'Provençal le Gaulois'));
+        $request = Request::create('/api/v1/profiles', 'POST', array(), array(), array(), $headers, $body);
+
+        $this-&gt;app-&gt;handle($request);
+        $response = $this-&gt;app-&gt;handle($request);
+
+        $this-&gt;assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+
+    protected function tearDown()
+    {
+        $this-&gt;em-&gt;rollback();
+        $this-&gt;em-&gt;close();
+    }
+}
+</code></pre>
+
+<p>Our tests should be broken again:</p>
+
+<pre><code>make test
+</code></pre>
+
+<p>Another check can fix this awful situation:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Controller/ProfileCreationController.php;
+
+namespace AppBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationController extends Controller
+{
+    /**
+     * @Route("/api/v1/profiles")
+     * @Method({"POST"})
+     */
+    public function createProfileAction(Request $request)
+    {
+        $em = $this-&gt;get('doctrine.orm.entity_manager');
+
+        $name = $request-&gt;request-&gt;get('name');
+        if (null === $name) {
+            return new JsonResponse(array('error' =&gt; 'The "name" parameter is missing from the request\'s body'), 422);
+        }
+        if (null !== $em-&gt;getRepository('AppBundle:Profile')-&gt;findOneByName($name)) {
+            return new JsonResponse(array('error' =&gt; 'The name "'.$name.'" is already taken'), 422);
+        }
+        $createdProfile = new Profile($name);
+        $em-&gt;persist($createdProfile);
+        $em-&gt;flush();
+
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+    }
+}
+</code></pre>
+
+<p>Are we there yet?</p>
+
+<pre><code>php app/console doctrine:database:drop --force --env=test
+make test
+</code></pre>
+
+<p>Yes we are. Here's our last commit for this time:</p>
+
+<pre><code>git add -A
+git commit -m 'Added error checks'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Creating an endpoint with Symfony is pretty straighfoward: it all comes down to
+HTTP knowledge.</p>
+
+<p>Our codebase is very small due to the simplicity of our examples, but in a real
+life application we'll need to add more complexity as new requirements appear.</p>
+
+<p>The pragmatic approach is good for now, but at some point we'll need to refactor
+our code by creating some services, each with their specific responsibilities,
+to prevent our application from becoming a <a href="https://speakerdeck.com/richardmiller/atm">big ball of mud</a>
+where everything is hard to read, impossible to test and expensive to change.</p>
+
+<p>This will the subject of <a href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html">the next article</a>.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Symfony / Web Services - part 2.1: Creation bootstrap]]></title>
+            <link href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html"/>
+            <updated>2015-01-21T00:00:00+00:00</updated>
+            <id>/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html</id>
+            <content type="html"><![CDATA[<p>This is the second article of the series on managing Web Services in a
+<a href="https://symfony.com">Symfony</a> environment. Have a look at the first one:
+<a href="/2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a>.</p>
+
+<p>In this post we'll create an empty application and prepare it:</p>
+
+<ul>
+<li><a href="#installing-the-standard-edition">Installing the standard edition</a></li>
+<li><a href="#twitching-for-tests">Twitching for tests</a></li>
+<li><a href="#patching-for-json-submit">Patching for JSON submit</a></li>
+<li><a href="#setting-up-the-authentication">Setting up the authentication</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="installing-the-standard-edition">Installing the standard edition</h2>
+
+<p>First of all, we need to create an empty Symfony application:</p>
+
+<pre><code>composer create-project symfony/framework-standard-edition ws
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Take the time to configure a MySQL database, we'll need it later.</p>
+</blockquote>
+
+<p>Next we'll configure an Apache's virtual host (should be in <code>/etc/apache2/sites-available/ws.conf</code>):</p>
+
+<pre><code>&lt;VirtualHost *:80&gt;
+    ServerName ws.local
+
+    DocumentRoot /home/foobar/ws/web
+
+    ErrorLog "/home/foobar/ws/app/logs/apache_errors.log"
+    CustomLog "/home/foobar/ws/app/logs/apache_accesses.log" common
+
+    &lt;Directory /home/foobar/ws/web&gt;
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride None
+        Require all granted
+        Order allow,deny
+        allow from all
+    &lt;/Directory&gt;
+&lt;/VirtualHost&gt;
+</code></pre>
+
+<p>Apache will require access to the logs and cache directories, as well as your
+user. The easiest way to do so is to change Apache's user and group to yours in
+<code>/etc/apache2/envvars</code>:</p>
+
+<pre><code>export APACHE_RUN_USER=foobar
+export APACHE_RUN_GROUP=foobar
+</code></pre>
+
+<p>In order for this to work we'll update our <code>/etc/hosts</code> file:</p>
+
+<pre><code>echo '127.0.0.1 ws.local' | sudo tee -a /etc/hosts
+</code></pre>
+
+<p>And finally we'll restart the web server:</p>
+
+<pre><code>sudo service apache2 restart
+</code></pre>
+
+<p>We should be able to see "Homepage" when browsing http://ws.local/app_dev.php/app/example</p>
+
+<p>Let's commit our work:</p>
+
+<pre><code>git init
+git add -A
+git ci -m 'Created a standard Symfony application'
+</code></pre>
+
+<h2 id="twitching-for-tests">Twitching for tests</h2>
+
+<p>As explained in <a href="/2014/11/15/sf2-quick-functional-tests.html">this article</a>,
+we'll twitch the standard edition a little bit in order to make tests more explicit.</p>
+
+<p>First we create a bootstraping file:</p>
+
+<pre><code class="php">&lt;?php
+// File: app/bootstrap.php
+
+require __DIR__.'/bootstrap.php.cache';
+require __DIR__.'/AppKernel.php';
+</code></pre>
+
+<p>Then we configure PHPUnit to use it:</p>
+
+<pre><code class="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- http://phpunit.de/manual/4.1/en/appendixes.configuration.html --&gt;
+&lt;phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.1/phpunit.xsd"
+         backupGlobals="false"
+         colors="true"
+         bootstrap="bootstrap.php"
+&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="Project Test Suite"&gt;
+            &lt;directory&gt;../tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;
+</code></pre>
+
+<p>We've decided to put our tests in a separate <code>tests</code> directory, allowing us to
+decalre an autoload mapping specific for development. To fully optimize our
+autoloading, we'll also define our <code>src/AppBundle</code> folder as a path for the
+<code>AppBundle</code> namespace, using PSR-4:</p>
+
+<pre><code>{
+    "name": "symfony/framework-standard-edition",
+    "license": "MIT",
+    "type": "project",
+    "description": "The \"Symfony Standard Edition\" distribution",
+    "autoload": {
+        "psr-4": { "AppBundle\\": "src/AppBundle" }
+    },
+    "autoload-dev": {
+        "psr-4": { "AppBundle\\Tests\\": "tests" }
+    },
+    "require": {
+        "php": "&gt;=5.3.3",
+        "symfony/symfony": "2.6.*",
+        "doctrine/orm": "~2.2,&gt;=2.2.3",
+        "doctrine/doctrine-bundle": "~1.2",
+        "twig/extensions": "~1.0",
+        "symfony/assetic-bundle": "~2.3",
+        "symfony/swiftmailer-bundle": "~2.3",
+        "symfony/monolog-bundle": "~2.4",
+        "sensio/distribution-bundle": "~3.0.12",
+        "sensio/framework-extra-bundle": "~3.0",
+        "incenteev/composer-parameter-handler": "~2.0"
+    },
+    "require-dev": {
+        "sensio/generator-bundle": "~2.3"
+    },
+    "scripts": {
+        "post-root-package-install": [
+            "SymfonyStandard\\Composer::hookRootPackageInstall"
+        ],
+        "post-install-cmd": [
+            "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters",
+            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::buildBootstrap",
+            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::clearCache",
+            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::installAssets",
+            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::installRequirementsFile",
+            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::removeSymfonyStandardFiles"
+        ],
+        "post-update-cmd": [
+            "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters",
+            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::buildBootstrap",
+            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::clearCache",
+            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::installAssets",
+            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::installRequirementsFile",
+            "Sensio\\Bundle\\DistributionBundle\\Composer\\ScriptHandler::removeSymfonyStandardFiles"
+        ]
+    },
+    "config": {
+        "bin-dir": "bin"
+    },
+    "extra": {
+        "symfony-app-dir": "app",
+        "symfony-web-dir": "web",
+        "symfony-assets-install": "relative",
+        "incenteev-parameters": {
+            "file": "app/config/parameters.yml"
+        },
+        "branch-alias": {
+            "dev-master": "2.6-dev"
+        }
+    }
+}
+</code></pre>
+
+<p>To make it official, we need to run the following command:</p>
+
+<pre><code>composer dump-autoload
+</code></pre>
+
+<p>We'll also install <a href="http://phpspec.net">phpspec</a>:</p>
+
+<pre><code>composer require phpspec/phpspec:~2.1
+</code></pre>
+
+<p>With this our tests will be awesome! Time to commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Configured tests'
+</code></pre>
+
+<h2 id="patching-for-json-submit">Patching for JSON submit</h2>
+
+<p>Symfony provides the posted data in the <code>Request</code>'s <code>request</code> attribute, except
+if the content type is <code>application/json</code>, as it will be our case. To fix this
+behavior we'll follow the steps described in <a href="/2014/09/03/master-sf2-part-5-events.html">this article</a>.</p>
+
+<p>Let's start by the creation of an event listener:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/EventListener/SubmitJsonListener.php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+/**
+ * PHP does not populate $_POST with the data submitted via a JSON Request,
+ * causing an empty $request-&gt;request.
+ *
+ * This listener fixes this.
+ */
+class SubmitJsonListener
+{
+    /**
+     * @param GetResponseEvent $event
+     */
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        $request = $event-&gt;getRequest();
+        $hasBeenSubmited = in_array($request-&gt;getMethod(), array('POST', 'PUT'), true);
+        $isJson = ('application/json' === $request-&gt;headers-&gt;get('Content-Type'));
+        if (!$hasBeenSubmited || !$isJson) {
+            return;
+        }
+        $data = json_decode($request-&gt;getContent(), true);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            $event-&gt;setResponse(new JsonResponse(array('error' =&gt; 'Invalid or malformed JSON'), 400));
+        }
+        $request-&gt;request-&gt;add($data ?: array());
+    }
+}
+</code></pre>
+
+<p>Finally we'll register it in the Dependency Injection Container:</p>
+
+<pre><code># File: app/config/services.yml
+services:
+    app.submit_json_listener:
+        class: AppBundle\EventListener\SubmitJsonListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+</code></pre>
+
+<h2 id="setting-up-the-authentication">Setting up the authentication</h2>
+
+<p>HTTP basic authentication can be configured through the <code>app/config/security.yml</code>
+file, as described in <a href="http://symfony.com/doc/current/book/security.html">the official documentation</a>.</p>
+
+<p>In the end we should have something like this:</p>
+
+<pre><code># app/config/security.yml
+security:
+    encoders:
+        Symfony\Component\Security\Core\User\User: plaintext
+
+    providers:
+        in_memory:
+            memory:
+                users:
+                    spanish_inquisition:
+                        password: 'NobodyExpectsIt!'
+                        roles:
+                            - ROLE_USER
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        default:
+            anonymous: ~
+            http_basic: ~
+            stateless: true
+
+    access_control:
+        - { path: /.*, roles: ROLE_USER }
+</code></pre>
+
+<p>Now to comply with our description we need to customize the error. We can do so
+using another event listener:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/EventListener/ForbiddenExceptionListener.php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+
+/**
+ * PHP does not populate $_POST with the data submitted via a JSON Request,
+ * causing an empty $request-&gt;request.
+ *
+ * This listener fixes this.
+ */
+class ForbiddenExceptionListener
+{
+    /**
+     * @param GetResponseForExceptionEvent $event
+     */
+    public function onKernelException(GetResponseForExceptionEvent $event)
+    {
+        $exception = $event-&gt;getException();
+        if (!$exception instanceof AccessDeniedException) {
+            return;
+        }
+        $error = 'The credentials are either missing or incorrect';
+        $event-&gt;setResponse(new JsonResponse(array('error' =&gt; $error), 403));
+    }
+}
+</code></pre>
+
+<p>And to register it:</p>
+
+<pre><code># File: app/config/services.yml
+services:
+    app.submit_json_listener:
+        class: AppBundle\EventListener\SubmitJsonListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    app.forbidden_exception_listener:
+        class: AppBundle\EventListener\ForbiddenExceptionListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException, priority: 10 }
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: the Symfony Security event listener has a priority set to 0.
+  In order for our listener to be executed, we need to set a higher one, like 10.</p>
+</blockquote>
+
+<p>As you can see by browsing http://ws.local/app_dev.php/app/example, we now need
+to provide the <code>spanish_inquisition</code> with the <code>NobodyExpectsIt!</code> password to
+access the page.</p>
+
+<p>This is enough for today, we'll commit our work:</p>
+
+<pre><code>git add -A
+git commit -m 'Created custom event listeners'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Our application is now ready!</p>
+
+<p>In the [next article](/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html
+we'll create the first endpoint, the creation of profiles, using a pragmatic approach.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Symfony / Web Services - part 1: Introduction]]></title>
+            <link href="/2015/01/14/sf-ws-part-1-introduction.html"/>
+            <updated>2015-01-14T00:00:00+00:00</updated>
+            <id>/2015/01/14/sf-ws-part-1-introduction.html</id>
+            <content type="html"><![CDATA[<p>Welcome to this new series of articles on managing Web Services in a
+<a href="https://symfony.com">Symfony</a> environment. Its purpose is to provide an example,
+it doesn't pretend to be the best solution and it requires you to know the basics
+of Symfony (if you know what a service is, you're good) and of web services
+(basically to know that they're a way to provide data remotely).</p>
+
+<blockquote>
+  <p><strong>Spoiler alert</strong>: There won't be much Symfony specific code ;) .</p>
+</blockquote>
+
+<p>In this post we'll describe the different endpoints of the (fake) web service
+which will be used as a reference thoughout the whole series:</p>
+
+<ul>
+<li><a href="#json-objects">JSON objects</a></li>
+<li><a href="#authentication">Authentication</a></li>
+<li><a href="#create-a-profile">Create a profile</a></li>
+<li><a href="#delete-a-profile">Delete a profile</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="json-objects">JSON objects</h2>
+
+<p>The posted and returned resources will always be wrapped in a JSON object.</p>
+
+<h2 id="authentication">Authentication</h2>
+
+<p>All endpoints require HTTP Basic Authentication with the following credentials:</p>
+
+<ul>
+<li>user: <code>spanish_inquisition</code></li>
+<li>password: <code>NobodyExpectsIt!</code></li>
+</ul>
+
+<p>If those credentials are missing or wrong (<code>403 FORBIDDEN</code>), it will return:</p>
+
+<pre><code>{
+    "error": "The credentials are either missing or incorrect"
+}
+</code></pre>
+
+<h2 id="create-a-profile">Create a profile</h2>
+
+<ul>
+<li><code>POST http://ws.local/api/v1/profiles</code></li>
+</ul>
+
+<p>The request body should be as follow:</p>
+
+<pre><code>{
+    "name": "Fawlty Tower"
+}
+</code></pre>
+
+<p>In case of success (<code>201 CREATED</code>), it will return:</p>
+
+<pre><code>{
+    "id": 23,
+    "name": "Fawlty Tower"
+}
+</code></pre>
+
+<p>If the request's body contains malformed JSON (<code>400 BAD REQUEST</code>), it will return:</p>
+
+<pre><code>{
+    "error": "Invalid or malformed JSON"
+}
+</code></pre>
+
+<p>If the <code>name</code> parameter is missing from the request's body (<code>422 UNPROCESSABLE ENTITY</code>),
+it will return:</p>
+
+<pre><code>{
+    "error": "The \"name\" parameter is missing from the request's body"
+}
+</code></pre>
+
+<p>If the name already exists (<code>422 UNPROCESSABLE ENTITY</code>), it will return:</p>
+
+<pre><code>{
+    "error": "The name \"Provençal le Gaulois\" is already taken"
+}
+</code></pre>
+
+<h2 id="delete-a-profile">Delete a profile</h2>
+
+<ul>
+<li><code>DELETE http://ws.local/api/v1/profiles/{id}</code></li>
+</ul>
+
+<p>This endpoint will always return an empty body (<code>204 NO CONTENT</code>).</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>So basically we can create and remove profiles, which have an identifier and a name.</p>
+
+<p>In <a href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html">the next article</a>
+we'll see how to build such web service.</p>
+]]></content>
+        </entry>
+    </feed>

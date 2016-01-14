@@ -1,0 +1,232 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Memio validator and linter &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2015/04/22/memio-validator-linter.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Memio validator and linter
+    <span class="sub-title">14/01/2016</span>
+</h2>
+                            <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+                </header>
+
+                <blockquote>
+  <p><strong>TL;DR</strong>: Write <a href="http://github.com/memio/validator">constraints</a> to check
+  <a href="http://github.com/memio/model">models</a> integrity.
+  <a href="http://github.com/memio/linter">Linter</a> constraints (e.g. syntax error) are already available.</p>
+</blockquote>
+
+<p>Everyday Memio, the higly opinionated PHP code generation library, progresses
+toward its stable release.</p>
+
+<p>In this article, we'll have a look at two packages that have been freshly extracted:
+<code>memio/validator</code> and <code>memio/linter</code>.</p>
+
+<h2 id="writing-constraints">Writing constraints</h2>
+
+<p>The <a href="http://github.com/memio/validator">validator</a> packages provides an easy way
+to write constraints. Let's write one to check that method arguments are never scalar.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: This is one of the principle in <a href="http://williamdurand.fr/2013/06/03/object-calisthenics">object calisthenics</a>:
+  <a href="http://williamdurand.fr/2013/06/03/object-calisthenics/#3-wrap-all-primitives-and-strings">wrap all primitives and string</a>.</p>
+</blockquote>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Memio\Validator\Constraint;
+use Memio\Validator\Violation\NoneViolation;
+use Memio\Validator\Violation\SomeViolation;
+
+class ArgumentCannotBeScalar implements Constraint
+{
+    public function validate($model)
+    {
+        $type = $model-&gt;getType();
+        if (in_array($type, array('array', 'bool', 'callable', 'double', 'int', 'mixed', 'null', 'resource', 'string'), true)) {
+            return new SomeViolation(sprintf('Argument "%s" cannot be scalar', $model-&gt;getName()));
+        }
+
+        return new NoneViolation();
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Naming constraints after their error message allow for better reability.</p>
+</blockquote>
+
+<p>The next step is to register our constraint in a validator. Since our constraint
+aims <code>Argument</code> models, we'll register it in an <code>ArgumentValidator</code>:</p>
+
+<pre><code class="php">// ...
+
+use Memio\Validator\ModelValidator\ArgumentValidator;
+
+$argumentValidator = new ArgumentValidator();
+$argumentValidator-&gt;add(new ArgumentCannotBeScalar());
+</code></pre>
+
+<p>When building models, <code>Arguments</code> are burried in <code>Methods</code>, which themselves are burried in
+<code>Contracts</code> or <code>Objects</code> which in turn are burried in <code>File</code>.</p>
+
+<p>To make things easy, we'd like to simply give the top most model (e.g. <code>File</code>) to
+a generic <code>Validator</code>. Its responsibility would be to go through each models and execute
+the appropriate <code>ModelValidator</code>.</p>
+
+<p>In order to do so, we have to create all <code>ModelValidators</code> and assemble them as follow:</p>
+
+<pre><code class="php">// ...
+
+use Memio\Validator\ModelValidator\CollectionValidator;
+use Memio\Validator\ModelValidator\ContractValidator;
+use Memio\Validator\ModelValidator\FileValidator;
+use Memio\Validator\ModelValidator\MethodValidator;
+use Memio\Validator\ModelValidator\ObjectValidator;
+
+$collectionValidator = new CollectionValidator();
+$methodValidator = new MethodValidator($argumentValidator, $collectionValidator);
+$contractValidator = new ContractValidator($collectionValidator, $methodValidator);
+$objectValidator = new ObjectValidator($collectionValidator, $methodValidator);
+$fileValidator = new FileValidator($contractValidator, $objectValidator);
+</code></pre>
+
+<p>Finally, we need to create a validator and register our <code>ModelValidators</code> in it:</p>
+
+<pre><code class="php">// ...
+
+use Memio\Validator\Validator;
+
+$calisthenicValidator = new Validator();
+$calisthenicValidator-&gt;add($argumentValidator);
+$calisthenicValidator-&gt;add($collectionValidator);
+$calisthenicValidator-&gt;add($methodValidator);
+$calisthenicValidator-&gt;add($contractValidator);
+$calisthenicValidator-&gt;add($objectValidator);
+$calisthenicValidator-&gt;add($fileValidator);
+</code></pre>
+
+<p>We can now validate our Models:</p>
+
+<pre><code class="php">// ...
+
+$calisthenicValidator-&gt;validate($file); // @throws Memio\Validator\InvalidModelException if one or more constraint fail
+</code></pre>
+
+<p>The <code>InvalidModelException</code>'s message has one line per violation.</p>
+
+<h2 id="linter">Linter</h2>
+
+<p>Out of the box, Memio provides a <a href="http://github.com/memio/linter">Linter</a> which
+provides the following constraints:</p>
+
+<ul>
+<li>Collection cannot have name duplicates</li>
+<li>Concrete Object Methods cannot be abstract</li>
+<li>Contract Methods can only be public</li>
+<li>Contract Methods cannot be final</li>
+<li>Contract Methods cannot be static</li>
+<li>Contract Methods cannot have a body</li>
+<li>Method cannot be abstract and have a body</li>
+<li>Method cannot be both abstract and final</li>
+<li>Method cannot be both abstract and private</li>
+<li>Method cannot be both abstract and static</li>
+<li>Object Argument can only default to null</li>
+</ul>
+
+<p>As we've seen above, constructing and assembling constraints and validators can be quite
+tiresome.</p>
+
+<p>That's where <code>memio/memio</code>, the main central repository, starts to be useful by
+providing a simple way to get a ready to use linter:</p>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Memio\Memio\Config\Build;
+
+$linter = Build::linter();
+
+$linter-&gt;validate($file); // @throws Memio\Validator\InvalidModelException if one or more constraint fail
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Validator allows the creation of custom constraint to ensure that the build Models
+are valid. Linter is a set of constraints ready to use, allowing to prevent syntax errors
+(e.g. a method cannot be both final and abstract).</p>
+
+<p>If you'd like to find out more about Memio Validator, have a look at the documentation:</p>
+
+<ul>
+<li><a href="http://memio.github.io/memio/doc/03-validation-tutorial.html">Validator Tutorial</a></li>
+</ul>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/04/15/memio-models.html" title="Memio models">Previous &lt; Memio models</a>
+                                        <a class="button six columns" href="/2015/04/29/memio-pretty-printer.html" title="Memio Pretty Printer">Next &gt; Memio Pretty Printer</a>
+                    </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

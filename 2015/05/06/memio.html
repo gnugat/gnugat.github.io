@@ -1,0 +1,262 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Memio v1.0 &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2015/05/06/memio.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Memio v1.0
+    <span class="sub-title">14/01/2016</span>
+</h2>
+                            <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+                </header>
+
+                <blockquote>
+  <p><strong>TL;DR</strong>: <a href="http://memio.github.io/memio">Memio</a> is a PHP code generator library,
+  the main repository provides integration with Twig templates, but by using the
+  smaller package <code>pretty-printer</code> on its own it is possible to be decoupled from any template engines.</p>
+</blockquote>
+
+<p><a href="http://memio.github.io/memio">Memio</a> has finally be released in version 1.0 (stable).
+In this article, we'll see how the different packages are assembled in the main repository.</p>
+
+<h2 id="standard-edition">Standard Edition</h2>
+
+<p>Memio is composed of small packages (<code>linter</code>, <code>model</code>, <code>pretty-printer</code>, <code>twig-template-engine</code>, <code>validator</code>),
+the main repository (<a href="http://gituhb.com/memio/memio">memio/memio</a>) is a standard selection of those
+to make their usage easier:</p>
+
+<p><img src="http://yuml.me/8686d889" alt="Package diagram" /></p>
+
+<p>It can be installed using <a href="http://getcomposer.com/">Composer</a>:</p>
+
+<pre><code>composer require memio/memio:~1.0
+</code></pre>
+
+<p>It provides two services, which can be instanciated as follow:</p>
+
+<pre><code class="php">&lt;?php
+// File: memio.php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Memio\Memio\Config\Build;
+
+$linter = Build::linter();
+$prettyPrinter = Build::prettyPrinter();
+</code></pre>
+
+<p>To see how to use them, let's describe a request handler method:</p>
+
+<pre><code class="php">// ...
+
+use Memio\Model\Method;
+use Memio\Model\Argument;
+
+$handle = Method::make('handle')
+    -&gt;addArgument(Argument::make('Request', 'request'))
+    -&gt;addArgument(Argument::make('int', 'type')
+        -&gt;setDefaultValue('self::MASTER_REQUEST')
+    )
+    -&gt;addArgument(Argument::make('bool', 'catch')
+        -&gt;setDefaultValue('true')
+    )
+;
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Each Model can be constructed using <code>new</code> or the static constructor <code>make</code>.
+  The last one has the advantage to allow method chaining (e.g. <code>Method::make('doHandle')-&gt;makePrivate()</code>).</p>
+</blockquote>
+
+<p>We can lint this model:</p>
+
+<pre><code class="php">// ...
+
+$linter-&gt;validate($handler); // @throws Memio\Validator\Exception\InvalidModelException if the model contains syntax errors.
+</code></pre>
+
+<p>And we can generate the corresponding PHP code:</p>
+
+<pre><code class="php">// ...
+
+$generatedCode = $prettyPrinter-&gt;generateCode($handle);
+</code></pre>
+
+<p>We can check in our console's output the result:</p>
+
+<pre><code class="php">// ...
+
+echo $generatedCode;
+</code></pre>
+
+<p>This should print:</p>
+
+<pre><code class="php">    public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = true)
+    {
+    }
+</code></pre>
+
+<h2 id="limitations">Limitations</h2>
+
+<p>Currently it is possible to describe:</p>
+
+<ul>
+<li>a File (License header, use statements)</li>
+<li>a Class (abstract, final, with parents, PHPdoc) or an Interface (with parents, PHPdoc)</li>
+<li>a class Constant</li>
+<li>a class Property (static, default value, PHPdoc)</li>
+<li>a class Method (static, abstract, final, visibility, PHPdoc)</li>
+<li>a method Argument (typehint, default value)</li>
+</ul>
+
+<p>It is possible to describe a method Body, but only with a string:</p>
+
+<pre><code class="php">// ...
+
+$handle-&gt;setBody(&lt;&lt;&lt;BODY
+        try {
+            $this-&gt;requestHandler-&gt;handle($request);
+        } catch (\Exception $e) {
+            if (!$catch) {
+                throw $e;
+            }
+        }
+BODY
+);
+</code></pre>
+
+<h2 id="use-cases">Use cases</h2>
+
+<p>In real life, models wouldn't be built manually as in the above examples. They would
+be built dynamically:</p>
+
+<pre><code class="php">// ...
+
+array_shift($argv); // remove binary name (php)
+array_shift($argv); // remove script name (memio.php)
+$methodName = array_shift($argv); // first argument = method name
+$arguments = $argv; // all other arguments = argument types (e.g. `int`, `bool`, `DateTime`, etc)
+
+$method = new Method($methodName);
+$index = 1;
+foreach ($arguments as $argumentType) {
+    $argumentName = 'argument'.$index++;
+    $method-&gt;addArgument(new Argument($argumentType, $argumentName));
+}
+
+echo $prettyPrinter-&gt;generatedCode($method);
+</code></pre>
+
+<p>Have a try by running <code>php memio.php handle Request int bool</code>, it should print the following:</p>
+
+<pre><code class="php">    public function handle(Request $argument1, $argument2, $argument3)
+    {
+    }
+</code></pre>
+
+<p>With this we can already improve <a href="http://phpspec.net">phpspec</a> generator (generate typehinted arguments, PHPdoc, etc).
+This is going to be the next Memio package, a phpspec extension.</p>
+
+<h2 id="extension-points">Extension points</h2>
+
+<p>The coding style can be changed by creating our custom templates. Those can be loaded as follow:</p>
+
+<pre><code class="php">// ...
+
+$prettyPrinter-&gt;addTemplatePath(__DIR__.'/our-custom-templates-dir');
+</code></pre>
+
+<p>Custom constraints can be written to check more things, for example we can ensure
+that arguments are always object.</p>
+
+<p>Those steps, just like the rest, are heavily described in the official <a href="http://memio.github.io/memio">documentation</a>.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Memio is a library that provides a PHP Code Generator:</p>
+
+<ol>
+<li>First we describe what we want by building <code>Models</code> (e.g. <code>new Method('__construct')</code>)</li>
+<li>Optionally we can <code>Lint</code> them to check if we introduced syntax errors (e.g. <code>Method cannot be both abstract and final</code>)</li>
+<li>Then we use a <code>PrettyPrinter</code> to get the generated code (returns a string, can be displayed on the output or saved in a file, etc)</li>
+</ol>
+
+<p>You can read more about it with the following articles:</p>
+
+<ul>
+<li><a href="/2015/04/08/introducing-memio-code-generator.html">Introducing Memio</a></li>
+<li><a href="/2015/04/15/memio-models.html">Memio Models</a></li>
+<li><a href="/2015/04/22/memio-validator-linter.html">Memio Validator and Linter</a></li>
+<li><a href="/2015/04/29/memio-pretty-printer.html">Memio PrettyPrinter and TwigTemplateEngine</a></li>
+</ul>
+
+<p>It also has an <a href="http://memio.github.io/memio">official documentation</a>.</p>
+
+<p>The next step is to create a <a href="http://phpspec.net">phpspec</a> extension to improve its
+code generator.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/04/29/memio-pretty-printer.html" title="Memio Pretty Printer">Previous &lt; Memio Pretty Printer</a>
+                                        <a class="button six columns" href="/2015/05/13/memio-spec-gen.html" title="Memio SpecGen v0.1">Next &gt; Memio SpecGen v0.1</a>
+                    </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

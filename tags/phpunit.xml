@@ -1,0 +1,1500 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2016-01-14T08:31:38+00:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Decouple from Libraries]]></title>
+            <link href="/2015/10/12/decouple-from-libraries.html"/>
+            <updated>2015-10-12T00:00:00+01:00</updated>
+            <id>/2015/10/12/decouple-from-libraries.html</id>
+            <content type="html"><![CDATA[<p>Libraries are similar to frameworks: they solve infrastructure problems (e.g.
+requesting remote endpoints or querying databases). They also don't directly
+add any value to our projects: the business need will not be fulfilled by
+connecting to a database.</p>
+
+<p>They also share the same Backward Compatibility (BC) break issue, since they will
+change to solve their own concerns, regardless of our projects.</p>
+
+<p>Here's a true story with <a href="http://guzzle.readthedocs.org/en/latest/">Guzzle</a>: we
+started to use version 2 in our project and spread direct calls to it in different places.
+After a while we've decided to use <a href="http://flysystem.thephpleague.com/">Flysystem</a>
+and its <a href="http://aws.amazon.com/sdkforphp">SDK for Amazon S3</a> but we had a problem:
+it required Guzzle 3.
+This means tracking down every usage of Guzzle in the project and adapting the
+calls to the new version. It's a dawnting task, especially when the project doesn't
+have strong enough tests.</p>
+
+<p>Later on, when Amazon S3 SDK stabilized, it started to require Guzzle 5...</p>
+
+<p><a href="http://knowyourmeme.com/memes/rage-guy-fffffuuuuuuuu"><img src="http://i0.kym-cdn.com/photos/images/newsfeed/000/000/578/1234931504682.jpg" alt="Screaming with anger" /></a></p>
+
+<p>Does that mean that we shouldn't use any libraries? Should we just don't care and
+continue to use them in the same way?</p>
+
+<p>This article will explain how to avoid both extremes, by decoupling from the library.
+It can be done by using the Inversion of Control principle: instead of relying
+on the library we rely on interfaces and provide an implementation that uses the library.</p>
+
+<h2 id="fortune%3A-our-example">Fortune: our example</h2>
+
+<p>In <a href="/2015/09/30/decouple-from-frameworks.html">the previous article</a>,
+we started to create an endpoint allowing us to subit new quotes for a
+<a href="https://en.wikipedia.org/wiki/Fortune_%28Unix%29">fortune</a> application.</p>
+
+<p>We're now going to create a SDK for it:</p>
+
+<pre><code>mkdir fortune-sdk
+cd fortune-sdk
+</code></pre>
+
+<p>To do so, we'll create the <code>composer.json</code> file:</p>
+
+<pre><code>{
+    "name": "acme/fortune-sdk",
+    "description": "A PHP SDK for Fortune",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Acme\\FortuneSdk\\": "src/Acme/FortuneSdk"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Acme\\FortuneSdk\\Fixtures\\": "fixtures",
+            "Acme\\FortuneSdk\\Tests\\": "tests"
+        }
+    },
+    "require": {
+        "php": "&gt;=5.4",
+    },
+    "require-dev": {
+        "phpspec/phpspec": "^2.3",
+        "phpunit/phpunit": "^4.5",
+        "symfony/console": "^2.3",
+        "symfony/yaml": "^2.2"
+    }
+}
+</code></pre>
+
+<p>Then create a test script:</p>
+
+<pre><code>#!/usr/bin/env sh
+
+# bin/test.sh
+
+composer --quiet --no-interaction update --optimize-autoloader &gt; /dev/null
+
+vendor/bin/phpspec --no-interaction run -f dot &amp;&amp; vendor/bin/phpunit
+</code></pre>
+
+<p>And finally configure PHPUnit:</p>
+
+<pre><code class="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- phpunit.xml.dist --&gt;
+&lt;!-- http://phpunit.de/manual/4.1/en/appendixes.configuration.html --&gt;
+&lt;phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.1/phpunit.xsd"
+         backupGlobals="false"
+         colors="true"
+         bootstrap="vendor/autoload.php"
+&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="Fortune SDK Test Suite"&gt;
+            &lt;directory&gt;tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;
+</code></pre>
+
+<h2 id="request-handler">Request Handler</h2>
+
+<p>Since Guzzle might completly change next year, we're going to abstract it behind
+our own HTTP client:</p>
+
+<pre><code class="php">&lt;?php
+
+// src/Acme/FortuneSdk/Remote/RequestHandler.php
+
+namespace Acme\FortuneSdk\Remote;
+
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
+interface RequestHandler
+{
+    /**
+     * @param RequestInterface $request
+     *
+     * @return ResponseInterface
+     *
+     * @throws ClientException If client throws an unexpected exception (e.g. connection error, etc)
+     */
+    public function handle(RequestInterface $request);
+}
+</code></pre>
+
+<p>We've decided to use the new PSR-7 standard:</p>
+
+<pre><code>composer require psr/http-message:^1.0
+</code></pre>
+
+<p>We'll hide any errors behind our own exception:</p>
+
+<pre><code class="php">&lt;?php
+
+// src/Acme/FortuneSdk/Remote/ClientException.php
+
+namespace Acme\FortuneSdk\Remote;
+
+use RuntimeException;
+
+class ClientException extends RuntimeException
+{
+}
+</code></pre>
+
+<p>Its first implementation will be with Guzzle 6:</p>
+
+<pre><code class="php">&lt;?php
+
+// src/Acme/FortuneSdk/Remote/RequestHandler/GuzzleSixRequestHandler.php
+
+namespace Acme\FortuneSdk\Remote\RequestHandler;
+
+use Acme\FortuneSdk\Remote\ClientException;
+use Acme\FortuneSdk\Remote\RequestHandler;
+use Exception;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\BadResponseException;
+use Psr\Http\Message\RequestInterface;
+
+class GuzzleSixRequestHandler implements RequestHandler
+{
+    private $client;
+
+    public function __construct(Client $client)
+    {
+        $this-&gt;client = $client;
+    }
+
+    public function handle(RequestInterface $request)
+    {
+        try {
+            return $this-&gt;client-&gt;send($request);
+        } catch (BadResponseException $e) {
+            return $e-&gt;getResponse();
+        } catch (Exception $e) {
+            throw new ClientException('Client threw an unexpected exception', 0, $e);
+        }
+    }
+}
+</code></pre>
+
+<p>And that's it. When Guzzle 7 will be released, we'll just have to create a new
+implementation and throw away the old one instead of having to replace it everywhere
+in our project. We can even change our mind and use a completly different HTTP client
+(Buzz, etc).</p>
+
+<p>Since we've started to softly depend on Guzzle, we need to install it with Composer:</p>
+
+<pre><code>composer require guzzlehttp/guzzle:^6.0
+</code></pre>
+
+<h2 id="functional-test">Functional test</h2>
+
+<p>We can now create a functional test describing our service:</p>
+
+<pre><code class="php">&lt;?php
+
+// tests/Quote/SubmitNewQuoteTest.php
+
+namespace Acme\FortuneSdk\Tests\Quote;
+
+use Acme\FortuneSdk\Quote\SubmitNewQuote\RemoteSubmitNewQuote;
+use Acme\FortuneSdk\Fixtures\FixturesRequestHandler;
+use PHPUnit_Framework_TestCase;
+
+class SubmitNewQuoteTest extends PHPUnit_Framework_TestCase
+{
+    const URL = 'http://example.com';
+    const QUOTE = 'Nobody expects the Spanish Inquisition!';
+
+    private $submitNewQuote;
+
+    protected function setUp()
+    {
+        $requestHandler = new FixturesRequestHandler();
+        $this-&gt;submitNewQuote = new RemoteSubmitNewQuote($requestHandler, self::URL);
+    }
+
+    /**
+     * @test
+     */
+    public function it_can_submit_a_new_quote()
+    {
+        $quote = $this-&gt;submitNewQuote-&gt;submit(self::QUOTE);
+
+        self::assertSame(self::QUOTE, $quote['quote']);
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>sh ./bin/test.sh
+</code></pre>
+
+<p>It fails because <code>FixturesRequestHandler</code> doesn't exist. It's an implementation
+of <code>RequestHandler</code> designed for our tests: even if the endpoint actually existed,
+relying on network calls in our tests would only make them brittle
+(because it's slow and unreliable).</p>
+
+<p>Let's create it:</p>
+
+<pre><code class="php">&lt;?php
+
+// fixtures/FixturesRequestHandler.php
+
+namespace Acme\FortuneSdk\Fixtures;
+
+use Acme\FortuneSdk\Remote\RequestHandler;
+use Psr\Http\Message\RequestInterface;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\Stream;
+
+class FixturesRequestHandler implements RequestHandler
+{
+    private $routes;
+
+    public function __construct()
+    {
+        $this-&gt;routes = array(
+            array(
+                'controller' =&gt; new Controller\Quote\SubmitNewQuoteController(),
+                'pattern' =&gt; '#/quotes#',
+                'methods' =&gt; array('POST'),
+            ),
+        );
+    }
+
+    public function handle(RequestInterface $request)
+    {
+        $path = $request-&gt;getUri()-&gt;getPath();
+        $method = $request-&gt;getMethod();
+        foreach ($this-&gt;routes as $route) {
+            if (1 === preg_match($route['pattern'], $path)) {
+                if (false === in_array($method, $route['methods'], true)) {
+                    $body = new Stream('php://temp', 'w');
+                    $body-&gt;write(json_encode(array(
+                        'message' =&gt; "Method \"$method\" for route \"$path\" not supported (supported methods are: ".implode(', ', $route['methods']).")",
+                    )));
+
+                    return new Response($body, 405, array('Content-Type' =&gt; 'application/json'));
+                }
+                try {
+                    return $route['controller']-&gt;handle($request);
+                } catch (FixturesException $e) {
+                    $body = new Stream('php://temp', 'w');
+                    $body-&gt;write($e-&gt;getMessage());
+
+                    return new Response($body, $e-&gt;getCode(), array('Content-Type' =&gt; 'application/json'));
+                }
+            }
+        }
+        $body = new Stream('php://temp', 'w');
+        $body-&gt;write(json_encode(array(
+            'message' =&gt; "Route \"$path\" not found",
+        )));
+
+        return new Response($body, 404, array('Content-Type' =&gt; 'application/json'));
+    }
+}
+</code></pre>
+
+<p>We've decided to rely on Zend Diactoros to build the request, since it is the de
+facto implementation of PSR-7:</p>
+
+<pre><code>composer require zendframework/zend-diactoros:^1.0
+</code></pre>
+
+<p>We've open the possibility of managing many endpoints with this class. We now need
+to define a controller for the quote submission one:</p>
+
+<pre><code class="php">&lt;?php
+
+// fixtures/Controller/Quote/SubmitNewQuoteController.php
+
+namespace Acme\FortuneSdk\Fixtures\Controller\Quote;
+
+use Acme\FortuneSdk\Remote\RequestHandler;
+use Acme\FortuneSdk\Fixtures\FixturesException;
+use Psr\Http\Message\RequestInterface;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\Stream;
+
+class SubmitNewQuoteController implements RequestHandler
+{
+    public function handle(RequestInterface $request)
+    {
+        $submitNewQuote = json_decode($request-&gt;getBody()-&gt;__toString(), true);
+        if (false === isset($submitNewQuote['quote'])) {
+            throw FixturesException::make('Missing required "quote" parameter', 422);
+        }
+        $quote = (string) $submitNewQuote['quote'];
+        if ('' === $quote) {
+            throw FixturesException::make('Invalid "quote" parameter: must not be empty', 422);
+        }
+        $body = new Stream('php://temp', 'w');
+        $body-&gt;write(json_encode(array(
+            'id' =&gt; '',
+            'quote' =&gt; $quote
+        )));
+
+        return new Response($body, 201, array('Content-Type' =&gt; 'application/json'));
+    }
+}
+</code></pre>
+
+<p>Finally we need to write the exception class:</p>
+
+<pre><code class="php">&lt;?php
+
+// fixtures/FixturesException.php
+
+namespace fixtures\Acme\FortuneSdk\Fixtures;
+
+use DomainException;
+
+class FixturesException extends DomainException
+{
+    /**
+     * @param string $message
+     * @param int    $statusCode
+     *
+     * @return FixturesException
+     */
+    public static function make($message, $statusCode)
+    {
+        return new self(json_encode(array('message' =&gt; $message)), $statusCode);
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>sh ./bin/test.sh
+</code></pre>
+
+<p>They now fail because <code>SubmitNewQuote</code> doesn't exist.</p>
+
+<h2 id="submitnewquote">SubmitNewQuote</h2>
+
+<p>First of all, we'll define our service as an interface:</p>
+
+<pre><code class="php">&lt;?php
+
+// src/Acme/FortuneSdk/Quote/SubmitNewQuote.php
+
+namespace Acme\FortuneSdk\Quote;
+
+interface SubmitNewQuote
+{
+    public function submit($quote);
+}
+</code></pre>
+
+<p>This will allow developers using our SDK to create their own implementation for testing
+or extension purpose.
+It will also allow us to create Composite implementation: we can have a remote
+implementation that does the actual work, wrapped in a lazy cache implementation
+itself wrapped in a log implementation.</p>
+
+<p>Here we'll just take care of the remote one, let's bootstrap its test:</p>
+
+<pre><code>vendor/bin/phpspec describe 'Acme\FortuneSdk\Quote\SubmitNewQuote\RemoteSubmitNewQuote'
+</code></pre>
+
+<p>And now we can write the tests:</p>
+
+<pre><code class="php">&lt;?php
+
+// spec/Acme/FortuneSdk/Quote/SubmitNewQuote.php
+
+namespace spec\Acme\FortuneSdk\Quote\SubmitNewQuote;
+
+use Acme\FortuneSdk\Remote\RequestHandler;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
+
+class RemoteSubmitNewQuoteSpec extends ObjectBehavior
+{
+    const URL = 'http://example.com';
+    const QUOTE = 'Nobody expects the Spanish Inquisition!';
+
+    function let(RequestHandler $requestHandler)
+    {
+        $this-&gt;beConstructedWith($requestHandler, self::URL);
+    }
+
+    function it_is_a_submit_new_quote()
+    {
+        $this-&gt;shouldImplement('Acme\FortuneSdk\Quote\SubmitNewQuote');
+    }
+
+    function it_calls_the_remote_endpoint(
+        RequestHandler $requestHandler,
+        ResponseInterface $response,
+        StreamInterface $stream
+    ) {
+        $quote = array(
+            'quote' =&gt; self::QUOTE,
+        );
+
+        $request = Argument::type('Psr\Http\Message\RequestInterface');
+        $requestHandler-&gt;handle($request)-&gt;willReturn($response);
+        $response-&gt;getBody()-&gt;willReturn($stream);
+        $stream-&gt;__toString()-&gt;willReturn(json_encode($quote));
+
+        $this-&gt;submit(self::QUOTE)-&gt;shouldBe($quote);
+    }
+}
+</code></pre>
+
+<p>In this test, we've used a wildcard to represent the request since the service is
+going to create it. This is at the cost of not knowing how it is built.</p>
+
+<p>If we absolutely want to have control over this, we need to delegate the request
+construction to a factory, it then becomes possible to mock the request and check
+how it is built:</p>
+
+<pre><code class="php">&lt;?php
+
+// spec/Acme/FortuneSdk/Quote/SubmitNewQuote.php
+
+namespace spec\Acme\FortuneSdk\Quote\SubmitNewQuote;
+
+use Acme\FortuneSdk\Remote\RequestFactory;
+use Acme\FortuneSdk\Remote\RequestHandler;
+use PhpSpec\ObjectBehavior;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
+
+class RemoteSubmitNewQuoteSpec extends ObjectBehavior
+{
+    const URL = 'http://example.com';
+    const QUOTE = 'Nobody expects the Spanish Inquisition!';
+
+    function let(RequestFactory $requestFactory, RequestHandler $requestHandler)
+    {
+        $this-&gt;beConstructedWith($requestFactory, $requestHandler, self::URL);
+    }
+
+    function it_is_a_submit_new_quote()
+    {
+        $this-&gt;shouldImplement('Acme\FortuneSdk\Quote\SubmitNewQuote');
+    }
+
+    function it_calls_the_remote_endpoint(
+        RequestFactory $requestFactory,
+        RequestHandler $requestHandler,
+        RequestInterface $request,
+        ResponseInterface $response,
+        StreamInterface $stream
+    ) {
+        $quote = array(
+            'quote' =&gt; self::QUOTE,
+        );
+
+        $requestFactory-&gt;make(self::URL.'/v1/quotes', 'POST', json_encode($quote), array(
+            'Content-Type' =&gt; 'application/json'
+        ))-&gt;willReturn($request);
+        $requestHandler-&gt;handle($request)-&gt;willReturn($response);
+        $response-&gt;getBody()-&gt;willReturn($stream);
+        $stream-&gt;__toString()-&gt;willReturn(json_encode($quote));
+
+        $this-&gt;submit(self::QUOTE)-&gt;shouldBe($quote);
+    }
+}
+</code></pre>
+
+<p>The choice between the first solution and the second one really depends on our preferences
+and on what we're trying to achieve. For the sake of this article, we'll stick
+to the first one (to avoid having to create the factory class and change the functional test,
+this article is already long enough!).</p>
+
+<p>Let's run our tests to bootstrap the code:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>Now we can write the actual code:</p>
+
+<pre><code class="php">&lt;?php
+
+// src/Acme/FortuneSdk/Quote/SubmitNewQuote/RemoteSubmitNewQuote.php
+
+namespace Acme\FortuneSdk\Quote\SubmitNewQuote;
+
+use Acme\FortuneSdk\Quote\SubmitNewQuote;
+use Acme\FortuneSdk\Remote\RequestHandler;
+use Zend\Diactoros\Request;
+use Zend\Diactoros\Stream;
+
+class RemoteSubmitNewQuote implements SubmitNewQuote
+{
+    private $requestHandler;
+    private $url;
+
+    public function __construct(RequestHandler $requestHandler, $url)
+    {
+        $this-&gt;requestHandler = $requestHandler;
+        $this-&gt;url = $url;
+    }
+
+    public function submit($quote)
+    {
+        $body = new Stream('php://memory', 'w');
+        $body-&gt;write(json_encode(array(
+            'quote' =&gt; $quote,
+        )));
+        $request = new Request($this-&gt;url.'/v1/quotes', 'POST', $body, array(
+            'Content-Type' =&gt; 'application/json'
+        ));
+        $quote = json_decode($this-&gt;requestHandler-&gt;handle($request)-&gt;getBody()-&gt;__toString(), true);
+
+        return $quote;
+    }
+}
+</code></pre>
+
+<p>This should be sufficient to make our tests pass:</p>
+
+<pre><code>sh ./bin/test.sh
+</code></pre>
+
+<p>All green!</p>
+
+<p>We now have a SDK that provides a <code>SubmitNewQuote</code> service allowing us to submit new quotes.
+Since we've mocked the network connection, we can't be sure that our SDK actually works.
+Manual testing can be sufficient in this case: we can build a Command Line Interface (CLI)
+client and check by ourselves if everything is fine, once in a while.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Inversion of Control is a principle that can come handy when dealing with third party library,
+especially the ones that change often like Guzzle. It can be applied easily:
+instead of making our high level classes rely on concrete low level ones, we just
+need to introduce an interface.</p>
+
+<p>Once again, all projects are different and this solution might not apply in every
+case. If we're building an application that we expect to maintain for a couple of years
+it can be worth it to protect ourselves from external changes.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Decouple from Frameworks]]></title>
+            <link href="/2015/09/30/decouple-from-frameworks.html"/>
+            <updated>2015-09-30T00:00:00+01:00</updated>
+            <id>/2015/09/30/decouple-from-frameworks.html</id>
+            <content type="html"><![CDATA[<p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
+While necessary, those concerns don't add any value to your project: the business
+need will not be fulfilled by creating an empty application.</p>
+
+<p>As always, different responsibilities mean also different reasons to change: frameworks
+have a history of Backward Compatibility (BC) breaks and they do so regardless of your
+project.</p>
+
+<p>Take for example <a href="http://symfony.com/">Symfony</a>: it only started to follow <a href="http://semver.org/">Semantic Versioning</a>
+from version 2.3. The upgrade to version 3 has been made easier by allowing developers
+to know what was deprecated, but the removal of those features still means a lot of
+work in your application.
+The arrival of the <a href="http://www.php-fig.org/psr/psr-7/">new standard PSR-7</a> brings
+a lot of questions on the future of Symfony: for now it <a href="http://symfony.com/blog/psr-7-support-in-symfony-is-here">allows to choose</a>
+between <code>symfony/http-foundation</code> and <code>psr/http-message</code>, but if Symfony doesn't
+want to fall back behind (<a href="http://framework.zend.com/blog/announcing-the-zend-framework-3-roadmap.html">Zend 3 is fully based on PSR-7</a>)
+it might have to introduce another big BC break (event listeners with the Request
+and Response <a href="http://evertpot.com/psr-7-issues/">are not possible the way they are now with PSR-7</a>).</p>
+
+<p>Migrating Symfony applications (from symfony1, from symfony 2.0, etc) is so hard
+that it is a business on its own.</p>
+
+<p>Does that mean that we shouldn't use any frameworks? Should we just don't care and
+embrace fully frameworks?</p>
+
+<p>This article will explain how to avoid both extremes, by decoupling from the framework.
+It can be done by restricting the framework to its infrastructure responsibilities
+(HTTP, CLI), by only using its entry points (Controller, Command) and by using
+the Command Bus pattern.</p>
+
+<h2 id="fortune%3A-our-example">Fortune: our example</h2>
+
+<p>We're going to build part of a <a href="https://en.wikipedia.org/wiki/Fortune_%28Unix%29">fortune</a>
+application for our example, more precisely we're going to build an endpoint allowing us to
+submit quotes.</p>
+
+<p>To do so, we'll bootstrap a symfony application using the <a href="https://github.com/gnugat/symfony-empty-edition">Empty Edition</a>:</p>
+
+<pre><code>composer create-project gnugat/symfony-empty-edition fortune
+cd fortune
+</code></pre>
+
+<p>We'll need to install our test frameworks:</p>
+
+<pre><code>composer require --dev phpunit/phpunit
+composer require --dev phpspec/phpspec
+</code></pre>
+
+<p>Then add them to our test script:</p>
+
+<pre><code>#!/usr/bin/env sh
+
+# bin/test.sh
+
+echo ''
+echo '// Building test environment'
+
+rm -rf app/cache/test app/logs/*test.log
+composer --quiet --no-interaction install --optimize-autoloader  &gt; /dev/null
+php app/console --env=test --quiet cache:clear
+
+echo ''
+echo ' [OK] Test environment built'
+echo ''
+
+vendor/bin/phpspec --format=dot &amp;&amp; vendor/bin/phpunit
+</code></pre>
+
+<p>Finally we'll configure PHPUnit:</p>
+
+<pre><code class="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- phpunit.xml.dist --&gt;
+&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
+&lt;phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="app/bootstrap.php"&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="System Tests"&gt;
+            &lt;directory&gt;tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;
+</code></pre>
+
+<h2 id="request-listener">Request listener</h2>
+
+<p>Our endpoint will receive JSON encoded content. PHP does not populate <code>$_POST</code> with
+this data, causing an empty <code>$request-&gt;request</code>. We can create an event listener
+to fix this issue:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/EventListener/JsonRequestListener.php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+class JsonRequestListener
+{
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        $request = $event-&gt;getRequest();
+        $hasBeenSubmited = in_array($request-&gt;getMethod(), array('PATCH', 'POST', 'PUT'), true);
+        $isJson = (1 === preg_match('#application/json#', $request-&gt;headers-&gt;get('Content-Type')));
+        if (!$hasBeenSubmited || !$isJson) {
+            return;
+        }
+        $data = json_decode($request-&gt;getContent(), true);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            $event-&gt;setResponse(new Response('{"error":"Invalid or malformed JSON"}', 400, array('Content-Type' =&gt; 'application/json')));
+        }
+        $request-&gt;request-&gt;add($data ?: array());
+    }
+}
+</code></pre>
+
+<p>This logic is infrastructure related, so it makes sense to keep it in <code>AppBundle</code>.</p>
+
+<p>To enable it, configure it in the Dependency Injection Container:</p>
+
+<pre><code># app/config/services/event_listener.yml
+
+services:
+    app.json_request_listener:
+        class: AppBundle\EventListener\JsonRequestListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+</code></pre>
+
+<p>We also need to make sure files in <code>app/config/services</code> are imported:</p>
+
+<pre><code class="php">&lt;?php
+// app/config/importer.php
+
+use Symfony\Component\Finder\Finder;
+
+$finder = new Finder();
+$files = $finder-&gt;files()-&gt;name('*.yml')-&gt;in(__DIR__.'/services');
+foreach ($files as $file) {
+    $loader-&gt;import($file-&gt;getRealpath());
+}
+</code></pre>
+
+<h2 id="controller">Controller</h2>
+
+<p>Our first step will be to describe how the endpoint should work, with a test:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Controller/QuoteControllerTest.php
+
+namespace tests\AppBundle\Controller;
+
+use AppKernel;
+use PHPUnit_Framework_TestCase;
+use Symfony\Component\HttpFoundation\Request;
+
+class QuoteControllerTest extends PHPUnit_Framework_TestCase
+{
+    private $app;
+
+    protected function setUp()
+    {
+        $this-&gt;app = new AppKernel('test', false);
+        $this-&gt;app-&gt;boot();
+    }
+
+    /**
+     * @test
+     */
+    public function it_submits_a_new_quote()
+    {
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $request = Request::create('/v1/quotes', 'POST', array(), array(), array(), $headers, json_encode(array(
+            'quote' =&gt; 'Nobody expects the spanish inquisition',
+        )));
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        self::assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Testing only the status code is called "Smoke Testing" and is a very
+  efficient way to check if the application is broken.
+  Testing the content would be tedious and would make our test fragile as it might change often.</p>
+</blockquote>
+
+<p>Let's run it:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>The tests fail because the controller doesn't exist. Let's fix that:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/QuoteController.php
+
+namespace AppBundle\Controller;
+
+use Acme\Fortune\Quote\SubmitNewQuote;
+use Acme\Fortune\Quote\SubmitNewQuoteHandler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class QuoteController
+{
+    private $submitNewQuoteHandler;
+
+    public function __construct(SubmitNewQuoteHandler $submitNewQuoteHandler)
+    {
+        $this-&gt;submitNewQuoteHandler = $submitNewQuoteHandler;
+    }
+
+    public function submitNewAction(Request $request)
+    {
+        $sumbitNewQuote = new SubmitNewQuote(
+            $request-&gt;request-&gt;get('quote')
+        );
+        $newQuote = $this-&gt;submitNewQuoteHandler-&gt;handle($sumbitNewQuote);
+
+        return new Response(json_encode($newQuote), 201, array('Content-Type' =&gt; 'application/json'));
+    }
+}
+</code></pre>
+
+<p>Now we need to configure the controller as a service:</p>
+
+<pre><code># app/config/services/controller.yml
+
+services:
+    app.quote_controller:
+        class: AppBundle\Controller\QuoteController
+        arguments:
+            - "@app.submit_new_quote_handler"
+</code></pre>
+
+<p>Then we need to configure the route:</p>
+
+<pre><code># app/config/routings/quote.yml
+
+submit_new_quote:
+    path: /v1/quotes
+    defaults:
+        _controller: app.quote_controller:submitNew
+    methods:
+        - POST
+</code></pre>
+
+<p>This file needs to be imported:</p>
+
+<pre><code># app/config/routing.yml
+
+quote:
+    resource: routings/quote.yml
+</code></pre>
+
+<p>Finally we can run the test again:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>It now fails for a different reason: <code>SubmitNewQuote</code> and its handler class don't exist.</p>
+
+<h2 id="command-from-commandbus">Command (from CommandBus)</h2>
+
+<p><code>SubmitNewQuote</code> is a Data Transfer Object (DTO): its responsibility is to wrap
+input parameters in a well named class (in this case a class that describes the action intended).
+It's also the best place to do some basic validation on the input parameters.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: In the Command Bus pattern, <code>SubmitNewQuote</code> would be a Command (different from the CLI Command).</p>
+</blockquote>
+
+<p>We'll write a test for this, but first we'll bootstrap the test class:</p>
+
+<pre><code>vendor/bin/phpspec describe 'Acme\Fortune\Quote\SubmitNewQuote'
+</code></pre>
+
+<p>Now we can decribe the different validation rules:</p>
+
+<pre><code class="php">&lt;?php
+// spec/Acme/Fortune/Quote/SubmitNewQuoteSpec.php
+
+namespace spec\Acme\Fortune\Quote;
+
+use PhpSpec\ObjectBehavior;
+
+class SubmitNewQuoteSpec extends ObjectBehavior
+{
+    const QUOTE = 'Nobody expects the spanish inquisition';
+
+    function it_fails_if_required_quote_parameter_is_missing()
+    {
+        $this-&gt;beConstructedWith(null);
+
+        $this-&gt;shouldThrow('Acme\Fortune\Exception\ValidationFailedException')-&gt;duringInstantiation();
+    }
+
+    function it_fails_if_quote_parameter_is_empty()
+    {
+        $this-&gt;beConstructedWith('');
+
+        $this-&gt;shouldThrow('Acme\Fortune\Exception\ValidationFailedException')-&gt;duringInstantiation();
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Since this class has nothing to do with Symfony, we don't put it in <code>AppBundle</code>.
+  By keeping it in its own namespace, we protect it from framework directory tree changes,
+  for example before <code>AppBundle</code> the norm was <code>Acme\FortuneBundle</code>. We also allow ourselves
+  to move it to another framework (e.g. Laravel, Zend, etc).</p>
+</blockquote>
+
+<p>Let's run the tests:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>It fails because the exception doesn't exist yet:</p>
+
+<pre><code class="php">&lt;?php
+// src/Acme/Fortune/Exception/ValidationFailedException.php
+
+namespace Acme\Fortune\Exception;
+
+class ValidationFailedException extends FortuneException
+{
+}
+</code></pre>
+
+<p>We're making it a sub type of <code>FortuneException</code>: that way we can catch all exceptions
+related to our code (all other exceptions can be considered as Internal Server Errors).</p>
+
+<pre><code class="php">&lt;?php
+// src/Acme/Fortune/Exception/FortuneException.php
+
+namespace Acme\Fortune\Exception;
+
+use DomainException;
+
+class FortuneException extends DomainException
+{
+}
+</code></pre>
+
+<p>Now we need to create the Command:</p>
+
+<pre><code class="php">&lt;?php
+// src/Acme/Fortune/Quote/SubmitNewQuote.php
+
+namespace Acme\Fortune\Quote;
+
+use Acme\Fortune\Exception\ValidationFailedException;
+
+class SubmitNewQuote
+{
+    public function __construct($quote)
+    {
+        if (null === $quote) {
+            throw new ValidationFailedException('Missing required "quote" parameter');
+        }
+        if ('' === $quote) {
+            throw new ValidationFailedException('Invalid "quote" parameter: must not be empty');
+        }
+        $this-&gt;quote = (string) $quote;
+    }
+}
+</code></pre>
+
+<p>Running the tests again:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>Everything seems fine.</p>
+
+<h2 id="exception-listener">Exception listener</h2>
+
+<p>Instead of catching exceptions in our controllers we can create an event listener:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/EventListener/FortuneExceptionListener.php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+class FortuneExceptionListener
+{
+    public function onKernelException(GetResponseForExceptionEvent $event)
+    {
+        $exception = $event-&gt;getException();
+        if (!$exception instanceof FortuneException) {
+            return;
+        }
+        $content = json_encode(array('error' =&gt; $exception-&gt;getMessage()));
+        $statusCode = Response::HTTP_UNPROCESSABLE_ENTITY;
+        $event-&gt;setResponse(new Response($content, $statusCode, array('Content-Type' =&gt; 'application/json')));
+    }
+}
+</code></pre>
+
+<p>This lowers the risk of forgetting to catch an exception and it also keeps our controller slim.</p>
+
+<p>Let's enable it in the DIC:</p>
+
+<pre><code># app/config/services/event_listener.yml
+
+services:
+    app.fortune_exception_listener:
+        class: AppBundle\EventListener\FortuneExceptionListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+
+    app.json_request_listener:
+        class: AppBundle\EventListener\JsonRequestListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+</code></pre>
+
+<h2 id="command-handler">Command Handler</h2>
+
+<p><code>SubmitNewQuoteHandler</code>'s responsibility is to validate <code>SubmitNewQuote</code> data against
+business rules (e.g. no quote duplicates, author must exist, etc) and to call the
+appropriate services to process it.
+Reading its code feels like reading the details of a use case:</p>
+
+<blockquote>
+  <p>To handle the submission of a new quote,
+  we need to generate a unique identifier
+  and then we need to save the new quote.</p>
+</blockquote>
+
+<p>Let's bootstrap its test:</p>
+
+<pre><code>vendor/bin/phpspec describe 'Acme\Fortune\Quote\SubmitNewQuoteHandler'
+</code></pre>
+
+<p>Then edit the test:</p>
+
+<pre><code class="php">&lt;?php
+// spec/Acme/Fortune/Quote/SubmitNewQuoteHandlerSpec.php
+
+namespace spec\Acme\Fortune\Quote;
+
+use Acme\Fortune\Quote\SubmitNewQuote;
+use Acme\Fortune\Quote\Service\SaveNewQuote;
+use Acme\Fortune\Quote\Service\UniqueIdentifierGenerator;
+use PhpSpec\ObjectBehavior;
+
+class SubmitNewQuoteHandlerSpec extends ObjectBehavior
+{
+    const ID = '921410e8-eb98-4f99-ba98-055d46980511';
+    const QUOTE = 'Nobody expects the spanish inquisition!';
+
+    function let(SaveNewQuote $saveNewQuote, UniqueIdentifierGenerator $uniqueIdentifierGenerator)
+    {
+        $this-&gt;beConstructedWith($saveNewQuote, $uniqueIdentifierGenerator);
+    }
+
+    function it_saves_new_quote(SaveNewQuote $saveNewQuote, UniqueIdentifierGenerator $uniqueIdentifierGenerator)
+    {
+        $submitNewQuote = new SubmitNewQuote(self::QUOTE);
+        $quote = array(
+            'id' =&gt; self::ID,
+            'quote' =&gt; self::QUOTE,
+        );
+
+        $uniqueIdentifierGenerator-&gt;generate()-&gt;willReturn(self::ID);
+        $saveNewQuote-&gt;save($quote)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($submitNewQuote)-&gt;shouldBe($quote);
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>After generating interfaces for <code>SaveNewQuote</code> and <code>UniqueIdentifierGenerator</code>
+and after bootstrapping the code for <code>SubmitNewQuoteHandler</code>, the test will fail
+because we need to complete it:</p>
+
+<pre><code class="php">&lt;?php
+// src/Acme/Fortune/Quote/SubmitNewQuoteHandler.php
+
+namespace Acme\Fortune\Quote;
+
+use Acme\Fortune\Quote\Service\SaveNewQuote;
+use Acme\Fortune\Quote\Service\UniqueIdentifierGenerator;
+
+class SubmitNewQuoteHandler
+{
+    private $saveNewQuote;
+    private $uniqueIdentifierGenerator;
+
+    public function __construct(SaveNewQuote $saveNewQuote, UniqueIdentifierGenerator $uniqueIdentifierGenerator)
+    {
+        $this-&gt;saveNewQuote = $saveNewQuote;
+        $this-&gt;uniqueIdentifierGenerator = $uniqueIdentifierGenerator;
+    }
+
+    public function handle(SubmitNewQuote $sumbitNewQuote)
+    {
+        $quote = array(
+            'id' =&gt; $this-&gt;uniqueIdentifierGenerator-&gt;generate(),
+            'quote' =&gt; $sumbitNewQuote-&gt;quote,
+        );
+        $this-&gt;saveNewQuote-&gt;save($quote);
+
+        return $quote;
+    }
+}
+</code></pre>
+
+<p>Now we can configure the service:</p>
+
+<pre><code class="php"># app/config/services/quote.yml
+
+services:
+    app.submit_new_quote_handler:
+        class: Acme\Fortune\Quote\SubmitNewQuoteHandler
+        arguments:
+            - "@app.save_new_quote"
+            - "@app.unique_identifier_generator"
+</code></pre>
+
+<p>Finally can run the tests one last time:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>Allmost green!</p>
+
+<p>They fail because <code>app.save_new_quote</code> and <code>app.unique_identifier_generator</code> don't
+exist yet. They will be the topic of another article ;) .</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>By restricting frameworks to their entry points (Controllers, Commands, etc) and
+using the Command Bus to define our project entry points (domain boundaries) we
+are able to decouple from the framework, allowing us to restrict the impact of BC breaks.</p>
+
+<p>Of course, all projects are different and this solution might not be possible everywhere.
+RAD development is a robust solution for web agencies, especially if they are chosen
+to bootstrap a project as fast as possible and then need to pass the project over
+to their customer after a short period.</p>
+
+<p>On the other hand some companies are creating projects they will have to maintain
+for decades and those are also in need of delivering a first version early.
+Decoupling from the framework isn't something that slows down development, and there
+are ways to still release early (e.g. define Minimum Valuable Product and deliver
+small features iterations by iterations).</p>
+
+<blockquote>
+  <p><strong>Note</strong>: There are a couple of bundles that provides Symfony with a Command Bus, among them:</p>
+  
+  <ul>
+  <li><a href="/2015/09/09/tactician.html">Tactician</a></li>
+  <li><a href="/2015/08/04/simple-bus.html">SimpleBus</a></li>
+  </ul>
+</blockquote>
+
+<p>If you're interrested on the subject, here's some resources:</p>
+
+<ul>
+<li>The framework as an implementation detail
+(<a href="http://www.slideshare.net/marcello.duarte/the-framework-as-an-implementation-detail">slides</a>
+and <a href="https://www.youtube.com/watch?v=0L_9NutiJlc">video</a>),
+by <a href="http://marcelloduarte.net/">Marcello Duarte</a>
+and <a href="http://everzet.com/">Konstantin Kudryashov</a></li>
+<li><a href="https://blog.8thlight.com/uncle-bob/2014/05/11/FrameworkBound.html">Framework bound</a>,
+by <a href="https://sites.google.com/site/unclebobconsultingllc/">Robert Cecil Martin</a></li>
+<li><a href="http://kristopherwilson.com/2013/11/27/decoupling-the-framework/">Decoupling the Framework</a>,
+by <a href="https://twitter.com/mrkrstphr">Kristopher Wilson</a></li>
+</ul>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[PHPUnit with phpspec]]></title>
+            <link href="/2015/09/23/phpunit-with-phpspec.html"/>
+            <updated>2015-09-23T00:00:00+01:00</updated>
+            <id>/2015/09/23/phpunit-with-phpspec.html</id>
+            <content type="html"><![CDATA[<p><a href="https://phpunit.de/">PHPUnit</a> is a port of <a href="http://junit.org/">jUnit</a>, its name
+might be deceptive: it allows you to write any type of tests (unit, but also functional,
+system, integration, end to end, acceptance, etc).</p>
+
+<p><a href="http://www.phpspec.net">phpspec</a> was at first a port of <a href="http://rspec.info/">rspec</a>,
+it can be considered as a unit test framework that enforces practices it considers best.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: <a href="/2015/08/03/phpspec.html">read more about phpspec</a>.</p>
+</blockquote>
+
+<p>In this article, we'll see how to use both tools together in a same project.</p>
+
+<h2 id="fortune%3A-our-example">Fortune: our example</h2>
+
+<p>We're going to build part of a <a href="https://en.wikipedia.org/wiki/Fortune_%28Unix%29">fortune</a>
+application for our example, more precisely we're going to build a CLI allowing us to save quotes.</p>
+
+<p>To do so, we'll bootstrap a symfony application using the <a href="https://github.com/gnugat/symfony-empty-edition">Empty Edition</a>:</p>
+
+<pre><code>composer create-project gnugat/symfony-empty-edition fortune
+cd fortune
+</code></pre>
+
+<p>We'll need to install our test frameworks:</p>
+
+<pre><code>composer require --dev phpunit/phpunit
+composer require --dev phpspec/phpspec
+</code></pre>
+
+<p>Finally we'll configure PHPUnit:</p>
+
+<pre><code class="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- phpunit.xml.dist --&gt;
+&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
+&lt;phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="app/bootstrap.php"&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="System Tests"&gt;
+            &lt;directory&gt;tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;
+</code></pre>
+
+<h2 id="the-command">The command</h2>
+
+<p>Our first step will be to write a <strong>system test</strong> describing the command:</p>
+
+<pre><code class="php">&lt;?php
+// tests/Command/SaveQuoteCommandTest.php
+
+namespace AppBundle\Tests\Command;
+
+use AppKernel;
+use PHPUnit_Framework_TestCase;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Tester\ApplicationTester;
+
+class SaveQuoteCommandTest extends PHPUnit_Framework_TestCase
+{
+    const EXIT_SUCCESS = 0;
+
+    private $app;
+
+    protected function setUp()
+    {
+        $kernel = new AppKernel('test', false);
+        $application = new Application($kernel);
+        $application-&gt;setAutoExit(false);
+        $this-&gt;app = new ApplicationTester($application);
+    }
+
+    /**
+     * @test
+     */
+    public function it_saves_a_new_quote()
+    {
+        $exitCode = $this-&gt;app-&gt;run(array(
+            'quote:save',
+            'quote' =&gt; 'Nobody expects the spanish inquisition',
+        ));
+
+        self::assertSame(self::EXIT_SUCCESS, $exitCode, $this-&gt;app-&gt;getDisplay());
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Testing only the exit code is called "Smoke Testing" and is a very
+  efficient way to check if the application is broken.
+  Testing the output would be tedious and would make our test fragile as it might change often.</p>
+</blockquote>
+
+<p>Let's run it:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>The tests fails because the command doesn't exist. Let's fix that:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Command/SaveQuoteCommand.php
+
+namespace AppBundle\Command;
+
+use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class SaveQuoteCommand extends ContainerAwareCommand
+{
+    protected function configure()
+    {
+        $this-&gt;setName('quote:save');
+        $this-&gt;addArgument('quote', InputArgument::REQUIRED);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $output-&gt;writeln('');
+        $output-&gt;writeln('// Saving quote');
+
+        $this-&gt;getContainer()-&gt;get('app.save_new_quote')-&gt;save(
+            $input-&gt;getArgument('quote')
+        );
+
+        $output-&gt;writeln('');
+        $output-&gt;writeln(' [OK] Quote saved');
+        $output-&gt;writeln('');
+    }
+}
+</code></pre>
+
+<p>Then run the test again:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>It now fails for a different reason: the service used doesn't exist.</p>
+
+<h2 id="the-service">The service</h2>
+
+<p>The second step is to write the unit test for the service. With phpspec we can
+first bootstrap it:</p>
+
+<pre><code>vendor/bin/phpspec describe 'AppBundle\Service\SaveNewQuote'
+</code></pre>
+
+<p>Then we need to edit it:</p>
+
+<pre><code class="php">&lt;?php
+// spec/AppBundle/Service/SaveNewQuoteSpec.php
+
+namespace spec\AppBundle\Service;
+
+use PhpSpec\ObjectBehavior;
+use Symfony\Component\Filesystem\Filesystem;
+
+class SaveNewQuoteSpec extends ObjectBehavior
+{
+    const FILENAME = '/tmp/quotes.txt';
+    const QUOTE = 'Nobody expects the spanish inquisition!';
+
+    function let(Filesystem $filesystem)
+    {
+        $this-&gt;beConstructedWith($filesystem, self::FILENAME);
+    }
+
+    function it_saves_new_quote(Filesystem $filesystem)
+    {
+        $filesystem-&gt;dumpFile(self::FILENAME, self::QUOTE)-&gt;shouldBeCalled();
+
+        $this-&gt;save(self::QUOTE);
+    }
+}
+</code></pre>
+
+<p>Time to run the suite:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>phpspec will detect that the tested class doesn't exist and will bootstrap it for us,
+so we just have to edit it:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/SaveNewQuote.php
+
+namespace AppBundle\Service;
+
+use Symfony\Component\Filesystem\Filesystem;
+
+class SaveNewQuote
+{
+    private $filesystem;
+    private $filename;
+
+    public function __construct(Filesystem $filesystem, $filename)
+    {
+        $this-&gt;filesystem = $filesystem;
+        $this-&gt;filename = $filename;
+    }
+
+    public function save($quote)
+    {
+        $this-&gt;filesystem-&gt;dumpFile($this-&gt;filename, $quote);
+    }
+}
+</code></pre>
+
+<p>Again, we're going to run our unit test:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>It's finally green! Our final step will be to define our service in the Dependency Injection
+Container:</p>
+
+<pre><code># app/config/config.yml
+
+imports:
+    - { resource: parameters.yml }
+    - { resource: importer.php }
+
+framework:
+    secret: "%secret%"
+
+services:
+    app.save_new_quote:
+        class: AppBundle\Service\SaveNewQuote
+        arguments:
+            - "@filesystem"
+            - "%kernel.root_dir%/cache/quotes"
+</code></pre>
+
+<p>To make sure everything is fine, let's clear the cache and run the test:</p>
+
+<pre><code>rm -rf app/cache/*
+vendor/bin/phpunit
+</code></pre>
+
+<p>It's <a href="https://www.youtube.com/watch?v=lFeLDc2CzOs">Super Green</a>!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>As we can see, PHPUnit and phpspec can work perfectly well together.</p>
+
+<p>Of course we could write our unit test in a similar manner with PHPUnit:</p>
+
+<pre><code>&lt;?php
+// tests/Service/SaveNewQuoteTest.php
+
+namespace AppBundle\Tests\Service;
+
+use AppBundle\Service\SaveNewQuote;
+use PHPUnit_Framework_TestCase;
+
+class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
+{
+    const FILENAME = '/tmp/quotes.txt';
+    const QUOTE = 'Nobody expects the spanish inquisition!';
+
+    private $filesystem;
+    private $saveNewQuote;
+
+    protected function setUp()
+    {
+        $this-&gt;filesystem = $this-&gt;prophesize('Symfony\Component\Filesystem\Filesystem');
+        $this-&gt;saveNewQuote = new SaveNewQuote($this-&gt;filesystem-&gt;reveal(), self::FILENAME);
+    }
+
+    /**
+     * @test
+     * @group unit
+     */
+    public function it_saves_new_quote()
+    {
+        $this-&gt;filesystem-&gt;dumpFile(self::FILENAME, self::QUOTE)-&gt;shouldBeCalled();
+
+        $this-&gt;saveNewQuote-&gt;save(self::QUOTE);
+    }
+}
+</code></pre>
+
+<p>And run it separately:</p>
+
+<pre><code>vendor/bin/phpunit --group=unit
+</code></pre>
+
+<p>But then we would lose all the advantages of phpspec:</p>
+
+<ul>
+<li>it adds less overhead (this same test runs in ~20ms with phpspec, and ~80ms with PHPUnit)</li>
+<li>it tells you when it thinks you're doing something wrong (typically by making it harder/impossible for you to do it)</li>
+<li>it bootstraps things for you if you follow the TDD workflow (test first, then code)</li>
+</ul>
+]]></content>
+        </entry>
+    </feed>

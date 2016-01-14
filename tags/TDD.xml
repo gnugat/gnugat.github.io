@@ -1,0 +1,565 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2016-01-14T08:31:38+00:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[PHPUnit with phpspec]]></title>
+            <link href="/2015/09/23/phpunit-with-phpspec.html"/>
+            <updated>2015-09-23T00:00:00+01:00</updated>
+            <id>/2015/09/23/phpunit-with-phpspec.html</id>
+            <content type="html"><![CDATA[<p><a href="https://phpunit.de/">PHPUnit</a> is a port of <a href="http://junit.org/">jUnit</a>, its name
+might be deceptive: it allows you to write any type of tests (unit, but also functional,
+system, integration, end to end, acceptance, etc).</p>
+
+<p><a href="http://www.phpspec.net">phpspec</a> was at first a port of <a href="http://rspec.info/">rspec</a>,
+it can be considered as a unit test framework that enforces practices it considers best.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: <a href="/2015/08/03/phpspec.html">read more about phpspec</a>.</p>
+</blockquote>
+
+<p>In this article, we'll see how to use both tools together in a same project.</p>
+
+<h2 id="fortune%3A-our-example">Fortune: our example</h2>
+
+<p>We're going to build part of a <a href="https://en.wikipedia.org/wiki/Fortune_%28Unix%29">fortune</a>
+application for our example, more precisely we're going to build a CLI allowing us to save quotes.</p>
+
+<p>To do so, we'll bootstrap a symfony application using the <a href="https://github.com/gnugat/symfony-empty-edition">Empty Edition</a>:</p>
+
+<pre><code>composer create-project gnugat/symfony-empty-edition fortune
+cd fortune
+</code></pre>
+
+<p>We'll need to install our test frameworks:</p>
+
+<pre><code>composer require --dev phpunit/phpunit
+composer require --dev phpspec/phpspec
+</code></pre>
+
+<p>Finally we'll configure PHPUnit:</p>
+
+<pre><code class="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- phpunit.xml.dist --&gt;
+&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
+&lt;phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="app/bootstrap.php"&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="System Tests"&gt;
+            &lt;directory&gt;tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;
+</code></pre>
+
+<h2 id="the-command">The command</h2>
+
+<p>Our first step will be to write a <strong>system test</strong> describing the command:</p>
+
+<pre><code class="php">&lt;?php
+// tests/Command/SaveQuoteCommandTest.php
+
+namespace AppBundle\Tests\Command;
+
+use AppKernel;
+use PHPUnit_Framework_TestCase;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Tester\ApplicationTester;
+
+class SaveQuoteCommandTest extends PHPUnit_Framework_TestCase
+{
+    const EXIT_SUCCESS = 0;
+
+    private $app;
+
+    protected function setUp()
+    {
+        $kernel = new AppKernel('test', false);
+        $application = new Application($kernel);
+        $application-&gt;setAutoExit(false);
+        $this-&gt;app = new ApplicationTester($application);
+    }
+
+    /**
+     * @test
+     */
+    public function it_saves_a_new_quote()
+    {
+        $exitCode = $this-&gt;app-&gt;run(array(
+            'quote:save',
+            'quote' =&gt; 'Nobody expects the spanish inquisition',
+        ));
+
+        self::assertSame(self::EXIT_SUCCESS, $exitCode, $this-&gt;app-&gt;getDisplay());
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Testing only the exit code is called "Smoke Testing" and is a very
+  efficient way to check if the application is broken.
+  Testing the output would be tedious and would make our test fragile as it might change often.</p>
+</blockquote>
+
+<p>Let's run it:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>The tests fails because the command doesn't exist. Let's fix that:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Command/SaveQuoteCommand.php
+
+namespace AppBundle\Command;
+
+use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class SaveQuoteCommand extends ContainerAwareCommand
+{
+    protected function configure()
+    {
+        $this-&gt;setName('quote:save');
+        $this-&gt;addArgument('quote', InputArgument::REQUIRED);
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $output-&gt;writeln('');
+        $output-&gt;writeln('// Saving quote');
+
+        $this-&gt;getContainer()-&gt;get('app.save_new_quote')-&gt;save(
+            $input-&gt;getArgument('quote')
+        );
+
+        $output-&gt;writeln('');
+        $output-&gt;writeln(' [OK] Quote saved');
+        $output-&gt;writeln('');
+    }
+}
+</code></pre>
+
+<p>Then run the test again:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>It now fails for a different reason: the service used doesn't exist.</p>
+
+<h2 id="the-service">The service</h2>
+
+<p>The second step is to write the unit test for the service. With phpspec we can
+first bootstrap it:</p>
+
+<pre><code>vendor/bin/phpspec describe 'AppBundle\Service\SaveNewQuote'
+</code></pre>
+
+<p>Then we need to edit it:</p>
+
+<pre><code class="php">&lt;?php
+// spec/AppBundle/Service/SaveNewQuoteSpec.php
+
+namespace spec\AppBundle\Service;
+
+use PhpSpec\ObjectBehavior;
+use Symfony\Component\Filesystem\Filesystem;
+
+class SaveNewQuoteSpec extends ObjectBehavior
+{
+    const FILENAME = '/tmp/quotes.txt';
+    const QUOTE = 'Nobody expects the spanish inquisition!';
+
+    function let(Filesystem $filesystem)
+    {
+        $this-&gt;beConstructedWith($filesystem, self::FILENAME);
+    }
+
+    function it_saves_new_quote(Filesystem $filesystem)
+    {
+        $filesystem-&gt;dumpFile(self::FILENAME, self::QUOTE)-&gt;shouldBeCalled();
+
+        $this-&gt;save(self::QUOTE);
+    }
+}
+</code></pre>
+
+<p>Time to run the suite:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>phpspec will detect that the tested class doesn't exist and will bootstrap it for us,
+so we just have to edit it:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/SaveNewQuote.php
+
+namespace AppBundle\Service;
+
+use Symfony\Component\Filesystem\Filesystem;
+
+class SaveNewQuote
+{
+    private $filesystem;
+    private $filename;
+
+    public function __construct(Filesystem $filesystem, $filename)
+    {
+        $this-&gt;filesystem = $filesystem;
+        $this-&gt;filename = $filename;
+    }
+
+    public function save($quote)
+    {
+        $this-&gt;filesystem-&gt;dumpFile($this-&gt;filename, $quote);
+    }
+}
+</code></pre>
+
+<p>Again, we're going to run our unit test:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>It's finally green! Our final step will be to define our service in the Dependency Injection
+Container:</p>
+
+<pre><code># app/config/config.yml
+
+imports:
+    - { resource: parameters.yml }
+    - { resource: importer.php }
+
+framework:
+    secret: "%secret%"
+
+services:
+    app.save_new_quote:
+        class: AppBundle\Service\SaveNewQuote
+        arguments:
+            - "@filesystem"
+            - "%kernel.root_dir%/cache/quotes"
+</code></pre>
+
+<p>To make sure everything is fine, let's clear the cache and run the test:</p>
+
+<pre><code>rm -rf app/cache/*
+vendor/bin/phpunit
+</code></pre>
+
+<p>It's <a href="https://www.youtube.com/watch?v=lFeLDc2CzOs">Super Green</a>!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>As we can see, PHPUnit and phpspec can work perfectly well together.</p>
+
+<p>Of course we could write our unit test in a similar manner with PHPUnit:</p>
+
+<pre><code>&lt;?php
+// tests/Service/SaveNewQuoteTest.php
+
+namespace AppBundle\Tests\Service;
+
+use AppBundle\Service\SaveNewQuote;
+use PHPUnit_Framework_TestCase;
+
+class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
+{
+    const FILENAME = '/tmp/quotes.txt';
+    const QUOTE = 'Nobody expects the spanish inquisition!';
+
+    private $filesystem;
+    private $saveNewQuote;
+
+    protected function setUp()
+    {
+        $this-&gt;filesystem = $this-&gt;prophesize('Symfony\Component\Filesystem\Filesystem');
+        $this-&gt;saveNewQuote = new SaveNewQuote($this-&gt;filesystem-&gt;reveal(), self::FILENAME);
+    }
+
+    /**
+     * @test
+     * @group unit
+     */
+    public function it_saves_new_quote()
+    {
+        $this-&gt;filesystem-&gt;dumpFile(self::FILENAME, self::QUOTE)-&gt;shouldBeCalled();
+
+        $this-&gt;saveNewQuote-&gt;save(self::QUOTE);
+    }
+}
+</code></pre>
+
+<p>And run it separately:</p>
+
+<pre><code>vendor/bin/phpunit --group=unit
+</code></pre>
+
+<p>But then we would lose all the advantages of phpspec:</p>
+
+<ul>
+<li>it adds less overhead (this same test runs in ~20ms with phpspec, and ~80ms with PHPUnit)</li>
+<li>it tells you when it thinks you're doing something wrong (typically by making it harder/impossible for you to do it)</li>
+<li>it bootstraps things for you if you follow the TDD workflow (test first, then code)</li>
+</ul>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Master Symfony2 - part 2: Test Driven Development]]></title>
+            <link href="/2014/08/13/master-sf2-part-2-tdd.html"/>
+            <updated>2014-08-13T00:00:00+01:00</updated>
+            <id>/2014/08/13/master-sf2-part-2-tdd.html</id>
+            <content type="html"><![CDATA[<p>This is the second article of the series on mastering the
+<a href="http://symfony.com/">Symfony2</a> framework. Have a look at the first one:
+<a href="/2014/08/05/master-sf2-part-1-bootstraping.html">Bootstraping</a>.</p>
+
+<p>In the first article we bootstraped our project with the following files:</p>
+
+<pre><code>.
+├── app
+│   ├── AppKernel.php
+│   ├── cache
+│   │   └── .gitkeep
+│   ├── config
+│   │   ├── config_prod.yml
+│   │   ├── config_test.yml
+│   │   ├── config.yml
+│   │   ├── parameters.yml.dist
+│   │   └── routing.yml
+│   ├── logs
+│   │   └── .gitkeep
+│   └── phpunit.xml.dist
+├── composer.json
+├── composer.lock
+├── src
+│   └── Fortune
+│       └── ApplicationBundle
+│           └── FortuneApplicationBundle.php
+└── web
+    └── app.php
+</code></pre>
+
+<p>Here's the <a href="https://github.com/gnugat/mastering-symfony2">repository where you can find the actual code</a>.</p>
+
+<p>In this one we'll implement the first User Story, by writing tests first.</p>
+
+<p><strong>Note</strong>: writing tests before writing any code is part of the
+<a href="/2014/02/19/test-driven-development.html">Test Driven Development (TDD) methodology</a>.</p>
+
+<h2 id="defining-the-user-story">Defining the User Story</h2>
+
+<p>With the help of our Scrum Master, our Product Owner (Nostradamus) managed to
+write the following user story:</p>
+
+<pre><code>As a User
+I want to be able to submit a new quote
+In order to make it available
+</code></pre>
+
+<h2 id="writing-the-test">Writing the test</h2>
+
+<p>Our first reflex will be to write a functional test. First create the directory:</p>
+
+<pre><code>mkdir -p src/Fortune/ApplicationBundle/Tests/Controller
+</code></pre>
+
+<p>Then the test class:</p>
+
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Tests/Controller/QuoteControllerTest.php
+
+namespace Fortune\ApplicationBundle\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
+
+class QuoteControllerTest extends WebTestCase
+{
+    private function post($uri, array $data)
+    {
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $content = json_encode($data);
+        $client = static::createClient();
+        $client-&gt;request('POST', $uri, array(), array(), $headers, $content);
+
+        return $client-&gt;getResponse();
+    }
+
+    public function testSubmitNewQuote()
+    {
+        $response = $this-&gt;post('/api/quotes', array('content' =&gt; '&lt;KnightOfNi&gt; Ni!'));
+
+        $this-&gt;assertSame(Response::HTTP_CREATED, $response-&gt;getStatusCode());
+    }
+}
+</code></pre>
+
+<h2 id="configuring-the-route">Configuring the route</h2>
+
+<p>Now we need to link the <code>/quotes</code> URL to a controller, so let's edit the
+configuration:</p>
+
+<pre><code># File: app/config/routing.yml
+submit_quote:
+    path: /api/quotes
+    methods:
+        - POST
+    defaults:
+        _controller: FortuneApplicationBundle:Quote:submit
+</code></pre>
+
+<h2 id="creating-the-controller">Creating the controller</h2>
+
+<p>There wasn't any controllers until now, so we create the directory:</p>
+
+<pre><code>mkdir src/Fortune/ApplicationBundle/Controller
+</code></pre>
+
+<p>And finally the controller class:</p>
+
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
+
+namespace Fortune\ApplicationBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+class QuoteController extends Controller
+{
+    public function submitAction(Request $request)
+    {
+        $postedContent = $request-&gt;getContent();
+        $postedValues = json_decode($postedContent, true);
+
+        $answer['quote']['content'] = $postedValues['content'];
+
+        return new JsonResponse($answer, Response::HTTP_CREATED);
+    }
+}
+</code></pre>
+
+<p>Now let's run our tests:</p>
+
+<pre><code>./vendor/bin/phpunit -c app
+</code></pre>
+
+<p><a href="https://www.youtube.com/watch?v=lFeLDc2CzOs">All green</a>! This makes us
+confident enough to commit our work:</p>
+
+<pre><code>git add -A
+git commit -m 'Created submission of quotes'
+</code></pre>
+
+<h2 id="testing-bad-cases">Testing bad cases</h2>
+
+<p>The submitted content shouldn't be empty. Let's add a test for the bad cases:</p>
+
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Tests/Controller/QuoteControllerTest.php
+
+namespace Fortune\ApplicationBundle\Tests\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
+
+class QuoteControllerTest extends WebTestCase
+{
+    private function post($uri, array $data)
+    {
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $content = json_encode($data);
+        $client = static::createClient();
+        $client-&gt;request('POST', $uri, array(), array(), $headers, $content);
+
+        return $client-&gt;getResponse();
+    }
+
+    public function testSubmitNewQuote()
+    {
+        $response = $this-&gt;post('/api/quotes', array('content' =&gt; '&lt;KnightOfNi&gt; Ni!'));
+
+        $this-&gt;assertSame(Response::HTTP_CREATED, $response-&gt;getStatusCode());
+    }
+
+    public function testSubmitEmptyQuote()
+    {
+        $response = $this-&gt;post('/api/quotes', array('content' =&gt; ''));
+
+        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response-&gt;getStatusCode());
+    }
+
+    public function testSubmitNoQuote()
+    {
+        $response = $this-&gt;post('/api/quotes', array());
+
+        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response-&gt;getStatusCode());
+    }
+}
+</code></pre>
+
+<h2 id="checking-bad-cases">Checking bad cases</h2>
+
+<p>Now let's fix the new tests:</p>
+
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
+
+namespace Fortune\ApplicationBundle\Controller;
+
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+class QuoteController extends Controller
+{
+    public function submitAction(Request $request)
+    {
+        $postedContent = $request-&gt;getContent();
+        $postedValues = json_decode($postedContent, true);
+
+        if (empty($postedValues['content'])) {
+            $answer = array('message' =&gt; 'Missing required parameter: content');
+
+            return new JsonResponse($answer, Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $answer['quote']['content'] = $postedValues['content'];
+
+        return new JsonResponse($answer, Response::HTTP_CREATED);
+    }
+}
+</code></pre>
+
+<p>Finally run the tests:</p>
+
+<pre><code>./vendor/bin/phpunit -c app
+</code></pre>
+
+<p>All green! Let's call it a day and commit our work:</p>
+
+<pre><code>git add -A
+git commit -m 'Managed submission of empty/no quotes'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>For those who didn't practice a lot with Symfony2, this article should have
+demonstrated how quick and simple it is to implement the first User Story
+(test and code alike).</p>
+
+<p>In the next article, we'll learn how to work with services.</p>
+]]></content>
+        </entry>
+    </feed>

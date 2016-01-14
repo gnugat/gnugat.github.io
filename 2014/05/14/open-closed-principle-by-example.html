@@ -1,0 +1,329 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Open/Closed principle, by example &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2014/05/14/open-closed-principle-by-example.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Open/Closed principle, by example
+    <span class="sub-title">14/01/2016</span>
+</h2>
+                            <nav>
+                        <a class="button " href="/tags/design%20principle">design principle</a>
+                        <a class="button " href="/tags/redaktilo">redaktilo</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                    </nav>
+                </header>
+
+                <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p>This week I've read two articles, which just have been published, on the
+Open/Closed principle:</p>
+
+<ul>
+<li>one by <a href="http://blog.8thlight.com/uncle-bob/2014/05/12/TheOpenClosedPrinciple.html">Uncle Bob</a></li>
+<li>another one by <a href="http://verraes.net/2014/05/final-classes-in-php/">Mathias Verraes</a></li>
+</ul>
+
+<p>I'd like to add my small contribution to their explanation by providing a real
+world example: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a>.</p>
+
+<h2 id="problem-statement">Problem statement</h2>
+
+<p>Let's say you have the following file:</p>
+
+<pre><code>Egg
+Sausage
+Bacon
+Spam
+</code></pre>
+
+<p>Redaktilo provides an <code>Editor</code> class which allows you to jump to the line you
+want, provided that you know exactly its content:</p>
+
+<pre><code class="php">$editor-&gt;has($file, 'Bacon'); // true!
+$editor-&gt;jumpDownTo($file, 'Bacon'); // Current line: Bacon
+$editor-&gt;jumpUpTo($file, 'Sausage'); // Current line: Sausage
+</code></pre>
+
+<p>But what if you want to jump two lines under <code>Sausage</code>? You'd have to create
+a new method:</p>
+
+<pre><code class="php">$editor-&gt;moveDown($file, 2); // Current line: Spam
+</code></pre>
+
+<p>You have extended <code>Editor</code> by modifying it.</p>
+
+<h2 id="complying-to-the-open%2Fclosed-principle">Complying to the Open/Closed principle</h2>
+
+<p>Having to fork a library to extend it doesn't feel natural. What does the
+Open/Closed principle say?</p>
+
+<blockquote>
+  <p>Software entities (classes, modules, functions, etc.) should be open for
+  extension, but closed for modification.</p>
+</blockquote>
+
+<p>Our <code>Editor</code> class is open to extension, but also to modification.</p>
+
+<p>To fix this, we can transfer the responsibility of finding a pattern in the file
+to a <code>SearchStrategy</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo\Search;
+
+use Gnugat\Redaktilo\File;
+
+interface SearchStrategy
+{
+    public function has(File $file, $pattern);
+
+    public function findNext(File $file, $pattern);
+    public function findPrevious(File $file, $pattern);
+
+    public function supports($pattern);
+}
+
+</code></pre>
+
+<p>Here's some implementation ideas:</p>
+
+<ul>
+<li><code>LineSearchStrategy</code>: looking for the exact line in the file</li>
+<li><code>LineNumberSearchStrategy</code>: jumping to a line relatively to the current one</li>
+<li><code>RegexpSearchStrategy</code>: looking for a pattern in the file using regular expressions</li>
+<li><code>PhpTokenSearchStrategy</code>: parsing PHP tokens</li>
+</ul>
+
+<p>The <code>supports</code> method tells you that <code>LineSearchStrategy</code> needs <code>$pattern</code> to be
+a string, but that <code>RegexpSearchStrategy</code> needs an <code>Expression</code> value object.</p>
+
+<p>The responsibility to find a <code>SearchStrategy</code> which supports the given pattern
+should be delegated to <code>SearchEngine</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo\Search;
+
+class SearchEngine
+{
+    private $searchStrategies = array();
+
+    public function registerStrategy(SearchStrategy $searchStrategy)
+    {
+        $this-&gt;searchStrategies[] = $searchStrategy;
+    }
+
+    public function resolve($pattern)
+    {
+        foreach ($this-&gt;searchStrategies as $searchStrategy) {
+            if ($searchStrategy-&gt;supports($pattern)) {
+                return $searchStrategy;
+            }
+        }
+
+        throw new PatternNotSupportedException($pattern);
+    }
+}
+</code></pre>
+
+<p>You no longer need to fork Redaktilo to add new search related behavior, you can
+now just create a new implementation of <code>SearchStrategy</code>, register it into
+<code>SearchEngine</code> and then inject it into the <code>Editor</code>:</p>
+
+<pre><code class="php">use Gnugat\Redaktilo\Editor;
+use Gnugat\Redaktilo\Filesystem;
+use Gnugat\Redaktilo\Search\SearchEngine;
+use Gnugat\Redaktilo\Search\LineNumberSearchStrategy;
+use Gnugat\Redaktilo\Search\LineSearchStrategy;
+use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
+
+$searchEngine = new SearchEngine();
+
+$lineSearchStrategy = new LineSearchStrategy();
+$searchEngine-&gt;registerStrategy($lineSearchStrategy);
+
+$lineNumberSearchStrategy = new LineNumberSearchStrategy();
+$searchEngine-&gt;registerStrategy($lineNumberSearchStrategy);
+
+$symfonyFilesystem = new SymfonyFilesystem();
+$filesystem = new Filesystem($symfonyFilesystem);
+$editor = new Editor($filesystem, $searchEngine);
+</code></pre>
+
+<p>We just made Redaktilo open to extension (still) and closed to modifications,
+hooray!</p>
+
+<h2 id="editor%27s-diff">Editor's diff</h2>
+
+<p>Here's what <code>Editor</code> looked like after adding <code>moveDown</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class Editor
+{
+    public function jumpDownTo(File $file, $pattern)
+    {
+        $lines = $file-&gt;readlines();
+        $filename = $file-&gt;getFilename();
+        $currentLineNumber = $file-&gt;getCurrentLineNumber() + 1;
+        $length = count($lines);
+        while ($currentLineNumber &lt; $length) {
+            if ($lines[$currentLineNumber] === $pattern) {
+                $file-&gt;setCurrentLineNumber($currentLineNumber);
+
+                return;
+            }
+            $currentLineNumber++;
+        }
+
+        throw new \Exception("Couldn't find line $pattern in $filename");
+    }
+
+    public function jumpUpTo(File $file, $pattern)
+    {
+        $lines = $file-&gt;readlines();
+        $filename = $file-&gt;getFilename();
+        $currentLineNumber = $file-&gt;getCurrentLineNumber() - 1;
+        while (0 &lt;= $currentLineNumber) {
+            if ($lines[$currentLineNumber] === $pattern) {
+                $file-&gt;setCurrentLineNumber($currentLineNumber);
+
+                return;
+            }
+            $currentLineNumber--;
+        }
+
+        throw new \Exception("Couldn't find line $pattern in $filename");
+    }
+
+    public function moveUp(File $file, $lines = 1)
+    {
+        $newLineNumber = $file-&gt;getCurrentLineNumber() - $lines;
+
+        if ($newLineNumber &lt; 0) {
+            $newLineNumber = 0;
+        }
+
+        $file-&gt;setCurrentLineNumber($newLineNumber);
+    }
+
+    public function has(File $file, $pattern)
+    {
+        return $file-&gt;hasLine($pattern);
+    }
+}
+</code></pre>
+
+<p>And now, here's what it looks like:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+use Gnugat\Redaktilo\Search\SearchEngine;
+
+class Editor
+{
+    private $searchEngine;
+
+    public function __construct(SearchEngine $searchEngine)
+    {
+        $this-&gt;searchEngine = $searchEngine;
+    }
+
+    public function jumpDownTo(File $file, $pattern)
+    {
+        $searchStrategy = $this-&gt;searchEngine-&gt;resolve($pattern);
+        $foundLineNumber = $searchStrategy-&gt;findNext($file, $pattern);
+
+        $file-&gt;setCurrentLineNumber($foundLineNumber);
+    }
+
+    public function jumpUpTo(File $file, $pattern)
+    {
+        $searchStrategy = $this-&gt;searchEngine-&gt;resolve($pattern);
+        $foundLineNumber = $searchStrategy-&gt;findPrevious($file, $pattern);
+
+        $file-&gt;setCurrentLineNumber($foundLineNumber);
+    }
+
+    public function has(File $file, $pattern)
+    {
+        $searchStrategy = $this-&gt;searchEngine-&gt;resolve($pattern);
+
+        return $searchStrategy-&gt;has($file, $pattern);
+    }
+}
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>You should be able to add new features without modifying existing code.</p>
+
+<p>I hope you found this article interesting, if you have any questions or
+feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twitter</a>.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2014/05/09/redaktilo.html" title="Redaktilo: because your code too needs an editor">Previous &lt; Redaktilo: because your code too needs an editor</a>
+                                        <a class="button six columns" href="/2014/05/21/facade-design-pattern-by-example.html" title="Facade design pattern, by example">Next &gt; Facade design pattern, by example</a>
+                    </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

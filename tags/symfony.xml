@@ -1,0 +1,909 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2016-01-14T08:31:38+00:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Symfony Micro Framework]]></title>
+            <link href="/2015/12/23/symfony-micro-framework.html"/>
+            <updated>2015-12-23T00:00:00+00:00</updated>
+            <id>/2015/12/23/symfony-micro-framework.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TD;DR</strong>: <a href="http://symfony.com">Symfony</a> has always been able to be used as a micro
+  framework.
+  For more "add what you need" micro-framework like spirit, use the <a href="http://github.com/gnugat/symfony-empty-edition">Empty Edition</a>
+  and the <a href="http://github.com/gnugat/micro-framework-bundle">MicroFrameworkBundle</a>.</p>
+</blockquote>
+
+<p>There are many definitions out there to qualify a framework as being "micro", among
+them the following criterias often appear:</p>
+
+<ul>
+<li>small API (usage of framework's code in your application)</li>
+<li>few Lines Of Code (LOC)</li>
+<li>few dependencies (how many third party libraries are used)</li>
+<li>small footprint (framework loading time)</li>
+</ul>
+
+<p>Is Symfony a micro framework as well? Let's find out.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: To know more about how to determine if a framework is micro, read
+  <a href="https://igor.io/archive.html">Igor Wiedler</a> article: <a href="https://igor.io/2013/09/02/how-heavy-is-silex.html">How heavy is Silex?</a>.</p>
+</blockquote>
+
+<h2 id="measuring">Measuring</h2>
+
+<p>While "Hello World" examples rarely reflect real world applications, it's going
+to be good enough to serve the purpose of this article: getting a good measure of
+Symfony's API, LOC, dependencies and footprint.</p>
+
+<p>Since dependencies and footprint are easy to measure, we're going to rely on it.
+However, all benchmarks are relative to the computer that executes them, so we need
+a point of reference: a flat PHP "Hello World" application:</p>
+
+<pre><code class="php">&lt;?php
+// index.php
+
+echo 'Hello World';
+</code></pre>
+
+<p>Let's run the benchmark:</p>
+
+<pre><code>php -S localhost:2501 &amp;
+ab -c 10 -t 10 'http://localhost:2501/index.php'
+killall php
+</code></pre>
+
+<p>Result: <strong>6 915.03</strong> Requests per second.</p>
+
+<h2 id="standard-edition">Standard Edition</h2>
+
+<p>To get the Standard Edition, we can use composer:</p>
+
+<pre><code>composer create-project symfony/framework-standard-edition
+cd framework-standard-edition
+</code></pre>
+
+<p>Since the standard edition follows a "solve 80% of use cases out of the box" philosohpy,
+it's almost ready, we just need to tweak the given controller:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/DefaultController.php
+
+namespace AppBundle\Controller;
+
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class DefaultController extends Controller
+{
+    /**
+     * @Route("/", name="homepage")
+     */
+    public function indexAction(Request $request)
+    {
+        return new Response('Hello World');
+    }
+}
+</code></pre>
+
+<p>Let's run the benchmark:</p>
+
+<pre><code>SYMFONY_ENV=prod composer update -o --no-dev
+php -S localhost:2502 -t web &amp;
+ab -c 10 -t 10 'http://localhost:2502/app.php'
+killall php
+</code></pre>
+
+<p>Result: <strong>134.23</strong> Requests per second.</p>
+
+<p>We're also going to list the dependencies:</p>
+
+<pre><code>tree -d -L 2 vendor/ | grep '   ' | wc -l
+tree -d -L 2 vendor/ | grep '    ' | wc -l
+</code></pre>
+
+<p>We get 28 + 1, to which we need to substitute <code>symfony</code> with all the
+packages it replaces (44): 72.</p>
+
+<p>So to sum up:</p>
+
+<ul>
+<li>API: 1 step to add a new route</li>
+<li>footprint: 52x slower than flat PHP</li>
+<li>size: 72 dependencies</li>
+</ul>
+
+<h2 id="empty-edition">Empty Edition</h2>
+
+<p>As stated above the Standard Edition has a "solve 80% of use cases out of the box"
+philosophy, so it comes with many dependencies that might not fit our use. Micro
+framework usually follow a "add what you need philosophy", which is exactly what
+the Empty Edition is all about.</p>
+
+<p>Let's see if we can get more micro with it:</p>
+
+<pre><code>composer create-project gnugat/symfony-empty-edition
+cd symfony-empty-edition
+</code></pre>
+
+<p>The first step is to create a controller:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/HelloController.php
+
+namespace AppBundle\Controller;
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class HelloController
+{
+    public function world(Request $request)
+    {
+        return new Response('Hello World');
+    }
+}
+</code></pre>
+
+<p>Then we register it as a service:</p>
+
+<pre><code># app/config/services/controller.yml
+services:
+    app.hello_controller:
+        class: AppBundle\Controller\HelloController
+</code></pre>
+
+<p>Finally we register the route:</p>
+
+<pre><code># app/config/routings/app.yml
+hello_world:
+    path: /
+    defaults:
+        _controller: app.hello_controller:world
+    methods:
+        - GET
+</code></pre>
+
+<p>Let's run the benchmark:</p>
+
+<pre><code>composer update -o --no-dev
+php -S localhost:2503 -t web &amp;
+ab -c 10 -t 10 'http://localhost:2503/app.php'
+killall php
+</code></pre>
+
+<p>Result: <strong>524.53</strong> Requests per second.</p>
+
+<p>We're also going to list the dependencies:</p>
+
+<pre><code>tree -d -L 2 vendor/ | grep '   ' | wc -l
+tree -d -L 2 vendor/ | grep '    ' | wc -l
+</code></pre>
+
+<p>We get 6 + 23 = 29.</p>
+
+<p>So to sum up:</p>
+
+<ul>
+<li>API: 3 steps to add a new route</li>
+<li>footprint: 13x slower than flat PHP</li>
+<li>size: 29 dependencies</li>
+</ul>
+
+<h2 id="micro-framework-bundle">Micro Framework Bundle</h2>
+
+<p>By reducing the number of dependencies, we also drastically reduced the framework
+footprint. This is not surprising as:</p>
+
+<ul>
+<li>we've reduced the number of classes to autoload</li>
+<li>we've reduced the number of configuration (parameters and service definition) to set up</li>
+<li>we've reduced the bootload time of the Dependency Injection Container (less services to instantiate)</li>
+<li>we've reduced the number of event listeners called</li>
+</ul>
+
+<p>Can we go further? Certainly: the FrameworkBundle also follows a
+"solve 80% of use cases out of the box" (includes Forms, Security, Templating, Translation, Assets, annotations, etc).</p>
+
+<p>By using a MicroFrameworkBundle that would provide the strict minimum and follow
+the micro framework philosophy of "add what you need" we can surely reduce further
+the number of dependencies. Hence <code>gnugat/micro-framework-bundle</code>:</p>
+
+<pre><code>composer require 'gnugat/micro-framework-bundle'
+composer remove 'symfony/framework-bundle'
+</code></pre>
+
+<p>Then we need to swap the bundle in the registration:</p>
+
+<pre><code class="php">&lt;?php
+// app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        return array(
+            new Gnugat\MicroFrameworkBundle\GnugatMicroFrameworkBundle(),
+            new AppBundle\AppBundle(),
+        );
+    }
+
+    public function getRootDir()
+    {
+        return __DIR__;
+    }
+
+    public function getCacheDir()
+    {
+        return dirname(__DIR__).'/var/cache/'.$this-&gt;environment;
+    }
+
+    public function getLogDir()
+    {
+        return dirname(__DIR__).'/var/logs';
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader)
+    {
+        $loader-&gt;load($this-&gt;rootDir.'/config/config_'.$this-&gt;environment.'.yml');
+    }
+}
+</code></pre>
+
+<p>Finally we can get rid of some configuration:</p>
+
+<pre><code># app/config/config.yml
+imports:
+    - { resource: parameters.yml }
+    - { resource: services/ }
+</code></pre>
+
+<p>Let's benchmark our trimmed application:</p>
+
+<pre><code>rm -rf var/*
+composer update -o --no-dev
+php -S localhost:2504 -t web &amp;
+ab -c 10 -t 10 'http://localhost:2504/app.php'
+killall php
+</code></pre>
+
+<p>Result: <strong>872.83</strong> Requests per second.</p>
+
+<p>We're also going to list the dependencies:</p>
+
+<pre><code>tree -d -L 2 vendor/ | grep '   ' | wc -l
+tree -d -L 2 vendor/ | grep '    ' | wc -l
+</code></pre>
+
+<p>We get 3 + 13 = 16.</p>
+
+<p>So to sum up:</p>
+
+<ul>
+<li>API: 3 steps to add a new route</li>
+<li>footprint: 8x slower than flat PHP</li>
+<li>size: 13 dependencies</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Symfony has always been able to be used as a micro framework bundle.</p>
+
+<p>The <a href="https://github.com/symfony/symfony-standard">Standard Edition</a> and the
+<a href="https://github.com/symfony/symfony/tree/master/src/Symfony/Bundle/FrameworkBundle">FrameworkBundle</a>
+follow a "solve 80% of use cases out of the box" philosohpy, which is better for new comers.</p>
+
+<p>However for experimented developers who're looking for a "add what you need" philosophy,
+which is what micro-framework usually follow, using the <a href="http://github.com/gnugat/symfony-empty-edition">Empty Edition</a>
+and <a href="http://github.com/gnugat/micro-framework-bundle">MicroFrameworkBundle</a> can
+be a viable alternative (they are slimer in term of dependencies and faster).</p>
+
+<blockquote>
+  <p><strong>Note</strong>: At the time of writing, MicroFrameworkBundle is still under development
+  (version <code>0.1.0</code>). Use it at your own risk and contribute to it :) .</p>
+</blockquote>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Decouple from Frameworks]]></title>
+            <link href="/2015/09/30/decouple-from-frameworks.html"/>
+            <updated>2015-09-30T00:00:00+01:00</updated>
+            <id>/2015/09/30/decouple-from-frameworks.html</id>
+            <content type="html"><![CDATA[<p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
+While necessary, those concerns don't add any value to your project: the business
+need will not be fulfilled by creating an empty application.</p>
+
+<p>As always, different responsibilities mean also different reasons to change: frameworks
+have a history of Backward Compatibility (BC) breaks and they do so regardless of your
+project.</p>
+
+<p>Take for example <a href="http://symfony.com/">Symfony</a>: it only started to follow <a href="http://semver.org/">Semantic Versioning</a>
+from version 2.3. The upgrade to version 3 has been made easier by allowing developers
+to know what was deprecated, but the removal of those features still means a lot of
+work in your application.
+The arrival of the <a href="http://www.php-fig.org/psr/psr-7/">new standard PSR-7</a> brings
+a lot of questions on the future of Symfony: for now it <a href="http://symfony.com/blog/psr-7-support-in-symfony-is-here">allows to choose</a>
+between <code>symfony/http-foundation</code> and <code>psr/http-message</code>, but if Symfony doesn't
+want to fall back behind (<a href="http://framework.zend.com/blog/announcing-the-zend-framework-3-roadmap.html">Zend 3 is fully based on PSR-7</a>)
+it might have to introduce another big BC break (event listeners with the Request
+and Response <a href="http://evertpot.com/psr-7-issues/">are not possible the way they are now with PSR-7</a>).</p>
+
+<p>Migrating Symfony applications (from symfony1, from symfony 2.0, etc) is so hard
+that it is a business on its own.</p>
+
+<p>Does that mean that we shouldn't use any frameworks? Should we just don't care and
+embrace fully frameworks?</p>
+
+<p>This article will explain how to avoid both extremes, by decoupling from the framework.
+It can be done by restricting the framework to its infrastructure responsibilities
+(HTTP, CLI), by only using its entry points (Controller, Command) and by using
+the Command Bus pattern.</p>
+
+<h2 id="fortune%3A-our-example">Fortune: our example</h2>
+
+<p>We're going to build part of a <a href="https://en.wikipedia.org/wiki/Fortune_%28Unix%29">fortune</a>
+application for our example, more precisely we're going to build an endpoint allowing us to
+submit quotes.</p>
+
+<p>To do so, we'll bootstrap a symfony application using the <a href="https://github.com/gnugat/symfony-empty-edition">Empty Edition</a>:</p>
+
+<pre><code>composer create-project gnugat/symfony-empty-edition fortune
+cd fortune
+</code></pre>
+
+<p>We'll need to install our test frameworks:</p>
+
+<pre><code>composer require --dev phpunit/phpunit
+composer require --dev phpspec/phpspec
+</code></pre>
+
+<p>Then add them to our test script:</p>
+
+<pre><code>#!/usr/bin/env sh
+
+# bin/test.sh
+
+echo ''
+echo '// Building test environment'
+
+rm -rf app/cache/test app/logs/*test.log
+composer --quiet --no-interaction install --optimize-autoloader  &gt; /dev/null
+php app/console --env=test --quiet cache:clear
+
+echo ''
+echo ' [OK] Test environment built'
+echo ''
+
+vendor/bin/phpspec --format=dot &amp;&amp; vendor/bin/phpunit
+</code></pre>
+
+<p>Finally we'll configure PHPUnit:</p>
+
+<pre><code class="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- phpunit.xml.dist --&gt;
+&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
+&lt;phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="app/bootstrap.php"&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="System Tests"&gt;
+            &lt;directory&gt;tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;
+</code></pre>
+
+<h2 id="request-listener">Request listener</h2>
+
+<p>Our endpoint will receive JSON encoded content. PHP does not populate <code>$_POST</code> with
+this data, causing an empty <code>$request-&gt;request</code>. We can create an event listener
+to fix this issue:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/EventListener/JsonRequestListener.php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+class JsonRequestListener
+{
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        $request = $event-&gt;getRequest();
+        $hasBeenSubmited = in_array($request-&gt;getMethod(), array('PATCH', 'POST', 'PUT'), true);
+        $isJson = (1 === preg_match('#application/json#', $request-&gt;headers-&gt;get('Content-Type')));
+        if (!$hasBeenSubmited || !$isJson) {
+            return;
+        }
+        $data = json_decode($request-&gt;getContent(), true);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            $event-&gt;setResponse(new Response('{"error":"Invalid or malformed JSON"}', 400, array('Content-Type' =&gt; 'application/json')));
+        }
+        $request-&gt;request-&gt;add($data ?: array());
+    }
+}
+</code></pre>
+
+<p>This logic is infrastructure related, so it makes sense to keep it in <code>AppBundle</code>.</p>
+
+<p>To enable it, configure it in the Dependency Injection Container:</p>
+
+<pre><code># app/config/services/event_listener.yml
+
+services:
+    app.json_request_listener:
+        class: AppBundle\EventListener\JsonRequestListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+</code></pre>
+
+<p>We also need to make sure files in <code>app/config/services</code> are imported:</p>
+
+<pre><code class="php">&lt;?php
+// app/config/importer.php
+
+use Symfony\Component\Finder\Finder;
+
+$finder = new Finder();
+$files = $finder-&gt;files()-&gt;name('*.yml')-&gt;in(__DIR__.'/services');
+foreach ($files as $file) {
+    $loader-&gt;import($file-&gt;getRealpath());
+}
+</code></pre>
+
+<h2 id="controller">Controller</h2>
+
+<p>Our first step will be to describe how the endpoint should work, with a test:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Controller/QuoteControllerTest.php
+
+namespace tests\AppBundle\Controller;
+
+use AppKernel;
+use PHPUnit_Framework_TestCase;
+use Symfony\Component\HttpFoundation\Request;
+
+class QuoteControllerTest extends PHPUnit_Framework_TestCase
+{
+    private $app;
+
+    protected function setUp()
+    {
+        $this-&gt;app = new AppKernel('test', false);
+        $this-&gt;app-&gt;boot();
+    }
+
+    /**
+     * @test
+     */
+    public function it_submits_a_new_quote()
+    {
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $request = Request::create('/v1/quotes', 'POST', array(), array(), array(), $headers, json_encode(array(
+            'quote' =&gt; 'Nobody expects the spanish inquisition',
+        )));
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        self::assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Testing only the status code is called "Smoke Testing" and is a very
+  efficient way to check if the application is broken.
+  Testing the content would be tedious and would make our test fragile as it might change often.</p>
+</blockquote>
+
+<p>Let's run it:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>The tests fail because the controller doesn't exist. Let's fix that:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/QuoteController.php
+
+namespace AppBundle\Controller;
+
+use Acme\Fortune\Quote\SubmitNewQuote;
+use Acme\Fortune\Quote\SubmitNewQuoteHandler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class QuoteController
+{
+    private $submitNewQuoteHandler;
+
+    public function __construct(SubmitNewQuoteHandler $submitNewQuoteHandler)
+    {
+        $this-&gt;submitNewQuoteHandler = $submitNewQuoteHandler;
+    }
+
+    public function submitNewAction(Request $request)
+    {
+        $sumbitNewQuote = new SubmitNewQuote(
+            $request-&gt;request-&gt;get('quote')
+        );
+        $newQuote = $this-&gt;submitNewQuoteHandler-&gt;handle($sumbitNewQuote);
+
+        return new Response(json_encode($newQuote), 201, array('Content-Type' =&gt; 'application/json'));
+    }
+}
+</code></pre>
+
+<p>Now we need to configure the controller as a service:</p>
+
+<pre><code># app/config/services/controller.yml
+
+services:
+    app.quote_controller:
+        class: AppBundle\Controller\QuoteController
+        arguments:
+            - "@app.submit_new_quote_handler"
+</code></pre>
+
+<p>Then we need to configure the route:</p>
+
+<pre><code># app/config/routings/quote.yml
+
+submit_new_quote:
+    path: /v1/quotes
+    defaults:
+        _controller: app.quote_controller:submitNew
+    methods:
+        - POST
+</code></pre>
+
+<p>This file needs to be imported:</p>
+
+<pre><code># app/config/routing.yml
+
+quote:
+    resource: routings/quote.yml
+</code></pre>
+
+<p>Finally we can run the test again:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>It now fails for a different reason: <code>SubmitNewQuote</code> and its handler class don't exist.</p>
+
+<h2 id="command-from-commandbus">Command (from CommandBus)</h2>
+
+<p><code>SubmitNewQuote</code> is a Data Transfer Object (DTO): its responsibility is to wrap
+input parameters in a well named class (in this case a class that describes the action intended).
+It's also the best place to do some basic validation on the input parameters.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: In the Command Bus pattern, <code>SubmitNewQuote</code> would be a Command (different from the CLI Command).</p>
+</blockquote>
+
+<p>We'll write a test for this, but first we'll bootstrap the test class:</p>
+
+<pre><code>vendor/bin/phpspec describe 'Acme\Fortune\Quote\SubmitNewQuote'
+</code></pre>
+
+<p>Now we can decribe the different validation rules:</p>
+
+<pre><code class="php">&lt;?php
+// spec/Acme/Fortune/Quote/SubmitNewQuoteSpec.php
+
+namespace spec\Acme\Fortune\Quote;
+
+use PhpSpec\ObjectBehavior;
+
+class SubmitNewQuoteSpec extends ObjectBehavior
+{
+    const QUOTE = 'Nobody expects the spanish inquisition';
+
+    function it_fails_if_required_quote_parameter_is_missing()
+    {
+        $this-&gt;beConstructedWith(null);
+
+        $this-&gt;shouldThrow('Acme\Fortune\Exception\ValidationFailedException')-&gt;duringInstantiation();
+    }
+
+    function it_fails_if_quote_parameter_is_empty()
+    {
+        $this-&gt;beConstructedWith('');
+
+        $this-&gt;shouldThrow('Acme\Fortune\Exception\ValidationFailedException')-&gt;duringInstantiation();
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Since this class has nothing to do with Symfony, we don't put it in <code>AppBundle</code>.
+  By keeping it in its own namespace, we protect it from framework directory tree changes,
+  for example before <code>AppBundle</code> the norm was <code>Acme\FortuneBundle</code>. We also allow ourselves
+  to move it to another framework (e.g. Laravel, Zend, etc).</p>
+</blockquote>
+
+<p>Let's run the tests:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>It fails because the exception doesn't exist yet:</p>
+
+<pre><code class="php">&lt;?php
+// src/Acme/Fortune/Exception/ValidationFailedException.php
+
+namespace Acme\Fortune\Exception;
+
+class ValidationFailedException extends FortuneException
+{
+}
+</code></pre>
+
+<p>We're making it a sub type of <code>FortuneException</code>: that way we can catch all exceptions
+related to our code (all other exceptions can be considered as Internal Server Errors).</p>
+
+<pre><code class="php">&lt;?php
+// src/Acme/Fortune/Exception/FortuneException.php
+
+namespace Acme\Fortune\Exception;
+
+use DomainException;
+
+class FortuneException extends DomainException
+{
+}
+</code></pre>
+
+<p>Now we need to create the Command:</p>
+
+<pre><code class="php">&lt;?php
+// src/Acme/Fortune/Quote/SubmitNewQuote.php
+
+namespace Acme\Fortune\Quote;
+
+use Acme\Fortune\Exception\ValidationFailedException;
+
+class SubmitNewQuote
+{
+    public function __construct($quote)
+    {
+        if (null === $quote) {
+            throw new ValidationFailedException('Missing required "quote" parameter');
+        }
+        if ('' === $quote) {
+            throw new ValidationFailedException('Invalid "quote" parameter: must not be empty');
+        }
+        $this-&gt;quote = (string) $quote;
+    }
+}
+</code></pre>
+
+<p>Running the tests again:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>Everything seems fine.</p>
+
+<h2 id="exception-listener">Exception listener</h2>
+
+<p>Instead of catching exceptions in our controllers we can create an event listener:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/EventListener/FortuneExceptionListener.php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+class FortuneExceptionListener
+{
+    public function onKernelException(GetResponseForExceptionEvent $event)
+    {
+        $exception = $event-&gt;getException();
+        if (!$exception instanceof FortuneException) {
+            return;
+        }
+        $content = json_encode(array('error' =&gt; $exception-&gt;getMessage()));
+        $statusCode = Response::HTTP_UNPROCESSABLE_ENTITY;
+        $event-&gt;setResponse(new Response($content, $statusCode, array('Content-Type' =&gt; 'application/json')));
+    }
+}
+</code></pre>
+
+<p>This lowers the risk of forgetting to catch an exception and it also keeps our controller slim.</p>
+
+<p>Let's enable it in the DIC:</p>
+
+<pre><code># app/config/services/event_listener.yml
+
+services:
+    app.fortune_exception_listener:
+        class: AppBundle\EventListener\FortuneExceptionListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+
+    app.json_request_listener:
+        class: AppBundle\EventListener\JsonRequestListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+</code></pre>
+
+<h2 id="command-handler">Command Handler</h2>
+
+<p><code>SubmitNewQuoteHandler</code>'s responsibility is to validate <code>SubmitNewQuote</code> data against
+business rules (e.g. no quote duplicates, author must exist, etc) and to call the
+appropriate services to process it.
+Reading its code feels like reading the details of a use case:</p>
+
+<blockquote>
+  <p>To handle the submission of a new quote,
+  we need to generate a unique identifier
+  and then we need to save the new quote.</p>
+</blockquote>
+
+<p>Let's bootstrap its test:</p>
+
+<pre><code>vendor/bin/phpspec describe 'Acme\Fortune\Quote\SubmitNewQuoteHandler'
+</code></pre>
+
+<p>Then edit the test:</p>
+
+<pre><code class="php">&lt;?php
+// spec/Acme/Fortune/Quote/SubmitNewQuoteHandlerSpec.php
+
+namespace spec\Acme\Fortune\Quote;
+
+use Acme\Fortune\Quote\SubmitNewQuote;
+use Acme\Fortune\Quote\Service\SaveNewQuote;
+use Acme\Fortune\Quote\Service\UniqueIdentifierGenerator;
+use PhpSpec\ObjectBehavior;
+
+class SubmitNewQuoteHandlerSpec extends ObjectBehavior
+{
+    const ID = '921410e8-eb98-4f99-ba98-055d46980511';
+    const QUOTE = 'Nobody expects the spanish inquisition!';
+
+    function let(SaveNewQuote $saveNewQuote, UniqueIdentifierGenerator $uniqueIdentifierGenerator)
+    {
+        $this-&gt;beConstructedWith($saveNewQuote, $uniqueIdentifierGenerator);
+    }
+
+    function it_saves_new_quote(SaveNewQuote $saveNewQuote, UniqueIdentifierGenerator $uniqueIdentifierGenerator)
+    {
+        $submitNewQuote = new SubmitNewQuote(self::QUOTE);
+        $quote = array(
+            'id' =&gt; self::ID,
+            'quote' =&gt; self::QUOTE,
+        );
+
+        $uniqueIdentifierGenerator-&gt;generate()-&gt;willReturn(self::ID);
+        $saveNewQuote-&gt;save($quote)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($submitNewQuote)-&gt;shouldBe($quote);
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>After generating interfaces for <code>SaveNewQuote</code> and <code>UniqueIdentifierGenerator</code>
+and after bootstrapping the code for <code>SubmitNewQuoteHandler</code>, the test will fail
+because we need to complete it:</p>
+
+<pre><code class="php">&lt;?php
+// src/Acme/Fortune/Quote/SubmitNewQuoteHandler.php
+
+namespace Acme\Fortune\Quote;
+
+use Acme\Fortune\Quote\Service\SaveNewQuote;
+use Acme\Fortune\Quote\Service\UniqueIdentifierGenerator;
+
+class SubmitNewQuoteHandler
+{
+    private $saveNewQuote;
+    private $uniqueIdentifierGenerator;
+
+    public function __construct(SaveNewQuote $saveNewQuote, UniqueIdentifierGenerator $uniqueIdentifierGenerator)
+    {
+        $this-&gt;saveNewQuote = $saveNewQuote;
+        $this-&gt;uniqueIdentifierGenerator = $uniqueIdentifierGenerator;
+    }
+
+    public function handle(SubmitNewQuote $sumbitNewQuote)
+    {
+        $quote = array(
+            'id' =&gt; $this-&gt;uniqueIdentifierGenerator-&gt;generate(),
+            'quote' =&gt; $sumbitNewQuote-&gt;quote,
+        );
+        $this-&gt;saveNewQuote-&gt;save($quote);
+
+        return $quote;
+    }
+}
+</code></pre>
+
+<p>Now we can configure the service:</p>
+
+<pre><code class="php"># app/config/services/quote.yml
+
+services:
+    app.submit_new_quote_handler:
+        class: Acme\Fortune\Quote\SubmitNewQuoteHandler
+        arguments:
+            - "@app.save_new_quote"
+            - "@app.unique_identifier_generator"
+</code></pre>
+
+<p>Finally can run the tests one last time:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>Allmost green!</p>
+
+<p>They fail because <code>app.save_new_quote</code> and <code>app.unique_identifier_generator</code> don't
+exist yet. They will be the topic of another article ;) .</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>By restricting frameworks to their entry points (Controllers, Commands, etc) and
+using the Command Bus to define our project entry points (domain boundaries) we
+are able to decouple from the framework, allowing us to restrict the impact of BC breaks.</p>
+
+<p>Of course, all projects are different and this solution might not be possible everywhere.
+RAD development is a robust solution for web agencies, especially if they are chosen
+to bootstrap a project as fast as possible and then need to pass the project over
+to their customer after a short period.</p>
+
+<p>On the other hand some companies are creating projects they will have to maintain
+for decades and those are also in need of delivering a first version early.
+Decoupling from the framework isn't something that slows down development, and there
+are ways to still release early (e.g. define Minimum Valuable Product and deliver
+small features iterations by iterations).</p>
+
+<blockquote>
+  <p><strong>Note</strong>: There are a couple of bundles that provides Symfony with a Command Bus, among them:</p>
+  
+  <ul>
+  <li><a href="/2015/09/09/tactician.html">Tactician</a></li>
+  <li><a href="/2015/08/04/simple-bus.html">SimpleBus</a></li>
+  </ul>
+</blockquote>
+
+<p>If you're interrested on the subject, here's some resources:</p>
+
+<ul>
+<li>The framework as an implementation detail
+(<a href="http://www.slideshare.net/marcello.duarte/the-framework-as-an-implementation-detail">slides</a>
+and <a href="https://www.youtube.com/watch?v=0L_9NutiJlc">video</a>),
+by <a href="http://marcelloduarte.net/">Marcello Duarte</a>
+and <a href="http://everzet.com/">Konstantin Kudryashov</a></li>
+<li><a href="https://blog.8thlight.com/uncle-bob/2014/05/11/FrameworkBound.html">Framework bound</a>,
+by <a href="https://sites.google.com/site/unclebobconsultingllc/">Robert Cecil Martin</a></li>
+<li><a href="http://kristopherwilson.com/2013/11/27/decoupling-the-framework/">Decoupling the Framework</a>,
+by <a href="https://twitter.com/mrkrstphr">Kristopher Wilson</a></li>
+</ul>
+]]></content>
+        </entry>
+    </feed>

@@ -1,0 +1,51 @@
+/**
+ * Ne pique pas les yeux,
+ * Dop, dop, dop,
+ * Évite les noeuds,
+ * DOP !
+ *
+ * @author Loïc Faugeron <faugeron.loic+blog-css@gmail.com>
+ */
+
+html, body {
+    font-size: 18px;
+}
+
+.title {
+    text-align: center;
+    margin-top: 60px;
+    margin-bottom: 60px;
+    font-size: 2.3em;
+    line-height: 1.2em;
+}
+
+.sub-title {
+    font-size: 60%;
+    line-height: 1em;
+    font-weight: 200;
+    letter-spacing: 3px;
+    padding-left: 4px;
+    display: block;
+}
+
+.button.button-deprecated,
+button.button-deprecated,
+input[type="submit"].button-deprecated,
+input[type="reset"].button-deprecated,
+input[type="button"].button-deprecated {
+  color: #FFF;
+  background-color: #e4b9b9;
+  border-color: #f2dede; }
+.button.button-deprecated:hover,
+button.button-deprecated:hover,
+input[type="submit"].button-deprecated:hover,
+input[type="reset"].button-deprecated:hover,
+input[type="button"].button-deprecated:hover,
+.button.button-deprecated:focus,
+button.button-deprecated:focus,
+input[type="submit"].button-deprecated:focus,
+input[type="reset"].button-deprecated:focus,
+input[type="button"].button-deprecated:focus {
+  color: #FFF;
+  background-color: #f2dede;
+  border-color: #e4b9b9; }

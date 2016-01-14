@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2016-01-14T08:31:38+00:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Simple Bus]]></title>
+            <link href="/2015/08/04/simple-bus.html"/>
+            <updated>2015-08-04T00:00:00+01:00</updated>
+            <id>/2015/08/04/simple-bus.html</id>
+            <content type="html"><![CDATA[<p><a href="http://simplebus.github.io/MessageBus/">Simple Bus</a> is a lightweight library
+created by <a href="https://twitter.com/matthiasnoback">Matthias Noback</a> allowing you to
+use the Command Bus design pattern in your applications.</p>
+
+<h2 id="command-%2F-query-responsibility-separation">Command / Query Responsibility Separation</h2>
+
+<p>The <a href="http://martinfowler.com/bliki/CQRS.html">CQRS principle</a> specifies that an
+application entry point (e.g. console command, or web controller) should only do
+an imperative command (e.g. register a member) or an interrogatory command (how many members?).</p>
+
+<p>Here's a nice reference about the different kinds of commands, by
+<a href="https://twitter.com/mathiasverraes">Mathias Verraes</a>: <a href="http://verraes.net/2015/01/messaging-flavours/">Messaging flavours</a>.</p>
+
+<p>This allows to simplify the application and the code base: those are two different
+concerns and with the <a href="http://www.objectmentor.com/resources/articles/srp.pdf">Single Responsibility Principle</a>
+we've learned that they shouldn't be mixed.</p>
+
+<p>The Command Bus pattern aims at solving the imperative command part.</p>
+
+<h2 id="command-bus">Command Bus</h2>
+
+<p>With this design pattern, we have 3 different kinds of class:</p>
+
+<ul>
+<li>Command: a Data Transfer Object (no logic) with a name describing the command (e.g. <code>RegisterMember</code>)</li>
+<li>Command Handler: the service that does the actions require by the Command (note: 1 Command =  1 Command Handler)</li>
+<li>Command Bus: given a Command, it will execute the appropriate Command Handler</li>
+</ul>
+
+<p>Our entry points would create the command using the parameters received
+(e.g. console input or request content), and then give it to the Command Bus.</p>
+
+<p>Having a Command Bus class is really nice as it allows us to execute things before and
+after every commands: for example in a test environment we could wrap SQL queries in transactions
+and roll them back.</p>
+
+<h2 id="usage-example">Usage example</h2>
+
+<p>Here's how to install Simple Bus:</p>
+
+<pre><code>composer require simple-bus/message-bus:^3.0
+</code></pre>
+
+<p>Since it allows us to choose how the Command Bus will find the Command Handler, we
+have to set it up:</p>
+
+<pre><code class="php">&lt;?php
+
+use SimpleBus\Message\Bus\Middleware\MessageBusSupportingMiddleware;
+use SimpleBus\Message\CallableResolver\CallableMap;
+use SimpleBus\Message\CallableResolver\ServiceLocatorAwareCallableResolver;
+use SimpleBus\Message\Handler\DelegatesToMessageHandlerMiddleware;
+use SimpleBus\Message\Handler\Resolver\NameBasedMessageHandlerResolver;
+use SimpleBus\Message\Name\ClassBasedNameResolver;
+
+require __DIR__.'/vendor/autoload.php';
+
+$commandHandlerMap = new CallableMap(array(
+    'Vendor\Project\Member\RegisterMember' =&gt; array('register_member_handler', 'handle'),
+), new ServiceLocatorAwareCallableResolver(function ($serviceId) {
+    if ('register_member_handler' === $serviceId) {
+        return new Vendor\Project\Member\RegisterMemberHandler();
+    }
+}));
+
+$commandBus = new MessageBusSupportingMiddleware();
+$commandBus-&gt;appendMiddleware(new DelegatesToMessageHandlerMiddleware(new NameBasedMessageHandlerResolver(
+    new ClassBasedNameResolver(),
+    $commandHandlerMap
+)));
+</code></pre>
+
+<p>This create a Command Bus that will use the given Command's Fully Qualified ClassName
+(FQCN, the class name with its full namespace) to call the associated Command Handler
+in the map. Also, the Command Handler will only be created if it is used!</p>
+
+<p>This configuration looks a bit scary, but thankfully if we use <a href="http://symfony.com/">Symfony</a>
+we can just install the bundle:</p>
+
+<pre><code>composer require simple-bus/symfony-bridge:^3.0
+# Don't forget to register `SimpleBus\SymfonyBridge\SimpleBusCommandBusBundle` in `AppKernel`
+</code></pre>
+
+<p>Then we just have to use the <code>command_bus</code> service. To register Command Handler, we
+need to tag service definitions as follow:</p>
+
+<pre><code>services:
+    register_member_handler:
+        class: Vendor\Project\Member\RegisterMemberHandler
+        tags:
+            - { name: command_handler, handles: Vendor\Project\Member\RegisterMember }
+</code></pre>
+
+<p>Now that the configuration is settled, here's a usage example:</p>
+
+<pre><code class="php">$username = isset($argv[1]) ? $argv[1] : null;
+$commandBus-&gt;handle(new RegisterMember($username));
+</code></pre>
+
+<p>The command would look like this:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Vendor\Project\Member;
+
+class RegisterMember
+{
+    public $username;
+
+    public function __construct($username)
+    {
+        if (null === $username) {
+            throw new \InvalidArgumentException('Missing required "username" parameter');
+        }
+        $this-&gt;username = $username;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Commands validate simple input logic (required parameters, parameter type, etc).</p>
+</blockquote>
+
+<p>The Command Handler could look like this:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Vendor\Project\Member;
+
+class RegisterMember
+{
+    private $memberRepository;
+
+    public function __construct(MemberRespository $memberRepository)
+    {
+        $this-&gt;memberRepository = $memberRepository;
+    }
+
+    public function handle(RegisterMember $registerMember)
+    {
+        if ($memberRepository-&gt;has($registerMember-&gt;username)) {
+            throw new \DomainException(sprintf('Given username "%s" already exists, and duplicates are not allowed', $registerMember-&gt;username));
+        }
+        $memberRepository-&gt;register($registerMember);
+    }
+}
+</code></pre>
+
+<p>The Command Handler validates more complex logic (member username duplication, etc).</p>
+
+<p>Here's a nice reference about command validation: <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command, and Model Validation</a>.</p>
+
+<h2 id="tips">Tips</h2>
+
+<p>Here are some personal tips!</p>
+
+<p>We can reuse Command Handlers by injecting them into other Command Handlers
+(don't inject the Command Bus in a Command Handler).</p>
+
+<p>Command Handlers were not meant to return anything (think of asynchrone messages).
+But this might not always be pragmatic: in this case we can store a return value in the Command.</p>
+
+<p>We've talked about the Command part in CQRS, what about the Query part?
+I've experimented a bit with a "Query Bus", but in the end I've settled down with
+a Search Engine class, to which a Criteria is given.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Remember when people said that controllers shouldn't have any logic in it?
+With the Command Bus pattern this becomes possible.
+It also makes this kind of logic reusable and testable.</p>
+
+<p>Simple Bus is a nice library for this: it doesn't get in our way.
+For more information about it, read the series of articles published for its first release
+(caution: the public API changed a lot since): <a href="http://php-and-symfony.matthiasnoback.nl/tags/SimpleBus/">A wave of command buses</a>.</p>
+
+<p>An alternative in the PHP world would be <a href="http://tactician.thephpleague.com/">Tactician</a>.</p>
+
+<p>Here's also some nice slides by <a href="https://twitter.com/mr_r_miller">Richard Miller</a>
+about CQRS: <a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avoiding the Mud</a>.</p>
+]]></content>
+        </entry>
+    </feed>

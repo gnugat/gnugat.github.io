@@ -1,0 +1,230 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>SpecGen v0.3 &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2015/05/28/spec-gen-0-3.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    SpecGen v0.3
+    <span class="sub-title">14/01/2016</span>
+</h2>
+                            <nav>
+                        <a class="button " href="/tags/memio">memio</a>
+                        <a class="button " href="/tags/SpecGen">SpecGen</a>
+                        <a class="button " href="/tags/phpspec">phpspec</a>
+                        <a class="button " href="/tags/pet%20project">pet project</a>
+                        <a class="button " href="/tags/introducing%20library">introducing library</a>
+                    </nav>
+                </header>
+
+                <blockquote>
+  <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.3 inserts a property for each constructor argument.</p>
+</blockquote>
+
+<p>SpecGen is a <a href="http://phpspec.net">phpspec</a> extension which enhance its code generator.
+With the latest release, v0.3, we get the following features:</p>
+
+<ul>
+<li>method generation:
+
+<ul>
+<li>it inserts method at the end of the class</li>
+<li>it typehints object, array and callable arguments</li>
+<li>it names object arguments after their type</li>
+<li>it names scalar arguments after a generic name (<code>argument</code>)</li>
+<li>it adds number on names that could collide (e.g. <code>$argument1, $argument2</code>)</li>
+</ul></li>
+<li>constructor generation, same as method except:
+
+<ul>
+<li>it inserts constructor at the begining of the class</li>
+<li>it inserts properties with initialization for each constructor arguments</li>
+</ul></li>
+</ul>
+
+<p>Here's a simple example to demonstrate how helpful it can be.</p>
+
+<h2 id="example">Example</h2>
+
+<p>First of all, we need to set up a project with <a href="https://getcomposer.org/download">Composer</a>.
+Let's write the following <code>composer.json</code>:</p>
+
+<pre><code>{
+    "name": "vendor/project",
+    "autoload": {
+        "psr-4": {
+            "Vendor\\Project\\": "src/Vendor/Project"
+        }
+    },
+    "require": {},
+    "require-dev": {}
+}
+</code></pre>
+
+<p>Then we can install phpspec with SpecGen by running those commands:</p>
+
+<pre><code>composer require --dev phpspec/phpspec:~2.2
+composer require --dev memio/spec-gen:~0.3
+echo 'extensions:' &gt; phpspec.yml
+echo '  - Memio\SpecGen\MemioSpecGenExtension' &gt;&gt; phpspec.yml
+</code></pre>
+
+<p>In our example, we'll specify a <code>TextEditor</code> service, it should be able to
+create new files by relying on <code>Filesystem</code>, another service.</p>
+
+<p>This can be done as follow:</p>
+
+<pre><code>phpspec describe 'Vendor\Project\TextEditor'
+````
+
+&gt; **Tip**: make your vendor's binaries available by adding `vendor/bin` to your `$PATH`.
+&gt; `export PATH="vendor/bin:$PATH"`.
+
+This should generate a `spec\Vendor\Project\TextEditorSpec.php` file:
+
+```php
+&lt;?php
+
+namespace spec\Vendor\Project;
+
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class TextEditorSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType('Vendor\Project\TextEditor');
+    }
+}
+</code></pre>
+
+<p>It needs to be edited to fit our needs:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+use Vendor\Project\File;
+use PhpSpec\ObjectBehavior;
+
+class TextEditorSpec extends ObjectBehavior
+{
+    const FILENAME = '/tmp/file.txt';
+    const FORCE_FILE_CREATION = true;
+
+    function let(Filesystem $filesystem)
+    {
+        $this-&gt;beConstructedWith($filesystem);
+    }
+
+    function it_creates_new_files(File $file, Filesystem $filesystem)
+    {
+        $filesystem-&gt;exists(self::FILENAME)-&gt;willReturn(false);
+        $filesystem-&gt;create(self::FILENAME)-&gt;willReturn($file);
+
+        $this-&gt;open(self::FILENAME, self::FORCE_FILE_CREATION)-&gt;shouldBe($file);
+    }
+}
+</code></pre>
+
+<p>The Test Driven Development cycle advises us to run the test suite now:</p>
+
+<pre><code>phpspec run
+</code></pre>
+
+<p>This will bootstrap the following code:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+
+class TextEditor
+{
+    private $filesystem;
+
+    public function __construct(Filesystem $filesystem)
+    {
+        $this-&gt;filesystem = $filesystem;
+    }
+
+    public function open($argument1, $argument2)
+    {
+    }
+}
+</code></pre>
+
+<p>It created a <code>filesystem</code> property to mirror the constructor arguments. Neat!</p>
+
+<h2 id="what%27s-next%3F">What's next?</h2>
+
+<p>In our example phpspec also generated the collaborators (<code>File</code> and <code>Filesystem</code>).
+These don't beneficiate from SpecGen help yet, so the next release (v0.4) will
+probably be about using it for collaborators.</p>
+
+<p>Other features that could be implemented would be PHPdoc generation, or avoiding the
+<code>Interface</code> / <code>Abstract</code> suffix/prefix in interface and abstract object argument names.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/05/20/spec-gen-0-2.html" title="SpecGen v0.2">Previous &lt; SpecGen v0.2</a>
+                                        <a class="button six columns" href="/2015/06/03/sf-differently-part-1-introduction.html" title="Symfony Differently - part 1: Introduction">Next &gt; Symfony Differently - part 1: Introduction</a>
+                    </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>PHP generators and coroutines &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2014/04/30/php-generators-and-coroutines.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    PHP generators and coroutines
+    <span class="sub-title">14/01/2016</span>
+</h2>
+                            <nav>
+                        <a class="button " href="/tags/PHP">PHP</a>
+                    </nav>
+                </header>
+
+                <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p>In PHP ~5.5, a function containing <code>yield</code> becomes an instance of the
+<a href="http://php.net/manual/en/class.generator.php"><code>Generator</code> class</a>, which acts
+like an iterator.</p>
+
+<p>Each <code>yield</code> occurence marks a position. Calling <code>next</code> will move from the
+current yield to the next one.</p>
+
+<p>Thanks to the <code>send</code> method, the <code>Generator</code> class acts also as a corroutine:
+you can send the returned value of the <code>yield</code> occurence.</p>
+
+<p>A <code>Generator</code> function cannot return a value.</p>
+
+<h2 id="generator-api">Generator API</h2>
+
+<pre><code class="php">class Generator
+{
+    public function current(); // The yielded value.
+    public function key();
+
+    public function valid(); // Has the iterator been closed?
+
+    public function next(); // Resumes execution.
+    public function rewind();
+
+    public function send($value); // Sends the value to be returned by the current yield, and resumes execution.
+    public function throw(Exception $e); // Replaces the current yield with `throw $e;`
+}
+</code></pre>
+
+<h2 id="examples">Examples</h2>
+
+<h3 id="simple-example">Simple example</h3>
+
+<pre><code class="php">function direct_generator()
+{
+    yield 1;
+    yield 'index' =&gt; 2;
+}
+
+$generator = direct_generator();
+echo $generator-&gt;current(); // outputs 1
+$generator-&gt;next();
+echo $generator-&gt;current(); // outputs 2
+echo $generator-&gt;key(); // outputs index
+
+</code></pre>
+
+<h3 id="range-example">Range example</h3>
+
+<p>The <code>foreach</code> loop internally calls <code>current</code>, <code>key</code>, <code>next</code> and <code>valid</code> methods:</p>
+
+<pre><code class="php">function xrange($start, $end)
+{
+    $value = $start;
+    while ($value &lt;= $end) {
+        yield $value;
+        $value++;
+    }
+}
+
+foreach(xrange(1, 2) as $value) {
+    echo $value; // outputs 1, then 2.
+}
+</code></pre>
+
+<h3 id="co-routine-example">Co-routine example</h3>
+
+<p>Calling the <code>send</code> method is like replacing the current <code>yield</code> with the given
+value.</p>
+
+<pre><code class="php">function holy_grail_countdown($number)
+{
+    while (0 &lt; $number) {
+        $reset = (yield $number);
+        $number = $reset ?: $number - 1;
+    }
+}
+
+$c = holy_grail_countdown(5);
+foreach ($c as $number) {
+    echo "$number\n"; // outputs 5, then 2 and finally 1.
+    if (5 === $number) {
+        $c-&gt;send(3);
+    }
+}
+</code></pre>
+
+<h2 id="links-to-use-cases">Links to use cases</h2>
+
+<p>I've first encountered generators and couritines in Python a long time ago, but
+never really grasped its utility.</p>
+
+<p>It's only recently that I've found some articles describing some usefull use
+cases, so I'm just going to share them with you:</p>
+
+<ul>
+<li><a href="http://eli.thegreenplace.net/2009/08/29/co-routines-as-an-alternative-to-state-machines/">co-routines as an alternative to state machines</a></li>
+<li><a href="http://nikic.github.io/2012/12/22/Cooperative-multitasking-using-coroutines-in-PHP.html">Cooperative multitasking using co-routines in PHP</a></li>
+<li><a href="http://stackoverflow.com/a/1347772">Python generators and co-routines</a></li>
+<li><a href="http://blog.ircmaxell.com/2012/07/what-generators-can-do-for-you.html">What generators can do for you</a></li>
+<li><a href="http://www.chiark.greenend.org.uk/~sgtatham/coroutines.html">Coroutines in C</a></li>
+</ul>
+
+<p>Another helpful resource would be the <a href="https://wiki.php.net/rfc/generators">PHP's RFC</a>,
+which I find more explicative than the actual documentation.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Generators allow you to pause the execution of a function and resume back to
+where it stopped. Coroutines allow you to send a value while resuming back to
+it!</p>
+
+<p>If you have any comments or questions, feel free to notify me on
+<a href="https://twitter.com/epiloic">Twitter</a>.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2014/04/23/sf2-sessions-introduction.html" title="Symfony2 Sessions introduction">Previous &lt; Symfony2 Sessions introduction</a>
+                                        <a class="button six columns" href="/2014/05/09/redaktilo.html" title="Redaktilo: because your code too needs an editor">Next &gt; Redaktilo: because your code too needs an editor</a>
+                    </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

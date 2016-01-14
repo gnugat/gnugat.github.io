@@ -1,0 +1,331 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Master Symfony2 - part 6: Annotations &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2014/09/10/master-sf2-part-6-annotations.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Master Symfony2 - part 6: Annotations
+    <span class="sub-title">14/01/2016</span>
+</h2>
+                            <nav>
+                        <a class="button " href="/tags/Symfony">Symfony</a>
+                        <a class="button " href="/tags/Master%20Symfony2%20series">Master Symfony2 series</a>
+                    </nav>
+                </header>
+
+                <p>This is the sixth article of the series on mastering the
+<a href="http://symfony.com/">Symfony2</a> framework. Have a look at the four first ones:</p>
+
+<ul>
+<li><a href="/2014/08/05/master-sf2-part-1-bootstraping.html">1: Bootstraping</a></li>
+<li><a href="/2014/08/13/master-sf2-part-2-tdd.html">2: TDD</a></li>
+<li><a href="/2014/08/22/master-sf2-part-3-services.html">3: Services</a></li>
+<li><a href="/2014/08/27/master-sf2-part-4-doctrine.htm">4: Doctrine</a></li>
+<li><a href="/2014/09/03/master-sf2-part-5-events.html">5: Events</a></li>
+</ul>
+
+<p>In the previous articles we created an API allowing us to submit and list
+quotes:</p>
+
+<pre><code>.
+├── app
+│   ├── AppKernel.php
+│   ├── cache
+│   │   └── .gitkeep
+│   ├── config
+│   │   ├── config_prod.yml
+│   │   ├── config_test.yml
+│   │   ├── config.yml
+│   │   ├── doctrine.yml
+│   │   ├── parameters.yml
+│   │   ├── parameters.yml.dist
+│   │   └── routing.yml
+│   ├── console
+│   ├── logs
+│   │   └── .gitkeep
+│   └── phpunit.xml.dist
+├── composer.json
+├── composer.lock
+├── src
+│   └── Fortune
+│       └── ApplicationBundle
+│           ├── Controller
+│           │   └── QuoteController.php
+│           ├── DependencyInjection
+│           │   └── FortuneApplicationExtension.php
+│           ├── Entity
+│           │   ├── QuoteFactory.php
+│           │   ├── QuoteGateway.php
+│           │   ├── Quote.php
+│           │   └── QuoteRepository.php
+│           ├── EventListener
+│           │   └── SubmitJsonListener.php
+│           ├── FortuneApplicationBundle.php
+│           ├── Resources
+│           │   └── config
+│           │       ├── doctrine
+│           │       │   └── Quote.orm.yml
+│           │       └── services.xml
+│           └── Tests
+│               ├── Controller
+│               │   └── QuoteControllerTest.php
+│               └── Entity
+│                   └── QuoteRepositoryTest.php
+└── web
+    └── app.php
+</code></pre>
+
+<p>Here's the <a href="https://github.com/gnugat/mastering-symfony2">repository where you can find the actual code</a>.</p>
+
+<p>In this article, we'll discover annotations.</p>
+
+<h2 id="doctrine-annotations">Doctrine Annotations</h2>
+
+<p>Inspired by <a href="http://legacy.python.org/dev/peps/pep-0318/">Python Decorators</a> and
+<a href="http://docs.oracle.com/javase/tutorial/java/annotations/">Java Annotations</a>,
+the <a href="http://www.doctrine-project.org/">Doctrine Project</a> created a convenient
+library allowing to put in the same file: information (like configuration) and
+source code.</p>
+
+<p>In concrete terms, <a href="http://docs.doctrine-project.org/projects/doctrine-common/en/latest/reference/annotations.html">Annotations</a>
+are comments which are read by <code>AnnotationReader</code> and can then be cached in any
+format (generally PHP) to make things faster afterwards.</p>
+
+<p>It's main strength is the possibility to avoid having a configuration file in a
+path too far from the source code which uses it. For example intead of having
+the schema definition in <code>src/Fortune/ApplicationBundle/Resources/config/doctrine/Quote.orm.yml</code>
+we could have it directly in the <code>QuoteEntity</code>.</p>
+
+<h2 id="installing-sensio-frameworkextra-bundle">Installing Sensio FrameworkExtra Bundle</h2>
+
+<p>The <a href="http://symfony.com/doc/current/bundles/SensioFrameworkExtraBundle/index.html">Sensio FrameworkExtra Bundle</a>
+provides controller annotations, amongst them lies <code>@Route</code> allowing us to move
+the routing configuration from <code>app/config/routing.yml</code> directly to the actions.</p>
+
+<p>Let's download the bundle:</p>
+
+<pre><code>composer require sensio/framework-extra-bundle:~3.0
+</code></pre>
+
+<p>Then register it:</p>
+
+<pre><code>&lt;?php
+// File: app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Config\Loader\LoaderInterface;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        return array(
+            new Symfony\Bundle\FrameworkBundle\FrameworkBundle(),
+            new Fortune\ApplicationBundle\FortuneApplicationBundle(),
+            new Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
+            new Sensio\Bundle\FrameworkExtraBundle\SensioFrameworkExtraBundle(),
+        );
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader)
+    {
+        $loader-&gt;load(__DIR__.'/config/config_'.$this-&gt;getEnvironment().'.yml');
+    }
+}
+</code></pre>
+
+<p>Finally, we need to tell Doctrine's Annotation library  where to find the
+classes by registering Composer's autoloader:</p>
+
+<pre><code>&lt;?php
+// File: app/autoload.php
+
+use Doctrine\Common\Annotations\AnnotationRegistry;
+
+$loader = require __DIR__.'/../vendor/autoload.php';
+
+AnnotationRegistry::registerLoader(array($loader, 'loadClass'));
+
+return $loader;
+</code></pre>
+
+<p>This file should be used in our front controller:</p>
+
+<pre><code>&lt;?php
+
+use Symfony\Component\HttpFoundation\Request;
+
+require_once __DIR__.'/app/autoload.php';
+require_once __DIR__.'/../app/AppKernel.php';
+
+$kernel = new AppKernel('prod', false);
+$request = Request::createFromGlobals();
+$response = $kernel-&gt;handle($request);
+$response-&gt;send();
+$kernel-&gt;terminate($request, $response);
+</code></pre>
+
+<p>But also in our test suite:</p>
+
+<pre><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
+&lt;phpunit
+    backupGlobals="false"
+    colors="true"
+    syntaxCheck="false"
+    bootstrap="autoload.php"&gt;
+
+    &lt;testsuites&gt;
+        &lt;testsuite name="Functional Test Suite"&gt;
+            &lt;directory&gt;../src/*/*/Tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;
+</code></pre>
+
+<h2 id="using-the-%40route-annotation">Using the @Route annotation</h2>
+
+<p>We can now empty the <code>routing.yml</code> file and tell it to import the configuration
+from the <code>QuoteController</code> using its annotations:</p>
+
+<pre><code># File: app/config/routing.yml
+fortune_application:
+    resource: @FortuneApplicationBundle/Controller
+    type: annotation
+</code></pre>
+
+<p>The controller itself will look like this:</p>
+
+<pre><code>&lt;?php
+// File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
+
+namespace Fortune\ApplicationBundle\Controller;
+
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+class QuoteController extends Controller
+{
+    /**
+     * @Route("/api/quotes", methods={"POST"})
+     */
+    public function submitAction(Request $request)
+    {
+        $postedValues = $request-&gt;request-&gt;all();
+        if (empty($postedValues['content'])) {
+            $answer = array('message' =&gt; 'Missing required parameter: content');
+
+            return new JsonResponse($answer, Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+        $quoteRepository = $this-&gt;container-&gt;get('fortune_application.quote_repository');
+        $quote = $quoteRepository-&gt;insert($postedValues['content']);
+
+        return new JsonResponse($quote, Response::HTTP_CREATED);
+    }
+
+    /**
+     * @Route("/api/quotes", methods={"GET"})
+     */
+    public function listAction(Request $request)
+    {
+        $quoteRepository = $this-&gt;container-&gt;get('fortune_application.quote_repository');
+        $quotes = $quoteRepository-&gt;findAll();
+
+        return new JsonResponse($quotes, Response::HTTP_OK);
+    }
+}
+</code></pre>
+
+<p>And now annotations are ready to be used, as the tests prove it:</p>
+
+<pre><code>./vendor/bin/phpunit -c app
+</code></pre>
+
+<p>That's green enough for us to commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Used annotations'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Annotations allow us to remove the distance between configuration and code.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: You should know that annotations can
+  <a href="https://r.je/php-annotations-are-an-abomination.html">raise concerns about tight coupling</a>,
+  but it doesn't seem to be <a href="http://marekkalnik.tumblr.com/post/34047514685/are-annotations-really-bad">relevant when used as configuration</a>.</p>
+  
+  <p>The best thing to do is to minimize their use to the classes which are
+  already coupled to our tools (for example the controllers) and do some
+  research on the subject to make your own opinion.</p>
+</blockquote>
+
+<p>If the concept seduced you, have a look a <a href="https://github.com/mmoreram/ControllerExtraBundle">ControllerExtraBundle</a>.</p>
+
+<p>The next artile will be the conclusion, I hope you enjoy this series!</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2014/09/03/master-sf2-part-5-events.html" title="Master Symfony2 - part 5: Events">Previous &lt; Master Symfony2 - part 5: Events</a>
+                                        <a class="button six columns" href="/2014/10/08/master-sf2-conclusion.html" title="Master Symfony2 - Conclusion">Next &gt; Master Symfony2 - Conclusion</a>
+                    </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>
