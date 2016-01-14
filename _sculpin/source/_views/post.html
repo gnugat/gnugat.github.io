@@ -11,7 +11,7 @@
     {% if page.tags %}
         <nav>
             {% for tag in page.tags %}
-            <a class="button" href="{{ site.url }}/tags/{{ tag|url_encode(true) }}">{{ tag }}</a>
+            <a class="button {{ tag == 'deprecated' ? 'button-deprecated' }}" href="{{ site.url }}/tags/{{ tag|url_encode(true) }}">{{ tag }}</a>
             {% endfor %}
         </nav>
     {% endif %}
@@ -23,15 +23,13 @@
 
 {% block article_footer %}
     {% if page.previous_post or page.next_post %}
-        <nav class="article">
-            <ul>
-                {% if page.next_post %}
-                    <li>Next: <a class="next" href="{{ site.url }}{{ page.next_post.url }}" title="{{ page.next_post.title }}"><span class="title">{{ page.next_post.title }}</span></a></li>
-                {% endif %}
-                {% if page.previous_post %}
-                    <li>Previous: <a class="previous" href="{{ site.url }}{{ page.previous_post.url }}" title="{{ page.previous_post.title }}"><span class="title">{{ page.previous_post.title }}</span></a></li>
-                {% endif %}
-            </ul>
+        <nav class="row">
+            {% if page.previous_post %}
+                <a class="button six columns" href="{{ site.url }}{{ page.previous_post.url }}" title="{{ page.previous_post.title }}">Previous &lt; {{ page.previous_post.title }}</a>
+            {% endif %}
+            {% if page.next_post %}
+                <a class="button six columns" href="{{ site.url }}{{ page.next_post.url }}" title="{{ page.next_post.title }}">Next &gt; {{ page.next_post.title }}</a>
+            {% endif %}
         </nav>
     {% endif %}
 {% endblock %}

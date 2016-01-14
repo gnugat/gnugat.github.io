@@ -28,4 +28,24 @@ html, body {
     display: block;
 }
 
-
+.button.button-deprecated,
+button.button-deprecated,
+input[type="submit"].button-deprecated,
+input[type="reset"].button-deprecated,
+input[type="button"].button-deprecated {
+  color: #FFF;
+  background-color: #e4b9b9;
+  border-color: #f2dede; }
+.button.button-deprecated:hover,
+button.button-deprecated:hover,
+input[type="submit"].button-deprecated:hover,
+input[type="reset"].button-deprecated:hover,
+input[type="button"].button-deprecated:hover,
+.button.button-deprecated:focus,
+button.button-deprecated:focus,
+input[type="submit"].button-deprecated:focus,
+input[type="reset"].button-deprecated:focus,
+input[type="button"].button-deprecated:focus {
+  color: #FFF;
+  background-color: #f2dede;
+  border-color: #e4b9b9; }

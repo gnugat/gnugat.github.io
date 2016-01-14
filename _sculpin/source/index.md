@@ -12,7 +12,7 @@ use:
         </h3>
         <nav>
             {% for tag in post.meta.tags %}
-            <a class="button" href="{{ site.url }}/tags/{{ tag|url_encode(true) }}">{{ tag }}</a>
+            <a class="button {{ tag == 'deprecated' ? 'button-deprecated' }}" href="{{ site.url }}/tags/{{ tag|url_encode(true) }}">{{ tag }}</a>
             {% endfor %}
         </nav>
     </article>
