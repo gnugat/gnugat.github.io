@@ -1,0 +1,164 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Scuplin &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/01/15/sculpin.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Scuplin
+    <span class="sub-title">15/01/2016</span>
+</h2>
+                            <nav>
+                        <a class="button " href="/tags/introducing%20tool">introducing tool</a>
+                    </nav>
+                </header>
+
+                <p>Previously using <a href="http://carew.github.io/">Carew</a>, the static website generator,
+this blog has now been migrated to <a href="http://sculpin.io">Sculpin</a>.</p>
+
+<p>Both tools are really similar:</p>
+
+<ul>
+<li>they've been written in PHP</li>
+<li>they use both <a href="http://symfony.com">Symfony</a> components and <a href="http://twig.sensiolabs.org/">Twig</a></li>
+<li>they both generate HTML pages from markdown documents</li>
+</ul>
+
+<p>However Sculpin has a better support and its author is a member PHP FIG. Let's
+see how it works</p>
+
+<h2 id="github-pages">Github Pages</h2>
+
+<p>Github provides a service allowing people to host static webistes: <a href="https://pages.github.com/">Pages</a>.
+The idea is simple:</p>
+
+<ol>
+<li>create a reporitory with a name following this pattern: <code>&lt;username&gt;.github.io</code></li>
+<li>commit HTML files at its root and push</li>
+<li>???</li>
+<li>profit</li>
+</ol>
+
+<p>We can create a <code>_sculpin</code> directory at the root of the project, install inside
+it our Sculpin application with the page sources and finally generate the HTML
+files back in the root directory.</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>Installing Scuplin is very easy as a PHAR is provided:</p>
+
+<pre><code>curl -O https://download.sculpin.io/sculpin.phar
+php sculpin.phar install
+php sculpin.phar generate --watch --server
+</code></pre>
+
+<p>The <code>generate</code> command will convert all markdown files into HTML and the <code>--server</code>
+option will launch a local web server alowing us to preview the website in the browser.</p>
+
+<h2 id="writing-articles">Writing articles</h2>
+
+<p>Articles are written in the <code>source/_posts</code> directory and their name must be
+preffixed with their publication date (e.g. <code>2016-01-25-my-article.md</code>).</p>
+
+<p>Every page starts with a front matters:</p>
+
+<pre><code>---
+layout: post
+title: My Article
+tags:
+    - essay
+---
+</code></pre>
+
+<p>The rest of the file is in standard markdown and will constitute the content of
+the page.</p>
+
+<h2 id="publishing">Publishing</h2>
+
+<p>Once happy with the changes, we can generate the final HTML:</p>
+
+<pre><code>php sculpin.phar generate --env=prod
+</code></pre>
+
+<p>The files will be located in <code>output_prod</code>. If we want to use Github Pages as
+described above, we siply need to move those files to the root directory:</p>
+
+<pre><code>cp -r output_prod/* ../
+</code></pre>
+
+<p>Then we simply need to commit all the changes and push.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Sculpin is quite simple to use: write some markdown files and let it generate HTML
+files out of it. It uses Symfony and Twig behind the scene making it really easy
+to extend.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Migrating from carew has been a simple task. In my case it required:</p>
+  
+  <ul>
+  <li>removing all <code>link</code> function usage and use instead markdown links</li>
+  <li>configure <code>permalink</code> to <code>:year/:month/:day/:filename.html</code> in <code>app/config/sculpin_kernel.yml</code> to keep URL backward compatibility</li>
+  </ul>
+</blockquote>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2015/12/23/symfony-micro-framework.html" title="Symfony Micro Framework">Previous &lt; Symfony Micro Framework</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="/about">About</a>
+                <a class="button three columns" href="/">Articles</a>
+                <a class="button three columns" href="/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

@@ -8,8 +8,8 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="//tags/introducing tool"/>
-        <link rel="alternate" type="application/atom+xml" href="/tags/introducing%20tool.xml" title="Loïc Faugeron 'introducing tool' tag feed" />
+    <link rel="canonical" href="/tags/9"/>
+        <link rel="alternate" type="application/atom+xml" href="/tags/deprecated.xml" title="Loïc Faugeron 'deprecated' tag feed" />
     <meta name="robots" content="noindex, follow">
 
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
@@ -30,29 +30,9 @@
 
         <article>
             <header>
-                <h2>"introducing tool" tag</h2>                                            </header>
+                <h2>"deprecated" tag</h2>                                            </header>
 
                     <article>
-        <h3>
-            <a href="/2016/01/15/sculpin.html">Scuplin</a>
-            <span class="sub-title">15/01/2016</span>
-        </h3>
-        <nav>
-                        <a class="button " href="/tags/introducing%20tool">introducing tool</a>
-                    </nav>
-    </article>
-    <article>
-        <h3>
-            <a href="/2014/03/11/phpspec-quick-tour.html">Phpspec: a quick tour</a>
-            <span class="sub-title">11/03/2014</span>
-        </h3>
-        <nav>
-                        <a class="button " href="/tags/Tests%20series">Tests series</a>
-                        <a class="button " href="/tags/introducing%20tool">introducing tool</a>
-                        <a class="button " href="/tags/phpspec">phpspec</a>
-                    </nav>
-    </article>
-    <article>
         <h3>
             <a href="/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html">Bootstrap the markdown files of your foss project</a>
             <span class="sub-title">15/01/2014</span>
@@ -65,11 +45,12 @@
     </article>
     <article>
         <h3>
-            <a href="/2014/01/01/carew-static-site-generator.html">Carew, the static site generator</a>
-            <span class="sub-title">01/01/2014</span>
+            <a href="/2014/01/08/technology-scouting.html">Technology scouting</a>
+            <span class="sub-title">08/01/2014</span>
         </h3>
         <nav>
-                        <a class="button " href="/tags/introducing%20tool">introducing tool</a>
+                        <a class="button " href="/tags/introducing%20methodology">introducing methodology</a>
+                        <a class="button button-deprecated" href="/tags/deprecated">deprecated</a>
                     </nav>
     </article>
 
