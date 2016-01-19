@@ -3,7 +3,10 @@ layout: post
 title: Carew, the static site generator
 tags:
     - introducing tool
+    - deprecated
 ---
+
+> **Deprecated**: This article has been re-written - see [Scuplin](/2016/01/15/sculpin.html)
 
 Frameworks are a real help when building web applications which serve business
 logic. But what about static websites?

@@ -587,3 +587,5 @@ If you're interrested on the subject, here's some resources:
   by [Robert Cecil Martin](https://sites.google.com/site/unclebobconsultingllc/)
 * [Decoupling the Framework](http://kristopherwilson.com/2013/11/27/decoupling-the-framework/),
   by [Kristopher Wilson](https://twitter.com/mrkrstphr)
+
+> **Reference**: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a>

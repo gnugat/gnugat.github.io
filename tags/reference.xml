@@ -1,46 +1,19 @@
-<DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>phpspec &mdash; Loïc Faugeron &mdash; Technical Blog</title>
-    <meta name="description" content="Technical articles about Symfony and TDD">
-    <meta name="author" content="Loïc Faugeron">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <link rel="canonical" href="/2015/08/03/phpspec.html"/>
-        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
-    
-    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
-
-    <link rel="stylesheet" href="/css/normalize.css">
-    <link rel="stylesheet" href="/css/skeleton.css">
-    <link rel="stylesheet" href="/css/dop-dop-dop.css">
-    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
-</head>
-<body>
-    <div class="container">
-        <header class="title">
-            <h1>
-                <a href="/">Loïc Faugeron</a>
-                <span class="sub-title">Technical Blog</span>
-            </h1>
-        </header>
-
-        <article>
-            <header>
-                <h2>
-    phpspec
-    <span class="sub-title">19/01/2016</span>
-</h2>
-                            <nav>
-                                                            <a class="button " href="/tags/introducing%20library">introducing library</a>
-                                                            <a class="button " href="/tags/phpspec">phpspec</a>
-                                                                                        <a class="button button-reference" href="/tags/reference">reference</a>
-                    </nav>
-                </header>
-
-                <blockquote>
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2016-01-19T18:28:28+00:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[phpspec]]></title>
+            <link href="/2015/08/03/phpspec.html"/>
+            <updated>2015-08-03T00:00:00+01:00</updated>
+            <id>/2015/08/03/phpspec.html</id>
+            <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is kept up to date.</p>
 </blockquote>
 
@@ -388,39 +361,6 @@ it to a collaborator you have two choices:</p>
 </ul>
 
 <p>Give it a try!</p>
-
-
-            <footer>
-                            <nav class="row">
-                            <a class="button six columns" href="/2015/08/02/sf-differently-part-3-conclusion.html" title="Symfony Differently - part 3: Conclusion">Previous &lt; Symfony Differently - part 3: Conclusion</a>
-                                        <a class="button six columns" href="/2015/08/04/simple-bus.html" title="Simple Bus">Next &gt; Simple Bus</a>
-                    </nav>
-                    <hr />
-            </footer>
-        </article>
-
-        <footer>
-            <nav class="row">
-                <a class="button three columns" href="/about">About</a>
-                <a class="button three columns" href="/">Articles</a>
-                <a class="button three columns" href="/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
-            </nav>
-        </footer>
-    </div>
-
-    <script src="/js/highlight_9_0_0.min.js"></script>
-    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
-    <script type="text/javascript">
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-47822314-1']);
-        _gaq.push(['_trackPageview']);
-
-        (function() {
-            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-        })();
-    </script>
-</body>
-</html>
+]]></content>
+        </entry>
+    </feed>

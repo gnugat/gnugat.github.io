@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2016-01-15T08:15:03+00:00</updated>
+    <updated>2016-01-19T18:28:28+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -904,6 +904,10 @@ by <a href="https://sites.google.com/site/unclebobconsultingllc/">Robert Cecil M
 <li><a href="http://kristopherwilson.com/2013/11/27/decoupling-the-framework/">Decoupling the Framework</a>,
 by <a href="https://twitter.com/mrkrstphr">Kristopher Wilson</a></li>
 </ul>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
     </feed>

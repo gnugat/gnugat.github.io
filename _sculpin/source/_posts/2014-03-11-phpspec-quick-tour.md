@@ -97,3 +97,5 @@ provides a non verbose API. Even its documentations is complete and small!
 
 I hope you enjoyed this article, be sure to
 [tweet me what you think about it](https://twitter.com/epiloic) ;) .
+
+> **Reference**: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the reference article</a>

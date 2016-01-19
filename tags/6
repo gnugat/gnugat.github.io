@@ -38,9 +38,9 @@
             <span class="sub-title">15/01/2014</span>
         </h3>
         <nav>
-                        <a class="button " href="/tags/introducing%20tool">introducing tool</a>
-                        <a class="button " href="/tags/pet%20project">pet project</a>
-                        <a class="button button-deprecated" href="/tags/deprecated">deprecated</a>
+                                                            <a class="button " href="/tags/introducing%20tool">introducing tool</a>
+                                                            <a class="button " href="/tags/pet%20project">pet project</a>
+                                                                                        <a class="button button-deprecated" href="/tags/deprecated">deprecated</a>
                     </nav>
     </article>
     <article>
@@ -49,8 +49,18 @@
             <span class="sub-title">08/01/2014</span>
         </h3>
         <nav>
-                        <a class="button " href="/tags/introducing%20methodology">introducing methodology</a>
-                        <a class="button button-deprecated" href="/tags/deprecated">deprecated</a>
+                                                            <a class="button " href="/tags/introducing%20methodology">introducing methodology</a>
+                                                                                        <a class="button button-deprecated" href="/tags/deprecated">deprecated</a>
+                    </nav>
+    </article>
+    <article>
+        <h3>
+            <a href="/2014/01/01/carew-static-site-generator.html">Carew, the static site generator</a>
+            <span class="sub-title">01/01/2014</span>
+        </h3>
+        <nav>
+                                                            <a class="button " href="/tags/introducing%20tool">introducing tool</a>
+                                                                                        <a class="button button-deprecated" href="/tags/deprecated">deprecated</a>
                     </nav>
     </article>
 

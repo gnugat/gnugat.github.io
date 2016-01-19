@@ -495,3 +495,5 @@ To get a balanced opinion on the matter, I'd recommend you to read:
 
 * [PSR-7 By Example](https://mwop.net/blog/2015-01-26-psr-7-by-example.html)
 * [PSR-7 is imminent, and here's my issues with it.](http://evertpot.com/psr-7-issues/)
+
+> **Reference**: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a>

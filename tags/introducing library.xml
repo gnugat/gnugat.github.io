@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2016-01-15T08:15:03+00:00</updated>
+    <updated>2016-01-19T18:28:28+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -353,6 +353,10 @@ class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
 <li>it tells you when it thinks you're doing something wrong (typically by making it harder/impossible for you to do it)</li>
 <li>it bootstraps things for you if you follow the TDD workflow (test first, then code)</li>
 </ul>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -1012,7 +1016,11 @@ about CQRS: <a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avo
             <link href="/2015/08/03/phpspec.html"/>
             <updated>2015-08-03T00:00:00+01:00</updated>
             <id>/2015/08/03/phpspec.html</id>
-            <content type="html"><![CDATA[<p><a href="http://www.phpspec.net">phpspec</a> is a highly opinionated unit test framework:
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is kept up to date.</p>
+</blockquote>
+
+<p><a href="http://www.phpspec.net">phpspec</a> is a highly opinionated unit test framework:
 it was conceived to practice <a href="http://dannorth.net/introducing-bdd/">specBDD</a>
 (test method names should be sentences) and
 <a href="http://martinfowler.com/articles/mocksArentStubs.html">Mockist TDD</a>
@@ -1513,6 +1521,10 @@ probably be about using it for collaborators.</p>
 
 <p>Other features that could be implemented would be PHPdoc generation, or avoiding the
 <code>Interface</code> / <code>Abstract</code> suffix/prefix in interface and abstract object argument names.</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -1701,6 +1713,10 @@ typehint interfaces only), the version 0.3 will mainly be about the introduction
 of a new generator: insertion of properties when the method is a constructor.</p>
 
 <p>Stay tuned!</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -2022,6 +2038,10 @@ their specifications.</p>
 
 <p>The next versions will bring even more exciting features, such as constructor and PHPdoc
 generation.</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>

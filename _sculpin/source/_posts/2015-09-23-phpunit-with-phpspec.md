@@ -298,3 +298,5 @@ But then we would lose all the advantages of phpspec:
 * it adds less overhead (this same test runs in ~20ms with phpspec, and ~80ms with PHPUnit)
 * it tells you when it thinks you're doing something wrong (typically by making it harder/impossible for you to do it)
 * it bootstraps things for you if you follow the TDD workflow (test first, then code)
+
+> **Reference**: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a>

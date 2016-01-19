@@ -49,3 +49,25 @@ input[type="button"].button-deprecated:focus {
   color: #FFF;
   background-color: #f2dede;
   border-color: #e4b9b9; }
+
+.button.button-reference,
+button.button-reference,
+input[type="submit"].button-reference,
+input[type="reset"].button-reference,
+input[type="button"].button-reference {
+  color: #FFF;
+  background-color: #5cb85c;
+  border-color: #4cae4c; }
+.button.button-reference:hover,
+button.button-reference:hover,
+input[type="submit"].button-reference:hover,
+input[type="reset"].button-reference:hover,
+input[type="button"].button-reference:hover,
+.button.button-reference:focus,
+button.button-reference:focus,
+input[type="submit"].button-reference:focus,
+input[type="reset"].button-reference:focus,
+input[type="button"].button-reference:focus {
+  color: #FFF;
+  background-color: #4cae4c;
+  border-color: #5cb85c; }

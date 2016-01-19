@@ -305,3 +305,5 @@ their specifications.
 
 The next versions will bring even more exciting features, such as constructor and PHPdoc
 generation.
+
+> **Reference**: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a>

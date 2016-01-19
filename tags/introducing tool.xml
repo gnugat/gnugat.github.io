@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2016-01-15T08:15:03+00:00</updated>
+    <updated>2016-01-19T18:28:28+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -211,6 +211,10 @@ provides a non verbose API. Even its documentations is complete and small!</p>
 
 <p>I hope you enjoyed this article, be sure to
 <a href="https://twitter.com/epiloic">tweet me what you think about it</a> ;) .</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -463,7 +467,11 @@ documentation so everyone can see how awesome your work is!</p>
             <link href="/2014/01/01/carew-static-site-generator.html"/>
             <updated>2014-01-01T00:00:00+00:00</updated>
             <id>/2014/01/01/carew-static-site-generator.html</id>
-            <content type="html"><![CDATA[<p>Frameworks are a real help when building web applications which serve business
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This article has been re-written - see <a href="/2016/01/15/sculpin.html">Scuplin</a></p>
+</blockquote>
+
+<p>Frameworks are a real help when building web applications which serve business
 logic. But what about static websites?</p>
 
 <p>Those only contain pages which could be directly written in HTML. The only

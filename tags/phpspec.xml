@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2016-01-15T08:15:03+00:00</updated>
+    <updated>2016-01-19T18:28:28+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -600,6 +600,10 @@ need to introduce an interface.</p>
 <p>Once again, all projects are different and this solution might not apply in every
 case. If we're building an application that we expect to maintain for a couple of years
 it can be worth it to protect ourselves from external changes.</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -1190,6 +1194,10 @@ by <a href="https://sites.google.com/site/unclebobconsultingllc/">Robert Cecil M
 <li><a href="http://kristopherwilson.com/2013/11/27/decoupling-the-framework/">Decoupling the Framework</a>,
 by <a href="https://twitter.com/mrkrstphr">Kristopher Wilson</a></li>
 </ul>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -1495,6 +1503,10 @@ class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
 <li>it tells you when it thinks you're doing something wrong (typically by making it harder/impossible for you to do it)</li>
 <li>it bootstraps things for you if you follow the TDD workflow (test first, then code)</li>
 </ul>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -1502,7 +1514,11 @@ class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
             <link href="/2015/08/03/phpspec.html"/>
             <updated>2015-08-03T00:00:00+01:00</updated>
             <id>/2015/08/03/phpspec.html</id>
-            <content type="html"><![CDATA[<p><a href="http://www.phpspec.net">phpspec</a> is a highly opinionated unit test framework:
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is kept up to date.</p>
+</blockquote>
+
+<p><a href="http://www.phpspec.net">phpspec</a> is a highly opinionated unit test framework:
 it was conceived to practice <a href="http://dannorth.net/introducing-bdd/">specBDD</a>
 (test method names should be sentences) and
 <a href="http://martinfowler.com/articles/mocksArentStubs.html">Mockist TDD</a>
@@ -2003,6 +2019,10 @@ probably be about using it for collaborators.</p>
 
 <p>Other features that could be implemented would be PHPdoc generation, or avoiding the
 <code>Interface</code> / <code>Abstract</code> suffix/prefix in interface and abstract object argument names.</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -2191,6 +2211,10 @@ typehint interfaces only), the version 0.3 will mainly be about the introduction
 of a new generator: insertion of properties when the method is a constructor.</p>
 
 <p>Stay tuned!</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -2512,6 +2536,10 @@ their specifications.</p>
 
 <p>The next versions will bring even more exciting features, such as constructor and PHPdoc
 generation.</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -2860,6 +2888,10 @@ What happens when we try to create a profile which already exists?</p>
 Symfony environment. There's a lot more to say for example about caching remote resources
 in a local database, about self discovering APIs and about micro services, but I feel
 those should each have their own series of article :) .</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -3366,6 +3398,10 @@ really need.</p>
 <li><a href="https://mwop.net/blog/2015-01-26-psr-7-by-example.html">PSR-7 By Example</a></li>
 <li><a href="http://evertpot.com/psr-7-issues/">PSR-7 is imminent, and here's my issues with it.</a></li>
 </ul>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -3778,6 +3814,10 @@ git commit -m 'Added body to Response'
 to avoid coupling with Guzzle. In the <a href="/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">next article</a>,
 we'll talk about middleware and start to create some RequestHandler
 implementations (yes, more than one!).</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -4379,6 +4419,10 @@ who'd like to practice:</p>
 <li>we could create a CommandBus that always validate the Command using Symfony's validation component</li>
 <li>we can create our own DomainException to avoid catching ones that could be thrown by third party libraries</li>
 </ul>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -5048,6 +5092,10 @@ to prevent our application from becoming a <a href="https://speakerdeck.com/rich
 where everything is hard to read, impossible to test and expensive to change.</p>
 
 <p>This will the subject of <a href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html">the next article</a>.</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -5157,6 +5205,10 @@ provides a non verbose API. Even its documentations is complete and small!</p>
 
 <p>I hope you enjoyed this article, be sure to
 <a href="https://twitter.com/epiloic">tweet me what you think about it</a> ;) .</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
     </feed>

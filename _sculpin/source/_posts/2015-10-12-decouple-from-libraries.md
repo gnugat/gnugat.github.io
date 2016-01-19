@@ -601,3 +601,5 @@ need to introduce an interface.
 Once again, all projects are different and this solution might not apply in every
 case. If we're building an application that we expect to maintain for a couple of years
 it can be worth it to protect ourselves from external changes.
+
+> **Reference**: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a>

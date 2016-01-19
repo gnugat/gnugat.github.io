@@ -397,3 +397,5 @@ We've bootstrapped an application, and created a RequestHandler which will help 
 to avoid coupling with Guzzle. In the [next article](/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html),
 we'll talk about middleware and start to create some RequestHandler
 implementations (yes, more than one!).
+
+> **Reference**: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a>

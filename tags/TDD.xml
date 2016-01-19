@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2016-01-15T08:15:03+00:00</updated>
+    <updated>2016-01-19T18:28:28+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -311,6 +311,10 @@ class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
 <li>it tells you when it thinks you're doing something wrong (typically by making it harder/impossible for you to do it)</li>
 <li>it bootstraps things for you if you follow the TDD workflow (test first, then code)</li>
 </ul>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>

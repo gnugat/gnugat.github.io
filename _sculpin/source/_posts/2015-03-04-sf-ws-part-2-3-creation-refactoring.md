@@ -584,3 +584,5 @@ who'd like to practice:
 * we could use Symfony's validation component (use `validator` in the CommandHandler and set annotations in the Command)
 * we could create a CommandBus that always validate the Command using Symfony's validation component
 * we can create our own DomainException to avoid catching ones that could be thrown by third party libraries
+
+> **Reference**: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a>

@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2016-01-15T08:15:03+00:00</updated>
+    <updated>2016-01-19T18:28:28+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -723,6 +723,10 @@ provides a non verbose API. Even its documentations is complete and small!</p>
 
 <p>I hope you enjoyed this article, be sure to
 <a href="https://twitter.com/epiloic">tweet me what you think about it</a> ;) .</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>

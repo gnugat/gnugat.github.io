@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2016-01-15T08:15:03+00:00</updated>
+    <updated>2016-01-19T18:28:28+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -354,6 +354,10 @@ What happens when we try to create a profile which already exists?</p>
 Symfony environment. There's a lot more to say for example about caching remote resources
 in a local database, about self discovering APIs and about micro services, but I feel
 those should each have their own series of article :) .</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -860,6 +864,10 @@ really need.</p>
 <li><a href="https://mwop.net/blog/2015-01-26-psr-7-by-example.html">PSR-7 By Example</a></li>
 <li><a href="http://evertpot.com/psr-7-issues/">PSR-7 is imminent, and here's my issues with it.</a></li>
 </ul>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -1272,6 +1280,10 @@ git commit -m 'Added body to Response'
 to avoid coupling with Guzzle. In the <a href="/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html">next article</a>,
 we'll talk about middleware and start to create some RequestHandler
 implementations (yes, more than one!).</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -1873,6 +1885,10 @@ who'd like to practice:</p>
 <li>we could create a CommandBus that always validate the Command using Symfony's validation component</li>
 <li>we can create our own DomainException to avoid catching ones that could be thrown by third party libraries</li>
 </ul>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
@@ -2542,6 +2558,10 @@ to prevent our application from becoming a <a href="https://speakerdeck.com/rich
 where everything is hard to read, impossible to test and expensive to change.</p>
 
 <p>This will the subject of <a href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html">the next article</a>.</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
