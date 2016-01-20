@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc></loc>
-    <lastmod>2016-01-19T18:28:28+00:00</lastmod>
+    <lastmod>2016-01-20T07:52:37+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>/about</loc>
-    <lastmod>2016-01-19T18:28:28+00:00</lastmod>
+    <lastmod>2016-01-20T07:52:37+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>/2016/01/20/couscous.html</loc>
+    <lastmod>2016-01-20T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/01/15/sculpin.html</loc>

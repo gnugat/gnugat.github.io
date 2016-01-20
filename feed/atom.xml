@@ -3,11 +3,103 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2016-01-19T18:28:28+00:00</updated>
+    <updated>2016-01-20T07:52:37+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Couscous]]></title>
+            <link href="/2016/01/20/couscous.html"/>
+            <updated>2016-01-20T00:00:00+00:00</updated>
+            <id>/2016/01/20/couscous.html</id>
+            <content type="html"><![CDATA[<p><a href="http://couscous.io">Couscous</a> is a static site generator tool for your Github projects,
+converting all markdown files into an online documentation hosted by
+<a href="https://pages.github.com/">Github Pages</a>.</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>The first step is to get the tool:</p>
+
+<pre><code>curl -OS http://couscous.io/couscous.phar
+sudo mv ./couscous.phar /usr/loal/bin/couscous
+</code></pre>
+
+<p>Then we need to create a <code>couscous.yml</code> file at the root of our Github Project:</p>
+
+<pre><code>template:
+    url: https://github.com/CouscousPHP/Template-Light.git
+
+baseUrl: http://&lt;user-name&gt;.github.io/&lt;project-name&gt;
+
+title: &lt;project-title&gt;
+subTitle: &lt;project-short-decription&gt;
+
+github:
+    user: &lt;user-name&gt;
+    repo: &lt;project-name&gt;
+
+menu:
+    items:
+        home:
+            text: Home
+            relativeUrl:
+
+        &lt;article-name&gt;:
+            text: &lt;article-title&gt;
+            relativeUrl: &lt;article-filename&gt;.html
+</code></pre>
+
+<p>Of course <code>&lt;user-name&gt;</code>, <code>&lt;project-name&gt;</code>, <code>&lt;project-title&gt;</code>, <code>&lt;project-short-decription&gt;</code>,
+<code>&lt;article-name&gt;</code>, <code>article-title</code> and <code>article-filename</code> need to be replaced accordingly.</p>
+
+<h2 id="generating-the-documentation">Generating the Documentation</h2>
+
+<p>Couscous is going to automatically use <code>*.md</code> files found in the project (e.g. <code>README.md</code>).</p>
+
+<p>The <code>menu</code> section in <code>couscous.yml</code> will generate a handy menu. Usually <code>home</code>
+as well as the rest of the documentation is listed here, for example:</p>
+
+<pre><code>menu:
+    items:
+        home:
+            text: Home
+            relativeUrl:
+
+        installation:
+            text: Installation
+            relativeUrl: doc/01-installation.html
+
+        compatibility:
+            text: Compatibility
+            relativeUrl: doc/02-compatibility.html
+
+        benchmark:
+            text: Benchmark
+            relativeUrl: doc/03-benchmark.html
+</code></pre>
+
+<p>To generate the documentation, simply run:</p>
+
+<pre><code>couscous preview
+</code></pre>
+
+<p>This will launch a local server, allowing us to preview the documentation at <code>http://localhost:8000</code>.</p>
+
+<p>Once satisfied, we can run:</p>
+
+<pre><code>couscous deploy
+</code></pre>
+
+<p>This will generate the definitive HTML, commit them in a <code>gh-page</code> branch and push
+it, making it available online.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Couscous provides the possibility to host nice documentation for Github projects,
+thanks to its simplicity.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Scuplin]]></title>
             <link href="/2016/01/15/sculpin.html"/>
