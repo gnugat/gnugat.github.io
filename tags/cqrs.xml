@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="/feed/atom.xml" rel="self"/>
-    <link href="/"/>
-    <updated>2016-01-20T07:52:37+00:00</updated>
+    <title><![CDATA[]]></title>
+    <link href="http://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="http://gnugat.github.io/"/>
+    <updated>2016-01-21T09:09:04+00:00</updated>
     <id>http://gnugat.github.com</id>
-            <author>
-            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Command/Query Responsibility Segregation]]></title>
-            <link href="/2015/08/25/cqrs.html"/>
+            <link href="http://gnugat.github.io/2015/08/25/cqrs.html"/>
             <updated>2015-08-25T00:00:00+01:00</updated>
-            <id>/2015/08/25/cqrs.html</id>
+            <id>http://gnugat.github.io/2015/08/25/cqrs.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: CQRS is about not mixing "read" and "write" logic. You can use patterns
   like a Repostiory / Search Engine and Command Bus to help you achieve this.</p>

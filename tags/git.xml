@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="/feed/atom.xml" rel="self"/>
-    <link href="/"/>
-    <updated>2016-01-20T07:52:37+00:00</updated>
+    <title><![CDATA[]]></title>
+    <link href="http://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="http://gnugat.github.io/"/>
+    <updated>2016-01-21T09:09:04+00:00</updated>
     <id>http://gnugat.github.com</id>
-            <author>
-            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Keep It Simple and Git]]></title>
-            <link href="/2014/12/10/keep-it-simple-and-git.html"/>
+            <link href="http://gnugat.github.io/2014/12/10/keep-it-simple-and-git.html"/>
             <updated>2014-12-10T00:00:00+00:00</updated>
-            <id>/2014/12/10/keep-it-simple-and-git.html</id>
+            <id>http://gnugat.github.io/2014/12/10/keep-it-simple-and-git.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Branch only from master, merge back when done and immediately deploy.</p>
 </blockquote>

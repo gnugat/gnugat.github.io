@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="/feed/atom.xml" rel="self"/>
-    <link href="/"/>
-    <updated>2016-01-20T07:52:37+00:00</updated>
+    <title><![CDATA[]]></title>
+    <link href="http://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="http://gnugat.github.io/"/>
+    <updated>2016-01-21T09:09:04+00:00</updated>
     <id>http://gnugat.github.com</id>
-            <author>
-            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[PHPUnit with phpspec]]></title>
-            <link href="/2015/09/23/phpunit-with-phpspec.html"/>
+            <link href="http://gnugat.github.io/2015/09/23/phpunit-with-phpspec.html"/>
             <updated>2015-09-23T00:00:00+01:00</updated>
-            <id>/2015/09/23/phpunit-with-phpspec.html</id>
+            <id>http://gnugat.github.io/2015/09/23/phpunit-with-phpspec.html</id>
             <content type="html"><![CDATA[<p><a href="https://phpunit.de/">PHPUnit</a> is a port of <a href="http://junit.org/">jUnit</a>, its name
 might be deceptive: it allows you to write any type of tests (unit, but also functional,
 system, integration, end to end, acceptance, etc).</p>
@@ -319,9 +317,9 @@ class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
         </entry>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 2: Test Driven Development]]></title>
-            <link href="/2014/08/13/master-sf2-part-2-tdd.html"/>
+            <link href="http://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html"/>
             <updated>2014-08-13T00:00:00+01:00</updated>
-            <id>/2014/08/13/master-sf2-part-2-tdd.html</id>
+            <id>http://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html</id>
             <content type="html"><![CDATA[<p>This is the second article of the series on mastering the
 <a href="http://symfony.com/">Symfony2</a> framework. Have a look at the first one:
 <a href="/2014/08/05/master-sf2-part-1-bootstraping.html">Bootstraping</a>.</p>
