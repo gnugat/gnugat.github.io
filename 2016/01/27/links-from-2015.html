@@ -1,0 +1,407 @@
+<DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Links from 2015 &mdash;  &mdash; </title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/01/27/links-from-2015.html"/>
+        <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title=""/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="http://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="http://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="http://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="http://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="http://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Links from 2015
+    <span class="sub-title">27/01/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="http://gnugat.github.io/tags/radar">radar</a>
+                                                            <a class="button " href="http://gnugat.github.io/tags/symfony">symfony</a>
+                    </nav>
+                </header>
+
+                <blockquote>
+  <p><strong>TL;DR</strong>: Links I tweeted during 2015</p>
+</blockquote>
+
+<p>It's funny how old principles are still useful today. In 2015, the most important
+ones I've learned are the following:</p>
+
+<ul>
+<li>Command/Query Responsibility Segregation (CQRS): separate the "read" logic from
+the "write" logic</li>
+<li>Event Sourcing (ES): recording every action done for analytics and rollback
+purpose</li>
+<li>Command Bus: store and validate input in a Command object, pass it to a
+Command Bus middleware that will find and execute the appropriate
+Command Handler which will execture the logic</li>
+<li>Framework / Library agnosticism: decouple from vendors to be able to
+change/upgrade them without friction</li>
+<li>microservices: reduce the scope of an API, organize them into a communicating network</li>
+<li>Monolithic Repository: store related applications in the same git repository</li>
+</ul>
+
+<p>It was a year full of links, so here they are!</p>
+
+<h2 id="articles-highlight">Articles Highlight</h2>
+
+<ul>
+<li><a href="http://blog.confluent.io/2015/05/27/using-logs-to-build-a-solid-data-infrastructure-or-why-dual-writes-are-a-bad-idea/">Using logs to build a solid data infrastructure, or why dual writes are a bad idea</a></li>
+<li><a href="https://codeascraft.com/2015/07/29/targeting-broad-queries-in-search/">Targeting broad queries in search</a></li>
+</ul>
+
+<h2 id="tools-highlight">Tools Highlight</h2>
+
+<ul>
+<li><a href="http://docs.puli.io/en/latest/">Puli</a>:
+
+<ul>
+<li><a href="http://webmozarts.com/2015/01/12/puli-1-0-beta-released/">1.0-beta release</a></li>
+<li>Slides: <a href="https://speakerdeck.com/webmozart/puli-phps-next-package-revolution">Pulis, PHP next package revolution</a></li>
+<li><a href="http://webmozarts.com/2015/01/14/resource-discovery-with-puli/">Resource discovery</a></li>
+<li><a href="http://webmozarts.com/2015/03/20/managing-web-resources-with-puli/">Managing web resources</a></li>
+</ul></li>
+<li>Refactoring Browser:
+
+<ul>
+<li><a href="http://martinfowler.com/articles/refactoringRubicon.html">Refactoring Rubicon</a></li>
+<li><a href="https://github.com/QafooLabs/php-refactoring-browser">Qafoo PHP RefactoringBrowser</a></li>
+</ul></li>
+<li><a href="https://github.com/padraic/humbug">Humbug</a>:
+
+<ul>
+<li><a href="http://blog.astrumfutura.com/2015/01/lies-damned-lies-and-code-coverage-towards-mutation-testing/">Code Coverage lies, toward mutation testing</a></li>
+<li><a href="http://blog.astrumfutura.com/2015/04/introduction-to-humbug-a-mutation-testing-framework-for-php/">Introduction to Humbug, a mutation testing framework for PHP</a></li>
+<li><a href="http://davedevelopment.co.uk/2015/01/07/probing-test-suite-quality-with-mutation-testing.html">Probing test suite quality with mutation testing</a></li>
+</ul></li>
+<li><a href="https://tactician.thephpleague.com/">Tactician, the PHP Command Bus</a>:
+
+<ul>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/a-wave-of-command-buses/">A wave of Command Buses</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/responsibilities-of-the-command-bus/">Responsibilities of the Command Bus</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/from-commands-to-events/">From Commands to Events</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/some-questions-about-the-command-bus/">Command Bus FAQ</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/collecting-events-and-the-events-aware-command-bus/">Collecting events and the EventsAware Command Bus</a></li>
+<li><a href="http://verraes.net/2015/01/messaging-flavours/">Messaging Flavours</a></li>
+<li><a href="http://verraes.net/2015/02/form-command-model-validation/">Form Command model validation</a></li>
+<li><a href="http://boldradius.com/blog-post/VSQCySkAACcA4k5J/easy-scalability-with-akka">CQRS vs CRUD performances and scalability</a></li>
+</ul></li>
+<li><a href="http://lnav.org/">The log file navigator</a></li>
+<li><a href="https://github.com/ramsey/uuid">UUID</a>:
+
+<ul>
+<li><a href="https://philsturgeon.uk/http/2015/09/03/auto-incrementing-to-destruction/">auto incrementing to destruction</a></li>
+<li><a href="https://www.clever-cloud.com/blog/engineering/2015/05/20/Why-Auto-Increment-Is-A-Terrible-Idea">Why auto incrementing is a terrible idea</a></li>
+</ul></li>
+<li>Pomm:
+
+<ul>
+<li><a href="http://www.pomm-project.org/news/pomm-2-0-0-is-out.html">Pomm 2.0 is out</a></li>
+<li><a href="http://www.pomm-project.org/news/a-short-focus-on-pomm-s-foundation.html">A short focus on Pomm Foundation</a></li>
+</ul></li>
+</ul>
+
+<h2 id="interesting-talks">Interesting Talks</h2>
+
+<ul>
+<li>Monolithic Repository:
+
+<ul>
+<li><a href="https://qafoo.com/talks/15_08_froscon_monorepos.pdf">Monolithic Repository</a></li>
+<li><a href="http://www.slideshare.net/StenHiedel/symfony-uk-meetup-21-may">How to manage multiple Composer packages within a single respository</a></li>
+<li>see also article: <a href="http://sroze.io/2015/09/14/managing-monolith-repositories-with-composers-path-repository/">Managing monolith repositories with composers path repository</a></li>
+</ul></li>
+<li>Doctrine:
+
+<ul>
+<li><a href="https://qafoo.com/talks/15_09_symfony_live_london_doctrine2_to_use_or_not_to_use.pdf">Doctrine: to use or not to use</a></li>
+<li><a href="http://ocramius.github.io/blog/doctrine-orm-optimization-hydration/">Doctrine ORM optimization hydration</a></li>
+</ul></li>
+<li>PHP Interoperability:
+
+<ul>
+<li><a href="https://speakerdeck.com/michaelcullum/php-fig-the-psrs-you-dont-know-about">PHP FIG, the PSRs you do not know about</a></li>
+<li><a href="http://mnapoli.fr/presentations/psr-0-12/">PSR 0 to 12</a></li>
+<li><a href="http://talks.ppi.io/20150513-phpsw">The PHP Interoperability Framework</a></li>
+</ul></li>
+<li>Desgin:
+
+<ul>
+<li><a href="http://www.slideshare.net/mobile/CiaranMcNulty/why-your-test-suite-sucks">Why your test suite sucks</a></li>
+<li><a href="https://speakerdeck.com/jakzal/embracing-change">Embracing change</a></li>
+<li><a href="http://www.slideshare.net/mobile/CiaranMcNulty/driving-design-through-examples">Driving design through examples</a></li>
+<li><a href="http://www.slideshare.net/NicolPignatelli/brownfield-domain-driven-design-48240538">Brownfield Domain Driven Desgin</a></li>
+<li><a href="http://www.slideshare.net/matthiasnoback/the-quest-for-global-design-principles">The quest for global design principles</a></li>
+<li><a href="http://www.slideshare.net/matthiasnoback/hexagonal-architecture-messageoriented-software-design">Hexagonal architecture, message oriented software design</a></li>
+<li><a href="http://moquet.net/talks/phptour-2015">CQRS and Event Sourcing</a></li>
+</ul></li>
+<li><a href="https://speakerdeck.com/odolbeau/symfony2-killed-me">Symfony killed me</a></li>
+<li><a href="https://speakerdeck.com/odolbeau/logs-hunting">Logs hunting</a></li>
+<li><a href="http://www.slideshare.net/cakper/2014-0821-symfony-uk-meetup-scaling-symfony2-apps-with-rabbit-mq">Scaling Symofny apps with RabbitMq</a></li>
+<li><a href="http://andrewcarteruk.github.io/slides/breaking-boundaries-with-fastcgi-symfony/#/">Breaking boundaries with FastCGI Symfony</a></li>
+<li>in french: <a href="https://speakerdeck.com/lyrixx/symfony-live-2015-paris-monitorer-sa-prod">Monitorer sa prod</a></li>
+</ul>
+
+<h2 id="tests%3A">Tests:</h2>
+
+<ul>
+<li>Test Driven Desing (TDD):
+
+<ul>
+<li><a href="http://codurance.com/2015/05/12/does-tdd-lead-to-good-design/">Does TDD lead to good design?</a></li>
+<li><a href="https://medium.com/@davidihunt/tdd-and-complexity-1bbd5ca51ee7">TDD and complexity</a></li>
+</ul></li>
+<li><a href="http://verraes.net/2015/01/economy-of-tests/">Economy of tests</a></li>
+<li><a href="http://blog.8thlight.com/dariusz-pasciak/2015/01/12/your-test-suite-is-useless.html">Your test suite is useless</a></li>
+<li><a href="https://sites.google.com/site/unclebobconsultingllc/specs-vs-tests">Specs VS Tests</a></li>
+<li><a href="http://googletesting.blogspot.co.uk/2015/04/just-say-no-to-more-end-to-end-tests.html">Just say no to more end to end tests</a></li>
+<li><a href="http://elnur.pro/testing-is-not-a-choice/">Testing is not a choice</a></li>
+<li><a href="http://tech.mybuilder.com/coupling-tests/">Coupling tests</a></li>
+<li><a href="https://developer.atlassian.com/blog/2015/05/open-letter-from-an-ignored-test/">Open letter from an ignored test</a></li>
+<li><a href="https://cucumber.io/blog/2015/03/24/single-source-of-truth">Single source of truth</a></li>
+<li><a href="http://dannorth.net/introducing-bdd/">Introducing BDD</a></li>
+<li><a href="http://martinfowler.com/articles/nonDeterminism.html">Eradicating Non-Determinism in Tests</a></li>
+</ul>
+
+<h2 id="php-interoperability">PHP Interoperability</h2>
+
+<ul>
+<li>PSR 7:
+
+<ul>
+<li><a href="https://mwop.net/blog/2015-01-08-on-http-middleware-and-psr-7.html">On HTTP middleware and PSR 7</a></li>
+<li><a href="https://mwop.net/blog/2015-01-26-psr-7-by-example.html">PSR 7 by example</a></li>
+<li><a href="http://srcmvn.com/blog/2015/02/18/psr-7-and-the-future-of-php/">PSR 7 and the future of PHP</a></li>
+<li><a href="http://evertpot.com/psr-7-issues/">PSR 7 issues</a></li>
+<li><a href="http://symfony.com/blog/psr-7-support-in-symfony-is-here">PSR 7 support in Symfony is here</a></li>
+<li><a href="http://dunglas.fr/2015/06/using-psr-7-in-symfony">Using PSR 7 in Symfony</a></li>
+<li><a href="http://blog.madewithlove.be/post/http-client-for-sdks/">HTTP client for SDKs</a></li>
+</ul></li>
+<li><a href="http://mouf-php.com/psr7-container-interop-equals-cross-framework-module-system">PSR 7 Container Interop = cross framework module system</a></li>
+<li><a href="http://mouf-php.com/psr-11-use-cases">PSR 11 use cases</a></li>
+<li><a href="http://www.thecodingmachine.com/psr-11-performance-impact-of-the-delegate-lookup-feature/">PSR 11, performance impact of the delegate look-up feature</a></li>
+<li><a href="http://blog.phpdeveloper.org/2015/05/22/php-security-psr-9psr-10/">PHP Security PSR 9 and 10</a></li>
+<li><a href="https://www.acquia.com/blog/psr-what-shared-standards-bright-future">PSR-What? Shared Standards for a Bright Future</a></li>
+</ul>
+
+<h2 id="pet-projects">Pet projects</h2>
+
+<ul>
+<li><a href="https://github.com/gnugat/redaktilo/releases/tag/v1.7.0">Reaktilo 1.7</a></li>
+<li><a href="https://gist.github.com/gnugat/492a192f9f57c00098b1">Stack middleware to rollback database transactions</a></li>
+<li><a href="http://memio.github.io/memio/">Memio</a>:
+
+<ul>
+<li><a href="https://github.com/ciaranmcnulty/phpspec-typehintedmethods">its origin</a></li>
+<li><a href="https://github.com/memio/spec-gen">SpecGen</a></li>
+</ul></li>
+<li>Symfony Micro Framework:
+
+<ul>
+<li><a href="https://github.com/gnugat/symfony-empty-edition">Symfony Empty Edition</a></li>
+<li><a href="https://github.com/gnugat/micro-framework-bundle">MicroFrameworkBundle</a></li>
+</ul></li>
+</ul>
+
+<h2 id="design-patterns">Design Patterns</h2>
+
+<ul>
+<li><a href="http://shawnmc.cool/the-repository-pattern">The Repository pattern</a></li>
+<li><a href="http://enterprisecraftsmanship.com/2015/04/13/dto-vs-value-object-vs-poco">DTO vs Value Object vs POCO</a></li>
+<li><a href="http://engineering.peertransfer.com/blog/decoupling-logic-architecture-repositories">Decoupling architecture and domain with repositories</a></li>
+<li><a href="http://rob.conery.io/2014/03/04/repositories-and-unitofwork-are-not-a-good-idea/">Repositories On Top UnitOfWork Are Not a Good Idea</a></li>
+</ul>
+
+<h2 id="microservice">microservice</h2>
+
+<ul>
+<li><a href="http://martinfowler.com/bliki/MicroservicePremium.html">Microservice Premium</a></li>
+<li><a href="http://martinfowler.com/bliki/MonolithFirst.html">Monolith First</a></li>
+<li><a href="http://martinfowler.com/articles/dont-start-monolith.html">Don't start with a monolith</a></li>
+<li><a href="http://capgemini.github.io/architecture/is-rest-best-microservices">Is REST best microservices</a></li>
+<li><a href="http://martinfowler.com/articles/microservice-trade-offs.html">Microservices trade offs</a></li>
+<li><a href="http://blog.christianposta.com/microservices/youre-not-going-to-do-microservices/">You're not going to do microservices</a></li>
+</ul>
+
+<h2 id="refactoring">Refactoring</h2>
+
+<ul>
+<li><a href="http://martinfowler.com/articles/refactoring-external-service.html">Refactoring external service</a></li>
+<li>Refactoring the cat API client:
+
+<ul>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/07/refactoring-the-cat-api-client-part-1/">part 1</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/07/refactoring-the-cat-api-client-part-2/">part 2</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/2015/07/refactoring-the-cat-api-client-part-3/">part 3</a></li>
+</ul></li>
+</ul>
+
+<h2 id="keep-it-simple">Keep it Simple</h2>
+
+<ul>
+<li><a href="http://97things.oreilly.com/wiki/index.php/Simplicity_before_generality,_use_before_reuse">Simplicity before generality, use before reuse</a></li>
+<li><a href="http://blog.ircmaxell.com/2015/03/thoughts-on-design-of-apis.html">Thoughts on design of APIs</a></li>
+<li><a href="http://verraes.net/2014/08/dry-is-about-knowledge/">DRY is about knowledge</a></li>
+</ul>
+
+<h2 id="oop">OOP</h2>
+
+<ul>
+<li><a href="https://www.thoughtworks.com/insights/blog/composition-vs-inheritance-how-choose">Composition VS inheritance, how to choose</a></li>
+<li><a href="http://userpage.fu-berlin.de/~ram/pub/pub_jf47ht81Ht/doc_kay_oop_en">The meaning of Object Oriented Programming</a></li>
+</ul>
+
+<h2 id="git">Git</h2>
+
+<ul>
+<li><a href="https://akrabat.com/the-beginners-guide-to-rebasing-your-pr/">The beginners guide to rebasing your PR</a></li>
+<li><a href="http://jeffkreeftmeijer.com/2010/the-magical-and-not-harmful-rebase/">The magical and not harmful rebase</a></li>
+<li><a href="http://blog.rjkip.nl/2015/08/28/gits-interactive-patch-mode/">Git's interractive patch mode</a></li>
+<li><a href="http://blog.8thlight.com/makis-otman/2015/07/08/git-disciplined.html">Git disciplined</a></li>
+<li><a href="http://zachholman.com/posts/git-commit-history/">Utter Disregard for Git Commit History</a></li>
+</ul>
+
+<h2 id="security">Security</h2>
+
+<ul>
+<li><a href="http://www.antirez.com/news/96">A few things about Redis security</a></li>
+<li><a href="http://blog.slaks.net/2015-10-13/web-authentication-arms-race-a-tale-of-two-security-experts/">The Web Authentication Arms Race – A Tale of Two Security Experts</a></li>
+<li><a href="https://paragonie.com/blog/2015/04/secure-authentication-php-with-long-term-persistence">Secure authentication PHP with long term persistence</a></li>
+</ul>
+
+<h2 id="postgresql">PostgreSQL</h2>
+
+<ul>
+<li>What PostgreSQL has over other Open Source SQL databases:
+
+<ul>
+<li><a href="https://www.compose.io/articles/what-postgresql-has-over-other-open-source-sql-databases/">part 1</a></li>
+<li><a href="https://www.compose.io/articles/what-postgresql-has-over-other-open-source-sql-databases-part-ii/">part 2</a></li>
+</ul></li>
+<li><a href="http://rob.conery.io/2014/05/29/a-better-id-generator-for-postgresql/">A better ID generator for PostgreSQL</a></li>
+<li><a href="http://hashrocket.com/blog/posts/faster-json-generation-with-postgresql">Faster JSON generation with PostgreSQL</a></li>
+<li><a href="http://developer.olery.com/blog/goodbye-mongodb-hello-postgresql/">Goodbye MongoDB, hello PostgreSQL</a></li>
+</ul>
+
+<h2 id="rest">REST</h2>
+
+<ul>
+<li><a href="http://www.nurkiewicz.com/2015/07/restful-considered-harmful.html">RESTful considered harmful</a></li>
+<li><a href="http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api">Best practices for a pragmatic RESTful API</a></li>
+</ul>
+
+<h2 id="performance">Performance</h2>
+
+<ul>
+<li><a href="https://tideways.io/profiler/blog/5-doctrine-orm-performance-traps-you-should-avoid">5 Doctrine ORM performance traps you should avoid</a></li>
+<li><a href="https://tideways.io/profiler/blog/essential-macro-optimizations-to-improve-php-performance">Essential macro optimizations to improve PHP performance</a></li>
+<li><a href="https://tideways.io/profiler/blog/5-ways-to-optimize-symfony-baseline-performance">5 ways to optimize Symfony baseline performance</a></li>
+<li><a href="http://marcjschmidt.de/blog/2014/02/08/php-high-performance.html">PHP high performance</a></li>
+<li><a href="http://phpfastcgi.github.io/general/2015/11/04/introducing-phpfastcgi.html">Intproducting PHP FastCGI</a></li>
+<li><a href="http://blog.kevingomez.fr/til/2015/07/26/why-is-uniqid-slow/">Why is uniqid slow?</a></li>
+</ul>
+
+<h2 id="agile">Agile</h2>
+
+<ul>
+<li><a href="http://jelrik.me/blog/2015/10/17/transform-your-standup/">Transform your stand up</a></li>
+<li><a href="http://blog.8thlight.com/malcolm-newsome/2015/01/15/they-wont-be-interested.html">They won't be interrested</a></li>
+<li><a href="http://blog.cleancoder.com/uncle-bob/2015/04/15/DoesOrganizationMatter.html">Does organization matter</a></li>
+<li><a href="http://benjiweber.co.uk/blog/2015/04/17/modern-extreme-programming/">Modern extreme programming</a></li>
+<li><a href="http://frankneff.ch/business/2015/04/21/if-pragmatism-raises-technical-debt-call-it-oversimplification/">If pragmatism raises technical debt, call it over simplification</a></li>
+<li><a href="http://www.mountaingoatsoftware.com/blog/dont-blindly-follow">Don't blindly follow</a></li>
+<li><a href="http://mattbriggs.net/blog/2015/06/01/the-role-of-a-senior-developer/">The role of a senior developer</a></li>
+<li><a href="http://blog.toolshed.com/2015/05/the-failure-of-agile.html">The failure of agile</a></li>
+<li><a href="http://mikehadlow.blogspot.fr/2014/06/heisenberg-developers.html">Heisenberg developers</a></li>
+</ul>
+
+<h2 id="ddd">DDD</h2>
+
+<ul>
+<li><a href="http://weronikalabaj.com/to-ddd-or-not-to-ddd-what-to-do-if-your-domain-is-boring/">To DDD or not to DDD, what to do if your domain is boring</a></li>
+<li><a href="https://lostechies.com/gabrielschenker/2015/04/16/ddd-revisited/">DDD revisited</a></li>
+<li><a href="http://codebetter.com/iancooper/2011/07/15/why-crud-might-be-what-they-want-but-may-not-be-what-they-need/">Why CRUD might be what they want but not what they need</a></li>
+</ul>
+
+<h2 id="symfony">Symfony</h2>
+
+<ul>
+<li><a href="http://jolicode.com/blog/do-not-use-fosuserbundle">Do not use FOSUserBundle</a></li>
+<li><a href="http://mmoreram.github.io/blog/2015/08/20/re-thinking-event-listeners/">Re-thinking event listeners</a></li>
+<li><a href="http://thorpesystems.com/blog/tagging-symfony-services">Tagging Symfony services</a></li>
+<li><a href="https://www.pmg.com/blog/symfony-from-scratch/">Symfony from scratch</a></li>
+<li><a href="http://programmingarehard.com/2015/03/04/structing-my-application.html">Structuring my application</a></li>
+<li><a href="http://mmoreram.com/blog/2015/11/20/your-packages-dependencies/">Your package dependencies</a></li>
+</ul>
+
+<h2 id="misc">Misc</h2>
+
+<ul>
+<li><a href="http://kukuruku.co/hub/programming/do-not-learn-frameworks-learn-the-architecture">Do not learn frameworks, lean the architecture</a></li>
+<li><a href="http://blog.8thlight.com/uncle-bob/2015/08/06/let-the-magic-die.html">Let the magic die</a></li>
+<li><a href="http://www.levelofindirection.com/journal/2015/5/1/naming-is-hard-or-is-it.html">Naming is hard, or is it?</a></li>
+<li><a href="http://www.freeklijten.nl/home/2015/06/24/Setter-anxiety">Setter anxiety</a></li>
+<li><a href="http://blog.codinghorror.com/doing-terrible-things-to-your-code/">Doing terrible things to your code</a></li>
+<li><a href="http://www.stilldrinking.org/programming-sucks">Programming sucks</a></li>
+<li><a href="http://evertpot.com/switching-to-generators/">Switching to generators</a></li>
+<li><a href="http://www.vertabelo.com/blog/technical-articles/orms-under-the-hood">ORMs under the hood</a></li>
+<li><a href="http://blog.pivotal.io/pivotal-labs/labs/hexagonal-rails-and-the-ludicrous-terminal-application">Hexagonal</a></li>
+<li><a href="http://burnout.io/">Burnout</a></li>
+<li><a href="http://rosstuck.com/formatting-exception-messages/">Formatting exception messages</a></li>
+<li><a href="http://mnapoli.fr/approaching-coding-style-rationally/">Approaching coding style rationally</a></li>
+<li><a href="http://blog.frankdejonge.nl/pipelines-immutability-and-privates/">Pipelines, imutability and privates</a></li>
+</ul>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="http://gnugat.github.io/2016/01/20/couscous.html" title="Couscous">Previous &lt; Couscous</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="http://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="http://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="http://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="http://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

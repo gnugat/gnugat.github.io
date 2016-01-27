@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>http://gnugat.github.io</loc>
-    <lastmod>2016-01-21T09:09:04+00:00</lastmod>
+    <lastmod>2016-01-27T08:36:40+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>http://gnugat.github.io/about</loc>
-    <lastmod>2016-01-21T09:09:04+00:00</lastmod>
+    <lastmod>2016-01-27T08:36:40+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>http://gnugat.github.io/2016/01/27/links-from-2015.html</loc>
+    <lastmod>2016-01-27T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>http://gnugat.github.io/2016/01/20/couscous.html</loc>

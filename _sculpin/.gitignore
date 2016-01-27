@@ -5,4 +5,4 @@
 /app/logs/*
 /output_*/
 /source/components/
-s3.conf
+/source/wip/
