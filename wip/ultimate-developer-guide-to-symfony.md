@@ -2,16 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Tag &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <title>The Ultimate Developer Guide to Symfony &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="//tags/reference"/>
-        <link rel="alternate" type="application/atom+xml" href="http://gnugat.github.io/tags/reference.xml" title="Loïc Faugeron 'reference' tag feed" />
-    <meta name="robots" content="noindex, follow">
-
+    <link rel="canonical" href="/wip/ultimate-developer-guide-to-symfony.md"/>
+        <link rel="alternate" href="http://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
     <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
 
     <link rel="stylesheet" href="http://gnugat.github.io/css/normalize.css">
@@ -30,23 +29,19 @@
 
         <article>
             <header>
-                <h2>"reference" tag</h2>                                            </header>
-
-                    <article>
-        <h3>
-            <a href="http://gnugat.github.io/2015/08/03/phpspec.html">Phpspec</a>
-            <span class="sub-title">03/08/2015</span>
-        </h3>
-        <nav>
-                                                            <a class="button " href="http://gnugat.github.io/tags/introducing%20library">introducing library</a>
-                                                            <a class="button " href="http://gnugat.github.io/tags/phpspec">phpspec</a>
-                                                                                        <a class="button button-reference" href="http://gnugat.github.io/tags/reference">reference</a>
+                <h2>
+    The Ultimate Developer Guide to Symfony
+    <span class="sub-title">28/01/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="http://gnugat.github.io/tags/symfony">symfony</a>
                     </nav>
-    </article>
+                </header>
 
+                
 
             <footer>
-                                                <hr />
+                                    <hr />
             </footer>
         </article>
 

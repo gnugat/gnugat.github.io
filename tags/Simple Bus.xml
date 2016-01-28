@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <title><![CDATA[]]></title>
+    <title><![CDATA[Loïc Faugeron]]></title>
     <link href="http://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="http://gnugat.github.io/"/>
-    <updated>2016-01-27T08:36:40+00:00</updated>
+    <updated>2016-01-28T08:07:01+00:00</updated>
     <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Simple Bus]]></title>
