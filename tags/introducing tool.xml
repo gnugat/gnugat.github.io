@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="http://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="http://gnugat.github.io/"/>
-    <updated>2016-01-28T08:07:01+00:00</updated>
+    <updated>2016-02-03T09:03:24+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -173,7 +173,7 @@ the page.</p>
 </code></pre>
 
 <p>The files will be located in <code>output_prod</code>. If we want to use Github Pages as
-described above, we siply need to move those files to the root directory:</p>
+described above, we simply need to move those files to the root directory:</p>
 
 <pre><code>cp -r output_prod/* ../
 </code></pre>

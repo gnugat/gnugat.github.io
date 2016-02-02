@@ -3,11 +3,181 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="http://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="http://gnugat.github.io/"/>
-    <updated>2016-01-28T08:07:00+00:00</updated>
+    <updated>2016-02-03T09:03:24+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - HTTP Kernel]]></title>
+            <link href="http://gnugat.github.io/2016/02/03/ultimate-symfony-http-kernel.html"/>
+            <updated>2016-02-03T00:00:00+00:00</updated>
+            <id>http://gnugat.github.io/2016/02/03/ultimate-symfony-http-kernel.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: <code>$response = $httpKernel-&gt;handle($request);</code></p>
+</blockquote>
+
+<p><a href="http://symfony.com">Symfony</a> provides many standalone libraries (also known as
+"Components") that help us build applications.</p>
+
+<p>In this guide we'll see the main ones that allow us to build an application:</p>
+
+<ul>
+<li>HTTP Kernel and HTTP Foundation</li>
+<li>Event Dispatcher</li>
+<li>Routing and YAML</li>
+<li>Dependency Injection</li>
+<li>Console</li>
+</ul>
+
+<h2 id="http-kernel">HTTP kernel</h2>
+
+<p>Symfony provides a <a href="http://symfony.com/doc/current/components/http_kernel/introduction.html">HttpKernel component</a>
+which follows the HTTP protocol: it converts a <code>Request</code> into a <code>Response</code>.</p>
+
+<p>It all revolves around the following interface:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\HttpKernel;
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+interface HttpKernelInterface
+{
+    const MASTER_REQUEST = 1;
+    const SUB_REQUEST = 2;
+
+    /**
+     * @param Request $request
+     * @param int     $type
+     * @param bool    $catch   Whether to catch exceptions or not
+     *
+     * @return Response
+     */
+    public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = true);
+}
+</code></pre>
+
+<h2 id="httpfoundation">HttpFoundation</h2>
+
+<p>HttpKernel relies on the <a href="http://symfony.com/doc/current/components/http_foundation/introduction.html">HttpFoundation component</a>
+which mainly provides:</p>
+
+<ul>
+<li><code>Request</code>: wraps <code>$_GET</code>, <code>$_POST</code>, <code>$_COOKIE</code>, <code>$_FILES</code> and <code>$_SERVER</code></li>
+<li><code>Response</code>: wraps <code>header()</code> and <code>setcookie()</code>, but also displays the content</li>
+</ul>
+
+<blockquote>
+  <p><strong>Note</strong>: Global variables have the drawback to be possibly accessed by many
+  functions, causing their state to be unpredictable (hence bugs happen and they
+  are hard to find/understand).</p>
+  
+  <p>With HttpFoundation, <a href="http://php.net/manual/en/language.variables.superglobals.php">PHP super globals</a>
+  shouldn't be accessed directly, but rather via the objects that wraps them
+  (e.g. <code>Request</code>) which are passed around (those objects are not global).</p>
+</blockquote>
+
+<p>Here's a typical usage:</p>
+
+<pre><code class="php">$request = Request::createFromGlobals();
+$response = $httpKernel-&gt;handle($request);
+$reponse-&gt;send();
+</code></pre>
+
+<p>In the above example, <code>Request</code> will be initialized using PHP super globals.
+Sometimes it can be useful to build it with our own provided values (e.g. for tests):</p>
+
+<pre><code class="php">$uri = '/v1/items';
+$method = 'POST';
+$parameters = array(); // GET or POST parameters, usually left unused (use uri and content instead)
+$cookies = array();
+$files = array();
+$headers = array('CONTENT_TYPE' =&gt; 'application/json');
+$content = json_encode(array('name' =&gt; 'Arthur Dent'));
+
+$request = Request::create($uri, $method, $getOrPostParameters, $cookies, $files, $headers, $content);
+</code></pre>
+
+<p>In our application, we'll mainly extract its parameters:</p>
+
+<pre><code class="php">$getParameter = $request-&gt;query-&gt;get('description'); // e.g. from URI `/?description=hitchhicker`
+$postParameter = $request-&gt;request-&gt;get('name'); // e.g. from content `name=Arthur`
+$header = $request-&gt;headers-&gt;get('Content-Type'); // e.g. from headers `Content-Type: application/x-www-form-urlencoded`
+
+$customParameter = $request-&gt;attributes-&gt;get('_route'); // We'll see more about it in the next article
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Those public properties are instances of <code>Symfony\Component\HttpFoundation\ParameterBag</code>,
+  except <code>headers</code> which is an instance of <code>Symfony\Component\HttpFoundation\HeaderBag</code>.</p>
+</blockquote>
+
+<p>In our application we'll mainly build <code>Response</code>:</p>
+
+<pre><code class="php">$content = json_encode(array('name' =&gt; 'Arthur Dent'));
+$status = 201;
+$headers = array('Content-Type' =&gt; 'application/json');
+
+$response = new Reponse($content, $status, $headers);
+</code></pre>
+
+<h2 id="example">Example</h2>
+
+<p>Let's create a small Hello World example:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class HelloWorldHttpKernel implements HttpKernelInterface
+{
+    public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = true)
+    {
+        $name = $request-&gt;query-&gt;get('name', 'World');
+
+        return new Response("Hello $name!", 200);
+    }
+}
+
+$httpKernel = new HelloWorldHttpKernel();
+
+$request = Request::createFromGlobals();
+$response = $httpKernel-&gt;handle($request);
+$response-&gt;send();
+</code></pre>
+
+<p>So we can get the following:</p>
+
+<ul>
+<li>for <code>/</code> URL, we get <code>Hello World!</code></li>
+<li>for <code>/?name=Arthur</code> URL, we get <code>Hello Arthur!</code></li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Symfony provides a simple yet powerful component allowing us to follow the HTTP
+protocol.</p>
+
+<p>In this article we've seen the basics and how it works behind the hood, but in
+an actual application we don't necessarily need to create our own implementation
+of <code>HttpKernelInterface</code>.</p>
+
+<p>Indeed there's a <code>Symfony\Component\HttpKernel\Kernel</code> abstract class that can
+be used out of the box. It provides many features that we'll explore in the next
+articles:</p>
+
+<ul>
+<li>Event Dispatcher</li>
+<li>Routing and YAML</li>
+<li>Dependency Injection</li>
+</ul>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Links from 2015]]></title>
             <link href="http://gnugat.github.io/2016/01/27/links-from-2015.html"/>
@@ -511,7 +681,7 @@ the page.</p>
 </code></pre>
 
 <p>The files will be located in <code>output_prod</code>. If we want to use Github Pages as
-described above, we siply need to move those files to the root directory:</p>
+described above, we simply need to move those files to the root directory:</p>
 
 <pre><code>cp -r output_prod/* ../
 </code></pre>

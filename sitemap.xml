@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>http://gnugat.github.io</loc>
-    <lastmod>2016-01-28T08:07:00+00:00</lastmod>
+    <lastmod>2016-02-03T09:03:24+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>http://gnugat.github.io/about</loc>
-    <lastmod>2016-01-28T08:07:00+00:00</lastmod>
+    <lastmod>2016-02-03T09:03:24+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>http://gnugat.github.io/2016/02/03/ultimate-symfony-http-kernel.html</loc>
+    <lastmod>2016-02-03T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>http://gnugat.github.io/2016/01/27/links-from-2015.html</loc>
