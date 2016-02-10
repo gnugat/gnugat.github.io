@@ -178,12 +178,12 @@ Please note that `kernel.finish_request`
 
 Listeners that registered for `kernel.request` can modify the Request object.
 
-Out of the box there's a `RouterListener` regitered which sets the following
+Out of the box there's a `RouterListener` registered which sets the following
 parameters in `Request->attributes`:
 
 * `_route`: the route name that matched the Request
 * `_controller`: a callable that will handle the Request and return a Response
-* `_route_parameters`: query parameters exctracted from the Request
+* `_route_parameters`: query parameters extracted from the Request
 
 An example of a custom Listener could be one that decodes JSON content and sets
 it in `Request->request`:
