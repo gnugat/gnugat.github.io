@@ -226,7 +226,7 @@ class JsonRequestContentListener
 
 Another example would be to start a database transaction:
 
-```
+```php
 <?php
 
 namespace AppBundle\EventListener;
