@@ -1,18 +1,284 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="http://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="http://gnugat.github.io/"/>
-    <updated>2016-02-03T09:03:24+00:00</updated>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2016-02-10T08:25:46+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
+            <title type="html"><![CDATA[Lightweight console library]]></title>
+            <link href="https://gnugat.github.io/2014/12/03/lightweight-console-lib.html"/>
+            <updated>2014-12-03T00:00:00+00:00</updated>
+            <id>https://gnugat.github.io/2014/12/03/lightweight-console-lib.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This article has been deprecated.</p>
+  
+  <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/konzolo">Konzolo</a> can be used to create
+  minimalistic CLI applications, or to implement the command design pattern.</p>
+</blockquote>
+
+<p>After implementing a same feature in many projects, I usually have the reflex to
+create a library out of it. <a href="https://github.com/gnugat/konzolo">Konzolo</a> is one
+of them :) .</p>
+
+<p>In this article we'll see its features:</p>
+
+<ul>
+<li><a href="#create-a-command">Create a command</a></li>
+<li><a href="#binding-up-an-application">Binding up an application</a></li>
+<li><a href="#input-constraint">Input constraint</a></li>
+<li><a href="#input-validator">Input validator</a></li>
+<li><a href="#exceptions">Exceptions</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="create-a-command">Create a command</h2>
+
+<p>Let's create a "hello world" command:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Acme\Demo\Command;
+
+use Gnugat\Konzolo\Command;
+use Gnugat\Konzolo\Input;
+
+class HelloWorldCommand implements Command
+{
+    public function execute(Input $input)
+    {
+        $name = $input-&gt;getArgument('name');
+        echo "Hello $name\n";
+
+        return Command::EXIT_SUCCESS;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: If the name argument is missing, an exception will be thrown.
+  Keep reading to know more about those exceptions.</p>
+</blockquote>
+
+<p>We only have to implement the <code>execute</code> method, which receives a convenient
+<code>Input</code> class and returns 0 on success (actually this is optional).</p>
+
+<h2 id="binding-up-an-application">Binding up an application</h2>
+
+<p>Now that we have a command, let's put it in an application:</p>
+
+<pre><code class="php">&lt;?php
+// File: console.php
+
+use Acme\Demo\Command\HelloWorldCommand;
+use Gnugat\Konzolo\Application;
+use Gnugat\Konzolo\Input;
+
+require __DIR__.'/vendor/autoload.php';
+
+$input = new Input($argv[1]); // command name (acme:hello-world)
+if (isset($argv[2])) {
+    $input-&gt;setArgument('name', $argv[2]);
+}
+
+$application = new Application();
+$application-&gt;addCommand('acme:hello-world', new HelloWorldCommand());
+
+$application-&gt;run($input);
+</code></pre>
+
+<p>You can then run it:</p>
+
+<pre><code>php console.php acme:hello-world Igor
+</code></pre>
+
+<h2 id="input-constraint">Input constraint</h2>
+
+<p>If you need to validate the input, you can create a constraint:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Acme\Demo\Validation;
+
+use Gnugat\Konzolo\Exception\InvalidInputException;
+use Gnugat\Konzolo\Input;
+use Gnugat\Konzolo\Validation\InputConstraint;
+
+class NoWorldNameConstraint implements InputConstraint
+{
+    public function throwIfInvalid(Input $input)
+    {
+        $name = $input-&gt;getArgument('name');
+        if ('World' === $name) {
+            throw new InvalidInputException($input, 'The "name" parameter must not be set to "World"');
+        }
+    }
+}
+</code></pre>
+
+<p>This constraint can be used directly in the command, as a dependency:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Acme\Demo\Command;
+
+use Acme\Demo\Validation\NoWorldNameConstraint;
+use Gnugat\Konzolo\Command;
+use Gnugat\Konzolo\Input;
+
+class HelloWorldCommand implements Command
+{
+    private $noWorldNameConstraint;
+
+    public function __construct(NoWorldNameConstraint $noWorldNameConstraint)
+    {
+        $this-&gt;noWorldNameConstraint = $noWorldNameConstraint;
+    }
+
+    public function execute(Input $input)
+    {
+        $this-&gt;noWorldNameConstraint-&gt;throwIfInvalid($input);
+        $name = $input-&gt;getArgument('name');
+        echo "Hello $name\n";
+
+        return Command::EXIT_SUCCESS;
+    }
+}
+</code></pre>
+
+<p>And then inject it:</p>
+
+<pre><code class="php">&lt;?php
+// File: console.php
+
+use Acme\Demo\Command\HelloWorldCommand;
+use Acme\Demo\Validation\NoWorldNameConstraint;
+use Gnugat\Konzolo\Application;
+use Gnugat\Konzolo\Input;
+
+require __DIR__.'/vendor/autoload.php';
+
+$input = new Input($argv[1]); // command name (acme:hello-world)
+if (isset($argv[2])) {
+    $input-&gt;setArgument('name', $argv[2]);
+}
+
+$application = new Application();
+$application-&gt;addCommand('acme:hello-world', new HelloWorldCommand(new NoWorldNameConstraint()));
+
+$application-&gt;run($input);
+</code></pre>
+
+<h2 id="input-validator">Input validator</h2>
+
+<p>More conveniently, the command can depend on a validator:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Acme\Demo\Command;
+
+use Gnugat\Konzolo\Command;
+use Gnugat\Konzolo\Input;
+use Gnugat\Konzolo\Validation\InputValidator;
+
+class HelloWorldCommand implements Command
+{
+    private $validator;
+
+    public function __construct(InputValidator $validator)
+    {
+        $this-&gt;validator = $validator;
+    }
+
+    public function execute(Input $input)
+    {
+        $this-&gt;validator-&gt;throwIfInvalid($input);
+        $name = $input-&gt;getArgument('name');
+        echo "Hello $name\n";
+
+        return Command::EXIT_SUCCESS;
+    }
+}
+</code></pre>
+
+<p>You can add many constraint in a validator, and set priorities:</p>
+
+<pre><code class="php">&lt;?php
+// File: console.php
+
+use Acme\Demo\Command\HelloWorldCommand;
+use Acme\Demo\Validation\NoWorldNameConstraint;
+use Gnugat\Konzolo\Application;
+use Gnugat\Konzolo\Input;
+use Gnugat\Konzolo\Validation\InputValidator;
+
+require __DIR__.'/vendor/autoload.php';
+
+$input = new Input($argv[1]); // command name (acme:hello-world)
+if (isset($argv[2])) {
+    $input-&gt;setArgument('name', $argv[2]);
+}
+
+$helloWorldValidator = new InputValidator();
+$helloWorldValidator-&gt;addConstraint(new NoWorldNameConstraint(), 42);
+
+$application = new Application();
+$application-&gt;addCommand('acme:hello-world', new HelloWorldCommand($helloWorldValidator));
+
+$application-&gt;run($input);
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: The highest the priority, the soonest the constraint will be executed.
+  For example, a constraint with priority 1337 will be executed before another
+  one with priority 23 (even if this second one has been added first in the validator).</p>
+</blockquote>
+
+<h2 id="exceptions">Exceptions</h2>
+
+<p>Konzolo's exceptions all implement the <code>Gnugat\Konzolo\Exception\Exception</code> interface.
+This means you can catch every single one of them using this type. They also
+extend at the standard <code>\Exception</code> class, so if you don't care about Konzolo
+specific exceptions, you can catch them all!</p>
+
+<p>This is usefull for example in <a href="https://symfony.com">Symfony2</a>: you can create
+a Konzolo exception listener.</p>
+
+<p>You can find more about the different kind of exceptions and their specific
+methods in <a href="http://github.com/gnugat/konzolo/tree/master/doc/exception.md">its dedicated documentation</a>.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We have seen how to create commands and validate their inputs.</p>
+
+<p>Our examples showed how to create a CLI application, but Konzolo is mainly aimed at being used <strong>in</strong>
+applications (not only CLI ones).
+For example, <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> uses internally
+a system of Command/CommandInvoker, using an array as input and sanitizer as a
+validation mechanism. All this logic can now be externalized, thanks to Konzolo!</p>
+
+<p>I'd like to keep Konzolo as small as possible, but here's a list of possible
+features it could see in the future:</p>
+
+<h3 id="command-finder">Command finder</h3>
+
+<p>Currently we can find commands by their exact names. But wouldn't it be nice if
+we could just provide part of a name? Or an alias?</p>
+
+<h3 id="input-factories">Input Factories</h3>
+
+<p>Creating input manually isn't always what we need. A factory that creates one
+from an array could improve the situation.</p>
+]]></content>
+        </entry>
+            <entry>
             <title type="html"><![CDATA[Bootstrap the markdown files of your FOSS project]]></title>
-            <link href="http://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html"/>
+            <link href="https://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html"/>
             <updated>2014-01-15T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html</id>
+            <id>https://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: Fossil is currently unmaintained.</p>
 </blockquote>
@@ -255,9 +521,9 @@ documentation so everyone can see how awesome your work is!</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Technology scouting]]></title>
-            <link href="http://gnugat.github.io/2014/01/08/technology-scouting.html"/>
+            <link href="https://gnugat.github.io/2014/01/08/technology-scouting.html"/>
             <updated>2014-01-08T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2014/01/08/technology-scouting.html</id>
+            <id>https://gnugat.github.io/2014/01/08/technology-scouting.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This article has been re-written - see <a href="/2014/11/21/read-it-later.html">Read it Later</a></p>
 </blockquote>
@@ -349,9 +615,9 @@ actually) and new trending tools.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Carew, the static site generator]]></title>
-            <link href="http://gnugat.github.io/2014/01/01/carew-static-site-generator.html"/>
+            <link href="https://gnugat.github.io/2014/01/01/carew-static-site-generator.html"/>
             <updated>2014-01-01T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2014/01/01/carew-static-site-generator.html</id>
+            <id>https://gnugat.github.io/2014/01/01/carew-static-site-generator.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This article has been re-written - see <a href="/2016/01/15/sculpin.html">Scuplin</a></p>
 </blockquote>

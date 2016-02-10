@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="http://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="http://gnugat.github.io/"/>
-    <updated>2016-02-03T09:03:24+00:00</updated>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2016-02-10T08:25:46+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - Conclusion]]></title>
-            <link href="http://gnugat.github.io/2014/07/23/learn-sf2-conclusion.html"/>
+            <link href="https://gnugat.github.io/2014/07/23/learn-sf2-conclusion.html"/>
             <updated>2014-07-23T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/07/23/learn-sf2-conclusion.html</id>
+            <id>https://gnugat.github.io/2014/07/23/learn-sf2-conclusion.html</id>
             <content type="html"><![CDATA[<p>This is the conclusion of the series on learning
 <a href="http://symfony.com/">the Symfony2 framework</a>.
 Have a look at the five first ones:</p>
@@ -362,9 +362,9 @@ series of articles!</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 5: Tests]]></title>
-            <link href="http://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html"/>
+            <link href="https://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html"/>
             <updated>2014-07-20T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html</id>
+            <id>https://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html</id>
             <content type="html"><![CDATA[<p>This is the fifth article of the series on learning
 <a href="http://symfony.com/">the Symfony2 framework</a>.
 Have a look at the four first ones:</p>
@@ -731,9 +731,9 @@ need to check the precise HTTP response's status code).</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 4: Controllers]]></title>
-            <link href="http://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html"/>
+            <link href="https://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html"/>
             <updated>2014-07-12T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html</id>
+            <id>https://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html</id>
             <content type="html"><![CDATA[<p>This is the fourth article of the series on learning
 <a href="http://symfony.com/">the Symfony2 framework</a>.
 Have a look at the three first ones:</p>
@@ -1071,9 +1071,9 @@ git commit -m 'Created Ni route and controller'
         </entry>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 3: Bundles]]></title>
-            <link href="http://gnugat.github.io/2014/07/02/learn-sf2-bundles-part-3.html"/>
+            <link href="https://gnugat.github.io/2014/07/02/learn-sf2-bundles-part-3.html"/>
             <updated>2014-07-02T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/07/02/learn-sf2-bundles-part-3.html</id>
+            <id>https://gnugat.github.io/2014/07/02/learn-sf2-bundles-part-3.html</id>
             <content type="html"><![CDATA[<p>This is the third article of the series on learning
 <a href="http://symfony.com/">the Symfony2 framework</a>.
 Have a look at the two first ones:</p>
@@ -1326,9 +1326,9 @@ makes too much fuss to no avail (that's my humble opinion anyway).</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 2: Empty application]]></title>
-            <link href="http://gnugat.github.io/2014/06/25/learn-sf2-empty-app-part-2.html"/>
+            <link href="https://gnugat.github.io/2014/06/25/learn-sf2-empty-app-part-2.html"/>
             <updated>2014-06-25T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/06/25/learn-sf2-empty-app-part-2.html</id>
+            <id>https://gnugat.github.io/2014/06/25/learn-sf2-empty-app-part-2.html</id>
             <content type="html"><![CDATA[<p>This is the second article of the series on learning
 <a href="http://symfony.com/">the Symfony2 framework</a>.
 Have a look at the first one: <a href="/2014/06/18/learn-sf2-composer-part-1.html">Composer</a>.</p>
@@ -1537,9 +1537,9 @@ to a controller which takes a HTTP request and returns a HTTP response.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 1: Composer]]></title>
-            <link href="http://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html"/>
+            <link href="https://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html"/>
             <updated>2014-06-18T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html</id>
+            <id>https://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html</id>
             <content type="html"><![CDATA[<p>You don't know anything about the <a href="http://symfony.com/">Symfony2</a> framework,
 and you'd like a quick guide to learn how to use it, and how it works?</p>
 

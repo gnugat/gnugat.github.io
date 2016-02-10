@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="http://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="http://gnugat.github.io/"/>
-    <updated>2016-02-03T09:03:24+00:00</updated>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2016-02-10T08:25:46+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 3.3: Consuming, remote calls]]></title>
-            <link href="http://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html"/>
+            <link href="https://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html"/>
             <updated>2015-03-25T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html</id>
+            <id>https://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html</id>
             <content type="html"><![CDATA[<p>This is the seventh article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the six first ones:</p>
 
@@ -362,9 +362,9 @@ those should each have their own series of article :) .</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 3.2: Consuming, Guzzle]]></title>
-            <link href="http://gnugat.github.io/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html"/>
+            <link href="https://gnugat.github.io/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html"/>
             <updated>2015-03-18T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html</id>
+            <id>https://gnugat.github.io/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html</id>
             <content type="html"><![CDATA[<p>This is the sixth article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the five first ones:</p>
 
@@ -872,9 +872,9 @@ really need.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 3.1: Consuming, RequestHandler]]></title>
-            <link href="http://gnugat.github.io/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html"/>
+            <link href="https://gnugat.github.io/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html"/>
             <updated>2015-03-11T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html</id>
+            <id>https://gnugat.github.io/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html</id>
             <content type="html"><![CDATA[<p>This is the fifth article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the four first ones:</p>
 
@@ -1288,9 +1288,9 @@ implementations (yes, more than one!).</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 2.3: Creation, refactoring]]></title>
-            <link href="http://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html"/>
+            <link href="https://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html"/>
             <updated>2015-03-04T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html</id>
+            <id>https://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html</id>
             <content type="html"><![CDATA[<p>This is the fourth article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the three first ones:</p>
 
@@ -1893,9 +1893,9 @@ who'd like to practice:</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 2.2: Creation, the pragmatic way]]></title>
-            <link href="http://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html"/>
+            <link href="https://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html"/>
             <updated>2015-01-28T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html</id>
+            <id>https://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html</id>
             <content type="html"><![CDATA[<p>This is the third article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the two first ones:</p>
 
@@ -2566,9 +2566,9 @@ where everything is hard to read, impossible to test and expensive to change.</p
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 2.1: Creation bootstrap]]></title>
-            <link href="http://gnugat.github.io/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html"/>
+            <link href="https://gnugat.github.io/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html"/>
             <updated>2015-01-21T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html</id>
+            <id>https://gnugat.github.io/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html</id>
             <content type="html"><![CDATA[<p>This is the second article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the first one:
 <a href="/2015/01/14/sf-ws-part-1-introduction.html">1. Introduction</a>.</p>
@@ -2924,9 +2924,9 @@ we'll create the first endpoint, the creation of profiles, using a pragmatic app
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 1: Introduction]]></title>
-            <link href="http://gnugat.github.io/2015/01/14/sf-ws-part-1-introduction.html"/>
+            <link href="https://gnugat.github.io/2015/01/14/sf-ws-part-1-introduction.html"/>
             <updated>2015-01-14T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2015/01/14/sf-ws-part-1-introduction.html</id>
+            <id>https://gnugat.github.io/2015/01/14/sf-ws-part-1-introduction.html</id>
             <content type="html"><![CDATA[<p>Welcome to this new series of articles on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Its purpose is to provide an example,
 it doesn't pretend to be the best solution and it requires you to know the basics

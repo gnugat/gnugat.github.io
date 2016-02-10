@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="http://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="http://gnugat.github.io/"/>
-    <updated>2016-02-03T09:03:24+00:00</updated>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2016-02-10T08:25:46+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Redaktilo 1.3]]></title>
-            <link href="http://gnugat.github.io/2014/11/06/redaktilo-1-3.html"/>
+            <link href="https://gnugat.github.io/2014/11/06/redaktilo-1-3.html"/>
             <updated>2014-11-06T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2014/11/06/redaktilo-1-3.html</id>
+            <id>https://gnugat.github.io/2014/11/06/redaktilo-1-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> is a library
   which wraps array manipulation to make it feel like using a text editor.</p>
@@ -243,9 +243,9 @@ maturity point.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[PHP array manipulation]]></title>
-            <link href="http://gnugat.github.io/2014/10/15/php-array-manipulation.html"/>
+            <link href="https://gnugat.github.io/2014/10/15/php-array-manipulation.html"/>
             <updated>2014-10-15T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/10/15/php-array-manipulation.html</id>
+            <id>https://gnugat.github.io/2014/10/15/php-array-manipulation.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> provides a nice
   API to manipulate array of lines (insert, replace, go to line, etc).</p>
@@ -744,9 +744,9 @@ you.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Redaktilo v0.7]]></title>
-            <link href="http://gnugat.github.io/2014/05/27/redaktilo-0-7.html"/>
+            <link href="https://gnugat.github.io/2014/05/27/redaktilo-0-7.html"/>
             <updated>2014-05-27T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/05/27/redaktilo-0-7.html</id>
+            <id>https://gnugat.github.io/2014/05/27/redaktilo-0-7.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>Since the announcement of <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> on
@@ -927,9 +927,9 @@ start a discussion here.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Facade design pattern, by example]]></title>
-            <link href="http://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html"/>
+            <link href="https://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html"/>
             <updated>2014-05-21T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html</id>
+            <id>https://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>Sometimes, you just want to hide low level complexity behind a unique interface
@@ -1025,9 +1025,9 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
         </entry>
             <entry>
             <title type="html"><![CDATA[Open/Closed principle, by example]]></title>
-            <link href="http://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html"/>
+            <link href="https://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html"/>
             <updated>2014-05-14T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html</id>
+            <id>https://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>This week I've read two articles, which just have been published, on the
@@ -1283,9 +1283,9 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
         </entry>
             <entry>
             <title type="html"><![CDATA[Redaktilo: because your code too needs an editor]]></title>
-            <link href="http://gnugat.github.io/2014/05/09/redaktilo.html"/>
+            <link href="https://gnugat.github.io/2014/05/09/redaktilo.html"/>
             <updated>2014-05-09T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/05/09/redaktilo.html</id>
+            <id>https://gnugat.github.io/2014/05/09/redaktilo.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>I've been working on a silly library lately:

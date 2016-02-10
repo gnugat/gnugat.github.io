@@ -3,7 +3,10 @@ layout: post
 title: Lightweight console library
 tags:
     - pet project
+    - deprecated
 ---
+
+> **Deprecated**: This article has been deprecated.
 
 > **TL;DR**: [Konzolo](https://github.com/gnugat/konzolo) can be used to create
 > minimalistic CLI applications, or to implement the command design pattern.

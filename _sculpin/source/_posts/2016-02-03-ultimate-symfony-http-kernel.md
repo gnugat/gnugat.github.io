@@ -4,7 +4,11 @@ title: The Ultimate Developer Guide to Symfony - HTTP Kernel
 tags:
     - symfony
     - ultimate symfony series
+    - reference
 ---
+
+> **Reference**: This article is intended to be as complete as possible and is
+> kept up to date.
 
 > **TL;DR**: `$response = $httpKernel->handle($request);`
 
@@ -14,7 +18,7 @@ tags:
 In this guide we'll see the main ones that allow us to build an application:
 
 * HTTP Kernel and HTTP Foundation
-* Event Dispatcher
+* [Event Dispatcher](/2016/02/10/ultimate-symfony-event-dispatcher.html)
 * Routing and YAML
 * Dependency Injection
 * Console
@@ -158,6 +162,6 @@ Indeed there's a `Symfony\Component\HttpKernel\Kernel` abstract class that can
 be used out of the box. It provides many features that we'll explore in the next
 articles:
 
-* Event Dispatcher
+* [Event Dispatcher](/2016/02/10/ultimate-symfony-event-dispatcher.html)
 * Routing and YAML
 * Dependency Injection

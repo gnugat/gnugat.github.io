@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>The Ultimate Developer Guide to Symfony - Dependency Injection &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/02/24/ultimate-symfony-dependency-injection"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link href="http://fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    The Ultimate Developer Guide to Symfony - Dependency Injection
+    <span class="sub-title">10/02/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/symfony">symfony</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/ultimate%20symfony%20series">ultimate symfony series</a>
+                                                                                        <a class="button button-reference" href="https://gnugat.github.io/tags/reference">reference</a>
+                    </nav>
+                </header>
+
+                <blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>:</p>
+
+<pre><code class="php">$container = new ContainerBuilder();
+</code></pre>
+</blockquote>
+
+<p>In this guide we explore the standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications.</p>
+
+<p>We've already seen:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+</ul>
+
+<p>We're now about to check Dependency Injection, then in the next articles we'll have a look at:</p>
+
+<ul>
+<li>Console</li>
+</ul>
+
+<h2 id="introduction-to-the-design-pattern">Introduction to the design pattern</h2>
+
+<p>When first creating a class, we tend to keep it small and tidy. Then overtime it
+can grow out of control and the next thing we know it became this multi thousand
+line monster:</p>
+
+<pre><code class="php">&lt;?php
+
+class CheckApiStatus
+{
+    public function check($url)
+    {
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CUROPT_RETURNTRANSFER =&gt; true,
+            CURLOPT_HEADER =&gt; true,
+            CUROPT_URL =&gt; $url,
+        ));
+        $response = curl_exec($curl);
+        $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+        $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+        $headers = array_map(function($line) {
+            return explode(': ', trim($line));
+        }, explode("\n", substr($response, 0, $size)));
+        array_pop($headers);array_pop($headers);array_shift($headers);
+        $body = substr($response, $headerSize);
+
+        return 200 &gt;= $statusCode &amp;&amp; $statusCode &lt; 400;
+    }
+}
+</code></pre>
+
+<p>A nice way to shrink it back to an acceptable level is to identify the many
+"responsibilities" it bears and split those in sub classes. This process is called
+refactoring:</p>
+
+<pre><code class="php">&lt;?php
+
+class Request
+{
+    private $uri;
+
+    public function __construct($uri)
+    {
+        $this-&gt;uri;
+    }
+
+    public function getUri()
+    {
+        return $this-&gt;uri;
+    }
+}
+
+class Response
+{
+    private $statusCode;
+    private $headers;
+    private $body;
+
+    public function __construct($statusCode, $headers, $body)
+    {
+        $this-&gt;statusCode = $statusCode;
+        $this-&gt;headers = $headers;
+        $this-&gt;body = $body;
+    }
+
+    public function getStatusCode()
+    {
+        return $this-&gt;statusCode;
+    }
+
+    public function getHeaders()
+    {
+        return $this-&gt;headers;
+    }
+
+    public function getBody()
+    {
+        return $this-&gt;body;
+    }
+}
+
+interface HttpClient
+{
+    /**
+     * @return Response
+     */
+    public function sendRequest(Request $request);
+}
+
+class CurlHttpClient
+{
+    public function sendRequest(Request $request)
+    {
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CUROPT_RETURNTRANSFER =&gt; true,
+            CURLOPT_HEADER =&gt; true,
+            CUROPT_URL =&gt; $request-&gt;getUri(),
+        ));
+        $response = curl_exec($curl);
+        $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+        $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+        $headers = array_map(function($line) {
+            return explode(': ', trim($line));
+        }, explode("\n", substr($response, 0, $size)));
+        array_pop($headers);array_pop($headers);array_shift($headers);
+        $body = substr($response, $headerSize);
+        $body = substr($response, $headerSize);
+
+        return new Response($statusCode, $headers, $body);
+    }
+}
+
+class CheckApiStatus
+{
+    public function check($url)
+    {
+        $httpClient = new CurlHttpClient();
+        $statusCode = $httpClient-&gt;sendRequest(new Request($url))-&gt;getStatusCode();
+
+        return 200 &gt;= $statusCode &amp;&amp; $statusCode &lt; 400;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: here's another refactoring example <a href="http://martinfowler.com/articles/refactoring-external-service.html">by Martin Fowler</a>.</p>
+</blockquote>
+
+<p>Our original class then has to call those sub classes to "delegate" the work. But
+how does it access those sub classes? Should it instantiate them in its methods?
+A better place could be the constructor, where the instances are stored in the class
+properties.</p>
+
+<p>There is a better way.</p>
+
+<p>We can instantiate them out of the class, and then pass them as arguments to the
+original class constructor:</p>
+
+<pre><code class="php">&lt;?php
+
+class CheckApiStatus
+{
+    private $httpClient;
+
+    public function __construct(HttpClient $httpClient)
+    {
+        $this-&gt;httpClient = $httpClient;
+    }
+
+    public function check($url)
+    {
+        $statusCode = $this-&gt;httpClient-&gt;sendRequest(new Request($url))-&gt;getStatusCode();
+
+        return 200 &gt;= $statusCode &amp;&amp; $statusCode &lt; 400;
+    }
+}
+
+$httpClient = new CurlHttpClient();
+$checkApiStatus = new CheckApiStatus($httpClient);
+</code></pre>
+
+<p>And that's what Dependency Injection is all about: taking parameters our class
+needs (also known as depdencies) and pass them as arguments (also known as injection).</p>
+
+<p>The downside of this design pattern is that we now have a cascacade of instantiation.</p>
+
+<h2 id="the-component">The component</h2>
+
+<p>Symfony provides a <a href="http://symfony.com/doc/current/components/dependency-injection/introduction.html">Dependency Injection component</a>
+which allows us to set up how our classes are constructed:</p>
+
+<pre><code>&lt;?php
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
+
+$container = new ContainerBuilder();
+
+$container
+    -&gt;register('http_client','CurlHttpClient')
+;
+$container
+    -&gt;register('check_api_status', 'CheckApiStatus')
+    -&gt;addArgument(new Reference('http_client'))
+;
+
+$checkApiStatus = $container-&gt;get('check_api_status');
+</code></pre>
+
+<p>It can even be set up using configuration:</p>
+
+<pre><code># /tmp/services.yml
+services:
+    http_client:
+        class: CurlHttpClient
+
+    check_api_status:
+        class: CheckApiStatus
+        arguments:
+            - "@http_client"
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: In YAML configuration, service IDs must be prefixed with <code>@</code>
+  (the string then needs to be escaped in double quotes because <code>@</code> is a reserved YAML character).</p>
+</blockquote>
+
+<p>Here's how we can load this configuration</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+
+$container = new ContainerBuilder();
+$configurationDirectory = new FileLocator(__DIR__);
+
+$loader = new YamlFileLoader($container, $configurationDirectory);
+$loader-&gt;load('/tmp/services.yml');
+
+$checkApiStatus = $container-&gt;get('check_api_status');
+</code></pre>
+
+
+            <footer>
+                                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

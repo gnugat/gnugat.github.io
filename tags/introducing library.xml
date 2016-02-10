@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="http://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="http://gnugat.github.io/"/>
-    <updated>2016-02-03T09:03:24+00:00</updated>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2016-02-10T08:25:46+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[porpaginas]]></title>
-            <link href="http://gnugat.github.io/2015/11/05/porpaginas.html"/>
+            <link href="https://gnugat.github.io/2015/11/05/porpaginas.html"/>
             <updated>2015-11-05T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2015/11/05/porpaginas.html</id>
+            <id>https://gnugat.github.io/2015/11/05/porpaginas.html</id>
             <content type="html"><![CDATA[<p>Pagination libraries like <a href="https://github.com/whiteoctober/Pagerfanta">Pagerfanta</a>
 or <a href="https://github.com/KnpLabs/KnpPaginatorBundle">KnpPaginator</a> usually require
 a <code>QueryBuilder</code>:</p>
@@ -52,9 +52,9 @@ The actual pagination logic is delegated to the library of our choice, using ada
         </entry>
             <entry>
             <title type="html"><![CDATA[PHPUnit with phpspec]]></title>
-            <link href="http://gnugat.github.io/2015/09/23/phpunit-with-phpspec.html"/>
+            <link href="https://gnugat.github.io/2015/09/23/phpunit-with-phpspec.html"/>
             <updated>2015-09-23T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/09/23/phpunit-with-phpspec.html</id>
+            <id>https://gnugat.github.io/2015/09/23/phpunit-with-phpspec.html</id>
             <content type="html"><![CDATA[<p><a href="https://phpunit.de/">PHPUnit</a> is a port of <a href="http://junit.org/">jUnit</a>, its name
 might be deceptive: it allows you to write any type of tests (unit, but also functional,
 system, integration, end to end, acceptance, etc).</p>
@@ -361,9 +361,9 @@ class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
         </entry>
             <entry>
             <title type="html"><![CDATA[Tactician]]></title>
-            <link href="http://gnugat.github.io/2015/09/09/tactician.html"/>
+            <link href="https://gnugat.github.io/2015/09/09/tactician.html"/>
             <updated>2015-09-09T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/09/09/tactician.html</id>
+            <id>https://gnugat.github.io/2015/09/09/tactician.html</id>
             <content type="html"><![CDATA[<p>Just like <a href="/2015/08/04/simple-bus.html">SimpleBus</a>,
 <a href="https://tactician.thephpleague.com/">Tactician</a> is a lightweight library created by
 <a href="http://rosstuck.com/">Ross Tuck</a> allowing you to use the Command Bus design pattern
@@ -499,9 +499,9 @@ the "good" way or the "pragmatic" way (if you don't choose wisely, then shame on
         </entry>
             <entry>
             <title type="html"><![CDATA[Diactoros (PSR-7)]]></title>
-            <link href="http://gnugat.github.io/2015/08/07/diactoros-psr7.html"/>
+            <link href="https://gnugat.github.io/2015/08/07/diactoros-psr7.html"/>
             <updated>2015-08-07T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/08/07/diactoros-psr7.html</id>
+            <id>https://gnugat.github.io/2015/08/07/diactoros-psr7.html</id>
             <content type="html"><![CDATA[<p><a href="https://github.com/zendframework/zend-diactoros">Zend Diactoros</a> is a lightweight
 library providing implementations for <a href="http://www.php-fig.org/psr/psr-7/">PSR-7 interfaces</a>.</p>
 
@@ -607,9 +607,9 @@ used in <a href="http://symfony.com/blog/psr-7-support-in-symfony-is-here">Symfo
         </entry>
             <entry>
             <title type="html"><![CDATA[Pomm Foundation]]></title>
-            <link href="http://gnugat.github.io/2015/08/06/pomm-foundation.html"/>
+            <link href="https://gnugat.github.io/2015/08/06/pomm-foundation.html"/>
             <updated>2015-08-06T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/08/06/pomm-foundation.html</id>
+            <id>https://gnugat.github.io/2015/08/06/pomm-foundation.html</id>
             <content type="html"><![CDATA[<p><a href="http://www.pomm-project.org/">Pomm</a> is an interresting alternative to Doctrine
 (<a href="http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/introduction.html">DBAL</a>
 or <a href="http://docs.doctrine-project.org/projects/doctrine-orm/en/latest/tutorials/getting-started.html">ORM</a>), it specializes in one database vendor: <a href="http://www.postgresql.org/docs/9.4/static/intro-whatis.html">PostgreSQL</a>.</p>
@@ -683,9 +683,9 @@ so if you're using PostgresSQL and don't need an ORM, you can give it a try!</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[phinx]]></title>
-            <link href="http://gnugat.github.io/2015/08/05/phinx.html"/>
+            <link href="https://gnugat.github.io/2015/08/05/phinx.html"/>
             <updated>2015-08-05T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/08/05/phinx.html</id>
+            <id>https://gnugat.github.io/2015/08/05/phinx.html</id>
             <content type="html"><![CDATA[<p><a href="https://phinx.org/">phinx</a> is a lightweight migration library, completly decoupled
 from any framework and libraries. In its most simple form, it allows you to write SQL
 statements to upgrade and downgrade your schema, or insert / delete data.</p>
@@ -826,9 +826,9 @@ coupled to any framework and it doesn't require any integration.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Simple Bus]]></title>
-            <link href="http://gnugat.github.io/2015/08/04/simple-bus.html"/>
+            <link href="https://gnugat.github.io/2015/08/04/simple-bus.html"/>
             <updated>2015-08-04T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/08/04/simple-bus.html</id>
+            <id>https://gnugat.github.io/2015/08/04/simple-bus.html</id>
             <content type="html"><![CDATA[<p><a href="http://simplebus.github.io/MessageBus/">Simple Bus</a> is a lightweight library
 created by <a href="https://twitter.com/matthiasnoback">Matthias Noback</a> allowing you to
 use the Command Bus design pattern in your applications.</p>
@@ -1013,9 +1013,9 @@ about CQRS: <a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avo
         </entry>
             <entry>
             <title type="html"><![CDATA[phpspec]]></title>
-            <link href="http://gnugat.github.io/2015/08/03/phpspec.html"/>
+            <link href="https://gnugat.github.io/2015/08/03/phpspec.html"/>
             <updated>2015-08-03T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/08/03/phpspec.html</id>
+            <id>https://gnugat.github.io/2015/08/03/phpspec.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is kept up to date.</p>
 </blockquote>
@@ -1368,9 +1368,9 @@ it to a collaborator you have two choices:</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[SpecGen v0.3]]></title>
-            <link href="http://gnugat.github.io/2015/05/28/spec-gen-0-3.html"/>
+            <link href="https://gnugat.github.io/2015/05/28/spec-gen-0-3.html"/>
             <updated>2015-05-28T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/05/28/spec-gen-0-3.html</id>
+            <id>https://gnugat.github.io/2015/05/28/spec-gen-0-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.3 inserts a property for each constructor argument.</p>
 </blockquote>
@@ -1529,9 +1529,9 @@ probably be about using it for collaborators.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[SpecGen v0.2]]></title>
-            <link href="http://gnugat.github.io/2015/05/20/spec-gen-0-2.html"/>
+            <link href="https://gnugat.github.io/2015/05/20/spec-gen-0-2.html"/>
             <updated>2015-05-20T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/05/20/spec-gen-0-2.html</id>
+            <id>https://gnugat.github.io/2015/05/20/spec-gen-0-2.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.2 inserts use statements.</p>
 </blockquote>
@@ -1721,9 +1721,9 @@ of a new generator: insertion of properties when the method is a constructor.</p
         </entry>
             <entry>
             <title type="html"><![CDATA[Memio SpecGen v0.1]]></title>
-            <link href="http://gnugat.github.io/2015/05/13/memio-spec-gen.html"/>
+            <link href="https://gnugat.github.io/2015/05/13/memio-spec-gen.html"/>
             <updated>2015-05-13T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/05/13/memio-spec-gen.html</id>
+            <id>https://gnugat.github.io/2015/05/13/memio-spec-gen.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> is a <a href="http://phpspec.net">phpspec</a>
   extension that improves its code generator. Currently available: type hinted method arguments.</p>
@@ -2046,9 +2046,9 @@ generation.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Memio v1.0]]></title>
-            <link href="http://gnugat.github.io/2015/05/06/memio.html"/>
+            <link href="https://gnugat.github.io/2015/05/06/memio.html"/>
             <updated>2015-05-06T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/05/06/memio.html</id>
+            <id>https://gnugat.github.io/2015/05/06/memio.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://memio.github.io/memio">Memio</a> is a PHP code generator library,
   the main repository provides integration with Twig templates, but by using the
@@ -2237,9 +2237,9 @@ code generator.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Memio Pretty Printer]]></title>
-            <link href="http://gnugat.github.io/2015/04/29/memio-pretty-printer.html"/>
+            <link href="https://gnugat.github.io/2015/04/29/memio-pretty-printer.html"/>
             <updated>2015-04-29T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/04/29/memio-pretty-printer.html</id>
+            <id>https://gnugat.github.io/2015/04/29/memio-pretty-printer.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/pretty-printer">PrettyPrinter</a> converts a
   <a href="http://github.com/memio/model">Model</a> into its PHP code (returns a string),
@@ -2427,9 +2427,9 @@ but we can install Memio's TwigTemplateEngine package .</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Memio validator and linter]]></title>
-            <link href="http://gnugat.github.io/2015/04/22/memio-validator-linter.html"/>
+            <link href="https://gnugat.github.io/2015/04/22/memio-validator-linter.html"/>
             <updated>2015-04-22T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/04/22/memio-validator-linter.html</id>
+            <id>https://gnugat.github.io/2015/04/22/memio-validator-linter.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Write <a href="http://github.com/memio/validator">constraints</a> to check
   <a href="http://github.com/memio/model">models</a> integrity.
@@ -2588,9 +2588,9 @@ are valid. Linter is a set of constraints ready to use, allowing to prevent synt
         </entry>
             <entry>
             <title type="html"><![CDATA[Memio models]]></title>
-            <link href="http://gnugat.github.io/2015/04/15/memio-models.html"/>
+            <link href="https://gnugat.github.io/2015/04/15/memio-models.html"/>
             <updated>2015-04-15T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/04/15/memio-models.html</id>
+            <id>https://gnugat.github.io/2015/04/15/memio-models.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Describe code by building <a href="http://github.com/memio/model">models</a>.</p>
 </blockquote>
@@ -2747,9 +2747,9 @@ function phpspec_generator($methodName, array $arguments) {
         </entry>
             <entry>
             <title type="html"><![CDATA[Introducing Memio, code generator]]></title>
-            <link href="http://gnugat.github.io/2015/04/08/introducing-memio-code-generator.html"/>
+            <link href="https://gnugat.github.io/2015/04/08/introducing-memio-code-generator.html"/>
             <updated>2015-04-08T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2015/04/08/introducing-memio-code-generator.html</id>
+            <id>https://gnugat.github.io/2015/04/08/introducing-memio-code-generator.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Work in Progress: Memio, a library for PHP code generation.</p>
 </blockquote>
@@ -2874,9 +2874,9 @@ by <a href="https://github.com/webmozart">webmozart</a>).</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Redaktilo: because your code too needs an editor]]></title>
-            <link href="http://gnugat.github.io/2014/05/09/redaktilo.html"/>
+            <link href="https://gnugat.github.io/2014/05/09/redaktilo.html"/>
             <updated>2014-05-09T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/05/09/redaktilo.html</id>
+            <id>https://gnugat.github.io/2014/05/09/redaktilo.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>I've been working on a silly library lately:
@@ -3126,9 +3126,9 @@ to manipulate files, through the editor metaphor:</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony2 Sessions introduction]]></title>
-            <link href="http://gnugat.github.io/2014/04/23/sf2-sessions-introduction.html"/>
+            <link href="https://gnugat.github.io/2014/04/23/sf2-sessions-introduction.html"/>
             <updated>2014-04-23T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/04/23/sf2-sessions-introduction.html</id>
+            <id>https://gnugat.github.io/2014/04/23/sf2-sessions-introduction.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>The <a href="http://symfony.com/doc/current/components/http_foundation/introduction.html">Symfony2 HttpFoundation component</a>
@@ -3520,9 +3520,9 @@ questions don't be shy and drop me a line on
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony2 Console component, by example]]></title>
-            <link href="http://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html"/>
+            <link href="https://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html"/>
             <updated>2014-04-09T00:00:00+01:00</updated>
-            <id>http://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html</id>
+            <id>https://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p><a href="http://symfony.com/">Symfony2</a> is a set of libraries which help you in your
@@ -4167,9 +4167,9 @@ if you have any feedbacks/questions, be sure to contact me on
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony2 Dependency Injection component, by example]]></title>
-            <link href="http://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html"/>
+            <link href="https://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html"/>
             <updated>2014-01-29T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html</id>
+            <id>https://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html</id>
             <content type="html"><![CDATA[<p>In <a href="/2014/01/22/ioc-di-and-service-locator.html">the previous article</a>
 we've seen among other things the definition of Dependency Injection (DI) and of
 the Dependency Injection Container (DIC).</p>

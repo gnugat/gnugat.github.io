@@ -1,19 +1,445 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="http://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="http://gnugat.github.io/"/>
-    <updated>2016-02-03T09:03:24+00:00</updated>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2016-02-10T08:25:46+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
-            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - HTTP Kernel]]></title>
-            <link href="http://gnugat.github.io/2016/02/03/ultimate-symfony-http-kernel.html"/>
-            <updated>2016-02-03T00:00:00+00:00</updated>
-            <id>http://gnugat.github.io/2016/02/03/ultimate-symfony-http-kernel.html</id>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Event Dispatcher]]></title>
+            <link href="https://gnugat.github.io/2016/02/10/ultimate-symfony-event-dispatcher.html"/>
+            <updated>2016-02-10T00:00:00+00:00</updated>
+            <id>https://gnugat.github.io/2016/02/10/ultimate-symfony-event-dispatcher.html</id>
             <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>:</p>
+
+<pre><code class="php">$eventDispatcher-&gt;addListener($eventName, $listener1, $priority);
+$eventDispatcher-&gt;addListener($eventName, $listener2, $priority - 1);
+$eventDispatcher-&gt;dispatch($eventName); // Calls $listener1, then $listener2
+</code></pre>
+</blockquote>
+
+<p>In this guide we explore the standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications.</p>
+
+<p>We've already seen:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+</ul>
+
+<p>We're now about to check Event Dispatcher, then in the next articles we'll have a look at:</p>
+
+<ul>
+<li>Routing and YAML</li>
+<li>Dependency Injection</li>
+<li>Console</li>
+</ul>
+
+<h2 id="event-dispatcher">Event Dispatcher</h2>
+
+<p>Symfony provides an <a href="http://symfony.com/doc/current/components/event_dispatcher/introduction.html">EventDispatcher component</a>
+which allows the execution of registered function at key points in our applications.</p>
+
+<p>It revolves around the following interface:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\EventDispatcher;
+
+interface EventDispatcherInterface
+{
+    /**
+     * @param string   $eventName
+     * @param callable $listener
+     * @param int      $priority  High priority listeners will be executed first
+     */
+    public function addListener($eventName, $listener, $priority = 0);
+
+    /**
+     * @param string $eventName
+     * @param Event  $event
+     */
+    public function dispatch($eventName, Event $event = null);
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: This snippet is a truncated version, the actual interface has methods
+  to add/remove/get/check listeners and subscribers (which are "auto-configured" listeners).</p>
+</blockquote>
+
+<p>An implementation is provided out of the box and can be used as follow:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\EventDispatcher\EventDispatcher;
+
+$eventDispatcher = new EventDispatcher();
+
+$eventDispatcher-&gt;addListener('something_happened', function () {
+    echo "Log it\n";
+}, 1);
+$eventDispatcher-&gt;addListener('something_happened', function () {
+    echo "Save it\n";
+}, 2);
+
+$eventDispatcher-&gt;dispatch('something_happened');
+</code></pre>
+
+<p>This will output:</p>
+
+<pre><code>Save it
+Log it
+</code></pre>
+
+<p>Since the second listener had a higher priority, it got executed first.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Listeners must be a <a href="http://php.net/manual/en/language.types.callable.php">callable</a>,
+  for example:</p>
+  
+  <ul>
+  <li>an anonymous function: <code>$listener = function (Event $event) {};</code>.</li>
+  <li>an array with an instance of a class and a method name:
+  <code>$listener = array($service, 'method');</code>.</li>
+  <li>a fully qualified classname with a static method name:
+  <code>$listener = 'Vendor\Project\Service::staticMetod'</code>.</li>
+  </ul>
+</blockquote>
+
+<p>If we want to provide some context to the listeners (parameters, etc) we can
+create a sub-class of <code>Event</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\EventDispatcher\Event;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+
+class SomethingHappenedEvent extends Event
+{
+    private $who;
+    private $what;
+    private $when;
+
+    public function __construct($who, $what)
+    {
+        $this-&gt;who = $who;
+        $this-&gt;what = $what;
+        $this-&gt;when = new \DateTime();
+    }
+
+    public function who()
+    {
+        return $this-&gt;who;
+    }
+
+    public function what()
+    {
+        return $this-&gt;what;
+    }
+
+    public function when()
+    {
+        return $this-&gt;when;
+    }
+}
+
+$eventDispatcher = new EventDispatcher();
+
+$eventDispatcher-&gt;addListener('something_happened', function (SomethingHappenedEvent $event) {
+    echo "{$event-&gt;who()} was {$event-&gt;what()} at {$event-&gt;when()-&gt;format('Y/m/d H:i:s')}\n";
+});
+
+$eventDispatcher-&gt;dispatch('something_happened', new SomethingHappenedEvent('Arthur', 'hitchhiking'));
+</code></pre>
+
+<h2 id="httpkernel-example">HttpKernel example</h2>
+
+<p>The HttpKernel component we've seen in <a href="/2016/02/03/ultimate-symfony-http-kernel.html">the previous article</a>
+provides a <code>Kernel</code> abstract class that heavily relies on EventDispatcher.</p>
+
+<p>For each key steps of its execution, it dispatches the following events:</p>
+
+<ol>
+<li><code>kernel.request</code>: gets a <code>Request</code></li>
+<li><code>kernel.controller</code>: executes a callable (also known as "Controller")</li>
+<li><code>kernel.view</code>: converts the Controller's returned value into a <code>Response</code> (if necessary)</li>
+<li><code>kernel.response</code>: returns a <code>Response</code></li>
+</ol>
+
+<p>And in case of error:</p>
+
+<ul>
+<li><code>kernel.exception</code>: handles errors</li>
+</ul>
+
+<p>Just before returning the <code>Response</code>, <code>HttpKernel</code> dispatches one last event:</p>
+
+<ul>
+<li><code>kernel.finish_request</code>: clean ups, sending emails, etc</li>
+</ul>
+
+<p>After the <code>Response</code> has been displayed, we can dispatch:</p>
+
+<ul>
+<li><code>kernel.terminate</code>: same as <code>kernel.finish_request</code>, except it won't slow down
+the rendering of request if FastCGI is enabled</li>
+</ul>
+
+<p>Please note that <code>kernel.finish_request</code></p>
+
+<h3 id="kernel-request">Kernel Request</h3>
+
+<p>Listeners that registered for <code>kernel.request</code> can modify the Request object.</p>
+
+<p>Out of the box there's a <code>RouterListener</code> regitered which sets the following
+parameters in <code>Request-&gt;attributes</code>:</p>
+
+<ul>
+<li><code>_route</code>: the route name that matched the Request</li>
+<li><code>_controller</code>: a callable that will handle the Request and return a Response</li>
+<li><code>_route_parameters</code>: query parameters exctracted from the Request</li>
+</ul>
+
+<p>An example of a custom Listener could be one that decodes JSON content and sets
+it in <code>Request-&gt;request</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+/**
+ * PHP does not populate $_POST with the data submitted via a JSON Request,
+ * causing an empty $request-&gt;request.
+ *
+ * This listener fixes this.
+ */
+class JsonRequestContentListener
+{
+    /**
+     * @param GetResponseEvent $event
+     */
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        $request = $event-&gt;getRequest();
+        $hasBeenSubmited = in_array($request-&gt;getMethod(), array('PATCH', 'POST', 'PUT'), true);
+        $isJson = (1 === preg_match('#application/json#', $request-&gt;headers-&gt;get('Content-Type')));
+        if (!$hasBeenSubmited || !$isJson) {
+            return;
+        }
+        $data = json_decode($request-&gt;getContent(), true);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            $event-&gt;setResponse(new Response('{"error":"Invalid or malformed JSON"}', 400, array('Content-Type' =&gt; 'application/json')));
+        }
+        $request-&gt;request-&gt;add($data ?: array());
+    }
+}
+</code></pre>
+
+<p>Another example would be to start a database transaction:</p>
+
+<pre><code>&lt;?php
+
+namespace AppBundle\EventListener;
+
+use PommProject\Foundation\QueryManager\QueryManagerInterface;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+class StartTransactionListener
+{
+    /**
+     * @var QueryManagerInterface
+     */
+    private $queryManager;
+
+    /**
+     * @param QueryManagerInterface $queryManager
+     */
+    public function __construct(QueryManagerInterface $queryManager)
+    {
+        $this-&gt;queryManager = $queryManager;
+    }
+
+    /**
+     * @param GetResponseEvent $event
+     */
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        $this-&gt;queryManager-&gt;query('START TRANSACTION');
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: <a href="http://pomm-project.org">Pomm</a> is used here as an example.</p>
+</blockquote>
+
+<h3 id="kernel-controller">Kernel Controller</h3>
+
+<p>Listeners that registered for <code>kernel.controller</code> can modify the Request object.</p>
+
+<p>This can be useful when we'd like to change the Controller.</p>
+
+<p>For example <code>SensioFrameworkExtraBundle</code> has a <code>ControllerListener</code> that parses
+the controller annotations at this point.</p>
+
+<h3 id="kernel-view">Kernel View</h3>
+
+<p>Listeners that registered for <code>kernel.view</code> can modify the Response object.</p>
+
+<p>For example <code>SensioFrameworkExtraBundle</code> has a <code>TemplateListener</code> that uses <code>@Template</code>
+annotation: controllers only need to return an array and the listener will create
+a response using <a href="http://twig.sensiolabs.org/">Twig</a> (it will pass the array as
+Twig parameters).</p>
+
+<h3 id="kernel-response">Kernel Response</h3>
+
+<p>Listeners that registered for <code>kernel.response</code> can modify the Response object.</p>
+
+<p>Out of the box there's a <code>ResponseListener</code> regitered which sets some Response
+headers according to the Request's one.</p>
+
+<h3 id="kernel-terminate">Kernel Terminate</h3>
+
+<p>Listeners that registered for <code>kernel.terminate</code> can execute actions after the
+Response has been served (if our web server uses FastCGI).</p>
+
+<p>An example of a custom Listener could be one that rollsback a database transaction,
+when running in test environment:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\EventListener\Pomm;
+
+use PommProject\Foundation\QueryManager\QueryManagerInterface;
+use Symfony\Component\HttpKernel\Event\PostResponseEvent;
+
+class RollbackListener
+{
+    /**
+     * @var QueryManagerInterface
+     */
+    private $queryManager;
+
+    /**
+     * @param QueryManagerInterface $queryManager
+     */
+    public function __construct(QueryManagerInterface $queryManager)
+    {
+        $this-&gt;queryManager = $queryManager;
+    }
+
+    /**
+     * @param PostResponseEvent $event
+     */
+    public function onKernelTerminate(PostResponseEvent $event)
+    {
+        $this-&gt;queryManager-&gt;query('ROLLBACK');
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: We'll se later how to register this listener only for test environment.</p>
+</blockquote>
+
+<h3 id="kernel-exception">Kernel Exception</h3>
+
+<p>Listeners that registered for <code>kernel.exception</code> can catch an exception and generate
+an appropriate Response object.</p>
+
+<p>An example of a custom Listener could be one that logs debug information and generates
+a 500 Response:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\EventListener;
+
+use Psr\Log\LoggerInterface;
+use Ramsey\Uuid\Uuid;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
+
+class ExceptionListener
+{
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function __construct(LoggerInterface $logger)
+    {
+        $this-&gt;logger = $logger;
+    }
+
+    /**
+     * @param GetResponseForExceptionEvent $event
+     */
+    public function onKernelException(GetResponseForExceptionEvent $event)
+    {
+        $exception = $event-&gt;getException();
+        $token = Uuid::uuid4()-&gt;toString();
+        $this-&gt;logger-&gt;critical(
+            'Caught PHP Exception {class}: "{message}" at {file} line {line}',
+            array(
+                'class' =&gt; get_class($exception),
+                'message' =&gt; $exception-&gt;getMessage(),
+                'file' =&gt; $exception-&gt;getFile(),
+                'line' =&gt; $exception-&gt;getLine()
+                'exception' =&gt; $exception,
+                'token' =&gt; $token
+            )
+        );
+        $event-&gt;setResponse(new Response(
+            json_encode(array(
+                'error' =&gt; 'An error occured, if it keeps happening please contact an administrator and provide the following token: '.$token,
+            )),
+            500,
+            array('Content-Type' =&gt; 'application/json'))
+        );
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: <a href="https://benramsey.com/projects/ramsey-uuid/">Ramsey UUID</a> is used
+  here to provide a unique token that can be referred to.</p>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>EventDispatcher is another example of a simple yet powerful Symfony component.
+HttpKernel uses it to configure a standard "Symfony application", but also to
+allow us to change its behaviour.</p>
+
+<p>In this article we've seen the basics and how it works behind the hood when used
+by HttpKernel, but we could create our own event and dispatch it to make our
+own code "Open for extension, but Close to modification"
+(<a href="https://blog.8thlight.com/uncle-bob/2014/05/12/TheOpenClosedPrinciple.html">Open/Close principle</a>).</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - HTTP Kernel]]></title>
+            <link href="https://gnugat.github.io/2016/02/03/ultimate-symfony-http-kernel.html"/>
+            <updated>2016-02-03T00:00:00+00:00</updated>
+            <id>https://gnugat.github.io/2016/02/03/ultimate-symfony-http-kernel.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
   <p><strong>TL;DR</strong>: <code>$response = $httpKernel-&gt;handle($request);</code></p>
 </blockquote>
 
@@ -24,7 +450,7 @@
 
 <ul>
 <li>HTTP Kernel and HTTP Foundation</li>
-<li>Event Dispatcher</li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
 <li>Routing and YAML</li>
 <li>Dependency Injection</li>
 <li>Console</li>
@@ -172,7 +598,7 @@ be used out of the box. It provides many features that we'll explore in the next
 articles:</p>
 
 <ul>
-<li>Event Dispatcher</li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
 <li>Routing and YAML</li>
 <li>Dependency Injection</li>
 </ul>
