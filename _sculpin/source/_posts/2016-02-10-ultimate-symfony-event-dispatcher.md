@@ -98,7 +98,7 @@ Since the second listener had a higher priority, it got executed first.
 > * an array with an instance of a class and a method name:
 >   `$listener = array($service, 'method');`.
 > * a fully qualified classname with a static method name:
->  `$listener = 'Vendor\Project\Service::staticMetod'`.
+>  `$listener = 'Vendor\Project\Service::staticMethod'`.
 
 If we want to provide some context to the listeners (parameters, etc) we can
 create a sub-class of `Event`:
