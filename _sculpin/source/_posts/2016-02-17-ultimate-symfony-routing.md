@@ -99,7 +99,7 @@ $collection->add('edit_article', new Route('/v1/articles/{id}', array(
 via URL patterns and Request method. It also allows us to specify parts of the URLs
 as URI parameters (e.g. `id` in the above snippet).
 
-Building route configuration by interracting with PHP code can be tedious, so the
+Building route configuration by interacting with PHP code can be tedious, so the
 Routing component supports alternative configuration formats: annotations, XML, YAML, etc.
 
 > **Tip**: have a look at `Symfony\Component\Routing\Loader\YamlFileLoader`.
