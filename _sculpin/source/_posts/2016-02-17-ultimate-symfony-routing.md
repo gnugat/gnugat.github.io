@@ -188,7 +188,7 @@ Request is received to find a corresponding controller.
 
 > **Note**: `Request->attributes` is used to store information about the current
 > Request such as the matched route, the controller, etc. It's used internally
-> by Symofny but we could also store our onw values in it.
+> by Symofny but we could also store our own values in it.
 
 Some might be concerned with performance: reading the configuration from the
 filesystem may slow down the application.

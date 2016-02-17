@@ -163,5 +163,5 @@ be used out of the box. It provides many features that we'll explore in the next
 articles:
 
 * [Event Dispatcher](/2016/02/10/ultimate-symfony-event-dispatcher.html)
-* Routing and YAML
+* [Routing and YAML](/2016/02/17/ultimate-symfony-routing.html)
 * Dependency Injection

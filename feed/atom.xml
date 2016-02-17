@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-02-17T08:12:44+00:00</updated>
+    <updated>2016-02-17T08:25:56+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -207,7 +207,7 @@ Request is received to find a corresponding controller.</p>
 <blockquote>
   <p><strong>Note</strong>: <code>Request-&gt;attributes</code> is used to store information about the current
   Request such as the matched route, the controller, etc. It's used internally
-  by Symofny but we could also store our onw values in it.</p>
+  by Symofny but we could also store our own values in it.</p>
 </blockquote>
 
 <p>Some might be concerned with performance: reading the configuration from the
@@ -855,7 +855,7 @@ articles:</p>
 
 <ul>
 <li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
-<li>Routing and YAML</li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
 <li>Dependency Injection</li>
 </ul>
 ]]></content>
