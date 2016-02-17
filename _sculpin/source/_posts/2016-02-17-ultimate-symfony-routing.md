@@ -116,20 +116,20 @@ For example the following YAML file:
 search_articles:
     path: /api/articles
     defaults:
-        _controller: "Vendor\Project\Controller\ArticleController::search"
+        _controller: 'Vendor\Project\Controller\ArticleController::search'
     methods:
         - GET
         - HEAD
 
 edit_article:
-    path: "/api/articles/{id}"
+    path: '/api/articles/{id}'
     defaults:
-        _controller: "Vendor\Project\Controller\ArticleController::edit"
+        _controller: 'Vendor\Project\Controller\ArticleController::edit'
     methods:
         - PUT
 ```
 
-> **Note**: Some string values must be escaped using double quotes because the YAML
+> **Note**: Some string values must be escaped using single quotes because the YAML
 > has a list of [reserved characters](http://stackoverflow.com/a/22235064), including:
 > `@`, `%`, `\`, `-`, `:` `[`, `]`, `{` and `}`.
 
