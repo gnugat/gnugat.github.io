@@ -2,8 +2,8 @@
 layout: post
 title: Symfony / Web Services - part 1: Introduction
 tags:
-    - Symfony
-    - Symfony / Web Services series
+    - symfony
+    - symfony / web services series
 ---
 
 Welcome to this new series of articles on managing Web Services in a

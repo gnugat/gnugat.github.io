@@ -5,7 +5,7 @@ tags:
     - introducing library
     - phpspec
     - phpunit
-    - TDD
+    - tdd
 ---
 
 [PHPUnit](https://phpunit.de/) is a port of [jUnit](http://junit.org/), its name

@@ -2,7 +2,7 @@
 layout: post
 title: Tests: Tools overview
 tags:
-    - Tests series
+    - tests series
 ---
 
 This article is part of a series on Tests in general and on how to practice

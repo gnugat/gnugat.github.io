@@ -2,9 +2,9 @@
 layout: post
 title: Master Symfony2 - part 2: Test Driven Development
 tags:
-    - Symfony
-    - TDD
-    - Master Symfony2 series
+    - symfony
+    - tdd
+    - master symfony2 series
 ---
 
 This is the second article of the series on mastering the

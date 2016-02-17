@@ -2,8 +2,8 @@
 layout: post
 title: Master Symfony2 - part 4: Doctrine
 tags:
-    - Symfony
-    - Master Symfony2 series
+    - symfony
+    - master symfony2 series
 ---
 
 This is the fourth article of the series on mastering the

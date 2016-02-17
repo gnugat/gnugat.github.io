@@ -2,8 +2,8 @@
 layout: post
 title: Symfony Differently - part 3: Conclusion
 tags:
-    - Symfony
-    - Symfony Differently
+    - symfony
+    - symfony differently
 ---
 
 This series isn't really working for me, so I've decided to conclude it prematurely.

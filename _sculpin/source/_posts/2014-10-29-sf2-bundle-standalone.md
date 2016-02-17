@@ -2,7 +2,7 @@
 layout: post
 title: Symfony2 Bundle, standalone
 tags:
-    - Symfony
+    - symfony
 ---
 
 > **TL;DR**: Create an empty application in your bundle to allow people to test

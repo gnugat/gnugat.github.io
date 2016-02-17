@@ -2,9 +2,9 @@
 layout: post
 title: Symfony / Web Services - part 2.2: Creation, the pragmatic way
 tags:
-    - Symfony
+    - symfony
     - phpspec
-    - Symfony / Web Services series
+    - symfony / web services series
 ---
 
 This is the third article of the series on managing Web Services in a

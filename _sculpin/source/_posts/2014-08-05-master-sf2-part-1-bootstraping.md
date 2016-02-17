@@ -2,8 +2,8 @@
 layout: post
 title: Master Symfony2 - part 1: Bootstraping
 tags:
-    - Symfony
-    - Master Symfony2 series
+    - symfony
+    - master symfony2 series
 ---
 
 You know the basics of the [Symfony2](http://symfony.com/) framework

@@ -3,7 +3,7 @@ layout: post
 title: Tactician
 tags:
     - introducing library
-    - Tactician
+    - tactician
 ---
 
 Just like [SimpleBus](/2015/08/04/simple-bus.html),

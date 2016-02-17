@@ -3,7 +3,7 @@ layout: post
 title: Simple Bus
 tags:
     - introducing library
-    - Simple Bus
+    - simple bus
 ---
 
 [Simple Bus](http://simplebus.github.io/MessageBus/) is a lightweight library

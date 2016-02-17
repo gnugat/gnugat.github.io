@@ -2,7 +2,7 @@
 layout: post
 title: Learn Symfony2 - part 1: Composer
 tags:
-    - Symfony
+    - symfony
     - Learn Symfony2 series
 ---
 

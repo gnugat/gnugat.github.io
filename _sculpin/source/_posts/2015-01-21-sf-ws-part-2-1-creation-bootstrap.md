@@ -2,8 +2,8 @@
 layout: post
 title: Symfony / Web Services - part 2.1: Creation bootstrap
 tags:
-    - Symfony
-    - Symfony / Web Services series
+    - symfony
+    - symfony / web services series
 ---
 
 This is the second article of the series on managing Web Services in a

@@ -3,8 +3,8 @@ layout: post
 title: Diactoros (PSR-7)
 tags:
     - introducing library
-    - Diactoros
-    - PSR-7
+    - diactoros
+    - psr-7
 ---
 
 [Zend Diactoros](https://github.com/zendframework/zend-diactoros) is a lightweight

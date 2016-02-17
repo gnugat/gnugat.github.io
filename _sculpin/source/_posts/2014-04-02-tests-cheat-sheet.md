@@ -2,7 +2,7 @@
 layout: post
 title: Tests cheat sheet
 tags:
-    - Tests series
+    - tests series
 ---
 
 [TL;DR: jump to the conclusion](#conclusion).

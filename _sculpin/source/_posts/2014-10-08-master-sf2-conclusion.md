@@ -2,8 +2,8 @@
 layout: post
 title: Master Symfony2 - Conclusion
 tags:
-    - Symfony
-    - Master Symfony2 series
+    - symfony
+    - master symfony2 series
 ---
 
 This is the conclusion of the series on mastering the

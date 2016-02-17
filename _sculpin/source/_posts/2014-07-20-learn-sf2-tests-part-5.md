@@ -2,8 +2,8 @@
 layout: post
 title: Learn Symfony2 - part 5: Tests
 tags:
-    - Symfony
-    - Learn Symfony2 series
+    - symfony
+    - learn symfony2 series
 ---
 
 This is the fifth article of the series on learning

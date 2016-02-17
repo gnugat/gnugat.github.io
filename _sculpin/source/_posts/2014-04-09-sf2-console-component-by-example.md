@@ -2,7 +2,7 @@
 layout: post
 title: Symfony2 Console component, by example
 tags:
-    - Symfony
+    - symfony
     - introducing library
 ---
 

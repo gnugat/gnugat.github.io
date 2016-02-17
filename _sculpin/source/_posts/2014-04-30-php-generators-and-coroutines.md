@@ -2,7 +2,7 @@
 layout: post
 title: PHP generators and coroutines
 tags:
-    - PHP
+    - php
 ---
 
 [TL;DR: jump to the conclusion](#conclusion).

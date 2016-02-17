@@ -3,7 +3,7 @@ layout: post
 title: Pomm Foundation
 tags:
     - introducing library
-    - Pomm
+    - pomm
 ---
 
 [Pomm](http://www.pomm-project.org/) is an interresting alternative to Doctrine

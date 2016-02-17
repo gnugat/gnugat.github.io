@@ -2,7 +2,7 @@
 layout: post
 title: Behavior Driven Development: story BDD
 tags:
-    - Tests series
+    - tests series
 ---
 
 [TL;DR: jump to the conclusion](#conclusion).

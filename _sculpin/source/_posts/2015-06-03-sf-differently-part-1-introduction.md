@@ -2,8 +2,8 @@
 layout: post
 title: Symfony Differently - part 1: Introduction
 tags:
-    - Symfony
-    - Symfony Differently
+    - symfony
+    - symfony differently
 ---
 
 [Symfony](https://symfony.com) is an amazing HTTP framework which powers

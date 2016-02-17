@@ -2,9 +2,9 @@
 layout: post
 title: Symfony / Web Services - part 3.2: Consuming, Guzzle
 tags:
-    - Symfony
+    - symfony
     - phpspec
-    - Symfony / Web Services series
+    - symfony / web services series
 ---
 
 This is the sixth article of the series on managing Web Services in a

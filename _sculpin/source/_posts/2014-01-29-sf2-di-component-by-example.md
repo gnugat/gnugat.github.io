@@ -3,7 +3,7 @@ layout: post
 title: Symfony2 Dependency Injection component, by example
 tags:
     - introducing library
-    - Symfony
+    - symfony
 ---
 
 In [the previous article](/2014/01/22/ioc-di-and-service-locator.html)

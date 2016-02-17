@@ -2,8 +2,8 @@
 layout: post
 title: Symfony Differently - part 2: Bootstrap
 tags:
-    - Symfony
-    - Symfony Differently
+    - symfony
+    - symfony differently
 ---
 
 This is the second article of the [Symfony](https://symfony.com) Differently series,

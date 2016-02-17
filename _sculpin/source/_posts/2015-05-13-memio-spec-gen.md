@@ -3,7 +3,7 @@ layout: post
 title: Memio SpecGen v0.1
 tags:
     - memio
-    - SpecGen
+    - specgen
     - phpspec
     - pet project
     - introducing library

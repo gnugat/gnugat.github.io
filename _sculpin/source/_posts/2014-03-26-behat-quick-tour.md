@@ -2,7 +2,7 @@
 layout: post
 title: Behat: a quick tour
 tags:
-    - Tests series
+    - tests series
 ---
 
 [TL;DR: jump to the conclusion](#conclusion).

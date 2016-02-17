@@ -2,7 +2,7 @@
 layout: post
 title: Symfony2 Sessions introduction
 tags:
-    - Symfony
+    - symfony
     - introducing library
 ---
 

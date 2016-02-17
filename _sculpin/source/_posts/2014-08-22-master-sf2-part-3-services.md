@@ -2,8 +2,8 @@
 layout: post
 title: Master Symfony2 - part 3: Services
 tags:
-    - Symfony
-    - Master Symfony2 series
+    - symfony
+    - master symfony2 series
 ---
 
 This is the third article of the series on mastering the

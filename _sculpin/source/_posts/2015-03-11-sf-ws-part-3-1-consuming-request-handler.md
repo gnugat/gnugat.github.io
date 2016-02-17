@@ -2,9 +2,9 @@
 layout: post
 title: Symfony / Web Services - part 3.1: Consuming, RequestHandler
 tags:
-    - Symfony
+    - symfony
     - phpspec
-    - Symfony / Web Services series
+    - symfony / web services series
 ---
 
 This is the fifth article of the series on managing Web Services in a

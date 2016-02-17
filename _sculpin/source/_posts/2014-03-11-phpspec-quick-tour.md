@@ -2,7 +2,7 @@
 layout: post
 title: phpspec: a quick tour
 tags:
-    - Tests series
+    - tests series
     - introducing tool
     - phpspec
 ---
