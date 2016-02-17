@@ -37,7 +37,7 @@ We're now about to check Routing and YAML, then in the next articles we'll have 
 ## Routing
 
 Symfony provides a [Routing component](http://symfony.com/doc/current/components/routing/introduction.html)
-which allows us, for a page, to execute a specific function (also known as "Controller").
+which allows us, for a HTTP request/URL, to execute a specific function (also known as "Controller").
 
 > **Note**: Controllers must be a [callable](http://php.net/manual/en/language.types.callable.php),
 > for example:
