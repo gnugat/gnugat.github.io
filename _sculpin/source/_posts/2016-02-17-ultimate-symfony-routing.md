@@ -107,7 +107,7 @@ Routing component supports alternative configuration formats: annotations, XML, 
 ## YAML
 
 Symfony provides a [YAML component](http://symfony.com/doc/current/components/yaml/introduction.html)
-which allows us to convert YAML configuration into PHP arrays (and vis versa).
+which allows us to convert YAML configuration into PHP arrays (and vice versa).
 
 For example the following YAML file:
 
