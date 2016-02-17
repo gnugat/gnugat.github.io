@@ -73,7 +73,7 @@ provided by <a href="http://symfony.com">Symfony</a> to help us build applicatio
 <h2 id="routing">Routing</h2>
 
 <p>Symfony provides a <a href="http://symfony.com/doc/current/components/routing/introduction.html">Routing component</a>
-which allows us, for a page, to execute a specific function (also known as "Controller").</p>
+which allows us, for a HTTP request/URL, to execute a specific function (also known as "Controller").</p>
 
 <blockquote>
   <p><strong>Note</strong>: Controllers must be a <a href="http://php.net/manual/en/language.types.callable.php">callable</a>,
@@ -139,7 +139,7 @@ $collection-&gt;add('edit_article', new Route('/v1/articles/{id}', array(
 via URL patterns and Request method. It also allows us to specify parts of the URLs
 as URI parameters (e.g. <code>id</code> in the above snippet).</p>
 
-<p>Building route configuration by interracting with PHP code can be tedious, so the
+<p>Building route configuration by interacting with PHP code can be tedious, so the
 Routing component supports alternative configuration formats: annotations, XML, YAML, etc.</p>
 
 <blockquote>
@@ -149,7 +149,7 @@ Routing component supports alternative configuration formats: annotations, XML, 
 <h2 id="yaml">YAML</h2>
 
 <p>Symfony provides a <a href="http://symfony.com/doc/current/components/yaml/introduction.html">YAML component</a>
-which allows us to convert YAML configuration into PHP arrays (and vis versa).</p>
+which allows us to convert YAML configuration into PHP arrays (and vice versa).</p>
 
 <p>For example the following YAML file:</p>
 
@@ -157,21 +157,21 @@ which allows us to convert YAML configuration into PHP arrays (and vis versa).</
 search_articles:
     path: /api/articles
     defaults:
-        _controller: "Vendor\Project\Controller\ArticleController::search"
+        _controller: 'Vendor\Project\Controller\ArticleController::search'
     methods:
         - GET
         - HEAD
 
 edit_article:
-    path: "/api/articles/{id}"
+    path: '/api/articles/{id}'
     defaults:
-        _controller: "Vendor\Project\Controller\ArticleController::edit"
+        _controller: 'Vendor\Project\Controller\ArticleController::edit'
     methods:
         - PUT
 </code></pre>
 
 <blockquote>
-  <p><strong>Note</strong>: Some string values must be escaped using double quotes because the YAML
+  <p><strong>Note</strong>: Some string values must be escaped using single quotes because the YAML
   has a list of <a href="http://stackoverflow.com/a/22235064">reserved characters</a>, including:
   <code>@</code>, <code>%</code>, <code>\</code>, <code>-</code>, <code>:</code> <code>[</code>, <code>]</code>, <code>{</code> and <code>}</code>.</p>
 </blockquote>
