@@ -172,8 +172,6 @@ After the `Response` has been displayed, we can dispatch:
 * `kernel.terminate`: same as `kernel.finish_request`, except it won't slow down
   the rendering of request if FastCGI is enabled
 
-Please note that `kernel.finish_request`
-
 ### Kernel Request
 
 Listeners that registered for `kernel.request` can modify the Request object.
