@@ -64,7 +64,7 @@ provided by <a href="http://symfony.com">Symfony</a> to help us build applicatio
 <p>We're now about to check Event Dispatcher, then in the next articles we'll have a look at:</p>
 
 <ul>
-<li>Routing and YAML</li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
 <li>Dependency Injection</li>
 <li>Console</li>
 </ul>
@@ -137,7 +137,7 @@ Log it
   <li>an array with an instance of a class and a method name:
   <code>$listener = array($service, 'method');</code>.</li>
   <li>a fully qualified classname with a static method name:
-  <code>$listener = 'Vendor\Project\Service::staticMetod'</code>.</li>
+  <code>$listener = 'Vendor\Project\Service::staticMethod'</code>.</li>
   </ul>
 </blockquote>
 
@@ -226,13 +226,13 @@ the rendering of request if FastCGI is enabled</li>
 
 <p>Listeners that registered for <code>kernel.request</code> can modify the Request object.</p>
 
-<p>Out of the box there's a <code>RouterListener</code> regitered which sets the following
+<p>Out of the box there's a <code>RouterListener</code> registered which sets the following
 parameters in <code>Request-&gt;attributes</code>:</p>
 
 <ul>
 <li><code>_route</code>: the route name that matched the Request</li>
 <li><code>_controller</code>: a callable that will handle the Request and return a Response</li>
-<li><code>_route_parameters</code>: query parameters exctracted from the Request</li>
+<li><code>_route_parameters</code>: query parameters extracted from the Request</li>
 </ul>
 
 <p>An example of a custom Listener could be one that decodes JSON content and sets
@@ -275,7 +275,7 @@ class JsonRequestContentListener
 
 <p>Another example would be to start a database transaction:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 namespace AppBundle\EventListener;
 
@@ -461,7 +461,8 @@ own code "Open for extension, but Close to modification"
             <footer>
                             <nav class="row">
                             <a class="button six columns" href="https://gnugat.github.io/2016/02/03/ultimate-symfony-http-kernel.html" title="The Ultimate Developer Guide to Symfony - HTTP Kernel">Previous &lt; The Ultimate Developer Guide to Symfony - HTTP Kernel</a>
-                                </nav>
+                                        <a class="button six columns" href="https://gnugat.github.io/2016/02/17/ultimate-symfony-routing.html" title="The Ultimate Developer Guide to Symfony - Routing">Next &gt; The Ultimate Developer Guide to Symfony - Routing</a>
+                    </nav>
                     <hr />
             </footer>
         </article>

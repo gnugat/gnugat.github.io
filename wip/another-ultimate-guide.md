@@ -31,7 +31,7 @@
             <header>
                 <h2>
     The Ultimate Developer Guide to Symfony
-    <span class="sub-title">10/02/2016</span>
+    <span class="sub-title">17/02/2016</span>
 </h2>
                             <nav>
                                                             <a class="button " href="https://gnugat.github.io/tags/symfony">symfony</a>

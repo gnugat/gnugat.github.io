@@ -27,7 +27,7 @@ We've already seen:
 
 We're now about to check Event Dispatcher, then in the next articles we'll have a look at:
 
-* Routing and YAML
+* [Routing and YAML](/2016/02/17/ultimate-symfony-routing.html)
 * Dependency Injection
 * Console
 

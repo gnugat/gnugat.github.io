@@ -31,7 +31,7 @@
             <header>
                 <h2>
     The Ultimate Developer Guide to Symfony - Dependency Injection
-    <span class="sub-title">10/02/2016</span>
+    <span class="sub-title">17/02/2016</span>
 </h2>
                             <nav>
                                                             <a class="button " href="https://gnugat.github.io/tags/symfony">symfony</a>
@@ -61,11 +61,8 @@ provided by <a href="http://symfony.com">Symfony</a> to help us build applicatio
 <li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
 </ul>
 
-<p>We're now about to check Dependency Injection, then in the next articles we'll have a look at:</p>
-
-<ul>
-<li>Console</li>
-</ul>
+<p>We're now about to check Dependency Injection, and finally in the next article
+we'll have a look at Console.</p>
 
 <h2 id="introduction-to-the-design-pattern">Introduction to the design pattern</h2>
 
@@ -196,18 +193,26 @@ class CheckApiStatus
 </code></pre>
 
 <blockquote>
-  <p><strong>Note</strong>: here's another refactoring example <a href="http://martinfowler.com/articles/refactoring-external-service.html">by Martin Fowler</a>.</p>
+  <p><strong>Note</strong>: for more refactoring examples, check:</p>
+  
+  <ul>
+  <li><a href="http://martinfowler.com/articles/refactoring-external-service.html">Refactoring external service</a> by Martin Fowler</li>
+  <li><a href="http://verraes.net/2013/09/extract-till-you-drop/">Extract till you drop</a> by Mathias Verreas</li>
+  <li>Refactoring the cat API
+  <a href="http://php-and-symfony.matthiasnoback.nl/2015/07/refactoring-the-cat-api-client-part-1/">part 1</a>
+  <a href="http://php-and-symfony.matthiasnoback.nl/2015/07/refactoring-the-cat-api-client-part-2/">part 2</a>
+  <a href="http://php-and-symfony.matthiasnoback.nl/2015/07/refactoring-the-cat-api-client-part-3/">part 3</a>
+  by Matthias Noback</li>
+  </ul>
 </blockquote>
 
 <p>Our original class then has to call those sub classes to "delegate" the work. But
 how does it access those sub classes? Should it instantiate them in its methods?
 A better place could be the constructor, where the instances are stored in the class
-properties.</p>
+properties so it can be shared between two calls.</p>
 
-<p>There is a better way.</p>
-
-<p>We can instantiate them out of the class, and then pass them as arguments to the
-original class constructor:</p>
+<p>Or even better we can instantiate them out of the class, and then pass them as
+arguments to the original class constructor, so we can share it with other classes:</p>
 
 <pre><code class="php">&lt;?php
 
@@ -237,6 +242,11 @@ needs (also known as depdencies) and pass them as arguments (also known as injec
 
 <p>The downside of this design pattern is that we now have a cascacade of instantiation.</p>
 
+<blockquote>
+  <p><strong>Note</strong>: Classes can be shared if they are <a href="https://igor.io/2013/03/31/stateless-services.html">stateless</a>,
+  which means calling a method shouldn't change their attributes.</p>
+</blockquote>
+
 <h2 id="the-component">The component</h2>
 
 <p>Symfony provides a <a href="http://symfony.com/doc/current/components/dependency-injection/introduction.html">Dependency Injection component</a>
@@ -262,7 +272,7 @@ $checkApiStatus = $container-&gt;get('check_api_status');
 
 <p>It can even be set up using configuration:</p>
 
-<pre><code># /tmp/services.yml
+<pre><code># /tmp/services/api.yml
 services:
     http_client:
         class: CurlHttpClient
@@ -278,22 +288,101 @@ services:
   (the string then needs to be escaped in double quotes because <code>@</code> is a reserved YAML character).</p>
 </blockquote>
 
-<p>Here's how we can load this configuration</p>
+<p>Here's how we can load this configuration:</p>
 
 <pre><code class="php">&lt;?php
 
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Config\Loader\LoaderResolver;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\DirectoryLoader;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 $container = new ContainerBuilder();
-$configurationDirectory = new FileLocator(__DIR__);
 
-$loader = new YamlFileLoader($container, $configurationDirectory);
-$loader-&gt;load('/tmp/services.yml');
+// Load recursively all YAML configuration files in services directories
+$fileLocator = new FileLocator(__DIR__);
+$loader = new DirectoryLoader($container, $fileLocator);
+$loader-&gt;setResolver(new LoaderResolver(array(
+    new YamlFileLoader($container, $fileLocator),
+    $loader,
+)));
+$loader-&gt;load('/services/');
 
 $checkApiStatus = $container-&gt;get('check_api_status');
 </code></pre>
+
+<h2 id="extension">Extension</h2>
+
+<p>By creating a class that extends <code>Extension</code>, we can provide reusable Dependency
+Injection configuration:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Config\Loader\LoaderResolver;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\DirectoryLoader;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+
+class AppExtension extends Extension
+{
+    public function load(array $configs, ContainerBuilder $container)
+    {
+        $fileLocator = new FileLocator(__DIR__);
+        $loader = new DirectoryLoader($container, $fileLocator);
+        $loader-&gt;setResolver(new LoaderResolver(array(
+            new YamlFileLoader($container, $fileLocator),
+            $loader,
+        )));
+        $loader-&gt;load('/services/');
+    }
+}
+
+$container = new ContainerBuilder();
+$appExtension = new AppExtension();
+$appExtension-&gt;load(array(), $container);
+
+$checkApiStatus = $container-&gt;get('check_api_status');
+</code></pre>
+
+<h2 id="compilerpass-and-tags">CompilerPass and tags</h2>
+
+<p>By creating a class that implements <code>CompilerPassInterface</code>, we can change .</p>
+
+<p>For example, we can retrieve all services "tagged" <code>kernel.event_listener</code> and
+add them to the <code>EventDispatcher</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\Reference;
+
+class EventListenerCompilerPass implements CompilerPassInterface
+{
+    public function process(ContainerBuilder $container)
+    {
+        if (false === $container-&gt;hasDefinition('event_dispatcher')) {
+            return;
+        }
+        $eventDispatcher = $container-&gt;getDefinition('event_dispatcher');
+        $taggedServices = $container-&gt;findTaggedServiceIds('kernel.event_listener');
+        foreach ($taggedServices as $id =&gt; $attributes) {
+            $eventDispatcher-&gt;addMethodCall('addListener', array(
+                $attributes['event'],
+                array(new Reference($id), $attributes['method']),
+                $attributes['method'],
+            ));
+        }
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: The EventDispatcher component already provides a <code>RegisterListenersPass</code>.</p>
+</blockquote>
 
 
             <footer>

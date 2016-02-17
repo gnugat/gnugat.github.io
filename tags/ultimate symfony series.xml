@@ -3,11 +3,267 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-02-10T08:25:46+00:00</updated>
+    <updated>2016-02-17T07:52:59+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Routing]]></title>
+            <link href="https://gnugat.github.io/2016/02/17/ultimate-symfony-routing.html"/>
+            <updated>2016-02-17T00:00:00+00:00</updated>
+            <id>https://gnugat.github.io/2016/02/17/ultimate-symfony-routing.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>:</p>
+
+<pre><code class="php">$parameters = $urlMatcher-&gt;match($request-&gt;getPathInfo());
+
+$request-&gt;attributes-&gt;add(array('_controller' =&gt; $parameters['_controller']);
+$request-&gt;attributes-&gt;add(array('_route' =&gt; $parameters['_route']);
+unset($parameters['_controller'], $parameters['_route']);
+$request-&gt;attributes-&gt;add(array('_route_params' =&gt; $parameters);
+</code></pre>
+</blockquote>
+
+<p>In this guide we explore the standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications.</p>
+
+<p>We've already seen:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+</ul>
+
+<p>We're now about to check Routing and YAML, then in the next articles we'll have a look at:</p>
+
+<ul>
+<li>Dependency Injection</li>
+<li>Console</li>
+</ul>
+
+<h2 id="routing">Routing</h2>
+
+<p>Symfony provides a <a href="http://symfony.com/doc/current/components/routing/introduction.html">Routing component</a>
+which allows us, for a page, to execute a specific function (also known as "Controller").</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Controllers must be a <a href="http://php.net/manual/en/language.types.callable.php">callable</a>,
+  for example:</p>
+  
+  <ul>
+  <li>an anonymous function: <code>$controller = function (Request $request) { return new Response() };</code>.</li>
+  <li>an array with an instance of a class and a method name:
+  <code>$controller = array($controller, 'searchArticles');</code>.</li>
+  <li>a fully qualified classname with a static method name:
+  <code>$controller = 'Vendor\Project\Controller\ArticleController::searchArticles'</code>.</li>
+  </ul>
+  
+  <p>Controllers can take a Request argument and should return a Response instance.</p>
+</blockquote>
+
+<p>It revolves around the following interface:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\Routing\Matcher;
+
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\Routing\Exception\MethodNotAllowedException;
+
+interface UrlMatcherInterface
+{
+    /**
+     * @param string $pathinfo
+     *
+     * @return array Route parameters (also contains `_route`)
+     *
+     * @throws ResourceNotFoundException
+     * @throws MethodNotAllowedException
+     */
+    public function match($pathinfo);
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: For brevity the interface has been stripped from <code>RequestContextAwareInterface</code>.</p>
+</blockquote>
+
+<p>In actual applications we don't need to implement it as the component provides
+a nice implementation that works with <code>RouteCollection</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\Routing\Route;
+
+$collection = new RouteCollection();
+$collection-&gt;add('search_articles', new Route('/v1/articles', array(
+    '_controller' =&gt; 'Vendor\Project\Controller\ArticleController::search',
+), array(), array(), '', array(), array('GET', 'HEAD')));
+
+$collection-&gt;add('edit_article', new Route('/v1/articles/{id}', array(
+    '_controller' =&gt; 'Vendor\Project\Controller\ArticleController::edit',
+), array(), array(), '', array(), array('PUT')));
+</code></pre>
+
+<p><code>RouteCollection</code> allows us to configure which Request will match our controllers:
+via URL patterns and Request method. It also allows us to specify parts of the URLs
+as URI parameters (e.g. <code>id</code> in the above snippet).</p>
+
+<p>Building route configuration by interracting with PHP code can be tedious, so the
+Routing component supports alternative configuration formats: annotations, XML, YAML, etc.</p>
+
+<blockquote>
+  <p><strong>Tip</strong>: have a look at <code>Symfony\Component\Routing\Loader\YamlFileLoader</code>.</p>
+</blockquote>
+
+<h2 id="yaml">YAML</h2>
+
+<p>Symfony provides a <a href="http://symfony.com/doc/current/components/yaml/introduction.html">YAML component</a>
+which allows us to convert YAML configuration into PHP arrays (and vis versa).</p>
+
+<p>For example the following YAML file:</p>
+
+<pre><code># /tmp/routing.yml
+search_articles:
+    path: /api/articles
+    defaults:
+        _controller: "Vendor\Project\Controller\ArticleController::search"
+    methods:
+        - GET
+        - HEAD
+
+edit_article:
+    path: "/api/articles/{id}"
+    defaults:
+        _controller: "Vendor\Project\Controller\ArticleController::edit"
+    methods:
+        - PUT
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Some string values must be escaped using double quotes because the YAML
+  has a list of <a href="http://stackoverflow.com/a/22235064">reserved characters</a>, including:
+  <code>@</code>, <code>%</code>, <code>\</code>, <code>-</code>, <code>:</code> <code>[</code>, <code>]</code>, <code>{</code> and <code>}</code>.</p>
+</blockquote>
+
+<p>Can be converted using:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Yaml\Yaml;
+
+$routing = Yaml::parse(file_get_contents('/tmp/routing.yml'));
+</code></pre>
+
+<p>This will result in the equivalent of the following array:</p>
+
+<pre><code class="php">&lt;?php
+
+$routing = array(
+    'search_articles' =&gt; array(
+        'path' =&gt; '/api/articles',
+        'defaults' =&gt; array(
+            '_controller' =&gt; 'Vendor\Project\Controller\ArticleController::search',
+        ),
+        'methods' =&gt; array(
+            'GET',
+            'HEAD',
+        ),
+    ),
+    'edit_article' =&gt; array(
+        'path' =&gt; '/api/articles/{id}',
+        'defaults' =&gt; array(
+            '_controller' =&gt; 'Vendor\Project\Controller\ArticleController::edit',
+        ),
+        'methods' =&gt; array(
+            'PUT',
+        ),
+    ),
+);
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: the Routing component uses another component to then build <code>RouteCollection</code>
+  from this array: the <a href="http://symfony.com/doc/current/components/config/introduction.html">Config component</a>
+  which is out of the scope of this guide.</p>
+</blockquote>
+
+<p>There's also <code>$yaml = Yaml::dump($array);</code> that converts a PHP array into a YAML
+string.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The Routing component allows us to define which Controllers should be executed
+for the given Request, and the Yaml component allows us to configure it in a simple way.</p>
+
+<p>HttpKernel provides a <code>RouterListener</code> which makes use of <code>UrlMatcher</code> when the
+Request is received to find a corresponding controller.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: <code>Request-&gt;attributes</code> is used to store information about the current
+  Request such as the matched route, the controller, etc. It's used internally
+  by Symofny but we could also store our onw values in it.</p>
+</blockquote>
+
+<p>Some might be concerned with performance: reading the configuration from the
+filesystem may slow down the application.</p>
+
+<p>Don't panic! There's a <code>PhpMatcherDumper</code> class which can generate an implementation
+of <code>UrlMatcherInterface</code> with all configuration in an optimized way. It might look
+like this:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Routing\Exception\MethodNotAllowedException;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\Routing\RequestContext;
+
+class appDevUrlMatcher extends Symfony\Bundle\FrameworkBundle\Routing\RedirectableUrlMatcher
+{
+    public function __construct(RequestContext $context)
+    {
+        $this-&gt;context = $context;
+    }
+
+    public function match($pathinfo)
+    {
+        $allow = array();
+        $pathinfo = rawurldecode($pathinfo);
+        $context = $this-&gt;context;
+
+        // edit_article
+        if (preg_match('#^/v1/articles/(?P&lt;id&gt;[^/]++)$#s', $pathinfo, $matches)) {
+            if ($this-&gt;context-&gt;getMethod() != 'PUT') {
+                $allow[] = 'PUT';
+                goto not_edit_article;
+            }
+
+            return $this-&gt;mergeDefaults(array_replace($matches, array('_route' =&gt; 'edit_article')), array (  '_controller' =&gt; 'Vendor\Project\Controller\ArticleController::edit',));
+        }
+        not_edit_article:
+
+        // search_articles
+        if ($pathinfo === '/v1/articles') {
+            if (!in_array($this-&gt;context-&gt;getMethod(), array('GET', 'HEAD'))) {
+                $allow = array_merge($allow, array('GET', 'HEAD'));
+                goto not_search_articles;
+            }
+
+            return array (  '_controller' =&gt; 'app.article_controller:search',  '_route' =&gt; 'Vendor\Project\Controller\ArticleController::search',);
+        }
+        not_search_articles:
+
+        throw 0 &lt; count($allow) ? new MethodNotAllowedException(array_unique($allow)) : new ResourceNotFoundException();
+    }
+}
+</code></pre>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Event Dispatcher]]></title>
             <link href="https://gnugat.github.io/2016/02/10/ultimate-symfony-event-dispatcher.html"/>
@@ -37,7 +293,7 @@ provided by <a href="http://symfony.com">Symfony</a> to help us build applicatio
 <p>We're now about to check Event Dispatcher, then in the next articles we'll have a look at:</p>
 
 <ul>
-<li>Routing and YAML</li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
 <li>Dependency Injection</li>
 <li>Console</li>
 </ul>
@@ -110,7 +366,7 @@ Log it
   <li>an array with an instance of a class and a method name:
   <code>$listener = array($service, 'method');</code>.</li>
   <li>a fully qualified classname with a static method name:
-  <code>$listener = 'Vendor\Project\Service::staticMetod'</code>.</li>
+  <code>$listener = 'Vendor\Project\Service::staticMethod'</code>.</li>
   </ul>
 </blockquote>
 
@@ -199,13 +455,13 @@ the rendering of request if FastCGI is enabled</li>
 
 <p>Listeners that registered for <code>kernel.request</code> can modify the Request object.</p>
 
-<p>Out of the box there's a <code>RouterListener</code> regitered which sets the following
+<p>Out of the box there's a <code>RouterListener</code> registered which sets the following
 parameters in <code>Request-&gt;attributes</code>:</p>
 
 <ul>
 <li><code>_route</code>: the route name that matched the Request</li>
 <li><code>_controller</code>: a callable that will handle the Request and return a Response</li>
-<li><code>_route_parameters</code>: query parameters exctracted from the Request</li>
+<li><code>_route_parameters</code>: query parameters extracted from the Request</li>
 </ul>
 
 <p>An example of a custom Listener could be one that decodes JSON content and sets
@@ -248,7 +504,7 @@ class JsonRequestContentListener
 
 <p>Another example would be to start a database transaction:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 namespace AppBundle\EventListener;
 
@@ -451,7 +707,7 @@ own code "Open for extension, but Close to modification"
 <ul>
 <li>HTTP Kernel and HTTP Foundation</li>
 <li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
-<li>Routing and YAML</li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
 <li>Dependency Injection</li>
 <li>Console</li>
 </ul>
