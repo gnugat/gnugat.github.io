@@ -4,7 +4,11 @@ title: Symfony2 Dependency Injection component, by example
 tags:
     - introducing library
     - symfony
+    - deprecated
 ---
+
+> **Deprecated**: This article has been re-written - see
+> [The Ultimate Developer Guide to Symfony - Dependency Injection](/2016/02/24/ultimate-symfony-dependency-injection.html)
 
 In [the previous article](/2014/01/22/ioc-di-and-service-locator.html)
 we've seen among other things the definition of Dependency Injection (DI) and of

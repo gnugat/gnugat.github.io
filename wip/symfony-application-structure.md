@@ -29,7 +29,7 @@
             <header>
                 <h2>
     Symfony Application Structure
-    <span class="sub-title">17/02/2016</span>
+    <span class="sub-title">24/02/2016</span>
 </h2>
                             <nav>
                                                             <a class="button " href="https://gnugat.github.io/tags/symfony">symfony</a>

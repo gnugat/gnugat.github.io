@@ -3,11 +3,635 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-02-17T19:06:54+00:00</updated>
+    <updated>2016-02-24T07:51:55+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Dependency Injection]]></title>
+            <link href="https://gnugat.github.io/2016/02/24/ultimate-symfony-dependency-injection.html"/>
+            <updated>2016-02-24T00:00:00+00:00</updated>
+            <id>https://gnugat.github.io/2016/02/24/ultimate-symfony-dependency-injection.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: Make Dependency Injection easy by moving class construction in
+  configuration files.</p>
+</blockquote>
+
+<p>In this guide we explore the standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications.</p>
+
+<p>We've already seen:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+</ul>
+
+<p>We're now about to check Dependency Injection, and finally in the next article
+we'll have a look at Console.</p>
+
+<h2 id="introduction-to-the-design-pattern">Introduction to the design pattern</h2>
+
+<p>When first creating a class, we tend to keep it small and tidy. Then overtime it
+can grow out of control and the next thing we know it became this multi thousand
+line monster:</p>
+
+<pre><code class="php">&lt;?php
+
+class CheckApiStatus
+{
+    public function check($url)
+    {
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CUROPT_RETURNTRANSFER =&gt; true,
+            CURLOPT_HEADER =&gt; true,
+            CUROPT_URL =&gt; $url,
+        ));
+        $response = curl_exec($curl);
+        $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+        $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+        $headers = array_map(function($line) {
+            return explode(': ', trim($line));
+        }, explode("\n", substr($response, 0, $size)));
+        array_pop($headers);array_pop($headers);array_shift($headers);
+        $body = substr($response, $headerSize);
+
+        return 200 &gt;= $statusCode &amp;&amp; $statusCode &lt; 400;
+    }
+}
+</code></pre>
+
+<p>A nice way to shrink it back to an acceptable level is to identify the many
+"responsibilities" it bears and split those in sub classes. This process is called
+refactoring:</p>
+
+<pre><code class="php">&lt;?php
+
+class Request
+{
+    private $uri;
+
+    public function __construct($uri)
+    {
+        $this-&gt;uri;
+    }
+
+    public function getUri()
+    {
+        return $this-&gt;uri;
+    }
+}
+
+class Response
+{
+    private $statusCode;
+    private $headers;
+    private $body;
+
+    public function __construct($statusCode, $headers, $body)
+    {
+        $this-&gt;statusCode = $statusCode;
+        $this-&gt;headers = $headers;
+        $this-&gt;body = $body;
+    }
+
+    public function getStatusCode()
+    {
+        return $this-&gt;statusCode;
+    }
+
+    public function getHeaders()
+    {
+        return $this-&gt;headers;
+    }
+
+    public function getBody()
+    {
+        return $this-&gt;body;
+    }
+}
+
+interface HttpClient
+{
+    /**
+     * @return Response
+     */
+    public function sendRequest(Request $request);
+}
+
+class CurlHttpClient implements HttpClient
+{
+    public function sendRequest(Request $request)
+    {
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CUROPT_RETURNTRANSFER =&gt; true,
+            CURLOPT_HEADER =&gt; true,
+            CUROPT_URL =&gt; $request-&gt;getUri(),
+        ));
+        $response = curl_exec($curl);
+        $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+        $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+        $headers = array_map(function($line) {
+            return explode(': ', trim($line));
+        }, explode("\n", substr($response, 0, $size)));
+        array_pop($headers);array_pop($headers);array_shift($headers);
+        $body = substr($response, $headerSize);
+        $body = substr($response, $headerSize);
+
+        return new Response($statusCode, $headers, $body);
+    }
+}
+
+class CheckApiStatus
+{
+    public function check($url)
+    {
+        $httpClient = new CurlHttpClient();
+        $statusCode = $httpClient-&gt;sendRequest(new Request($url))-&gt;getStatusCode();
+
+        return 200 &gt;= $statusCode &amp;&amp; $statusCode &lt; 400;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: for more refactoring examples, check:</p>
+  
+  <ul>
+  <li><a href="http://martinfowler.com/articles/refactoring-external-service.html">Refactoring external service</a> by Martin Fowler</li>
+  <li><a href="http://verraes.net/2013/09/extract-till-you-drop/">Extract till you drop</a> by Mathias Verreas</li>
+  <li>Refactoring the cat API
+  <a href="http://php-and-symfony.matthiasnoback.nl/2015/07/refactoring-the-cat-api-client-part-1/">part 1</a>
+  <a href="http://php-and-symfony.matthiasnoback.nl/2015/07/refactoring-the-cat-api-client-part-2/">part 2</a>
+  <a href="http://php-and-symfony.matthiasnoback.nl/2015/07/refactoring-the-cat-api-client-part-3/">part 3</a>
+  by Matthias Noback</li>
+  </ul>
+</blockquote>
+
+<p>Our original class then has to call those sub classes to "delegate" the work. But
+how does it access those sub classes? Should it instantiate them in its methods?
+A better place could be the constructor, where the instances are stored in the class
+properties so it can be shared between two calls.</p>
+
+<p>Or even better we can instantiate them out of the class, and then pass them as
+arguments to the original class constructor, so we can share it with other classes:</p>
+
+<pre><code class="php">&lt;?php
+
+class CheckApiStatus
+{
+    private $httpClient;
+
+    public function __construct(HttpClient $httpClient)
+    {
+        $this-&gt;httpClient = $httpClient;
+    }
+
+    public function check($url)
+    {
+        $statusCode = $this-&gt;httpClient-&gt;sendRequest(new Request($url))-&gt;getStatusCode();
+
+        return 200 &gt;= $statusCode &amp;&amp; $statusCode &lt; 400;
+    }
+}
+
+$httpClient = new CurlHttpClient();
+$checkApiStatus = new CheckApiStatus($httpClient);
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Now <code>CheckApiStatus</code> is decoupled from the remote request logic.</p>
+  
+  <p>The refactoring steps might seem like producing more code just for the "beauty"
+  of principles, but it actually enables us to completly remove it: by using <a href="http://www.php-fig.org/psr/psr-7/">PSR-7</a>
+  interfaces instead of our own we can easily switch to <a href="http://docs.guzzlephp.org/en/latest/">Guzzle</a>
+  or any HTTP client library.</p>
+</blockquote>
+
+<p>And that's what <a href="http://www.martinfowler.com/articles/injection.html">Dependency Injection</a>
+is all about: taking parameters (also known as dependencies) our class (also known as service)
+needs and pass them as arguments (also known as injection), to allow more decoupling.</p>
+
+<p>The downside of this design pattern is that we now have a cascade of instantiations.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Classes can be shared if they are stateless which means calling a method
+  shouldn't change their attributes.</p>
+</blockquote>
+
+<h2 id="the-component">The component</h2>
+
+<p>Symfony provides a <a href="http://symfony.com/doc/current/components/dependency-injection/introduction.html">Dependency Injection component</a>
+which allows us to set up how our classes are constructed:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
+
+$container = new ContainerBuilder();
+
+$container
+    -&gt;register('http_client','CurlHttpClient')
+;
+$container
+    -&gt;register('check_api_status', 'CheckApiStatus')
+    -&gt;addArgument(new Reference('http_client'))
+;
+
+$checkApiStatus = $container-&gt;get('check_api_status');
+</code></pre>
+
+<p>It can even be set up using configuration:</p>
+
+<pre><code># /tmp/services/api.yml
+services:
+    http_client:
+        class: CurlHttpClient
+
+    check_api_status:
+        class: CheckApiStatus
+        arguments:
+            - '@http_client'
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Some string values must be escaped using single quotes because YAML
+  has a list of <a href="http://stackoverflow.com/a/22235064">reserved characters</a>, including:
+  <code>@</code>, <code>%</code>, <code>\</code>, <code>-</code>, <code>:</code> <code>[</code>, <code>]</code>, <code>{</code> and <code>}</code>.</p>
+</blockquote>
+
+<p>Here's how we can load this configuration:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Config\Loader\LoaderResolver;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\DirectoryLoader;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+
+$container = new ContainerBuilder();
+
+// Load recursively all YAML configuration files in services directories
+$fileLocator = new FileLocator(__DIR__);
+$loader = new DirectoryLoader($container, $fileLocator);
+$loader-&gt;setResolver(new LoaderResolver(array(
+    new YamlFileLoader($container, $fileLocator),
+    $loader,
+)));
+$loader-&gt;load('/services/');
+
+$checkApiStatus = $container-&gt;get('check_api_status');
+</code></pre>
+
+<p>Calling methods on a created service to complete its initialization is possible:</p>
+
+<pre><code>services:
+    my_event_listener:
+        class: MyEventListener
+
+    event_dispatcher:
+        class: 'Symfony\Component\EventDispatcher\EventDispatcher'
+        calls:
+            - [ addListener, [ kernel.request, '@my_event_listener', 42 ] ]
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: There's a better way to add listeners to the EventDispatcher, keep
+  reading to find out how.</p>
+</blockquote>
+
+<p>Finally it might be useful to create aliases:</p>
+
+<pre><code>services:
+    http_client:
+        alias: curl_http_client
+
+    curl_http_client:
+        class: CurlHttpClient
+
+    check_api_status:
+        class: checkApiStatus
+        arguments:
+            - "@http_client"
+</code></pre>
+
+<p>In the example above <code>http_client</code> is set to be <code>curl_http_client</code>, it could be
+changed later to use another implementation of <code>HttpClient</code>.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<p>In addition to class instances, we can also inject parameters:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Parameter;
+use Symfony\Component\DependencyInjection\Reference;
+
+$container = new ContainerBuilder();
+
+$container-&gt;setParameter('username', 'arthur.dent@example.com');
+$container-&gt;setParameter('password', 42);
+
+$container
+    -&gt;register('http_client','CurlHttpClient')
+;
+$container
+    -&gt;register('check_api_status', 'CheckApiStatus')
+    -&gt;addArgument(new Reference('http_client'))
+    -&gt;addArgument(new Parameter('username'))
+    -&gt;addArgument(new Parameter('password'))
+;
+
+$checkApiStatus = $container-&gt;get('check_api_status');
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: For the example's sake we're pretending that <code>CheckApiStatus</code>'s constructor
+  now takes 3 arguments.</p>
+</blockquote>
+
+<p>Here's the equivalent in YAML:</p>
+
+<pre><code># /tmp/services/api.yml
+parameters:
+    username: 'arthur.dent@example.com'
+    password: 42
+
+services:
+    http_client:
+        class: CurlHttpClient
+
+    check_api_status:
+        class: CheckApiStatus
+        arguments:
+            - '@http_client'
+            - '%username%'
+            - '%password%'
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: services are prefixed with <code>@</code>, and parameters are surrounded with <code>%</code>.</p>
+</blockquote>
+
+<p>The value of a parameter can be anything:</p>
+
+<ul>
+<li>null (<code>~</code>)</li>
+<li>a boolean (<code>true</code> or <code>false</code>)</li>
+<li>an integer (e.g. <code>42</code>)</li>
+<li>a float (e.g. <code>44.23</code>)</li>
+<li>a string (e.g. <code>hello world</code>, or escaped <code>'arthur.dent@example.com'</code>)</li>
+<li>an array (e.g. <code>[ apples, oranges ]</code>)</li>
+<li>an associative array (e.g. <code>{ first_name: Arthur, last_name: Dent }</code>)</li>
+</ul>
+
+<blockquote>
+  <p><strong>Note</strong>: The examples above for arrays are inline ones. They could also be on many lines:</p>
+
+<pre><code>parameters:
+    fruits:
+        - apples
+        - oranges
+
+    identity:
+        first_name: Arthur
+        last_name: Dent
+
+    # We can even have multi dimension arrays:
+    five_a_day:
+        -
+            - apples
+            - oranges
+        -
+            - carrots
+</code></pre>
+</blockquote>
+
+<h2 id="extension">Extension</h2>
+
+<p>By creating a class that extends <code>Extension</code>, we can provide reusable Dependency
+Injection configuration:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Config\Loader\LoaderResolver;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\DirectoryLoader;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+
+class AppExtension extends Extension
+{
+    public function load(array $configs, ContainerBuilder $container)
+    {
+        $fileLocator = new FileLocator(__DIR__);
+        $loader = new DirectoryLoader($container, $fileLocator);
+        $loader-&gt;setResolver(new LoaderResolver(array(
+            new YamlFileLoader($container, $fileLocator),
+            $loader,
+        )));
+        $loader-&gt;load('/services/');
+    }
+}
+
+$container = new ContainerBuilder();
+$appExtension = new AppExtension();
+$appExtension-&gt;load(array(), $container);
+
+$checkApiStatus = $container-&gt;get('check_api_status');
+</code></pre>
+
+<h2 id="compilerpass-and-tags">CompilerPass and tags</h2>
+
+<p>The <code>Container</code> implementation provides a <code>compile</code> method that resolves parameters
+(replace <code>%parameter%</code> placeholders by the parameter value) and freezes them
+(calling <code>setParameter</code> will result in an exception).</p>
+
+<p>The <code>ContainerBuilder</code> implementations also has a <code>compile</code> method which is going
+to execute all registered <code>CompilerPassInterface</code> implementations.</p>
+
+<p>For example, we can retrieve all services "tagged" <code>kernel.event_listener</code> and
+add them to the <code>EventDispatcher</code> with the following one:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\Reference;
+
+class EventListenerCompilerPass implements CompilerPassInterface
+{
+    public function process(ContainerBuilder $container)
+    {
+        if (false === $container-&gt;hasDefinition('event_dispatcher')) {
+            return;
+        }
+        $eventDispatcher = $container-&gt;getDefinition('event_dispatcher');
+        $taggedServices = $container-&gt;findTaggedServiceIds('kernel.event_listener');
+        foreach ($taggedServices as $id =&gt; $attributes) {
+            $eventDispatcher-&gt;addMethodCall('addListener', array(
+                $attributes['event'],
+                array(new Reference($id), $attributes['method']),
+                $attributes['priority'],
+            ));
+        }
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: The EventDispatcher component already provides a <code>RegisterListenersPass</code>.</p>
+</blockquote>
+
+<p>The configuration for a "tagged" service looks like this:</p>
+
+<pre><code>services:
+    my_event_listener:
+        class MyEventListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest, priority: 42 }
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: With this, it is no longer required to call <code>addListener</code> in <code>event_dispatcher</code>'s
+  configuration.</p>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>By providing a configurable way to define service construction, the DependencyInjection
+component allows us to use the design pattern of the same name in our projects.</p>
+
+<p>The HttpKernel component provides two <code>HttpKernelInterface</code> implementations:</p>
+
+<ul>
+<li><code>HttpKernel</code> which does the HTTP logic</li>
+<li><code>Kernel</code> which sets up a DependencyInjection container and then use <code>HttpKernel</code></li>
+</ul>
+
+<p>Just like for the Routing component, there's a <code>PhpDumper</code> which can generate an
+implementation of <code>ContainerInterface</code> with all configuration in an optimized way.
+It might look like this:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
+use Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use Symfony\Component\DependencyInjection\ParameterBag\FrozenParameterBag;
+
+class appDevDebugProjectContainer extends Container
+{
+    private $parameters;
+    private $targetDirs = array();
+
+    public function __construct()
+    {
+        $dir = __DIR__;
+        for ($i = 1; $i &lt;= 5; ++$i) {
+            $this-&gt;targetDirs[$i] = $dir = dirname($dir);
+        }
+        $this-&gt;parameters = $this-&gt;getDefaultParameters();
+
+        $this-&gt;services = array();
+        $this-&gt;methodMap = array(
+            'http_client' =&gt; 'getHttpClientService',
+            'check_api_status' =&gt; 'getCheckApiStatusService',
+        );
+        $this-&gt;aliases = array(
+        );
+    }
+
+    public function compile()
+    {
+        throw new LogicException('You cannot compile a dumped frozen container.');
+    }
+
+    protected function getHttpClientService()
+    {
+        return $this-&gt;services['http_client'] = new \CurlHttpClient();
+    }
+
+    protected function getCheckApiStatusService()
+    {
+        return $this-&gt;services['check_api_status'] = new \CheckApiStatus($this-&gt;get('http_client'), 'arthur.dent@example.com', 42);
+    }
+
+    public function getParameter($name)
+    {
+        $name = strtolower($name);
+        if (!(isset($this-&gt;parameters[$name]) || array_key_exists($name, $this-&gt;parameters))) {
+            throw new InvalidArgumentException(sprintf('The parameter "%s" must be defined.', $name));
+        }
+
+        return $this-&gt;parameters[$name];
+    }
+
+    public function hasParameter($name)
+    {
+        $name = strtolower($name);
+
+        return isset($this-&gt;parameters[$name]) || array_key_exists($name, $this-&gt;parameters);
+    }
+
+    public function setParameter($name, $value)
+    {
+        throw new LogicException('Impossible to call set() on a frozen ParameterBag.');
+    }
+
+    public function getParameterBag()
+    {
+        if (null === $this-&gt;parameterBag) {
+            $this-&gt;parameterBag = new FrozenParameterBag($this-&gt;parameters);
+        }
+
+        return $this-&gt;parameterBag;
+    }
+
+    protected function getDefaultParameters()
+    {
+        return array(
+            'username' =&gt; 'arthur.dent@example.com',
+            'password' =&gt; 42,
+        );
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Dependencies that are used by only one service can be marked as "private"
+  they'll be hard coded in the service instantiation (but they won't be available
+  anymore from <code>$container-&gt;get()</code>).</p>
+  
+  <p>In our example we could mark <code>http_client</code> as private, so the dumped Container
+  wouldn't have a <code>getHttpClientService</code> method:</p>
+
+<pre><code>service:
+    http_client:
+        class: CurlHttpClient
+        public: false
+</code></pre>
+</blockquote>
+
+<p>It is also worth noting that services are by default only initialized once and on demand,
+so the number of services doesn't impact the performances of the application.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Routing]]></title>
             <link href="https://gnugat.github.io/2016/02/17/ultimate-symfony-routing.html"/>
@@ -41,7 +665,7 @@ provided by <a href="http://symfony.com">Symfony</a> to help us build applicatio
 <p>We're now about to check Routing and YAML, then in the next articles we'll have a look at:</p>
 
 <ul>
-<li>Dependency Injection</li>
+<li><a href="/2016/02/24.ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
 <li>Console</li>
 </ul>
 
@@ -294,7 +918,7 @@ provided by <a href="http://symfony.com">Symfony</a> to help us build applicatio
 
 <ul>
 <li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
-<li>Dependency Injection</li>
+<li><a href="/2016/02/24.ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
 <li>Console</li>
 </ul>
 
@@ -706,7 +1330,7 @@ own code "Open for extension, but Close to modification"
 <li>HTTP Kernel and HTTP Foundation</li>
 <li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
 <li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
-<li>Dependency Injection</li>
+<li><a href="/2016/02/24.ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
 <li>Console</li>
 </ul>
 
@@ -804,6 +1428,10 @@ $headers = array('Content-Type' =&gt; 'application/json');
 $response = new Reponse($content, $status, $headers);
 </code></pre>
 
+<p>HttpFoundation also wraps <code>$_SESSION</code> in a convenient <code>Session</code> object. This one
+is however out of the scope of this series, to find more about it have a look at
+<a href="/2014/04/23/sf2-sessions-introduction.html">Symfony Session Introduction</a>.</p>
+
 <h2 id="example">Example</h2>
 
 <p>Let's create a small Hello World example:</p>
@@ -854,7 +1482,7 @@ articles:</p>
 <ul>
 <li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
 <li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
-<li>Dependency Injection</li>
+<li><a href="/2016/02/24.ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
 </ul>
 ]]></content>
         </entry>
@@ -10462,13 +11090,20 @@ git commit -m 'Installed Symfony2'
 ]]></content>
         </entry>
             <entry>
-            <title type="html"><![CDATA[Symfony2 Sessions introduction]]></title>
+            <title type="html"><![CDATA[Symfony Sessions introduction]]></title>
             <link href="https://gnugat.github.io/2014/04/23/sf2-sessions-introduction.html"/>
             <updated>2014-04-23T00:00:00+01:00</updated>
             <id>https://gnugat.github.io/2014/04/23/sf2-sessions-introduction.html</id>
-            <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><em>Last reviewed</em>: 22/02/2016.</p>
+</blockquote>
 
-<p>The <a href="http://symfony.com/doc/current/components/http_foundation/introduction.html">Symfony2 HttpFoundation component</a>
+<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p>The <a href="http://symfony.com/doc/current/components/http_foundation/introduction.html">Symfony HttpFoundation component</a>
 is a library which provides an Object Oriented implementation of the HTTP
 protocol: it wraps PHP's variable superglobals (<code>$_POST</code>, <code>$_GET</code>, <code>$_SERVER</code>,
 etc) inside objects (<code>Request</code>, <code>Response</code>, <code>Session</code>, etc).</p>
@@ -10504,7 +11139,7 @@ nightmare).</p>
 <p>In almost any cases, you'll only deal with the following three methods of the
 <code>Session</code> object:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 namespace Symfony\Component\HttpFoundation\Session;
 
@@ -10521,7 +11156,7 @@ class Session implements SessionInterface, \IteratorAggregate, \Countable
 <p>A <code>Bag</code> is a group of attributes stored in the session. Again, in most cases
 you'll only deal with the following four methods of the <code>AttributeBag</code> object:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 namespace Symfony\Component\HttpFoundation\Session\Attribute;
 
@@ -10536,7 +11171,7 @@ class AttributeBag implements AttributeBagInterface, \IteratorAggregate, \Counta
 
 <p>When using the sessions, you'll generally need to bootstrap things up as follows:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $session = new Session();
 
@@ -10547,7 +11182,7 @@ $session-&gt;registerBag($myAttributeBag);
 $session-&gt;start();
 </code></pre>
 
-<p>The session <strong>MUST</strong> be started by Symfony2, and it <em>SHOULD</em> be started after
+<p>The session <strong>MUST</strong> be started by Symfony, and it <em>SHOULD</em> be started after
 the bag registrations.</p>
 
 <h2 id="examples">Examples</h2>
@@ -10558,7 +11193,7 @@ the bag registrations.</p>
 
 <p>Let's assume that our session looks like this:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $_SESSION = array(
     'user' =&gt; array(
@@ -10570,7 +11205,7 @@ $_SESSION = array(
 
 <p>Here's the bootstrap code we need:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $session = new Session();
 
@@ -10582,7 +11217,7 @@ $session-&gt;start();
 
 <p>The equivalent to:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $firstName = 'Ford';
 if (isset($_SESSION['user']['first_name'])) {
@@ -10593,7 +11228,7 @@ $_SESSION['user']['last_name'] = 'Prefect';
 
 <p>Would be:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $userAttributeBag = $session-&gt;getBag('user');
 
@@ -10605,7 +11240,7 @@ $userAttributeBag-&gt;set('last_name', 'Prefect');
 
 <p>Now, let's assume we have a session which has deep attributes:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $_SESSION = array(
     'authentication' =&gt; array(
@@ -10619,7 +11254,7 @@ $_SESSION = array(
 
 <p>Here's the bootstrap code we need:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $session = new Session();
 
@@ -10631,14 +11266,14 @@ $session-&gt;start();
 
 <p>The equivalent to:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $_SESSION['authentication']['tokens']['github'] = 'AEB558F02C3B346';
 </code></pre>
 
 <p>Would be:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $authenticationAttributeBag = $session-&gt;getBag($authenticationAttributeBag);
 
@@ -10656,7 +11291,7 @@ this.</p>
 
 <p>A root attribute might look like:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $_SESSION = array(
     'attribute' =&gt; 'value',
@@ -10665,7 +11300,7 @@ $_SESSION = array(
 
 <p>You need to create your own kind of <code>Bag</code>:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 namespace Acme\Session;
 
@@ -10732,7 +11367,7 @@ class RootAttributeBag implements SessionBagInterface
 
 <p>We also need to hack a <code>Storage</code> class which supports our <code>Bag</code>:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 namespace Acme\Session;
 
@@ -10764,7 +11399,7 @@ class LegacySessionStorage extends NativeSessionStorage
 
 <p>Finally, we'll need the following bootstrap code:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 use Acme\Session\LegacySessionStorage;
 use Acme\Session\RootAttributeBag;
@@ -10811,7 +11446,7 @@ session itself. If you cannot prevent this, use
 with
 <a href="https://github.com/symfony/HttpFoundation/blob/master/Session/Storage/Handler/NativeFileSessionHandler.php"><code>NativeFileSessionHandler</code></a>:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\Handler\NativeFileSessionHandler;
@@ -10833,10 +11468,10 @@ persistence of the data. This might be caused by a
 <a href="http://blog.alterphp.com/2012/08/how-to-deal-with-asynchronous-request.html">session locking mechanism</a>
 which can be solved like this by saving manually the session:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $session-&gt;save();
-session_write_close();
+// session_write_close(); // Only required before Symfony 2.1
 </code></pre>
 
 <h2 id="conclusion">Conclusion</h2>
@@ -11507,7 +12142,12 @@ if you have any feedbacks/questions, be sure to contact me on
             <link href="https://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html"/>
             <updated>2014-01-29T00:00:00+00:00</updated>
             <id>https://gnugat.github.io/2014/01/29/sf2-di-component-by-example.html</id>
-            <content type="html"><![CDATA[<p>In <a href="/2014/01/22/ioc-di-and-service-locator.html">the previous article</a>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This article has been re-written - see
+  <a href="/2016/02/24/ultimate-symfony-dependency-injection.html">The Ultimate Developer Guide to Symfony - Dependency Injection</a></p>
+</blockquote>
+
+<p>In <a href="/2014/01/22/ioc-di-and-service-locator.html">the previous article</a>
 we've seen among other things the definition of Dependency Injection (DI) and of
 the Dependency Injection Container (DIC).</p>
 

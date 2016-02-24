@@ -20,7 +20,7 @@ In this guide we'll see the main ones that allow us to build an application:
 * HTTP Kernel and HTTP Foundation
 * [Event Dispatcher](/2016/02/10/ultimate-symfony-event-dispatcher.html)
 * [Routing and YAML](/2016/02/17/ultimate-symfony-routing.html)
-* Dependency Injection
+* [Dependency Injection](/2016/02/24.ultimate-symfony-dependency-injection.html)
 * Console
 
 ## HTTP kernel
@@ -116,6 +116,10 @@ $headers = array('Content-Type' => 'application/json');
 $response = new Reponse($content, $status, $headers);
 ```
 
+HttpFoundation also wraps `$_SESSION` in a convenient `Session` object. This one
+is however out of the scope of this series, to find more about it have a look at
+[Symfony Session Introduction](/2014/04/23/sf2-sessions-introduction.html).
+
 ## Example
 
 Let's create a small Hello World example:
@@ -164,4 +168,4 @@ articles:
 
 * [Event Dispatcher](/2016/02/10/ultimate-symfony-event-dispatcher.html)
 * [Routing and YAML](/2016/02/17/ultimate-symfony-routing.html)
-* Dependency Injection
+* [Dependency Injection](/2016/02/24.ultimate-symfony-dependency-injection.html)

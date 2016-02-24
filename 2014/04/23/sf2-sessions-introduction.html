@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Symfony2 Sessions introduction &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <title>Symfony Sessions introduction &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
@@ -28,18 +28,26 @@
         <article>
             <header>
                 <h2>
-    Symfony2 Sessions introduction
+    Symfony Sessions introduction
     <span class="sub-title">23/04/2014</span>
 </h2>
                             <nav>
                                                             <a class="button " href="https://gnugat.github.io/tags/symfony">symfony</a>
                                                             <a class="button " href="https://gnugat.github.io/tags/introducing%20library">introducing library</a>
+                                                                                        <a class="button button-reference" href="https://gnugat.github.io/tags/reference">reference</a>
                     </nav>
                 </header>
 
-                <p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+                <blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><em>Last reviewed</em>: 22/02/2016.</p>
+</blockquote>
 
-<p>The <a href="http://symfony.com/doc/current/components/http_foundation/introduction.html">Symfony2 HttpFoundation component</a>
+<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p>The <a href="http://symfony.com/doc/current/components/http_foundation/introduction.html">Symfony HttpFoundation component</a>
 is a library which provides an Object Oriented implementation of the HTTP
 protocol: it wraps PHP's variable superglobals (<code>$_POST</code>, <code>$_GET</code>, <code>$_SERVER</code>,
 etc) inside objects (<code>Request</code>, <code>Response</code>, <code>Session</code>, etc).</p>
@@ -75,7 +83,7 @@ nightmare).</p>
 <p>In almost any cases, you'll only deal with the following three methods of the
 <code>Session</code> object:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 namespace Symfony\Component\HttpFoundation\Session;
 
@@ -92,7 +100,7 @@ class Session implements SessionInterface, \IteratorAggregate, \Countable
 <p>A <code>Bag</code> is a group of attributes stored in the session. Again, in most cases
 you'll only deal with the following four methods of the <code>AttributeBag</code> object:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 namespace Symfony\Component\HttpFoundation\Session\Attribute;
 
@@ -107,7 +115,7 @@ class AttributeBag implements AttributeBagInterface, \IteratorAggregate, \Counta
 
 <p>When using the sessions, you'll generally need to bootstrap things up as follows:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $session = new Session();
 
@@ -118,7 +126,7 @@ $session-&gt;registerBag($myAttributeBag);
 $session-&gt;start();
 </code></pre>
 
-<p>The session <strong>MUST</strong> be started by Symfony2, and it <em>SHOULD</em> be started after
+<p>The session <strong>MUST</strong> be started by Symfony, and it <em>SHOULD</em> be started after
 the bag registrations.</p>
 
 <h2 id="examples">Examples</h2>
@@ -129,7 +137,7 @@ the bag registrations.</p>
 
 <p>Let's assume that our session looks like this:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $_SESSION = array(
     'user' =&gt; array(
@@ -141,7 +149,7 @@ $_SESSION = array(
 
 <p>Here's the bootstrap code we need:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $session = new Session();
 
@@ -153,7 +161,7 @@ $session-&gt;start();
 
 <p>The equivalent to:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $firstName = 'Ford';
 if (isset($_SESSION['user']['first_name'])) {
@@ -164,7 +172,7 @@ $_SESSION['user']['last_name'] = 'Prefect';
 
 <p>Would be:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $userAttributeBag = $session-&gt;getBag('user');
 
@@ -176,7 +184,7 @@ $userAttributeBag-&gt;set('last_name', 'Prefect');
 
 <p>Now, let's assume we have a session which has deep attributes:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $_SESSION = array(
     'authentication' =&gt; array(
@@ -190,7 +198,7 @@ $_SESSION = array(
 
 <p>Here's the bootstrap code we need:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $session = new Session();
 
@@ -202,14 +210,14 @@ $session-&gt;start();
 
 <p>The equivalent to:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $_SESSION['authentication']['tokens']['github'] = 'AEB558F02C3B346';
 </code></pre>
 
 <p>Would be:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $authenticationAttributeBag = $session-&gt;getBag($authenticationAttributeBag);
 
@@ -227,7 +235,7 @@ this.</p>
 
 <p>A root attribute might look like:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $_SESSION = array(
     'attribute' =&gt; 'value',
@@ -236,7 +244,7 @@ $_SESSION = array(
 
 <p>You need to create your own kind of <code>Bag</code>:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 namespace Acme\Session;
 
@@ -303,7 +311,7 @@ class RootAttributeBag implements SessionBagInterface
 
 <p>We also need to hack a <code>Storage</code> class which supports our <code>Bag</code>:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 namespace Acme\Session;
 
@@ -335,7 +343,7 @@ class LegacySessionStorage extends NativeSessionStorage
 
 <p>Finally, we'll need the following bootstrap code:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 use Acme\Session\LegacySessionStorage;
 use Acme\Session\RootAttributeBag;
@@ -382,7 +390,7 @@ session itself. If you cannot prevent this, use
 with
 <a href="https://github.com/symfony/HttpFoundation/blob/master/Session/Storage/Handler/NativeFileSessionHandler.php"><code>NativeFileSessionHandler</code></a>:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\Storage\Handler\NativeFileSessionHandler;
@@ -404,10 +412,10 @@ persistence of the data. This might be caused by a
 <a href="http://blog.alterphp.com/2012/08/how-to-deal-with-asynchronous-request.html">session locking mechanism</a>
 which can be solved like this by saving manually the session:</p>
 
-<pre><code>&lt;?php
+<pre><code class="php">&lt;?php
 
 $session-&gt;save();
-session_write_close();
+// session_write_close(); // Only required before Symfony 2.1
 </code></pre>
 
 <h2 id="conclusion">Conclusion</h2>

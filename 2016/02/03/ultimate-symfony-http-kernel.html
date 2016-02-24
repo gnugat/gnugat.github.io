@@ -54,7 +54,7 @@
 <li>HTTP Kernel and HTTP Foundation</li>
 <li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
 <li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
-<li>Dependency Injection</li>
+<li><a href="/2016/02/24.ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
 <li>Console</li>
 </ul>
 
@@ -152,6 +152,10 @@ $headers = array('Content-Type' =&gt; 'application/json');
 $response = new Reponse($content, $status, $headers);
 </code></pre>
 
+<p>HttpFoundation also wraps <code>$_SESSION</code> in a convenient <code>Session</code> object. This one
+is however out of the scope of this series, to find more about it have a look at
+<a href="/2014/04/23/sf2-sessions-introduction.html">Symfony Session Introduction</a>.</p>
+
 <h2 id="example">Example</h2>
 
 <p>Let's create a small Hello World example:</p>
@@ -202,7 +206,7 @@ articles:</p>
 <ul>
 <li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
 <li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
-<li>Dependency Injection</li>
+<li><a href="/2016/02/24.ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
 </ul>
 
 
