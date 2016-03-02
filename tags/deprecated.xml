@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-02-24T07:51:55+00:00</updated>
+    <updated>2016-03-02T07:54:15+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -272,6 +272,658 @@ we could just provide part of a name? Or an alias?</p>
 
 <p>Creating input manually isn't always what we need. A factory that creates one
 from an array could improve the situation.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Symfony2 Console component, by example]]></title>
+            <link href="https://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html"/>
+            <updated>2014-04-09T00:00:00+01:00</updated>
+            <id>https://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This article has been re-written - see
+  <a href="/2016/03/02/ultimate-symfony-console.html">The Ultimate Developer Guide to Symfony - Console</a></p>
+</blockquote>
+
+<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p><a href="http://symfony.com/">Symfony2</a> is a set of libraries which help you in your
+everyday tasks. You can even stack them together and create a framework with it:</p>
+
+<ul>
+<li><a href="https://github.com/symfony/symfony-standard">Symfony standard edition</a></li>
+<li><a href="https://github.com/gnugat/symfony-empty">Symfony empty edition</a></li>
+<li><a href="http://silex.sensiolabs.org/">Silex</a></li>
+</ul>
+
+<p>Many frameworks already use a lot of components from Symfony2:</p>
+
+<ul>
+<li><a href="http://laravel.com/">Laravel</a></li>
+<li><a href="https://drupal.org/">Drupal</a></li>
+<li><a href="http://ez.no/">eZ Publish</a></li>
+<li><a href="http://phpunit.de/">PHPUnit</a></li>
+<li><a href="https://www.phpbb.com/">phpBB</a></li>
+<li><a href="https://getcomposer.org/">Composer</a></li>
+</ul>
+
+<p>In this article, we'll see the
+<a href="http://symfony.com/doc/master/components/console/introduction.html">Console Component</a>,
+which allows you to build Command Line Interface (CLI) applications. Symfony 2.5
+will be released in may 2014, with great new features for the Console, so I'll
+speak about this version here.</p>
+
+<ul>
+<li><a href="#introduction">Introduction</a>
+
+<ul>
+<li><a href="#application">Application</a></li>
+<li><a href="#command">Command</a></li>
+<li><a href="#input">Input</a></li>
+<li><a href="#output">Output</a></li>
+<li><a href="#consolelogger">ConsoleLogger</a></li>
+</ul></li>
+<li><a href="#standalone-example">Standalone example</a>
+
+<ul>
+<li><a href="#creating-the-application">Creating the application</a></li>
+<li><a href="#creating-the-command">Creating the command</a></li>
+<li><a href="#registering-the-command">Registering the command</a></li>
+<li><a href="#using-the-filesystem-component">Using the Filesystem component</a></li>
+<li><a href="#thin-controller-many-small-services">Thin controller, many small services</a></li>
+<li><a href="#registering-the-services">Registering the services</a></li>
+</ul></li>
+</ul>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>This component allows you to focus on one thing: creating commands. It takes
+care of all the coloring output, input gathering and command containing stuff.</p>
+
+<p>The big picture is: you have an <code>Application</code> which contains a set of
+<code>Command</code>s. When ran, the <code>Application</code> will create an <code>Input</code> object which
+contains <code>Option</code>s and <code>Argument</code>s provided by the user, and will feed it to
+the right <code>Command</code>.</p>
+
+<p>The code being the best documentation, we'll now see the strict minimum classes
+you should know, with the methods you'll likely use.</p>
+
+<h3 id="application">Application</h3>
+
+<p>All you need to know about the <code>Application</code> is this:</p>
+
+<pre><code>&lt;?php
+
+namespace Symfony\Component\Console;
+
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class Application
+{
+    public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN');
+    public function add(Command $command);
+    public function setDefaultCommand($commandName); // New in 2.5!
+    public function run(InputInterface $input = null, OutputInterface $output = null);
+}
+</code></pre>
+
+<p>Minimum usage:</p>
+
+<pre><code>#!/usr/bin/env php
+&lt;?php
+
+use Symfony\Component\Console\Application;
+
+$application = new Application();
+$application-&gt;run();
+</code></pre>
+
+<p>By running this script, you should be able to see a colorful output which lists
+the available commands (<code>list</code> is the default command, and a <code>help</code> is also
+available).</p>
+
+<h3 id="command">Command</h3>
+
+<p>The <code>Command</code> class is the controller of your CLI application:</p>
+
+<pre><code>&lt;?php
+
+namespace Symfony\Component\Console\Command;
+
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class Command
+{
+    protected function configure();
+    protected function execute(InputInterface $input, OutputInterface $output);
+    protected function interact(InputInterface $input, OutputInterface $output);
+
+    // To be called in configure
+    public function setName($name);
+    public function addArgument($name, $mode = null, $description = '', $default = null);
+    public function addOption($name, $shortcut = null, $mode = null, $description = '', $default = null);
+    public function setDescription($description);
+    public function setHelp($help);
+    public function setAliases($aliases);
+}
+</code></pre>
+
+<p>Basically you create a class which extends <code>Command</code>. You need to implement 2
+methods:</p>
+
+<ul>
+<li><code>configure</code>: the configuration of the command's name, arguments, options, etc</li>
+<li><code>execute</code>: where you process the input, call your services and write to the
+output</li>
+</ul>
+
+<p>The <code>interact</code> method is called before the <code>execute</code> one: it allows you to ask
+questions to the user to set more input arguments and options.</p>
+
+<p>Here's my stand on arguments and options modes:</p>
+
+<ul>
+<li>an argument should always be required (<code>InputArgument::REQUIRED</code>)</li>
+<li>a flag is an option without value (<code>InputOption::VALUE_NONE</code>)</li>
+<li>an option should always have a required value (<code>InputOption::VALUE_REQUIRED</code>),
+don't forget to provide a default one</li>
+</ul>
+
+<h3 id="input">Input</h3>
+
+<p>The container of the arguments and options given by the user:</p>
+
+<pre><code>&lt;?php
+
+namespace Symfony\Component\Console\Input;
+
+interface InputInterface
+{
+    public function getArgument($name);
+    public function getOption($name);
+}
+</code></pre>
+
+<p>The <code>Application</code> validates a part of the input: it checks if the command
+actually accepts the given arguments and options (is the value required? Does
+the <code>hello:world</code> command have a <code>--yell</code> option? etc), but you still need to
+validate the input against your business rules (the <code>--number</code> option should
+be an integer, the <code>name</code> argument should be escaped to avoid SQL injection,
+etc).</p>
+
+<h3 id="output">Output</h3>
+
+<p>A convenient object which allows you to write on the console output:</p>
+
+<pre><code>&lt;?php
+
+namespace Symfony\Component\Console\Output;
+
+abstract class Output implements OutputInterface
+{
+    public function writeln($messages, $type = self::OUTPUT_NORMAL);
+}
+</code></pre>
+
+<p>The <code>writeln</code> method allows you to write a new line (with a newline character at
+the end). If the given <code>message</code> is an array, it will print each elements on a
+new line.</p>
+
+<p>The tags allow you to color some parts:</p>
+
+<ul>
+<li>green text for informative messages (usage example: <code>&lt;info&gt;foo&lt;/info&gt;</code>)</li>
+<li>yellow text for comments (usage example: <code>&lt;comment&gt;foo&lt;/comment&gt;</code>)</li>
+<li>black text on a cyan background for questions (usage example: <code>&lt;question&gt;foo&lt;/question&gt;</code>)</li>
+<li>white text on a red background for errors (usage example: <code>&lt;error&gt;foo&lt;/error&gt;</code>)</li>
+</ul>
+
+<h3 id="consolelogger">ConsoleLogger</h3>
+
+<p>Another brand new class from the version 2.5:</p>
+
+<pre><code>&lt;?php
+
+namespace Symfony\Component\Console\Logger;
+
+use Psr\Log\AbstractLogger;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class ConsoleLogger extends AbstractLogger
+{
+    public function __construct(
+        OutputInterface $output,
+        array $verbosityLevelMap = array(),
+        array $formatLevelMap = array()
+    );
+
+    public function log($level, $message, array $context = array());
+}
+</code></pre>
+
+<p>As you can see, it uses the <code>OutputInterface</code> provided by the <code>Application</code>.
+You should inject this logger into your services, this will allow them to write
+messages on the standard output of the console while keeping them decoupled from
+this component (so you can use these services in a web environment).</p>
+
+<p>Oh, and the good news is: it colors the output and decides whether or not to
+print it depending on the verbosity and level of log! An error message would
+always be printed in red, an informative message would be printed in green if
+you pass the <code>-vv</code> option.</p>
+
+<h2 id="standalone-example">Standalone example</h2>
+
+<p>Just like any other component, the Console can be used as a standalone library.</p>
+
+<p>In this example, we'll create a tool which will create a <code>LICENSE</code> file, just
+like <a href="https://github.com/gnugat/fossil">fossil</a> (the <a href="/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html">bootstraper of markdown files for your FOSS projetcs</a>).</p>
+
+<h3 id="creating-the-application">Creating the application</h3>
+
+<p>To begin, let's install the component using <a href="https://getcomposer.org/">Composer</a>:</p>
+
+<pre><code>$ curl -sS https://getcomposer.org/installer | php # Downloading composer
+$ ./composer.phar require "symfony/console:~2.5@dev"
+</code></pre>
+
+<p>Then create an empty application:</p>
+
+<pre><code>#!/usr/bin/env php
+&lt;?php
+// File: fossil
+
+require __DIR__.'/vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+
+$application = new Application('Fossil', '2.0.0');
+$application-&gt;run();
+</code></pre>
+
+<h3 id="creating-the-command">Creating the command</h3>
+
+<p>Our command has two arguments:</p>
+
+<ul>
+<li>the name for the copyright</li>
+<li>the year for the copyright</li>
+</ul>
+
+<p>It can also take the path of the project as an option (we'll provide the
+current directory as default value).</p>
+
+<p>Let's create it:</p>
+
+<pre><code>&lt;?php
+// File: src/Gnugat/Fossil/LicenseCommand.php
+
+namespace Gnugat\Fossil;
+
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class LicenseCommand extends Command
+{
+    protected function configure()
+    {
+        $this-&gt;setName('license');
+        $this-&gt;setDescription('Bootstraps the license file of your project');
+
+        $this-&gt;addArgument('author', InputArgument::REQUIRED);
+        $this-&gt;addArgument('year', InputArgument::REQUIRED);
+
+        $this-&gt;addOption('path', 'p', InputOption::VALUE_REQUIRED, '', getcwd());
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+    }
+}
+</code></pre>
+
+<h3 id="registering-the-command">Registering the command</h3>
+
+<p>Our command doesn't do anything yet, but we can already register it in our
+application:</p>
+
+<pre><code>#!/usr/bin/env php
+&lt;?php
+// File: fossil
+
+require __DIR__.'/vendor/autoload.php';
+
+use Symfony\Component\Console\Application;
+use Gnugat\Fossil\LicenseCommand;
+
+$command = new LicenseCommand();
+
+$application = new Application('Fossil', '2.0.0');
+$application-&gt;add($command);
+$application-&gt;run();
+</code></pre>
+
+<p>In order for it to run, you'll need to register the namespace in the autoloader
+by editing the <code>composer.json</code> file at the root of the project:</p>
+
+<pre><code>{
+    "require": {
+        "symfony/console": "~2.5@dev"
+    },
+    "autoload": {
+        "psr-4": { "": "src" }
+    }
+}
+</code></pre>
+
+<p>Then you need to run <code>./composer.phar update</code> to update the configuration.</p>
+
+<h3 id="using-the-filesystem-component">Using the Filesystem component</h3>
+
+<p>In <code>fossil</code>, <a href="https://github.com/gnugat/fossil/tree/master/skeletons">templates</a>
+are retrieved using the
+<a href="http://symfony.com/doc/current/components/finder.html">Finder component</a>, their
+values are replaced using <a href="http://twig.sensiolabs.org/">Twig</a> and written using the
+<a href="http://symfony.com/doc/current/components/filesystem.html">Filesystem component</a>.</p>
+
+<p>In order to keep this article short, we'll:</p>
+
+<ul>
+<li>use a fictive license which requires only the copyright line</li>
+<li>simply store the <code>LICENSE</code> template in the command</li>
+<li>inject the values using <code>implode</code></li>
+</ul>
+
+<p>This means that you have to install the new component:</p>
+
+<pre><code>$ ./composer.phar require "symfony/filesystem:~2.4"
+</code></pre>
+
+<p>And then you need to fill the <code>execute</code> method:</p>
+
+<pre><code>&lt;?php
+// File: src/Gnugat/Fossil/LicenseCommand.php
+
+namespace Gnugat\Fossil;
+
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Filesystem\Filesystem;
+
+class LicenseCommand extends Command
+{
+    // configure method...
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $path = $input-&gt;getOption('path').'/LICENSE';
+        $license = implode(' ', array(
+            'Copyright (c)',
+            $input-&gt;getArgument('author'),
+            $input-&gt;getArgument('year'),
+        ));
+
+        $filesystem = new Filesystem();
+        $filesystem-&gt;dumpFile($path, $license.PHP_EOL);
+
+        $output-&gt;writeln(sprintf('Created the file %s', $path));
+    }
+}
+</code></pre>
+
+<p>Now running <code>./fossil license "Loïc Chardonnet" "2013-2014" -p="/tmp"</code> will
+output the message "Created the file /tmp/LICENSE", which should be what really
+happened.</p>
+
+<h3 id="thin-controller%2C-many-small-services">Thin controller, many small services</h3>
+
+<p>I'm not a big fan of putting logic in my commands, so generally I use services
+to do the actual job:</p>
+
+<pre><code>&lt;?php
+// File src/Gnugat/Fossil/DocumentationWriter.php
+
+namespace Gnugat\Fossil;
+
+use Symfony\Component\Filesystem\Filesystem;
+use Psr\Log\LoggerInterface;
+
+class DocumentationWriter
+{
+    private $filesystem;
+    private $logger;
+
+    public function __construct(Filesystem $filesystem, LoggerInterface $logger)
+    {
+        $this-&gt;filesystem = $filesystem;
+        $this-&gt;logger = $logger;
+    }
+
+    public function write($path, $content)
+    {
+        $this-&gt;filesystem-&gt;dumpFile($path, $content);
+        $this-&gt;logger-&gt;notice(sprintf('Created file %s', $path));
+    }
+}
+</code></pre>
+
+<p>As you can see, the <code>DocumentationWriter</code> isn't very big. It might seem
+overkill, but now it's easy to write tests which will check if the <code>LICENSE</code>
+file has been created. Also, in <code>fossil</code> the class does a bit more work: it
+checks if the file already exists, and takes a "force overwrite" option into
+account.</p>
+
+<p>You'll also notice that we inject a logger to notice the user of what happens.
+We need to install the PSR-3 logger interface:</p>
+
+<pre><code>$ composer require "psr/log:~1.0"
+</code></pre>
+
+<p>Our command will now be much thinner, just like any controller should be (MVC
+can also be applied in CLI):</p>
+
+<pre><code>&lt;?php
+// File: src/Gnugat/Fossil/LicenseCommand.php
+
+namespace Gnugat\Fossil;
+
+use Gnugat\Fossil\DocumentationWriter;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Filesystem\Filesystem;
+
+class LicenseCommand extends Command
+{
+    // configure method...
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $path = $input-&gt;getOption('path').'/LICENSE';
+        $license = implode(' ', array(
+            'Copyright (c)',
+            $input-&gt;getArgument('author'),
+            $input-&gt;getArgument('year'),
+        ));
+
+        $filesystem = new Filesystem();
+        $logger = new ConsoleLogger($output);
+        $documentationWriter = new DocumentationWriter($filesystem, $logger);
+
+        $documentationWriter-&gt;write($path, $license.PHP_EOL);
+    }
+}
+</code></pre>
+
+<p>To be fair, our command is longer. But it <strong>is</strong> thinner as it now has less
+responsibilities:</p>
+
+<ul>
+<li>it retrieves the input</li>
+<li>creates the dependencies</li>
+<li>calls the services</li>
+</ul>
+
+<p>If you run again <code>./fossil license "Loïc Chardonnet" "2013-2014" -p="/tmp"</code>,
+you won't see anything: <code>ConsoleLogger</code> hides informative messages by default.
+You need to pass the verbose option to see the message:</p>
+
+<pre><code>$ ./fossil license -v "Loïc Chardonnet" "2013-2014" -p="/tmp"
+</code></pre>
+
+<h3 id="registering-the-services">Registering the services</h3>
+
+<p>The dependency creation isn't a responsibility a controller should have. We'll
+delegate this to the
+<a href="http://symfony.com/doc/current/components/dependency_injection/introduction.html">Dependency Injection component</a>:</p>
+
+<pre><code>$ ./composer.phar require "symfony/dependency-injection:~2.4"
+</code></pre>
+
+<p>We'll also install the
+<a href="http://symfony.com/doc/current/components/config/introduction.html">Config component</a>:</p>
+
+<pre><code>$ ./composer.phar require "symfony/config:~2.4"
+</code></pre>
+
+<p>If you don't know yet this component, go read
+<a href="/2014/01/29/sf2-di-component-by-example.html">this helpful article</a>.</p>
+
+<p>We'll create a XML file to configure the registration of our services:</p>
+
+<pre><code>&lt;?xml version="1.0" ?&gt;
+
+&lt;!-- File: config/services.xml --&gt;
+
+&lt;container xmlns="http://symfony.com/schema/dic/services"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd"&gt;
+    &lt;services&gt;
+        &lt;service id="symfony.application"
+            class="Symfony\Component\Console\Application"&gt;
+            &lt;argument key="name"&gt;Fossil&lt;/argument&gt;
+            &lt;argument key="version"&gt;2.0.0&lt;/argument&gt;
+            &lt;call method="add"&gt;
+                 &lt;argument type="service" id="fossil.license_command" /&gt;
+            &lt;/call&gt;
+        &lt;/service&gt;
+
+        &lt;service id="fossil.license_command" class="Gnugat\Fossil\LicenseCommand"&gt;
+            &lt;argument type="service" id="fossil.documentation_writer" /&gt;
+        &lt;/service&gt;
+
+        &lt;service id="fossil.documentation_writer" class="Gnugat\Fossil\DocumentationWriter"&gt;
+            &lt;argument type="service" id="symfony.filesystem" /&gt;
+            &lt;argument type="service" id="symfony.console_logger" /&gt;
+        &lt;/service&gt;
+
+        &lt;service id="symfony.filesystem" class="Symfony\Component\Filesystem\Filesystem"&gt;
+        &lt;/service&gt;
+
+        &lt;service id="symfony.console_logger" class="Symfony\Component\Console\Logger\ConsoleLogger"&gt;
+            &lt;argument type="service" id="symfony.console_output" /&gt;
+        &lt;/service&gt;
+
+        &lt;service id="symfony.console_output"
+            class="Symfony\Component\Console\Output\ConsoleOutput"&gt;
+        &lt;/service&gt;
+    &lt;/services&gt;
+&lt;/container&gt;
+</code></pre>
+
+<p>As you can see, I've delegated <strong>every</strong> construction to the DIC (Dependency
+Injection Container), even the construction of the application. Now the command
+looks like this:</p>
+
+<pre><code>    &lt;?php
+// File: src/Gnugat/Fossil/LicenseCommand.php
+
+namespace Gnugat\Fossil;
+
+use Gnugat\Fossil\DocumentationWriter;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class LicenseCommand extends Command
+{
+    private $documentationWriter;
+
+    public function __construct(DocumentationWriter $documentationWriter)
+    {
+        $this-&gt;documentationWriter = $documentationWriter;
+
+        parent::__construct();
+    }
+
+    protected function configure()
+    {
+        $this-&gt;setName('license');
+        $this-&gt;setDescription('Bootstraps the license file of your project');
+
+        $this-&gt;addArgument('author', InputArgument::REQUIRED);
+        $this-&gt;addArgument('year', InputArgument::REQUIRED);
+
+        $this-&gt;addOption('path', 'p', InputOption::VALUE_REQUIRED, '', getcwd());
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $path = $input-&gt;getOption('path').'/LICENSE';
+        $license = implode(' ', array(
+            'Copyright (c)',
+            $input-&gt;getArgument('author'),
+            $input-&gt;getArgument('year'),
+        ));
+
+        $this-&gt;documentationWriter-&gt;write($path, $license.PHP_EOL);
+    }
+}
+</code></pre>
+
+<p>And the console now contains the DIC initialization:</p>
+
+<pre><code>#!/usr/bin/env php
+&lt;?php
+// File: fossil
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
+
+require __DIR__.'/vendor/autoload.php';
+
+$container = new ContainerBuilder();
+$loader = new XmlFileLoader($container, new FileLocator(__DIR__.'/config'));
+$loader-&gt;load('services.xml');
+
+$output = $container-&gt;get('symfony.console_output');
+
+$application = $container-&gt;get('symfony.application');
+$application-&gt;run(null, $output);
+</code></pre>
+
+<p>And voilà! You now know how to create CLI applications :) .</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The Console component allows you to create CLI applications. The commands are a
+thin layer which gathers the input and call services. Those services can then
+output messages to the user using a special kind of logger.</p>
+
+<p>Although this article was a bit long, I might have missed something here, so
+if you have any feedbacks/questions, be sure to contact me on
+<a href="https://twitter.com/epiloic">Twitter</a>.</p>
 ]]></content>
         </entry>
             <entry>

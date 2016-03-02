@@ -20,8 +20,8 @@ In this guide we'll see the main ones that allow us to build an application:
 * HTTP Kernel and HTTP Foundation
 * [Event Dispatcher](/2016/02/10/ultimate-symfony-event-dispatcher.html)
 * [Routing and YAML](/2016/02/17/ultimate-symfony-routing.html)
-* [Dependency Injection](/2016/02/24.ultimate-symfony-dependency-injection.html)
-* Console
+* [Dependency Injection](/2016/02/24/ultimate-symfony-dependency-injection.html)
+* [Console](/2016/03/02/ultimate-symfony-console.html)
 
 ## HTTP kernel
 

@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-02-24T07:51:55+00:00</updated>
+    <updated>2016-03-02T07:54:15+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -3530,7 +3530,12 @@ questions don't be shy and drop me a line on
             <link href="https://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html"/>
             <updated>2014-04-09T00:00:00+01:00</updated>
             <id>https://gnugat.github.io/2014/04/09/sf2-console-component-by-example.html</id>
-            <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This article has been re-written - see
+  <a href="/2016/03/02/ultimate-symfony-console.html">The Ultimate Developer Guide to Symfony - Console</a></p>
+</blockquote>
+
+<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p><a href="http://symfony.com/">Symfony2</a> is a set of libraries which help you in your
 everyday tasks. You can even stack them together and create a framework with it:</p>

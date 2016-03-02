@@ -31,8 +31,8 @@ We've already seen:
 
 We're now about to check Routing and YAML, then in the next articles we'll have a look at:
 
-* [Dependency Injection](/2016/02/24.ultimate-symfony-dependency-injection.html)
-* Console
+* [Dependency Injection](/2016/02/24/ultimate-symfony-dependency-injection.html)
+* [Console](/2016/03/02/ultimate-symfony-console.html)
 
 ## Routing
 

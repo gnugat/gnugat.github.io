@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>The Ultimate Developer Guide to Symfony - Console &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/03/02/ultimate-symfony-console.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    The Ultimate Developer Guide to Symfony - Console
+    <span class="sub-title">02/03/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/symfony">symfony</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/ultimate%20symfony%20series">ultimate symfony series</a>
+                                                                                        <a class="button button-reference" href="https://gnugat.github.io/tags/reference">reference</a>
+                    </nav>
+                </header>
+
+                <blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: <code>$statusCode = $application-&gt;run($input);</code></p>
+</blockquote>
+
+<p>In this guide we explore the standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications.</p>
+
+<p>We've already seen:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+</ul>
+
+<p>We're now about to check the last one: Console.</p>
+
+<h2 id="application">Application</h2>
+
+<p>Symfony provides a <a href="http://symfony.com/doc/current/components/console/introduction.html">Console component</a>
+which allows us to create CLI commands. Its main class is <code>Application</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\Console;
+
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Command\Command;
+
+class Application
+{
+    public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN');
+
+    public function add(Command $command);
+    public function setDefaultCommand($commandName);
+    public function run(InputInterface $input = null, OutputInterface $output = null);
+
+    public function setAutoExit($boolean);
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: This snippet is a truncated version. Please note that <code>Application</code>
+  is (unfortunately) not an interface.</p>
+</blockquote>
+
+<p>We can create it as follow:</p>
+
+<pre><code class="php">&lt;?php
+// /tmp/console.php
+
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+
+$application = new Application('My Application', 'v4.2.3');
+$application-&gt;add($command);
+$application-&gt;setDefaultCommand($command-&gt;getName());
+
+$application-&gt;run(new ArgvInput());
+</code></pre>
+
+<p>Which can then be used as follow:</p>
+
+<pre><code>php /tmp/console.php
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: After running the command, <code>Application</code> will automatically stop
+  using <code>exit</code>.
+  As it can sometimes be inconvenient (for example in tests), we can disable it
+  with this line: <code>$application-&gt;setAutoExit(false);</code></p>
+</blockquote>
+
+<p>Out of the box, <code>Application</code> has two commands:</p>
+
+<ul>
+<li><code>list</code>, list all available commands (it's the default command if <code>setDefaultCommand</code> hasn't been used)</li>
+<li><code>help</code>, displays a description with available arguments and options for the current command</li>
+</ul>
+
+<h2 id="command">Command</h2>
+
+<p>In order for <code>Application</code> to be useful, we need to create commands. This can be
+done by extending <code>Command</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\Console\Command;
+
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class Command
+{
+    public function run(InputInterface $input, OutputInterface $output);
+    // Called by run
+    protected function execute(InputInterface $input, OutputInterface $output);
+    protected function interact(InputInterface $input, OutputInterface $output);
+
+    protected function configure();
+    // To be called in configure
+    public function setName($name);
+    public function addArgument($name, $mode = null, $description = '', $default = null);
+    public function addOption($name, $shortcut = null, $mode = null, $description = '', $default = null);
+    public function setDescription($description);
+    public function setHelp($help);
+    public function setAliases($aliases);
+}
+</code></pre>
+
+<p>We can configure the command (name, arguments, options, description, etc) in the
+<code>configure</code> method, we can define more options to be asked interractively in
+the <code>interact</code> method (e.g. <code>Are you sure? (Y/n)</code>) and finally we can write the
+command logic in the <code>execute</code> method.</p>
+
+<p>Commands are to Console what Controllers are to HttpKernel: their responsibility
+is to extract input parameters, pass them to a service and then put the service's
+returned value in the output.</p>
+
+<h2 id="input">Input</h2>
+
+<p>Input parameters are wrapped in the following interface:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\Console\Input;
+
+interface InputInterface
+{
+    public function getArgument($name);
+    public function getOption($name);
+}
+</code></pre>
+
+<p>Out of the box we have the following implementations:</p>
+
+<ul>
+<li><code>ArgvInput</code>: wraps CLI arguments comming from <code>$_SERVER['argv']</code></li>
+<li><code>ArrayInput</code>: define arguments using an array, which is useful for tests</li>
+</ul>
+
+<p><code>Application</code> will take care of validating <code>InputInterface</code> parameters against
+the <code>Command</code> configuration (e.g. if required arguments present).</p>
+
+<h2 id="output">Output</h2>
+
+<p>While <code>InputInterface</code> can be seen as a value object, <code>OutputInterface</code> should
+be seen as a service able to send informations to a stream:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\Console\Output;
+
+abstract class Output implements OutputInterface
+{
+    public function writeln($messages, $type = self::OUTPUT_NORMAL);
+}
+</code></pre>
+
+<p>The <code>writeln</code> method allows us to write a new line (with a newline character at
+the end). If the given message is an array, it will print each elements on a new
+line.</p>
+
+<p>The given message can contain tags (e.g. <code>Arthur &lt;info&gt;Dent&lt;/info&gt;</code>), which can
+be used to format it. Out of the box it will color the followings:</p>
+
+<ul>
+<li>green text for informative messages (usage example: <code>&lt;info&gt;Arthur Dent&lt;/info&gt;</code>)</li>
+<li>yellow text for comments (usage example: <code>&lt;comment&gt;Tricia McMillan&lt;/comment&gt;</code>)</li>
+<li>black text on a cyan background for questions (usage example: <code>&lt;question&gt;Ford Prefect&lt;/question&gt;</code>)</li>
+<li>white text on a red background for errors (usage example: <code>&lt;error&gt;Marvin&lt;/error&gt;</code>)</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The Console component allows us to create CLI applications. Its Commands are a
+thin layer which gathers the input and call services. Those services can then
+output messages to the user.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Since Symfony follows a <a href="https://github.com/symfony/symfony-docs/issues/4265">Console Output Formating Style Guide</a>,
+  the Console component provides the following helper class:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\Console\Style;
+
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
+
+class SymfonyStyle
+{
+    public function __construct(InputInterface $input, OutputInterface $output);
+
+    public function block($messages, $type = null, $style = null, $prefix = ' ', $padding = false);
+    public function title($message);
+    public function section($message);
+    public function listing(array $elements);
+    public function text($message);
+
+    public function comment($message);
+    public function success($message);
+    public function error($message);
+    public function warning($message);
+    public function note($message);
+    public function caution($message);
+
+    public function table(array $headers, array $rows);
+
+    public function ask($question, $default = null, $validator = null);
+    public function askHidden($question, $validator = null);
+    public function confirm($question, $default = true);
+    public function choice($question, array $choices, $default = null);
+    public function askQuestion(Question $question);
+
+    public function progressStart($max = 0);
+    public function progressAdvance($step = 1);
+    public function progressFinish();
+    public function createProgressBar($max = 0);
+
+    public function writeln($messages, $type = self::OUTPUT_NORMAL);
+    public function write($messages, $newline = false, $type = self::OUTPUT_NORMAL);
+    public function newLine($count = 1);
+}
+</code></pre>
+</blockquote>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/02/24/ultimate-symfony-dependency-injection.html" title="The Ultimate Developer Guide to Symfony - Dependency Injection">Previous &lt; The Ultimate Developer Guide to Symfony - Dependency Injection</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

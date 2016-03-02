@@ -4,7 +4,11 @@ title: Symfony2 Console component, by example
 tags:
     - symfony
     - introducing library
+    - deprecated
 ---
+
+> **Deprecated**: This article has been re-written - see
+> [The Ultimate Developer Guide to Symfony - Console](/2016/03/02/ultimate-symfony-console.html)
 
 [TL;DR: jump to the conclusion](#conclusion).
 

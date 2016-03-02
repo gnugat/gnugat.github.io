@@ -23,7 +23,7 @@ We've already seen:
 * [Routing and YAML](/2016/02/17/ultimate-symfony-routing.html)
 
 We're now about to check Dependency Injection, and finally in the next article
-we'll have a look at Console.
+we'll have a look at [Console](/2016/03/02/ultimate-symfony-console.html).
 
 ## Introduction to the design pattern
 
