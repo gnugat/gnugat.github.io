@@ -4,7 +4,11 @@ title: Master Symfony2 - part 4: Doctrine
 tags:
     - symfony
     - master symfony2 series
+    - deprecated
 ---
+
+> **Deprecated**: This series has been re-written - see
+> [The Ultimate Developer Guide to Symfony](/2016/02/03/ultimate-symfony-http-kernel.html)
 
 This is the fourth article of the series on mastering the
 [Symfony2](http://symfony.com/) framework. Have a look at the three first ones:

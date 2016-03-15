@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-03-15T22:07:01+00:00</updated>
+    <updated>2016-03-15T22:56:02+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -13,7 +13,12 @@
             <link href="https://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html"/>
             <updated>2014-06-18T00:00:00+01:00</updated>
             <id>https://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html</id>
-            <content type="html"><![CDATA[<p>You don't know anything about the <a href="http://symfony.com/">Symfony2</a> framework,
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>You don't know anything about the <a href="http://symfony.com/">Symfony2</a> framework,
 and you'd like a quick guide to learn how to use it, and how it works?</p>
 
 <p>Then this article is for you :) .</p>

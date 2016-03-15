@@ -4,6 +4,7 @@ title: Symfony Differently - part 2: Bootstrap
 tags:
     - symfony
     - symfony differently
+    - deprecated
 ---
 
 This is the second article of the [Symfony](https://symfony.com) Differently series,

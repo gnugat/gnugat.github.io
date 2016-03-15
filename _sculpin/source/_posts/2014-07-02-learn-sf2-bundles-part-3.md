@@ -4,7 +4,11 @@ title: Learn Symfony2 - part 3: Bundles
 tags:
     - symfony
     - learn symfony2 series
+    - deprecated
 ---
+
+> **Deprecated**: This series has been re-written - see
+> [The Ultimate Developer Guide to Symfony](/2016/02/03/ultimate-symfony-http-kernel.html)
 
 This is the third article of the series on learning
 [the Symfony2 framework](http://symfony.com/).

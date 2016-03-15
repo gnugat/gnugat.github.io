@@ -4,7 +4,11 @@ title: Symfony / Web Services - part 1: Introduction
 tags:
     - symfony
     - symfony / web services series
+    - deprecated
 ---
+
+> **Deprecated**: This series has been re-written - see
+> [The Ultimate Developer Guide to Symfony](/2016/02/03/ultimate-symfony-http-kernel.html)
 
 Welcome to this new series of articles on managing Web Services in a
 [Symfony](https://symfony.com) environment. Its purpose is to provide an example,

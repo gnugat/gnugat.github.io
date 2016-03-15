@@ -4,7 +4,11 @@ title: Learn Symfony2 - part 1: Composer
 tags:
     - symfony
     - Learn Symfony2 series
+    - deprecated
 ---
+
+> **Deprecated**: This series has been re-written - see
+> [The Ultimate Developer Guide to Symfony](/2016/02/03/ultimate-symfony-http-kernel.html)
 
 You don't know anything about the [Symfony2](http://symfony.com/) framework,
 and you'd like a quick guide to learn how to use it, and how it works?

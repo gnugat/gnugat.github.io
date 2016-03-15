@@ -4,7 +4,11 @@ title: Symfony / Web Services - part 2.1: Creation bootstrap
 tags:
     - symfony
     - symfony / web services series
+    - deprecated
 ---
+
+> **Deprecated**: This series has been re-written - see
+> [The Ultimate Developer Guide to Symfony](/2016/02/03/ultimate-symfony-http-kernel.html)
 
 This is the second article of the series on managing Web Services in a
 [Symfony](https://symfony.com) environment. Have a look at the first one:

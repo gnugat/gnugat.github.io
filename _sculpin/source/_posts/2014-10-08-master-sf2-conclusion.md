@@ -4,7 +4,11 @@ title: Master Symfony2 - Conclusion
 tags:
     - symfony
     - master symfony2 series
+    - deprecated
 ---
+
+> **Deprecated**: This series has been re-written - see
+> [The Ultimate Developer Guide to Symfony](/2016/02/03/ultimate-symfony-http-kernel.html)
 
 This is the conclusion of the series on mastering the
 [Symfony2](http://symfony.com/) framework. Have a look at the five articles:

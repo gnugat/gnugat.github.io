@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-03-15T22:07:01+00:00</updated>
+    <updated>2016-03-15T22:56:02+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -2547,7 +2547,12 @@ generation.</p>
             <link href="https://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html"/>
             <updated>2015-03-25T00:00:00+00:00</updated>
             <id>https://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html</id>
-            <content type="html"><![CDATA[<p>This is the seventh article of the series on managing Web Services in a
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>This is the seventh article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the six first ones:</p>
 
 <ul>
@@ -2899,7 +2904,12 @@ those should each have their own series of article :) .</p>
             <link href="https://gnugat.github.io/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html"/>
             <updated>2015-03-18T00:00:00+00:00</updated>
             <id>https://gnugat.github.io/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html</id>
-            <content type="html"><![CDATA[<p>This is the sixth article of the series on managing Web Services in a
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>This is the sixth article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the five first ones:</p>
 
 <ul>
@@ -3409,7 +3419,12 @@ really need.</p>
             <link href="https://gnugat.github.io/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html"/>
             <updated>2015-03-11T00:00:00+00:00</updated>
             <id>https://gnugat.github.io/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html</id>
-            <content type="html"><![CDATA[<p>This is the fifth article of the series on managing Web Services in a
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>This is the fifth article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the four first ones:</p>
 
 <ul>
@@ -3825,7 +3840,12 @@ implementations (yes, more than one!).</p>
             <link href="https://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html"/>
             <updated>2015-03-04T00:00:00+00:00</updated>
             <id>https://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html</id>
-            <content type="html"><![CDATA[<p>This is the fourth article of the series on managing Web Services in a
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>This is the fourth article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the three first ones:</p>
 
 <ul>
@@ -4430,7 +4450,12 @@ who'd like to practice:</p>
             <link href="https://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html"/>
             <updated>2015-01-28T00:00:00+00:00</updated>
             <id>https://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html</id>
-            <content type="html"><![CDATA[<p>This is the third article of the series on managing Web Services in a
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>This is the third article of the series on managing Web Services in a
 <a href="https://symfony.com">Symfony</a> environment. Have a look at the two first ones:</p>
 
 <ul>

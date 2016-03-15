@@ -114,7 +114,17 @@ Bundles are usually created for one of the following purposes:
   admin generator with [SonataAdminBundle](https://sonata-project.org/bundles/admin/2-3/doc/index.html),
   etc)
 
-> **Note**: regarding the last category, please read [composer require technical-debt-bundle](http://jolicode.com/blog/do-not-use-fosuserbundle).
+> **Note**: the last category is considered bad practice, as explained in the
+> following, articles:
+>
+> * [composer require technical-debt-bundle](http://jolicode.com/blog/do-not-use-fosuserbundle).
+> * [Use only infrastructural bundles in Symfony2, by Elnur Abdurrakhimov](http://elnur.pro/use-only-infrastructural-bundles-in-symfony/)
+> * [Should everything really be a bundle in Symfony2?](http://stackoverflow.com/questions/9999433/should-everything-really-be-a-bundle-in-symfony-2-x/10001019#10001019)
+> * [Yes, you can have low coupling in a Symfony2 application](http://danielribeiro.org/blog/yes-you-can-have-low-coupling-in-a-symfony-standard-edition-application/)
+> * [Symfony2 without bundles, by Elnur Abdurrakhimov, by Daniel Ribeiro](http://elnur.pro/symfony-without-bundles/)
+> * [Symfony2 some things I dont like about bundles, by Matthias Noback](http://php-and-symfony.matthiasnoback.nl/2013/10/symfony2-some-things-i-dont-like-about-bundles/)
+> * [Symfony2 console commands as services why, by Matthias Noback](http://php-and-symfony.matthiasnoback.nl/2013/10/symfony2-console-commands-as-services-why/)
+> * [Naked bundles, slides by Matthias Noback](http://www.slideshare.net/matthiasnoback/high-quality-symfony-bundles-tutorial-dutch-php-conference-2014)
 
 Bundles follow [by convention](http://symfony.com/doc/current/cookbook/bundles/best_practices.html)
 the following directory tree:

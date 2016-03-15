@@ -4,6 +4,7 @@ title: Symfony Differently - part 1: Introduction
 tags:
     - symfony
     - symfony differently
+    - deprecated
 ---
 
 [Symfony](https://symfony.com) is an amazing HTTP framework which powers

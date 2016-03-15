@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-03-15T22:07:01+00:00</updated>
+    <updated>2016-03-15T22:56:02+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -561,7 +561,19 @@ etc)</li>
 </ul>
 
 <blockquote>
-  <p><strong>Note</strong>: regarding the last category, please read <a href="http://jolicode.com/blog/do-not-use-fosuserbundle">composer require technical-debt-bundle</a>.</p>
+  <p><strong>Note</strong>: the last category is considered bad practice, as explained in the
+  following, articles:</p>
+  
+  <ul>
+  <li><a href="http://jolicode.com/blog/do-not-use-fosuserbundle">composer require technical-debt-bundle</a>.</li>
+  <li><a href="http://elnur.pro/use-only-infrastructural-bundles-in-symfony/">Use only infrastructural bundles in Symfony2, by Elnur Abdurrakhimov</a></li>
+  <li><a href="http://stackoverflow.com/questions/9999433/should-everything-really-be-a-bundle-in-symfony-2-x/10001019#10001019">Should everything really be a bundle in Symfony2?</a></li>
+  <li><a href="http://danielribeiro.org/blog/yes-you-can-have-low-coupling-in-a-symfony-standard-edition-application/">Yes, you can have low coupling in a Symfony2 application</a></li>
+  <li><a href="http://elnur.pro/symfony-without-bundles/">Symfony2 without bundles, by Elnur Abdurrakhimov, by Daniel Ribeiro</a></li>
+  <li><a href="http://php-and-symfony.matthiasnoback.nl/2013/10/symfony2-some-things-i-dont-like-about-bundles/">Symfony2 some things I dont like about bundles, by Matthias Noback</a></li>
+  <li><a href="http://php-and-symfony.matthiasnoback.nl/2013/10/symfony2-console-commands-as-services-why/">Symfony2 console commands as services why, by Matthias Noback</a></li>
+  <li><a href="http://www.slideshare.net/matthiasnoback/high-quality-symfony-bundles-tutorial-dutch-php-conference-2014">Naked bundles, slides by Matthias Noback</a></li>
+  </ul>
 </blockquote>
 
 <p>Bundles follow <a href="http://symfony.com/doc/current/cookbook/bundles/best_practices.html">by convention</a>
