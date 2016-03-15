@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>The Ultimate Developer Guide to Symfony - Skeleton &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/03/16/ultimate-symfony-skeleton.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    The Ultimate Developer Guide to Symfony - Skeleton
+    <span class="sub-title">16/03/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/symfony">symfony</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/ultimate%20symfony%20series">ultimate symfony series</a>
+                                                                                        <a class="button button-reference" href="https://gnugat.github.io/tags/reference">reference</a>
+                    </nav>
+                </header>
+
+                <blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: Start by putting everything in <code>AppBundle</code> until we have a better
+  idea of what the project looks like and how to organize it.</p>
+</blockquote>
+
+<p>In this guide we've explored the main standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+<li><a href="/2016/03/02/ultimate-symfony-console.html">Console</a></li>
+</ul>
+
+<p>We've also seen how HttpKernel enabled reusable code with <a href="/2016/03/09/ultimate-symfony-bundle.html">Bundles</a>.</p>
+
+<p>In this article, we're going to have a closer look at how to organise our applications
+directory tree.</p>
+
+<h2 id="editions">Editions</h2>
+
+<p>Deciding how our project directory is organized is up to us, but for consistency
+and convenience we usually use "Editions" to bootstrap new projects:</p>
+
+<pre><code>composer create-project gnugat/symfony-empty-edition our-project
+cd our-project
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Here we've decided to use the <a href="https://github.com/gnugat/symfony-empty-edition">Symfony Empty Edition</a>
+  which follows the "add what you need" philosophy (it only contains the strict minimum).</p>
+  
+  <p>If we're rather fond of the "solve 80% of use cases" philosophy we can go for
+  <a href="https://github.com/symfony/symfony-standard">Standard Edition</a>
+  which includes many tools commonly used to build full-stack websites.</p>
+  
+  <p>To find more distributions, <a href="http://symfony.com/distributions">check the official website</a>.</p>
+</blockquote>
+
+<p>The directory tree looks like this:</p>
+
+<pre><code>.
+├── app
+│   ├── AppKernel.php
+│   ├── autoload.php
+│   └── config
+│       ├── config_dev.yml
+│       ├── config_prod.yml
+│       ├── config_test.yml
+│       ├── config.yml
+│       └── parameters.yml.dist
+├── bin
+│   └── console
+├── composer.json
+├── src
+│   └── AppBundle
+│       └── AppBundle.php
+├── var
+│   ├── cache
+│   └── logs
+└── web
+    ├── app.php
+    ├── favicon.ico
+    └── robots.txt
+</code></pre>
+
+<p>Each folder in the root directory has a purpose:</p>
+
+<ul>
+<li><code>app</code>: configuration</li>
+<li><code>bin</code>: scripts, binaries</li>
+<li><code>src</code>: our code</li>
+<li><code>var</code>: temporary files</li>
+<li><code>web</code>: public directory exposed via the web server (<code>app.php</code> is the front controller)</li>
+</ul>
+
+<blockquote>
+  <p><strong>Note</strong>: Classes that wouldn't be used in production can be put outside of
+  <code>src</code> (e.g. tests could be put in <code>tests</code>, fixtures in <code>fixtures</code>, etc). They
+  should be configured in <code>composer.json</code> as follow:</p>
+
+<pre><code>{
+    "autoload-dev": {
+        "psr-4": {
+            "Gnugat\\Toasty\\Fixtures\\": "fixtures",
+            "Gnugat\\Toasty\\Tests\\": "tests"
+        }
+    }
+}
+</code></pre>
+  
+  <p>This way, when running Composer's <code>install</code> command in development we get our
+  tests/fixtures classes autoloaded, and when running the same command with <code>--no-dev</code>
+  option in production we don't.</p>
+</blockquote>
+
+<h2 id="appbundle">AppBundle</h2>
+
+<p>Once we have an empty skeleton, we can start organizing our code by puting all
+new classes in <code>src/AppBundle</code>, as advised by the <a href="http://symfony.com/doc/current/best_practices/business-logic.html">official best practice</a>.</p>
+
+<p>Symfony specific classes can be put in the following directories:</p>
+
+<ul>
+<li><code>src/AppBundle/Command</code>, for Console Commands</li>
+<li><code>src/AppBundle/Controller</code> for HttpKernel Controllers</li>
+<li><code>src/AppBundle/DependencyInjection</code>, for <code>CompilerPassInterface</code> and <code>ExtensionInterface</code> implementations</li>
+<li><code>src/AppBundle/EventListener</code>, for EventDispatcher Listeners</li>
+</ul>
+
+<p>Our project specific classes can be put the <code>src/AppBundle/Service</code> directory.</p>
+
+<p>The number of classes in will grow overtime, at some point we'll have an itch to
+organize them in a better way: we can group them by entity.</p>
+
+<p>Regarding configuration, we can organize it this way:</p>
+
+<ul>
+<li><code>app/config/routings/</code>, contains Router configuration</li>
+<li><code>app/config/services/</code>, contains Dependency Injection configuration</li>
+</ul>
+
+<p>The directory tree looks like this:</p>
+
+<pre><code>.
+├── app
+│   ├── AppKernel.php
+│   ├── autoload.php
+│   └── config
+│       ├── config_dev.yml
+│       ├── config_prod.yml
+│       ├── config_test.yml
+│       ├── config.yml
+│       ├── parameters.yml.dist
+│       ├── routings
+│       └── services
+├── bin
+│   └── console
+├── composer.json
+├── composer.lock
+├── src
+│   └── AppBundle
+│       ├── AppBundle.php
+│       ├── Command
+│       ├── Controller
+│       ├── DependencyInjection
+│       │   └── CompilerPass
+│       ├── EventListener
+│       └── Service
+├── var
+│   ├── cache
+│   └── logs
+└── web
+    ├── app.php
+    ├── favicon.ico
+    └── robots.txt
+</code></pre>
+
+<h2 id="decoupling-from-framework">Decoupling from framework</h2>
+
+<p>Starting by putting everything in <code>AppBundle</code> is fine until we have a better idea
+of what the project looks like and how to organize it.</p>
+
+<p>As suggested in the <a href="http://symfony.com/doc/current/best_practices/business-logic.html">official best practice</a>,
+we can move our "business logic" (everything in <code>src/AppBundle/Service</code>) to a new
+<code>src/&lt;vendor&gt;/&lt;project&gt;</code> directory.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Replace <code>&lt;vendor&gt;</code> by the organization/author (e.g. <code>Gnugat</code>)
+  and <code>&lt;project&gt;</code> by the project name (e.g. <code>Toasty</code>).</p>
+</blockquote>
+
+<p>The directory tree looks like this:</p>
+
+<pre><code>.
+├── app
+│   ├── AppKernel.php
+│   ├── autoload.php
+│   └── config
+│       ├── config_dev.yml
+│       ├── config_prod.yml
+│       ├── config_test.yml
+│       ├── config.yml
+│       ├── parameters.yml.dist
+│       ├── routings
+│       └── services
+├── bin
+│   └── console
+├── composer.json
+├── composer.lock
+├── src
+│   ├── AppBundle
+│   │   ├── AppBundle.php
+│   │   ├── Command
+│   │   ├── Controller
+│   │   ├── DependencyInjection
+│   │   │   └── CompilerPass
+│   │   └── EventListener
+│   └── &lt;vendor&gt;
+│       └── &lt;project&gt;
+├── var
+│   ├── cache
+│   └── logs
+└── web
+    ├── app.php
+    ├── favicon.ico
+    └── robots.txt
+</code></pre>
+
+<p>By leaving Symfony related classes in <code>src/AppBundle</code> and our "business logic"
+in <code>src/&lt;vendor&gt;/&lt;project&gt;</code>, it becomes easier to <a href="/2015/09/30/decouple-from-frameworks.html">decouple from the framework</a>.</p>
+
+<h2 id="decouple-from-libraries">Decouple from libraries</h2>
+
+<p>Building on "decoupling from frameworks", we might also want to <a href="http://localhost:8000/2015/10/12/decouple-from-libraries.html">decouple from libraires</a>.
+To do so our "business logic" classes should rely on interfaces, and their implementation
+would use libraries.</p>
+
+<p>At this point we can get three different categories of classes:</p>
+
+<ul>
+<li><code>Domain</code> ones, classes that reflect our business logic</li>
+<li><code>Component</code> ones, classes that don't have a direct link to our project and could be reused as libraries</li>
+<li><code>Bridge</code> ones, classes that map our Domain to Component (or third party libraries)</li>
+</ul>
+
+<p>By organizing our directory tree with those categories, it could looks like this:</p>
+
+<pre><code>.
+├── app
+│   ├── AppKernel.php
+│   ├── autoload.php
+│   └── config
+│       ├── config_dev.yml
+│       ├── config_prod.yml
+│       ├── config_test.yml
+│       ├── config.yml
+│       ├── parameters.yml.dist
+│       ├── routings
+│       └── services
+├── bin
+│   └── console
+├── composer.json
+├── composer.lock
+├── src
+│   ├── AppBundle
+│   │   ├── AppBundle.php
+│   │   ├── Command
+│   │   ├── Controller
+│   │   ├── DependencyInjection
+│   │   │   └── CompilerPass
+│   │   └── EventListener
+│   └── &lt;vendor&gt;
+│       └── &lt;project&gt;
+│           ├── Bridge
+│           ├── Component
+│           └── Domain
+├── var
+│   ├── cache
+│   └── logs
+└── web
+    ├── app.php
+    ├── favicon.ico
+    └── robots.txt
+</code></pre>
+
+<p>The issue with the previous organization is that classes in <code>Bridge</code> are now away
+from their interface. Wouldn't it better to keep related classes close?</p>
+
+<p>Here's an alternative organization, where we move <code>Bridge</code> to be in <code>Domain</code>:</p>
+
+<pre><code>.
+├── app
+│   ├── AppKernel.php
+│   ├── autoload.php
+│   └── config
+│       ├── config_dev.yml
+│       ├── config_prod.yml
+│       ├── config_test.yml
+│       ├── config.yml
+│       ├── parameters.yml.dist
+│       ├── routings
+│       └── services
+├── bin
+│   └── console
+├── composer.json
+├── composer.lock
+├── src
+│   ├── AppBundle
+│   │   ├── AppBundle.php
+│   │   ├── Command
+│   │   ├── Controller
+│   │   ├── DependencyInjection
+│   │   │   └── CompilerPass
+│   │   └── EventListener
+│   └── &lt;vendor&gt;
+│       └── &lt;project&gt;
+│           ├── Component
+│           └── Domain
+│               └── Bridge
+├── var
+│   ├── cache
+│   └── logs
+└── web
+    ├── app.php
+    ├── favicon.ico
+    └── robots.txt
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: <code>Components</code> could also need their own bridges. Also, a "Bundle" is
+  a kind of bridge: it maps a library to Symfony.</p>
+</blockquote>
+
+<h2 id="monolithic-repository">Monolithic Repository</h2>
+
+<p>There's a possibility that our application grows out of proportion and we decide
+it'd be better to split it into smaller applications.</p>
+
+<p>For example if we have an application that creates resources through a backend
+and then provides them through an API for other applications, we could split it
+in two: <code>backend</code> (note that <code>backend</code> could also be split in two:
+<code>backend-api</code> and <code>backend-ui</code>) and <code>api</code>.</p>
+
+<p>The problem is that those two applications would share a lot of logic, so splitting
+them in different repositories could become cumbersome to maintain. A good indicator
+to know if they need to be in the same repository: when we create a new version,
+do we need to release them together?</p>
+
+<p>In that case it might be worth keeping those two applications in the same repository,
+this practice being called "Monolithic Repository".</p>
+
+<p>For our project, it would mean:</p>
+
+<ul>
+<li>creating an <code>apps</code> directory where we would put small symfony applications,
+similar to the first directory tree we've seen</li>
+<li>creating a <code>packages</code> directory where we would put the previous content of <code>src/&lt;vendor&gt;/&lt;project&gt;</code>,
+with each component in their own directory (to enable us to use them selectively in each apps)</li>
+</ul>
+
+<p>Here's an overview:</p>
+
+<pre><code>.
+├── apps
+│   └── &lt;app&gt;
+│       ├── app
+│       │   ├── AppKernel.php
+│       │   ├── autoload.php
+│       │   └── config
+│       │       ├── config_dev.yml
+│       │       ├── config_prod.yml
+│       │       ├── config_test.yml
+│       │       ├── config.yml
+│       │       ├── parameters.yml.dist
+│       │       ├── routings
+│       │       └── services
+│       ├── bin
+│       │   └── console
+│       ├── composer.json
+│       ├── composer.lock
+│       ├── src
+│       │   └── AppBundle
+│       │       ├── AppBundle.php
+│       │       ├── Command
+│       │       ├── Controller
+│       │       ├── DependencyInjection
+│       │       │   └── CompilerPass
+│       │       └── EventListener
+│       ├── var
+│       │   ├── cache
+│       │   └── logs
+│       └── web
+│           ├── app.php
+│           ├── favicon.ico
+│           └── robots.txt
+└── packages
+    └── &lt;package&gt;
+        ├── composer.json
+        └── src
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: More information about Monolithic Repository:</p>
+  
+  <ul>
+  <li><a href="http://gregoryszorc.com/blog/2014/09/09/on-monolithic-repositories/">On monolithic repositories</a></li>
+  <li><a href="http://danluu.com/monorepo/">Advantages of monolithic version control</a></li>
+  <li><a href="http://sroze.io/2015/09/14/managing-monolith-repositories-with-composers-path-repository/">Managing monolithic repositories with composer’s path repository</a></li>
+  <li><a href="https://qafoo.com/talks/15_10_symfony_live_berlin_monorepos.pdf">Working with a single, big, scary version control repository</a></li>
+  <li><a href="http://www.whitewashing.de/2015/04/11/monolithic_repositories_with_php_and_composer.html">Monolithic Repositories with PHP and Composer</a></li>
+  <li><a href="http://tech.mybuilder.com/why-we-created-conductor/">Conductor: A return to monolith</a></li>
+  </ul>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>There are many ways to organize our application directory tree, and it's difficult
+to pick one when we don't have a clear idea on their impact or on what our project
+should look like.</p>
+
+<p>The best way to tackle this is to first start small (everything in <code>src/AppBundle</code>),
+and then move gradually files around. It's also important to make ure that change
+is possible.</p>
+
+<p>Here are some alternative ways of organizing the project directory tree:</p>
+
+<ul>
+<li><a href="http://programmingarehard.com/2015/03/04/structing-my-application.html/">Structuring my application</a>
+by <a href="http://twitter.com/dadamssg">David Adams</a></li>
+<li><a href="http://verraes.net/2011/10/code-folder-structure/">Code Folder Structure</a>
+by <a href="http://twitter.com/mathiasverraes">Mathias Verraes</a></li>
+<li><a href="http://williamdurand.fr/2013/08/07/ddd-with-symfony2-folder-structure-and-code-first/">DDD with Symfony2: Folder Structure And Code First</a>
+by <a href="http://williamdurand.fr/">William Durand</a></li>
+</ul>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/03/09/ultimate-symfony-bundle.html" title="The Ultimate Developer Guide to Symfony - Bundle">Previous &lt; The Ultimate Developer Guide to Symfony - Bundle</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>
