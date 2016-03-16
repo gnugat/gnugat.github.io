@@ -106,7 +106,7 @@ Bundles are usually created for one of the following purposes:
   which provides a [CommandBus](http://shawnmc.cool/command-bus),
   [MonologBundle](https://github.com/symfony/monolog-bundle)
   for [Monolog](https://github.com/Seldaek/monolog)
-  which provies a [PSR-3](http://www.php-fig.org/psr/psr-3/) compliant logger,
+  which provides a [PSR-3](http://www.php-fig.org/psr/psr-3/) compliant logger,
   etc)
 * define an application's classes as Dependency Injection services (usually named AppBundle)
 * create a framework (e.g.
