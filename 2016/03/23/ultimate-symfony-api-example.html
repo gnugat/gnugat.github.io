@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>The Ultimate Developer Guide to Symfony - API Example &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/03/23/ultimate-symfony-api-example.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    The Ultimate Developer Guide to Symfony - API Example
+    <span class="sub-title">23/03/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/symfony">symfony</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/ultimate%20symfony%20series">ultimate symfony series</a>
+                                                                                        <a class="button button-reference" href="https://gnugat.github.io/tags/reference">reference</a>
+                    </nav>
+                </header>
+
+                <blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: Practice makes Better.</p>
+</blockquote>
+
+<p>In this guide we've explored the main standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+<li><a href="/2016/03/02/ultimate-symfony-console.html">Console</a></li>
+</ul>
+
+<p>We've also seen how HttpKernel enabled reusable code with <a href="/2016/03/09/ultimate-symfony-bundle.html">Bundles</a>,
+and the different ways to organize our application <a href="/2016/03/16/ultimate-symfony-skeleton.html">tree directory</a>.</p>
+
+<p>In this article, we're going to put all this knowledge in practice by creating a
+"fortune" project with an endpoint that allows us to submit new fortunes.</p>
+
+<h2 id="create-the-project">Create the project</h2>
+
+<p>The first step is to create our project. For this example we'll use the
+<a href="https://github.com/symfony/symfony-standard">Standard Edition</a>:</p>
+
+<pre><code>composer create-project symfony/framework-standard-edition fortune
+</code></pre>
+
+<p>This will ask us some configuration questions (e.g. database credentials), allowing
+us to set up everything in one step.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Nothing prevents us from adding new libraries (e.g. <a href="https://github.com/beberlei/assert">Assert</a>),
+  replacing the ones provided by default (e.g. replacing <a href="http://www.doctrine-project.org/projects/orm.html">Doctrine</a>
+  with <a href="http://www.pomm-project.org/">Pomm</a>) or remove the ones we don't need
+  (e.g. <a href="http://swiftmailer.org/">Swiftmailer</a> if we don't need emailing).</p>
+</blockquote>
+
+<p>To begin with a clean slate we'll need to remove some things:</p>
+
+<pre><code>cd fortune
+echo '' &gt;&gt; app/config/routing.yml
+rm -rf src/AppBundle/Controller/* tests/AppBundle/Controller/* app/Resources/views/*
+</code></pre>
+
+<p>Then we're going to install PHPUnit locally:</p>
+
+<pre><code>composer require --dev phpunit/phpunit:5.2 --ignore-platform-reqs
+</code></pre>
+
+<p>We're now ready to begin.</p>
+
+<h2 id="create-the-controller">Create the Controller</h2>
+
+<p>We'll first start by writing a functional test for our new endpoint:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Controller/Api/FortuneControllerTest.php
+
+namespace Tests\AppBundle\Controller\Api;
+
+use Symfony\Component\HttpFoundation\Request;
+
+class FortuneControllerTest extends \PHPUnit_Framework_TestCase
+{
+    private $app;
+
+    protected function setUp()
+    {
+        $this-&gt;app = new \AppKernel('test', false);
+    }
+
+    /**
+     * @test
+     */
+    public function it_cannot_submit_fortunes_without_content()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+        );
+        $request = Request::create('/api/v1/fortunes', 'POST', array(), array(), array(), $headers, json_encode(array(
+        )));
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        self::assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+
+    /**
+     * @test
+     */
+    public function it_cannot_submit_fortunes_with_non_string_content()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+        );
+        $request = Request::create('/api/v1/fortunes', 'POST', array(), array(), array(), $headers, json_encode(array(
+            'content' =&gt; 42,
+        )));
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        self::assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+
+    /**
+     * @test
+     */
+    public function it_submits_new_fortunes()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+        );
+        $request = Request::create('/api/v1/fortunes', 'POST', array(), array(), array(), $headers, json_encode(array(
+            'content' =&gt; 'Hello',
+        )));
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        self::assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+}
+</code></pre>
+
+<p>With functional tests, we're only interested in making sure all components play
+well together, so checking the response status code (<code>201</code> is succesfully created,
+<code>422</code> is a validation error) is sufficient.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: <code>400 BAD REQUEST</code> is only used if there's a syntax error in the Request
+  (e.g. invalid JSON).</p>
+</blockquote>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They fail, with a <code>404 NOT FOUND</code> response. That's because we don't have any
+controllers, so let's fix that:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/Api/FortuneController.php
+
+namespace AppBundle\Controller\Api;
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class FortuneController
+{
+    public function submit(Request $request)
+    {
+        return new Response('', 201);
+    }
+}
+</code></pre>
+
+<p>Having a controller is no good without routing configuration:</p>
+
+<pre><code># app/config/routing.yml
+
+submit_new_fortunes_endpoint:
+    path: /api/v1/fortunes
+    defaults:
+        _controller: app.api.fortune_controller:submit
+    methods:
+        - POST
+</code></pre>
+
+<p>In this configuration, <code>_controller</code> is set to call the <code>submit</code> method of the
+<code>app.api.fortune_controller</code> service. Here's how to define this service:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+</code></pre>
+
+<p>Now let's try again our tests:</p>
+
+<pre><code>rm -rf var/cache/test
+vendor/bin/phpunit
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: We need to remove the cache to take into account the new configuration.</p>
+</blockquote>
+
+<p>The last test (happy scenario) pass! We'll have to fix the first two ones (unhappy
+scenario) later.</p>
+
+<p>We can now call directly our endpoint:</p>
+
+<pre><code>php -S localhost:2501 -t web &amp;
+curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"Nobody expects the spanish inquisition!"}'
+killall -9 php
+</code></pre>
+
+<p>We should successfully get a <code>201 CREATED</code>.</p>
+
+<h2 id="create-the-logic">Create the logic</h2>
+
+<p>So now we have an endpoint that does nothing. Let's fix it by creating the logic.
+Our first step will be to write a unit test for a class that will do a basic
+validation of the input:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Service/SubmitNewFortuneTest.php
+
+namespace Tests\AppBundle\Service;
+
+use AppBundle\Service\SubmitNewFortune;
+
+class SubmitNewFortuneTest extends \PHPUnit_Framework_TestCase
+{
+    const CONTENT = "Look, matey, I know a dead parrot when I see one, and I'm looking at one right now.";
+
+    /**
+     * @test
+     */
+    public function it_has_a_content()
+    {
+        $submitNewFortune = new SubmitNewFortune(self::CONTENT);
+
+        self::assertSame(self::CONTENT, $submitNewFortune-&gt;content);
+    }
+
+    /**
+     * @test
+     */
+    public function it_fails_if_the_content_is_missing()
+    {
+        $this-&gt;expectException(\DomainException::class);
+
+        new SubmitNewFortune(null);
+    }
+
+    /**
+     * @test
+     */
+    public function it_fails_if_the_content_is_not_a_string()
+    {
+        $this-&gt;expectException(\DomainException::class);
+
+        new SubmitNewFortune(42);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: You need PHPUnit 5.2 to be able to use <code>expectException</code>.</p>
+</blockquote>
+
+<p>Our <code>SubmitNewFortune</code> will check that we submitted a stringy content. Let's run
+the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: If we had used <a href="/2015/08/03/phpspec.html">phpspec</a> to write our unit
+  tests, it would have created an empty <code>SubmitNewFortune</code> class for us.
+  There's nothing wrong with using <a href="/2015/09/23/phpunit-with-phpspec.html">both PHPUnit and phpspec</a>,
+  (the first for functional tests and the second for unit tests).</p>
+</blockquote>
+
+<p>The tests fail because the actual class doesn't exist yet. We need to write it:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/SubmitNewFortune.php
+
+namespace AppBundle\Service;
+
+class SubmitNewFortune
+{
+    public $content;
+
+    public function __construct($content)
+    {
+        if (null === $content) {
+            throw new \DomainException('Missing required "content" parameter', 422);
+        }
+        if (false === is_string($content)) {
+            throw new \DomainException('Invalid "content" parameter: it must be a string', 422);
+        }
+        $this-&gt;content = $content;
+    }
+}
+</code></pre>
+
+<p>Let's run the tests again:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>This time they pass.</p>
+
+<p>Validating the input parameters isn't enough, we now need to execute some logic
+to actually submit new quotes. This can be done in a class that handles <code>SubmitNewFortune</code>:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Service/SubmitNewFortuneHandlerTest.php
+
+namespace Tests\AppBundle\Service;
+
+use AppBundle\Service\SaveNewFortune;
+use AppBundle\Service\SubmitNewFortune;
+use AppBundle\Service\SubmitNewFortuneHandler;
+
+class SubmitNewFortuneHandlerTest extends \PHPUnit_Framework_TestCase
+{
+    const CONTENT = "It's just a flesh wound.";
+
+    private $submitNewFortuneHandler;
+    private $saveNewFortune;
+
+    protected function setUp()
+    {
+        $this-&gt;saveNewFortune = $this-&gt;prophesize(SaveNewFortune::class);
+        $this-&gt;submitNewFortuneHandler = new SubmitNewFortuneHandler(
+            $this-&gt;saveNewFortune-&gt;reveal()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_submits_new_fortunes()
+    {
+        $submitNewFortune = new SubmitNewFortune(self::CONTENT);
+
+        $this-&gt;saveNewFortune-&gt;save(array(
+            'content' =&gt; self::CONTENT
+        ))-&gt;shouldBeCalled();
+
+        $this-&gt;submitNewFortuneHandler-&gt;handle($submitNewFortune);
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They're telling us to create <code>SubmitNewFortuneHandler</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/SubmitNewFortuneHandler.php
+
+namespace AppBundle\Service;
+
+class SubmitNewFortuneHandler
+{
+    private $saveNewFortune;
+
+    public function __construct(SaveNewFortune $saveNewFortune)
+    {
+        $this-&gt;saveNewFortune = $saveNewFortune;
+    }
+
+    public function handle(SubmitNewFortune $submitNewFortune)
+    {
+        $newFortune = array(
+            'content' =&gt; $submitNewFortune-&gt;content,
+        );
+
+        $this-&gt;saveNewFortune-&gt;save($newFortune);
+    }
+}
+</code></pre>
+
+<p>This should fix this specific error:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Now our tests are telling us to create <code>SaveNewFortune</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/SaveNewFortune.php
+
+namespace AppBundle\Service;
+
+interface SaveNewFortune
+{
+    public function save(array $newFortune);
+}
+</code></pre>
+
+<p>Let's see if it did the trick:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Yes it did! To sum up what we've done in this section:</p>
+
+<ul>
+<li>we've created a <code>SubmitNewFortune</code> class that contains all input parameters
+to submit a new fortune, and it valides them</li>
+<li>we've create a <code>SubmitNewFortuneHandler</code> class that uses parameters from
+<code>SubmitNewFortune</code> to call services which will do the actual logic</li>
+<li>we've created a <code>SaveNewFortune</code> interface, its implementations will save new
+fortunes</li>
+</ul>
+
+<h2 id="wiring">Wiring</h2>
+
+<p>We're going to use Doctrine DBAL to actually save new fortunes in a database.
+This can be done by creating an implementation of <code>SaveNewFortune</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/Bridge/DoctrineDbalSaveNewFortune.php
+
+namespace AppBundle\Service\Bridge;
+
+use AppBundle\Service\SaveNewFortune;
+use Doctrine\DBAL\Driver\Connection;
+
+class DoctrineDbalSaveNewFortune implements SaveNewFortune
+{
+    private $connection;
+
+    public function __construct(Connection $connection)
+    {
+        $this-&gt;connection = $connection;
+    }
+
+    public function save(array $newFortune)
+    {
+        $queryBuilder = $this-&gt;connection-&gt;createQueryBuilder();
+        $queryBuilder-&gt;insert('fortune');
+        $queryBuilder-&gt;setValue('content', '?');
+        $queryBuilder-&gt;setParameter(0, $newFortune['content']);
+        $sql = $queryBuilder-&gt;getSql();
+        $parameters = $queryBuilder-&gt;getParameters();
+        $statement = $this-&gt;connection-&gt;prepare($sql);
+        $statement-&gt;execute($parameters);
+    }
+}
+</code></pre>
+
+<p>This was the last class we needed to write. We can now use <code>SubmitNewFortune</code>
+in our controller:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/Api/FortuneController.php
+
+namespace AppBundle\Controller\Api;
+
+use AppBundle\Service\SubmitNewFortune;
+use AppBundle\Service\SubmitNewFortuneHandler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class FortuneController
+{
+    private $submitNewFortuneHandler;
+
+    public function __construct(SubmitNewFortuneHandler $submitNewFortuneHandler)
+    {
+        $this-&gt;submitNewFortuneHandler = $submitNewFortuneHandler;
+    }
+
+    public function submit(Request $request)
+    {
+        $submitNewFortune = new SubmitNewFortune(
+            $request-&gt;request-&gt;get('content')
+        );
+        $this-&gt;submitNewFortuneHandler-&gt;handle($submitNewFortune);
+
+        return new Response('', 201);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: In the controller, we extract Request (input) parameters and put them
+  in <code>SubmitNewFortune</code> which is going to validate them. We then simply call
+  <code>SubmitNewFortuneHandler</code> to take care of the logic associated to <code>SubmitNewFortune</code>.</p>
+</blockquote>
+
+<p>Now all that's left to do is wire everything together using Dependency Injection:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>rm -rf var/cache/test
+vendor/bin/phpunit
+</code></pre>
+
+<p>They currently fail with <code>500 INTERNAL SERVER ERROR</code>. To get an idea of what's
+going on, we need to have a look at our logs:</p>
+
+<pre><code>grep CRITICAL var/logs/test.log | tail -n 1 # Get the last line containing "CRITICAL", which is often cause by 500
+</code></pre>
+
+<p>This is what we got:</p>
+
+<pre><code>[2016-03-24 19:31:32] request.CRITICAL: Uncaught PHP Exception DomainException: "Missing required "content" parameter" at /home/foobar/fortune/src/AppBundle/Service/SubmitNewFortune.php line 13 {"exception":"[object] (DomainException(code: 422): Missing required \"content\" parameter at /home/foobar/fortune/src/AppBundle/Service/SubmitNewFortune.php:13)"} []
+</code></pre>
+
+<p>It looks like we don't get any data in the <code>request</code> attribute from <code>Request</code>.
+That's because PHP doesn't populate <code>$_POST</code> when we send JSON data. We can fix
+it by creating an <code>EventListener</code> that will prepare the Request for us:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/EventListener/JsonRequestContentListener.php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+/**
+ * PHP does not populate $_POST with the data submitted via a JSON Request,
+ * causing an empty $request-&gt;request.
+ *
+ * This listener fixes this.
+ */
+class JsonRequestContentListener
+{
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        $request = $event-&gt;getRequest();
+        $hasBeenSubmited = in_array($request-&gt;getMethod(), array('PATCH', 'POST', 'PUT'), true);
+        $isJson = (1 === preg_match('#application/json#', $request-&gt;headers-&gt;get('Content-Type')));
+        if (!$hasBeenSubmited || !$isJson) {
+            return;
+        }
+        $data = json_decode($request-&gt;getContent(), true);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            $event-&gt;setResponse(new Response('{"error":"Invalid or malformed JSON"}', 400, array('Content-Type' =&gt; 'application/json')));
+        }
+        $request-&gt;request-&gt;add($data ?: array());
+    }
+}
+</code></pre>
+
+<p>Our listener needs to be registered in the Dependency Injection Container:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+
+    app.json_request_content_listener:
+        class: 'AppBundle\EventListener\JsonRequestContentListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+</code></pre>
+
+<p>This should fix our error:</p>
+
+<pre><code>rm -rf var/cache/test
+vendor/bin/phpunit
+grep CRITICAL var/logs/test.log | tail -n 1
+</code></pre>
+
+<p>We still get a <code>500</code>, but this time for the following reason:</p>
+
+<pre><code>[2016-03-24 19:36:09] request.CRITICAL: Uncaught PHP Exception Doctrine\DBAL\Exception\ConnectionException: "An exception occured in driver: SQLSTATE[08006] [7] FATAL:  database "fortune" does not exist" at /home/foobar/fortune/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/AbstractPostgreSQLDriver.php line 85 {"exception":"[object] (Doctrine\\DBAL\\Exception\\ConnectionException(code: 0): An exception occured in driver: SQLSTATE[08006] [7] FATAL:  database \"fortune\" does not exist at /home/foobar/fortune/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/AbstractPostgreSQLDriver.php:85, Doctrine\\DBAL\\Driver\\PDOException(code: 7): SQLSTATE[08006] [7] FATAL:  database \"fortune\" does not exist at /home/foobar/fortune/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/PDOConnection.php:47, PDOException(code: 7): SQLSTATE[08006] [7] FATAL:  database \"fortune\" does not exist at /home/foobar/fortune/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/PDOConnection.php:43)"} []
+</code></pre>
+
+<p>The database doesn't exist. It can be created with the following command, provided by Doctrine:</p>
+
+<pre><code>bin/console doctrine:database:create
+</code></pre>
+
+<p>Let's take this opportunity to also create the table:</p>
+
+<pre><code>bin/console doctrine:query:sql 'CREATE TABLE fortune (content TEXT);'
+</code></pre>
+
+<p>Let's re-run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Hooray! We can now submit new fortunes by calling our endpoint:</p>
+
+<pre><code>rm -rf var/cache/prod
+php -S localhost:2501 -t web &amp;
+curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"What... is the air-speed velocity of an unladen swallow?"}'
+killall -9 php
+</code></pre>
+
+<p>We can see our fortunes in the database:</p>
+
+<pre><code>bin/console doctrine:query:sql 'SELECT * FROM fortune;'
+</code></pre>
+
+<p>We still have two failing tests though. That's because we don't catch our <code>DomainExceptions</code>.
+This can be fixed in an <code>EventListener</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/EventListener/ExceptionListener.php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
+
+class ExceptionListener
+{
+    public function onKernelException(GetResponseForExceptionEvent $event)
+    {
+        $exception = $event-&gt;getException();
+        if (!$exception instanceof \DomainException) {
+            return;
+        }
+        $event-&gt;setResponse(new Response(json_encode(array(
+            'error' =&gt; $exception-&gt;getMessage(),
+        )), $exception-&gt;getCode(), array('Content-Type' =&gt; 'application/json')));
+    }
+}
+</code></pre>
+
+<p>It then needs to be registered as a service:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+
+    app.json_request_content_listener:
+        class: 'AppBundle\EventListener\JsonRequestContentListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    app.exception_listener:
+        class: 'AppBundle\EventListener\ExceptionListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+</code></pre>
+
+<p>Finally we run the tests:</p>
+
+<pre><code>rm -rf var/cache/test
+vendor/bin/phpunit
+</code></pre>
+
+<p>All green!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>To create a new endpoint, we need to:</p>
+
+<ul>
+<li>create a Controller class</li>
+<li>configure its routing</li>
+<li>register the controller as a service</li>
+</ul>
+
+<p>We might need to create some event listeners (to populate <code>$request-&gt;request</code>
+when receiving JSON content, or to convert exceptions to responses).</p>
+
+<p>The endpoint's logic is then up to us, it doesn't have to be done in a "Symfony"
+way. For example we can:</p>
+
+<ul>
+<li>extract Request parameters and put them in a class that validates them</li>
+<li>pass the class to a handler that will call services to do the actual logic</li>
+<li>define our services as interfaces, and then create implementations to integrate
+them with third party libraries</li>
+</ul>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/03/16/ultimate-symfony-skeleton.html" title="The Ultimate Developer Guide to Symfony - Skeleton">Previous &lt; The Ultimate Developer Guide to Symfony - Skeleton</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>
