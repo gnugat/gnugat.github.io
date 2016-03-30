@@ -396,7 +396,7 @@ to pick one when we don't have a clear idea on their impact or on what our proje
 should look like.
 
 The best way to tackle this is to first start small (everything in `src/AppBundle`),
-and then move gradually files around. It's also important to make ure that change
+and then move gradually files around. It's also important to make sure that change
 is possible.
 
 Here are some alternative ways of organizing the project directory tree:
