@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2016-03-24T19:45:10+00:00</updated>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2016-03-30T09:19:41+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 1: Composer]]></title>
-            <link href="https://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html"/>
+            <link href="/2014/06/18/learn-sf2-composer-part-1.html"/>
             <updated>2014-06-18T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/06/18/learn-sf2-composer-part-1.html</id>
+            <id>/2014/06/18/learn-sf2-composer-part-1.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>

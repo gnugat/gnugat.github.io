@@ -748,3 +748,5 @@ way. For example we can:
 * pass the class to a handler that will call services to do the actual logic
 * define our services as interfaces, and then create implementations to integrate
   them with third party libraries
+
+You can find the code on Github: [Fortune - API example](https://github.com/gnugat-examples/fortune/tree/api-example)

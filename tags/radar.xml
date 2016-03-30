@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2016-03-24T19:45:10+00:00</updated>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2016-03-30T09:19:41+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Links from 2015]]></title>
-            <link href="https://gnugat.github.io/2016/01/27/links-from-2015.html"/>
+            <link href="/2016/01/27/links-from-2015.html"/>
             <updated>2016-01-27T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2016/01/27/links-from-2015.html</id>
+            <id>/2016/01/27/links-from-2015.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Links I tweeted during 2015</p>
 </blockquote>
@@ -348,9 +348,9 @@ change/upgrade them without friction</li>
         </entry>
             <entry>
             <title type="html"><![CDATA[Links from 2014]]></title>
-            <link href="https://gnugat.github.io/2015/01/07/links-from-2014.html"/>
+            <link href="/2015/01/07/links-from-2014.html"/>
             <updated>2015-01-07T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2015/01/07/links-from-2014.html</id>
+            <id>/2015/01/07/links-from-2014.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Links I tweeted during 2014</p>
 </blockquote>

@@ -1,18 +1,748 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2016-03-24T19:45:10+00:00</updated>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2016-03-30T09:19:41+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Web Example]]></title>
+            <link href="/2016/03/30/ultimate-symfony-web-example.html"/>
+            <updated>2016-03-30T00:00:00+01:00</updated>
+            <id>/2016/03/30/ultimate-symfony-web-example.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: Practice makes Better.</p>
+</blockquote>
+
+<p>In this guide we've explored the main standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+<li><a href="/2016/03/02/ultimate-symfony-console.html">Console</a></li>
+</ul>
+
+<p>We've also seen how HttpKernel enabled reusable code with <a href="/2016/03/09/ultimate-symfony-bundle.html">Bundles</a>,
+and the different ways to organize our application <a href="/2016/03/16/ultimate-symfony-skeleton.html">tree directory</a>.</p>
+
+<p>Finally we've started to put all this knowledge in practice by creating a
+"fortune" project with <a href="/2016/03/24/ultimate-symfony-api-example.html">an endpoint that allows us to submit new fortunes</a>.</p>
+
+<p>In this article, we're going to continue the "fortune" project by creating a page
+that lists all fortunes.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: To start with the same code, use the following repository:</p>
+
+<pre><code>git clone https://github.com/gnugat-examples/fortune.git
+cd fortune
+composer install -o --ignore-platform-reqs
+git checkout api-example
+git chekcout -b web-example
+</code></pre>
+</blockquote>
+
+<h2 id="create-the-controller">Create the Controller</h2>
+
+<p>We'll first start by writing a functional test for our new endpoint:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Controller/FortuneControllerTest.php
+
+namespace Tests\AppBundle\Controller;
+
+use Symfony\Component\HttpFoundation\Request;
+
+class FortuneControllerTest extends \PHPUnit_Framework_TestCase
+{
+    private $app;
+
+    protected function setUp()
+    {
+        $this-&gt;app = new \AppKernel('test', false);
+    }
+
+    /**
+     * @test
+     */
+    public function it_lists_all_fortunes()
+    {
+        $request = Request::create('/');
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        self::assertSame(200, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+}
+</code></pre>
+
+<p>Just like for our endpoint, we're only interested in checking the status code
+of the response (<code>200</code> is successful response).</p>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They fail, with a <code>404 NOT FOUND</code> response. That's because we don't have any
+controllers, so let's fix that:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/FortuneController.php
+
+namespace AppBundle\Controller;
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class FortuneController
+{
+    public function listAll(Request $request)
+    {
+        return new Response('', 200);
+    }
+}
+</code></pre>
+
+<p>After creating a controller, the next step is to configure its route:</p>
+
+<pre><code># app/config/routing.yml
+
+submit_new_fortunes_endpoint:
+    path: /api/v1/fortunes
+    defaults:
+        _controller: app.api.fortune_controller:submit
+    methods:
+        - POST
+
+list_all_fortunes_page:
+    path: /
+    defaults:
+        _controller: app.fortune_controller:listAll
+    methods:
+        - GET
+</code></pre>
+
+<p>In this configuration, <code>_controller</code> is set to call the <code>listAll</code> method of the
+<code>app.fortune_controller</code> service. Here's how to define this service:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    # Controllers
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.fortune_controller:
+        class: 'AppBundle\Controller\FortuneController'
+
+    # Handlers
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    # Services
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+
+    # Listeners
+    app.json_request_content_listener:
+        class: 'AppBundle\EventListener\JsonRequestContentListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    app.exception_listener:
+        class: 'AppBundle\EventListener\ExceptionListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+</code></pre>
+
+<p>Now let's try again our tests:</p>
+
+<pre><code>rm -rf var/cache/test
+vendor/bin/phpunit
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Everytime the configuration changes, we need to remove the cache.</p>
+</blockquote>
+
+<p>The test suite is now green. Let's start the server:</p>
+
+<pre><code>rm -rf var/cache/prod
+php -S localhost:2501 -t web
+</code></pre>
+
+<p>We can now visit our page: <a href="http://localhost:2501/app.php/">http://localhost:2501/app.php/</a></p>
+
+<p>We should successfully get a blank page.</p>
+
+<h2 id="create-the-logic">Create the logic</h2>
+
+<p>So now we have an empty page. Let's fix it by creating a use case to list all
+fortunes:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Service/ListAllFortunesTest.php
+
+namespace Tests\AppBundle\Service;
+
+use AppBundle\Service\ListAllFortunes;
+
+class ListAllFortunesTest extends \PHPUnit_Framework_TestCase
+{
+    /**
+     * @test
+     */
+    public function it_has_no_parameters()
+    {
+        $listAllFortunes = new ListAllFortunes();
+    }
+}
+</code></pre>
+
+<p>We can now run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They fail because we need to create the actual class:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/ListAllFortunes.php
+
+namespace AppBundle\Service;
+
+class ListAllFortunes
+{
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Currently the use case class has no parameters to validate.
+  If new requirements come up with the need for some parameters, we're going
+  to be able to heck them here.</p>
+</blockquote>
+
+<p>This should fix the issue:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Now let's create Handler that will list all fortunes:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Service/ListAllFortunesHandlerTest.php
+
+namespace Tests\AppBundle\Service;
+
+use AppBundle\Service\FindAllFortunes;
+use AppBundle\Service\ListAllFortunes;
+use AppBundle\Service\ListAllFortunesHandler;
+
+class ListAllFortunesHandlerTest extends \PHPUnit_Framework_TestCase
+{
+    const CONTENT = "It's just a flesh wound.";
+
+    private $listAllFortunesHandler;
+    private $findAllFortunes;
+
+    protected function setUp()
+    {
+        $this-&gt;findAllFortunes = $this-&gt;prophesize(FindAllFortunes::class);
+        $this-&gt;listAllFortunesHandler = new ListAllFortunesHandler(
+            $this-&gt;findAllFortunes-&gt;reveal()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_submits_new_fortunes()
+    {
+        $listAllFortunes = new ListAllFortunes();
+
+        $this-&gt;findAllFortunes-&gt;findAll()-&gt;shouldBeCalled();
+
+        $this-&gt;listAllFortunesHandler-&gt;handle($listAllFortunes);
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They're telling us to create <code>ListAllFortunesHandler</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/ListAllFortunesHandler.php
+
+namespace AppBundle\Service;
+
+class ListAllFortunesHandler
+{
+    private $findAllFortunes;
+
+    public function __construct(FindAllFortunes $findAllFortunes)
+    {
+        $this-&gt;findAllFortunes = $findAllFortunes;
+    }
+
+    public function handle(ListAllFortunes $listAllFortunes)
+    {
+        return $this-&gt;findAllFortunes-&gt;findAll();
+    }
+}
+</code></pre>
+
+<p>This should fix this specific error:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Now our tests are telling us to create <code>FindAllFortunes</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/FindAllFortunes.php
+
+namespace AppBundle\Service;
+
+interface FindAllFortunes
+{
+    public function findAll();
+}
+</code></pre>
+
+<p>Let's see if it did the trick:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Yes it did! To sum up what we've done in this section:</p>
+
+<ul>
+<li>we've created a <code>ListAllFortunes</code> use case which could be validating input parameter,
+for now it's empty and only serve us to convey intention (use case: list all fortunes)</li>
+<li>we've create a <code>ListAllFortunesHandler</code> class that call services which will
+do the actual logic</li>
+<li>we've created a <code>FindAllFortunes</code> interface, its implementations will find all
+fortunes</li>
+</ul>
+
+<h2 id="wiring">Wiring</h2>
+
+<p>We're going to use Doctrine DBAL to actually find all fortunes from a database.
+This can be done by creating an implementation of <code>FindAllFortunes</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/Bridge/DoctrineDbalFindAllFortunes.php
+
+namespace AppBundle\Service\Bridge;
+
+use AppBundle\Service\FindAllFortunes;
+use Doctrine\DBAL\Driver\Connection;
+
+class DoctrineDbalFindAllFortunes implements FindAllFortunes
+{
+    private $connection;
+
+    public function __construct(Connection $connection)
+    {
+        $this-&gt;connection = $connection;
+    }
+
+    public function findAll()
+    {
+        $queryBuilder = $this-&gt;connection-&gt;createQueryBuilder();
+        $queryBuilder-&gt;select('*');
+        $queryBuilder-&gt;from('fortune');
+        $sql = $queryBuilder-&gt;getSql();
+        $parameters = $queryBuilder-&gt;getParameters();
+        $statement = $this-&gt;connection-&gt;prepare($sql);
+        $statement-&gt;execute($parameters);
+
+        return $statement-&gt;fetchAll();
+    }
+}
+</code></pre>
+
+<p>This was the last class we needed to write. We can now use <code>ListAllFortunes</code>
+in our controller:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/FortuneController.php
+
+namespace AppBundle\Controller;
+
+use AppBundle\Service\ListAllFortunes;
+use AppBundle\Service\ListAllFortunesHandler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class FortuneController
+{
+    private $listAllFortunesHandler;
+
+    public function __construct(ListAllFortunesHandler $listAllFortunesHandler)
+    {
+        $this-&gt;listAllFortunesHandler = $listAllFortunesHandler;
+    }
+
+    public function listAll(Request $request)
+    {
+        $listAllFortunes = new ListAllFortunes(
+        );
+        $fortunes = $this-&gt;listAllFortunesHandler-&gt;handle($listAllFortunes);
+
+        return new Response('', 200);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: In the controller, we extract Request (input) parameters and put them
+  in <code>ListAllFortunes</code> which is going to validate them. We then simply call
+  <code>ListAllFortunesHandler</code> to take care of the logic associated to <code>ListAllFortunes</code>.</p>
+</blockquote>
+
+<p>Now all that's left to do is wire everything together using Dependency Injection:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    # Controllers
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.fortune_controller:
+        class: 'AppBundle\Controller\FortuneController'
+        arguments:
+            - '@app.list_all_fortunes_handler'
+
+    # Handlers
+    app.list_all_fortunes_handler:
+        class: 'AppBundle\Service\ListAllFortunesHandler'
+        arguments:
+            - '@app.find_all_fortunes'
+
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    # Services
+    app.find_all_fortunes:
+        alias: app.bridge.doctrine_dbal_find_all_fortunes
+
+    app.bridge.doctrine_dbal_find_all_fortunes:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalFindAllFortunes'
+        arguments:
+            - '@database_connection'
+
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+
+    # Listeners
+    app.json_request_content_listener:
+        class: 'AppBundle\EventListener\JsonRequestContentListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    app.exception_listener:
+        class: 'AppBundle\EventListener\ExceptionListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>./bin/console doctrine:database:drop --force
+./bin/console doctrine:database:create
+bin/console doctrine:query:sql 'CREATE TABLE fortune (content TEXT);'
+rm -rf var/cache/test
+vendor/bin/phpunit
+</code></pre>
+
+<p>All green!</p>
+
+<h2 id="view">View</h2>
+
+<p>If we start the server and check the page, it's going to be blank. That's because
+in our controlller we create a Response with empty content. Let's improve this situation:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/FortuneController.php
+
+namespace AppBundle\Controller;
+
+use AppBundle\Service\ListAllFortunes;
+use AppBundle\Service\ListAllFortunesHandler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class FortuneController
+{
+    private $listAllFortunesHandler;
+
+    public function __construct(ListAllFortunesHandler $listAllFortunesHandler)
+    {
+        $this-&gt;listAllFortunesHandler = $listAllFortunesHandler;
+    }
+
+    public function listAll(Request $request)
+    {
+        $listAllFortunes = new ListAllFortunes(
+        );
+        $fortunes = $this-&gt;listAllFortunesHandler-&gt;handle($listAllFortunes);
+        $fortunesHtml = '';
+        foreach ($fortunes as $fortune) {
+            $fortunesHtml .= "&lt;li&gt;{$fortune['content']}&lt;/li&gt;\n";
+        }
+        $html =&lt;&lt;&lt;HTML
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;title&gt;Fortunes&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;ul&gt;
+        $fortunesHtml
+    &lt;/ul&gt;
+&lt;/body&gt;
+HTML
+        ;
+
+        return new Response($html, 200);
+    }
+}
+</code></pre>
+
+<p>Let's start the server:</p>
+
+<pre><code>rm -rf var/cache/prod
+php -S localhost:2501 -t web
+</code></pre>
+
+<p>In order to see a list of fortunes, we first need to submit some! We can use our
+endpoint for this purpose:</p>
+
+<pre><code>curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"I came here to have an argument!"}'
+curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"Has not got as much spam in it as spam egg sausage and spam, has it?"}'
+curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"The Castle of aaarrrrggh"}'
+</code></pre>
+
+<p>We can now visit our page: <a href="http://localhost:2501/app.php/">http://localhost:2501/app.php/</a></p>
+
+<p>While it seems a bit plain (a bit of CSS, javascript and more HTML wouldn't be
+too much), we do see a list of all fortunes.</p>
+
+<p>Controllers shouldn't contain any "view" logic, let's push it to a template using
+<a href="http://twig.sensiolabs.org/">Twig</a>:</p>
+
+<p></p>
+
+<pre><code>{# app/Resources/views/list-all-fortunes.html.twig #}
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;title&gt;Fortunes&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;ul&gt;
+        {% for fortune in fortunes %}
+        &lt;li&gt;{{ fortune.content }}&lt;/li&gt;
+        {% endfor %}
+    &lt;/ul&gt;
+&lt;/body&gt;
+</code></pre>
+
+<p></p>
+
+<p>We now need to use Twig in the controller:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/FortuneController.php
+
+namespace AppBundle\Controller;
+
+use AppBundle\Service\ListAllFortunes;
+use AppBundle\Service\ListAllFortunesHandler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class FortuneController
+{
+    private $listAllFortunesHandler;
+    private $twig;
+
+    public function __construct(
+        ListAllFortunesHandler $listAllFortunesHandler,
+        \Twig_Environment $twig
+    ) {
+        $this-&gt;listAllFortunesHandler = $listAllFortunesHandler;
+        $this-&gt;twig = $twig;
+    }
+
+    public function listAll(Request $request)
+    {
+        $listAllFortunes = new ListAllFortunes(
+        );
+        $fortunes = $this-&gt;listAllFortunesHandler-&gt;handle($listAllFortunes);
+        $html = $this-&gt;twig-&gt;render('::list-all-fortunes.html.twig', array(
+            'fortunes' =&gt; $fortunes,
+        ));
+
+        return new Response($html, 200);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: The first argument of <code>render</code> is the "path" to the view. This path
+  contains 3 parts, separated by colons (<code>:</code>):</p>
+  
+  <ul>
+  <li>the first part is the bundle name (by default it's <code>AppBundle</code> so we don't need to provide it)</li>
+  <li>the second one is the directory from <code>Resources/views</code> (in our case it's at the root so we don't need to provide it)</li>
+  <li>the template file name</li>
+  </ul>
+  
+  <p>Some other path example: <code>FortuneBundle:Fortunes/List:all.html.twig</code>, etc.</p>
+  
+  <p>The second argument is an array which associates Twig variable names to their values,
+  in our case we're going to have access to a <code>fortunes</code> variable in our template,
+  which is going to be the content of the <code>$fortunes</code> variable from our controller.</p>
+</blockquote>
+
+<p>In order to get Twig injected in our controller, we'll update it's service configuration:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    # Controllers
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.fortune_controller:
+        class: 'AppBundle\Controller\FortuneController'
+        arguments:
+            - '@app.list_all_fortunes_handler'
+            - '@twig'
+
+    # Handlers
+    app.list_all_fortunes_handler:
+        class: 'AppBundle\Service\ListAllFortunesHandler'
+        arguments:
+            - '@app.find_all_fortunes'
+
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    # Services
+    app.find_all_fortunes:
+        alias: app.bridge.doctrine_dbal_find_all_fortunes
+
+    app.bridge.doctrine_dbal_find_all_fortunes:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalFindAllFortunes'
+        arguments:
+            - '@database_connection'
+
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+
+    # Listeners
+    app.json_request_content_listener:
+        class: 'AppBundle\EventListener\JsonRequestContentListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    app.exception_listener:
+        class: 'AppBundle\EventListener\ExceptionListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+</code></pre>
+
+<p>Since we changed the configuration, we'll need to clear the cache:</p>
+
+<pre><code>rm -rf var/cache/prod
+</code></pre>
+
+<p>Finally we can visit again our page: <a href="http://localhost:2501/app.php/">http://localhost:2501/app.php/</a>.</p>
+
+<p>Let's run our test suite one last time:</p>
+
+<pre><code>rm -rf var/cache/test
+vendor/bin/phpunit
+</code></pre>
+
+<p>Everything is still green!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>To create a new page, we need to:</p>
+
+<ul>
+<li>create a Controller class</li>
+<li>configure its routing</li>
+<li>register the controller as a service</li>
+</ul>
+
+<p>The page's logic is then up to us, it doesn't have to be done in a "Symfony"
+way. For example we can:</p>
+
+<ul>
+<li>extract Request parameters and put them in a class that validates them</li>
+<li>pass the class to a handler that will call services to do the actual logic</li>
+<li>define our services as interfaces, and then create implementations to integrate
+them with third party libraries</li>
+</ul>
+
+<p>Finally to display the result we need to create a template file and call a
+templating engine, such as Twig, from our controller.</p>
+]]></content>
+        </entry>
+            <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - API Example]]></title>
-            <link href="https://gnugat.github.io/2016/03/24/ultimate-symfony-api-example.html"/>
+            <link href="/2016/03/24/ultimate-symfony-api-example.html"/>
             <updated>2016-03-24T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2016/03/24/ultimate-symfony-api-example.html</id>
+            <id>/2016/03/24/ultimate-symfony-api-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -738,13 +1468,15 @@ way. For example we can:</p>
 <li>define our services as interfaces, and then create implementations to integrate
 them with third party libraries</li>
 </ul>
+
+<p>You can find the code on Github: <a href="https://github.com/gnugat-examples/fortune/tree/api-example">Fortune - API example</a></p>
 ]]></content>
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Skeleton]]></title>
-            <link href="https://gnugat.github.io/2016/03/16/ultimate-symfony-skeleton.html"/>
+            <link href="/2016/03/16/ultimate-symfony-skeleton.html"/>
             <updated>2016-03-16T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2016/03/16/ultimate-symfony-skeleton.html</id>
+            <id>/2016/03/16/ultimate-symfony-skeleton.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -1169,9 +1901,9 @@ by <a href="http://williamdurand.fr/">William Durand</a></li>
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Bundle]]></title>
-            <link href="https://gnugat.github.io/2016/03/09/ultimate-symfony-bundle.html"/>
+            <link href="/2016/03/09/ultimate-symfony-bundle.html"/>
             <updated>2016-03-09T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2016/03/09/ultimate-symfony-bundle.html</id>
+            <id>/2016/03/09/ultimate-symfony-bundle.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -1611,9 +2343,9 @@ one. It comes with the bare minimum (it follows a "add what you need" philosohpy
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Console]]></title>
-            <link href="https://gnugat.github.io/2016/03/02/ultimate-symfony-console.html"/>
+            <link href="/2016/03/02/ultimate-symfony-console.html"/>
             <updated>2016-03-02T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2016/03/02/ultimate-symfony-console.html</id>
+            <id>/2016/03/02/ultimate-symfony-console.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -1852,9 +2584,9 @@ class SymfonyStyle
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Dependency Injection]]></title>
-            <link href="https://gnugat.github.io/2016/02/24/ultimate-symfony-dependency-injection.html"/>
+            <link href="/2016/02/24/ultimate-symfony-dependency-injection.html"/>
             <updated>2016-02-24T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2016/02/24/ultimate-symfony-dependency-injection.html</id>
+            <id>/2016/02/24/ultimate-symfony-dependency-injection.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -2476,9 +3208,9 @@ so the number of services doesn't impact the performances of the application.</p
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Routing]]></title>
-            <link href="https://gnugat.github.io/2016/02/17/ultimate-symfony-routing.html"/>
+            <link href="/2016/02/17/ultimate-symfony-routing.html"/>
             <updated>2016-02-17T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2016/02/17/ultimate-symfony-routing.html</id>
+            <id>/2016/02/17/ultimate-symfony-routing.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -2732,9 +3464,9 @@ class appDevUrlMatcher extends Symfony\Bundle\FrameworkBundle\Routing\Redirectab
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Event Dispatcher]]></title>
-            <link href="https://gnugat.github.io/2016/02/10/ultimate-symfony-event-dispatcher.html"/>
+            <link href="/2016/02/10/ultimate-symfony-event-dispatcher.html"/>
             <updated>2016-02-10T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2016/02/10/ultimate-symfony-event-dispatcher.html</id>
+            <id>/2016/02/10/ultimate-symfony-event-dispatcher.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -3153,9 +3885,9 @@ own code "Open for extension, but Close to modification"
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - HTTP Kernel]]></title>
-            <link href="https://gnugat.github.io/2016/02/03/ultimate-symfony-http-kernel.html"/>
+            <link href="/2016/02/03/ultimate-symfony-http-kernel.html"/>
             <updated>2016-02-03T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2016/02/03/ultimate-symfony-http-kernel.html</id>
+            <id>/2016/02/03/ultimate-symfony-http-kernel.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
