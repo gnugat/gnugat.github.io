@@ -22,8 +22,18 @@ We've already seen:
 * [Event Dispatcher](/2016/02/10/ultimate-symfony-event-dispatcher.html)
 * [Routing and YAML](/2016/02/17/ultimate-symfony-routing.html)
 
-We're now about to check Dependency Injection, and finally in the next article
-we'll have a look at [Console](/2016/03/02/ultimate-symfony-console.html).
+We're now about to check Dependency Injection, then the next article we'll have
+a look at [Console](/2016/03/02/ultimate-symfony-console.html).
+
+We'll also see how HttpKernel enables reusable code with [Bundles](/2016/03/09/ultimate-symfony-bundle.html),
+and the different ways to organize our application [tree directory](/2016/03/16/ultimate-symfony-skeleton.html).
+
+Finally we'll finish by putting all this knowledge in practice by creating a
+"fortune" project with:
+
+* [an endpoint that allows us to submit new fortunes](/2016/03/24/ultimate-symfony-api-example.html)
+* [a page that lists all fortunes](/2016/03/30/ultimate-symfony-web-example.html)
+* [a command that prints the last fortune](/2016/04/06/ultimate-symfony-cli-example.html)
 
 ## Introduction to the design pattern
 

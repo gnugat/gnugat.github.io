@@ -27,6 +27,11 @@ and the different ways to organize our application [tree directory](/2016/03/16/
 In this article, we're going to put all this knowledge in practice by creating a
 "fortune" project with an endpoint that allows us to submit new fortunes.
 
+In the next articles we'll also create for this application:
+
+* [a page that lists all fortunes](/2016/03/30/ultimate-symfony-web-example.html)
+* [a command that prints the last fortune](/2016/04/06/ultimate-symfony-cli-example.html)
+
 ## Create the project
 
 The first step is to create our project. For this example we'll use the

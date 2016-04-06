@@ -27,6 +27,13 @@ We've also seen how HttpKernel enabled reusable code with [Bundles](/2016/03/09/
 In this article, we're going to have a closer look at how to organise our applications
 directory tree.
 
+Finally in the next articles we'll finish by putting all this knowledge in practice by creating a
+"fortune" project with:
+
+* [an endpoint that allows us to submit new fortunes](/2016/03/24/ultimate-symfony-api-example.html)
+* [a page that lists all fortunes](/2016/03/30/ultimate-symfony-web-example.html)
+* [a command that prints the last fortune](/2016/04/06/ultimate-symfony-cli-example.html)
+
 ## Editions
 
 Deciding how our project directory is organized is up to us, but for consistency

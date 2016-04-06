@@ -23,6 +23,16 @@ In this guide we'll see the main ones that allow us to build an application:
 * [Dependency Injection](/2016/02/24/ultimate-symfony-dependency-injection.html)
 * [Console](/2016/03/02/ultimate-symfony-console.html)
 
+We'll also see how HttpKernel enables reusable code with [Bundles](/2016/03/09/ultimate-symfony-bundle.html),
+and the different ways to organize our application [tree directory](/2016/03/16/ultimate-symfony-skeleton.html).
+
+Finally we'll finish by putting all this knowledge in practice by creating a
+"fortune" project with:
+
+* [an endpoint that allows us to submit new fortunes](/2016/03/24/ultimate-symfony-api-example.html)
+* [a page that lists all fortunes](/2016/03/30/ultimate-symfony-web-example.html)
+* [a command that prints the last fortune](/2016/04/06/ultimate-symfony-cli-example.html)
+
 ## HTTP kernel
 
 Symfony provides a [HttpKernel component](http://symfony.com/doc/current/components/http_kernel/introduction.html)

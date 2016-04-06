@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc></loc>
-    <lastmod>2016-03-30T09:19:41+01:00</lastmod>
+    <lastmod>2016-04-06T07:24:16+01:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>/about</loc>
-    <lastmod>2016-03-30T09:19:41+01:00</lastmod>
+    <lastmod>2016-04-06T07:24:16+01:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>/2016/04/06/ultimate-symfony-cli-example.html</loc>
+    <lastmod>2016-04-06T00:00:00+01:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/03/30/ultimate-symfony-web-example.html</loc>

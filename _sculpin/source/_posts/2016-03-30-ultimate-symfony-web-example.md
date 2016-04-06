@@ -30,6 +30,8 @@ Finally we've started to put all this knowledge in practice by creating a
 In this article, we're going to continue the "fortune" project by creating a page
 that lists all fortunes.
 
+In the next article we'll also create for this application [a command that prints the last fortune](/2016/04/06/ultimate-symfony-cli-example.html).
+
 > **Note**: To start with the same code, use the following repository:
 >
 > ```
@@ -235,7 +237,7 @@ class ListAllFortunes
 
 > **Note**: Currently the use case class has no parameters to validate.
 > If new requirements come up with the need for some parameters, we're going
-> to be able to heck them here.
+> to be able to check them here.
 
 This should fix the issue:
 

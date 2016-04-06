@@ -23,6 +23,16 @@ provided by [Symfony](http://symfony.com) to help us build applications:
 
 In this article, we're going to have a closer look at how HttpKernel enables reusable code.
 
+Then in the next article we'll see the different ways to organize our application
+[tree directory](/2016/03/16/ultimate-symfony-skeleton.html).
+
+Finally we'll finish by putting all this knowledge in practice by creating a
+"fortune" project with:
+
+* [an endpoint that allows us to submit new fortunes](/2016/03/24/ultimate-symfony-api-example.html)
+* [a page that lists all fortunes](/2016/03/30/ultimate-symfony-web-example.html)
+* [a command that prints the last fortune](/2016/04/06/ultimate-symfony-cli-example.html)
+
 ## HttpKernel vs Kernel
 
 The HttpKernel component provides two implementations for `HttpKernelInterface`.
