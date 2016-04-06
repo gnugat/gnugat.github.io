@@ -422,7 +422,7 @@ vendor/bin/phpunit
 Yes it did! To sum up what we've done in this section:
 
 * we've created a `SubmitNewFortune` class that contains all input parameters
-  to submit a new fortune, and it valides them
+  to submit a new fortune, and it validates them
 * we've create a `SubmitNewFortuneHandler` class that uses parameters from
   `SubmitNewFortune` to call services which will do the actual logic
 * we've created a `SaveNewFortune` interface, its implementations will save new
