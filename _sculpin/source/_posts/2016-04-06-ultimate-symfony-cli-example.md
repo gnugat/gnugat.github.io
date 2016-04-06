@@ -40,7 +40,7 @@ command that prints the last fortune.
 > cd fortune
 > composer install -o --ignore-platform-reqs
 > git checkout web-example
-> git chekcout -b cli-example
+> git checkout -b cli-example
 > ```
 
 ## Create the Command
@@ -215,7 +215,7 @@ class PrintLastFortuneHandlerTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function it_prints_last_fortuneS()
+    public function it_prints_last_fortune()
     {
         $printLastFortune = new PrintLastFortune();
         $lastFortune = array(
