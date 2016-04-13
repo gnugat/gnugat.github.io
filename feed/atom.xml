@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2016-04-13T14:06:33+01:00</updated>
+    <updated>2016-04-13T14:07:26+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -529,7 +529,7 @@ command that prints the last fortune.</p>
 cd fortune
 composer install -o --ignore-platform-reqs
 git checkout web-example
-git chekcout -b cli-example
+git checkout -b cli-example
 </code></pre>
 </blockquote>
 
@@ -695,7 +695,7 @@ class PrintLastFortuneHandlerTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function it_prints_last_fortuneS()
+    public function it_prints_last_fortune()
     {
         $printLastFortune = new PrintLastFortune();
         $lastFortune = array(
@@ -2128,7 +2128,7 @@ interface SaveNewFortune
 
 <ul>
 <li>we've created a <code>SubmitNewFortune</code> class that contains all input parameters
-to submit a new fortune, and it valides them</li>
+to submit a new fortune, and it validates them</li>
 <li>we've create a <code>SubmitNewFortuneHandler</code> class that uses parameters from
 <code>SubmitNewFortune</code> to call services which will do the actual logic</li>
 <li>we've created a <code>SaveNewFortune</code> interface, its implementations will save new
