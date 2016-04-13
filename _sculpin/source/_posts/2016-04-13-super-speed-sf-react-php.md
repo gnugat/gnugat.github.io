@@ -434,6 +434,8 @@ indeed a powerful library.
 In fact we haven't even used its main features and still managed to greatly
 improve performances! But these will be the subject of a different article.
 
+> **Note**: Read-only APIs are a good candidate for such a set up.
+
 In the next blog post, we'll have a look at a different way (not that we can't
 combine both) to achieve the Super Speed potential of our applications built
 with HTTP frameworks like Symfony.
