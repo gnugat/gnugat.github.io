@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="/feed/atom.xml" rel="self"/>
-    <link href="/"/>
-    <updated>2016-04-13T14:07:26+01:00</updated>
+    <title><![CDATA[]]></title>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2016-04-13T15:04:55+01:00</updated>
     <id>http://gnugat.github.com</id>
-            <author>
-            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - CLI Example]]></title>
-            <link href="/2016/04/06/ultimate-symfony-cli-example.html"/>
+            <link href="https://gnugat.github.io/2016/04/06/ultimate-symfony-cli-example.html"/>
             <updated>2016-04-06T00:00:00+01:00</updated>
-            <id>/2016/04/06/ultimate-symfony-cli-example.html</id>
+            <id>https://gnugat.github.io/2016/04/06/ultimate-symfony-cli-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -504,9 +502,9 @@ them with third party libraries</li>
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Web Example]]></title>
-            <link href="/2016/03/30/ultimate-symfony-web-example.html"/>
+            <link href="https://gnugat.github.io/2016/03/30/ultimate-symfony-web-example.html"/>
             <updated>2016-03-30T00:00:00+01:00</updated>
-            <id>/2016/03/30/ultimate-symfony-web-example.html</id>
+            <id>https://gnugat.github.io/2016/03/30/ultimate-symfony-web-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -1236,9 +1234,9 @@ templating engine, such as Twig, from our controller.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - API Example]]></title>
-            <link href="/2016/03/24/ultimate-symfony-api-example.html"/>
+            <link href="https://gnugat.github.io/2016/03/24/ultimate-symfony-api-example.html"/>
             <updated>2016-03-24T00:00:00+00:00</updated>
-            <id>/2016/03/24/ultimate-symfony-api-example.html</id>
+            <id>https://gnugat.github.io/2016/03/24/ultimate-symfony-api-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -1977,9 +1975,9 @@ them with third party libraries</li>
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Skeleton]]></title>
-            <link href="/2016/03/16/ultimate-symfony-skeleton.html"/>
+            <link href="https://gnugat.github.io/2016/03/16/ultimate-symfony-skeleton.html"/>
             <updated>2016-03-16T00:00:00+00:00</updated>
-            <id>/2016/03/16/ultimate-symfony-skeleton.html</id>
+            <id>https://gnugat.github.io/2016/03/16/ultimate-symfony-skeleton.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -2413,9 +2411,9 @@ by <a href="http://williamdurand.fr/">William Durand</a></li>
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Bundle]]></title>
-            <link href="/2016/03/09/ultimate-symfony-bundle.html"/>
+            <link href="https://gnugat.github.io/2016/03/09/ultimate-symfony-bundle.html"/>
             <updated>2016-03-09T00:00:00+00:00</updated>
-            <id>/2016/03/09/ultimate-symfony-bundle.html</id>
+            <id>https://gnugat.github.io/2016/03/09/ultimate-symfony-bundle.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -2867,9 +2865,9 @@ one. It comes with the bare minimum (it follows a "add what you need" philosohpy
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Console]]></title>
-            <link href="/2016/03/02/ultimate-symfony-console.html"/>
+            <link href="https://gnugat.github.io/2016/03/02/ultimate-symfony-console.html"/>
             <updated>2016-03-02T00:00:00+00:00</updated>
-            <id>/2016/03/02/ultimate-symfony-console.html</id>
+            <id>https://gnugat.github.io/2016/03/02/ultimate-symfony-console.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -3120,9 +3118,9 @@ class SymfonyStyle
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Dependency Injection]]></title>
-            <link href="/2016/02/24/ultimate-symfony-dependency-injection.html"/>
+            <link href="https://gnugat.github.io/2016/02/24/ultimate-symfony-dependency-injection.html"/>
             <updated>2016-02-24T00:00:00+00:00</updated>
-            <id>/2016/02/24/ultimate-symfony-dependency-injection.html</id>
+            <id>https://gnugat.github.io/2016/02/24/ultimate-symfony-dependency-injection.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -3756,9 +3754,9 @@ so the number of services doesn't impact the performances of the application.</p
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Routing]]></title>
-            <link href="/2016/02/17/ultimate-symfony-routing.html"/>
+            <link href="https://gnugat.github.io/2016/02/17/ultimate-symfony-routing.html"/>
             <updated>2016-02-17T00:00:00+00:00</updated>
-            <id>/2016/02/17/ultimate-symfony-routing.html</id>
+            <id>https://gnugat.github.io/2016/02/17/ultimate-symfony-routing.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -4024,9 +4022,9 @@ class appDevUrlMatcher extends Symfony\Bundle\FrameworkBundle\Routing\Redirectab
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Event Dispatcher]]></title>
-            <link href="/2016/02/10/ultimate-symfony-event-dispatcher.html"/>
+            <link href="https://gnugat.github.io/2016/02/10/ultimate-symfony-event-dispatcher.html"/>
             <updated>2016-02-10T00:00:00+00:00</updated>
-            <id>/2016/02/10/ultimate-symfony-event-dispatcher.html</id>
+            <id>https://gnugat.github.io/2016/02/10/ultimate-symfony-event-dispatcher.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>
@@ -4457,9 +4455,9 @@ own code "Open for extension, but Close to modification"
         </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - HTTP Kernel]]></title>
-            <link href="/2016/02/03/ultimate-symfony-http-kernel.html"/>
+            <link href="https://gnugat.github.io/2016/02/03/ultimate-symfony-http-kernel.html"/>
             <updated>2016-02-03T00:00:00+00:00</updated>
-            <id>/2016/02/03/ultimate-symfony-http-kernel.html</id>
+            <id>https://gnugat.github.io/2016/02/03/ultimate-symfony-http-kernel.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
   kept up to date.</p>

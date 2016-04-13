@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="/feed/atom.xml" rel="self"/>
-    <link href="/"/>
-    <updated>2016-04-13T14:07:26+01:00</updated>
+    <title><![CDATA[]]></title>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2016-04-13T15:04:55+01:00</updated>
     <id>http://gnugat.github.com</id>
-            <author>
-            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Decouple from Decoupling]]></title>
-            <link href="/2015/10/26/decouple-from-decoupling.html"/>
+            <link href="https://gnugat.github.io/2015/10/26/decouple-from-decoupling.html"/>
             <updated>2015-10-26T00:00:00+00:00</updated>
-            <id>/2015/10/26/decouple-from-decoupling.html</id>
+            <id>https://gnugat.github.io/2015/10/26/decouple-from-decoupling.html</id>
             <content type="html"><![CDATA[<p>In the last two articles, we've seen how to decouple our application:</p>
 
 <ul>
@@ -78,9 +76,9 @@ when to use it depends on the context (project, team, industry, etc).</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Decouple from Libraries]]></title>
-            <link href="/2015/10/12/decouple-from-libraries.html"/>
+            <link href="https://gnugat.github.io/2015/10/12/decouple-from-libraries.html"/>
             <updated>2015-10-12T00:00:00+01:00</updated>
-            <id>/2015/10/12/decouple-from-libraries.html</id>
+            <id>https://gnugat.github.io/2015/10/12/decouple-from-libraries.html</id>
             <content type="html"><![CDATA[<p>Libraries are similar to frameworks: they solve infrastructure problems (e.g.
 requesting remote endpoints or querying databases). They also don't directly
 add any value to our projects: the business need will not be fulfilled by
@@ -676,9 +674,9 @@ it can be worth it to protect ourselves from external changes.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Decouple from Frameworks]]></title>
-            <link href="/2015/09/30/decouple-from-frameworks.html"/>
+            <link href="https://gnugat.github.io/2015/09/30/decouple-from-frameworks.html"/>
             <updated>2015-09-30T00:00:00+01:00</updated>
-            <id>/2015/09/30/decouple-from-frameworks.html</id>
+            <id>https://gnugat.github.io/2015/09/30/decouple-from-frameworks.html</id>
             <content type="html"><![CDATA[<p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
 While necessary, those concerns don't add any value to your project: the business
 need will not be fulfilled by creating an empty application.</p>

@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="/feed/atom.xml" rel="self"/>
-    <link href="/"/>
-    <updated>2016-04-13T14:07:27+01:00</updated>
+    <title><![CDATA[]]></title>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2016-04-13T15:04:55+01:00</updated>
     <id>http://gnugat.github.com</id>
-            <author>
-            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 3.3: Consuming, remote calls]]></title>
-            <link href="/2015/03/25/sf-ws-part-3-3-consuming-remote.html"/>
+            <link href="https://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html"/>
             <updated>2015-03-25T00:00:00+00:00</updated>
-            <id>/2015/03/25/sf-ws-part-3-3-consuming-remote.html</id>
+            <id>https://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -367,9 +365,9 @@ those should each have their own series of article :) .</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 3.2: Consuming, Guzzle]]></title>
-            <link href="/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html"/>
+            <link href="https://gnugat.github.io/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html"/>
             <updated>2015-03-18T00:00:00+00:00</updated>
-            <id>/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html</id>
+            <id>https://gnugat.github.io/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -882,9 +880,9 @@ really need.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 3.1: Consuming, RequestHandler]]></title>
-            <link href="/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html"/>
+            <link href="https://gnugat.github.io/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html"/>
             <updated>2015-03-11T00:00:00+00:00</updated>
-            <id>/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html</id>
+            <id>https://gnugat.github.io/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -1303,9 +1301,9 @@ implementations (yes, more than one!).</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 2.3: Creation, refactoring]]></title>
-            <link href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html"/>
+            <link href="https://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html"/>
             <updated>2015-03-04T00:00:00+00:00</updated>
-            <id>/2015/03/04/sf-ws-part-2-3-creation-refactoring.html</id>
+            <id>https://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -1913,9 +1911,9 @@ who'd like to practice:</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 2.2: Creation, the pragmatic way]]></title>
-            <link href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html"/>
+            <link href="https://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html"/>
             <updated>2015-01-28T00:00:00+00:00</updated>
-            <id>/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html</id>
+            <id>https://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -2591,9 +2589,9 @@ where everything is hard to read, impossible to test and expensive to change.</p
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 2.1: Creation bootstrap]]></title>
-            <link href="/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html"/>
+            <link href="https://gnugat.github.io/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html"/>
             <updated>2015-01-21T00:00:00+00:00</updated>
-            <id>/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html</id>
+            <id>https://gnugat.github.io/2015/01/21/sf-ws-part-2-1-creation-bootstrap.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -2954,9 +2952,9 @@ we'll create the first endpoint, the creation of profiles, using a pragmatic app
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 1: Introduction]]></title>
-            <link href="/2015/01/14/sf-ws-part-1-introduction.html"/>
+            <link href="https://gnugat.github.io/2015/01/14/sf-ws-part-1-introduction.html"/>
             <updated>2015-01-14T00:00:00+00:00</updated>
-            <id>/2015/01/14/sf-ws-part-1-introduction.html</id>
+            <id>https://gnugat.github.io/2015/01/14/sf-ws-part-1-introduction.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>

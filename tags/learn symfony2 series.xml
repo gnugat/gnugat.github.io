@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="/feed/atom.xml" rel="self"/>
-    <link href="/"/>
-    <updated>2016-04-13T14:07:27+01:00</updated>
+    <title><![CDATA[]]></title>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2016-04-13T15:04:55+01:00</updated>
     <id>http://gnugat.github.com</id>
-            <author>
-            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - Conclusion]]></title>
-            <link href="/2014/07/23/learn-sf2-conclusion.html"/>
+            <link href="https://gnugat.github.io/2014/07/23/learn-sf2-conclusion.html"/>
             <updated>2014-07-23T00:00:00+01:00</updated>
-            <id>/2014/07/23/learn-sf2-conclusion.html</id>
+            <id>https://gnugat.github.io/2014/07/23/learn-sf2-conclusion.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -367,9 +365,9 @@ series of articles!</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 5: Tests]]></title>
-            <link href="/2014/07/20/learn-sf2-tests-part-5.html"/>
+            <link href="https://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html"/>
             <updated>2014-07-20T00:00:00+01:00</updated>
-            <id>/2014/07/20/learn-sf2-tests-part-5.html</id>
+            <id>https://gnugat.github.io/2014/07/20/learn-sf2-tests-part-5.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -741,9 +739,9 @@ need to check the precise HTTP response's status code).</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 4: Controllers]]></title>
-            <link href="/2014/07/12/learn-sf2-controllers-part-4.html"/>
+            <link href="https://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html"/>
             <updated>2014-07-12T00:00:00+01:00</updated>
-            <id>/2014/07/12/learn-sf2-controllers-part-4.html</id>
+            <id>https://gnugat.github.io/2014/07/12/learn-sf2-controllers-part-4.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -1086,9 +1084,9 @@ git commit -m 'Created Ni route and controller'
         </entry>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 3: Bundles]]></title>
-            <link href="/2014/07/02/learn-sf2-bundles-part-3.html"/>
+            <link href="https://gnugat.github.io/2014/07/02/learn-sf2-bundles-part-3.html"/>
             <updated>2014-07-02T00:00:00+01:00</updated>
-            <id>/2014/07/02/learn-sf2-bundles-part-3.html</id>
+            <id>https://gnugat.github.io/2014/07/02/learn-sf2-bundles-part-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -1346,9 +1344,9 @@ makes too much fuss to no avail (that's my humble opinion anyway).</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 2: Empty application]]></title>
-            <link href="/2014/06/25/learn-sf2-empty-app-part-2.html"/>
+            <link href="https://gnugat.github.io/2014/06/25/learn-sf2-empty-app-part-2.html"/>
             <updated>2014-06-25T00:00:00+01:00</updated>
-            <id>/2014/06/25/learn-sf2-empty-app-part-2.html</id>
+            <id>https://gnugat.github.io/2014/06/25/learn-sf2-empty-app-part-2.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
