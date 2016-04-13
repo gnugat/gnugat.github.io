@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2016-04-06T07:24:16+01:00</updated>
+    <updated>2016-04-13T14:06:33+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -2396,7 +2396,7 @@ to pick one when we don't have a clear idea on their impact or on what our proje
 should look like.</p>
 
 <p>The best way to tackle this is to first start small (everything in <code>src/AppBundle</code>),
-and then move gradually files around. It's also important to make ure that change
+and then move gradually files around. It's also important to make sure that change
 is possible.</p>
 
 <p>Here are some alternative ways of organizing the project directory tree:</p>
