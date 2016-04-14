@@ -156,15 +156,31 @@ require __DIR__.'/../app/autoload.php';
 
 $kernel = new AppKernel('prod', false);
 $callback = function ($request, $response) use ($kernel) {
-    $sfRequest = Symfony\Component\HttpFoundation\Request::create(
-        $request-&gt;getPath(),
-        $request-&gt;getMethod(),
-        $request-&gt;getQuery(),
+    $method = $request-&gt;getMethod();
+    $headers = $request-&gt;getHeaders();
+    $query = $request-&gt;getQuery();
+    $content = $request-&gt;getBody();
+    $post = array();
+    if (in_array(strtoupper($method), array('POST', 'PUT', 'DELETE', 'PATCH')) &amp;&amp;
+        isset($headers['Content-Type']) &amp;&amp; (0 === strpos($headers['Content-Type'], 'application/x-www-form-urlencoded'))
+    ) {
+        parse_str($content, $post);
+    }
+    $sfRequest = new Symfony\Component\HttpFoundation\Request(
+        $query,
+        $post,
+        array(),
         array(), // To get the cookies, we'll need to parse the headers
         $request-&gt;getFiles(),
-        $request-&gt;getHeaders(),
-        $request-&gt;getBody()
+        array(), // Server is partially filled a few lines below
+        $content
     );
+    $sfRequest-&gt;setMethod($method);
+    $sfRequest-&gt;headers-&gt;replace($headers);
+    $sfRequest-&gt;server-&gt;set('REQUEST_URI', $request-&gt;getPath());
+    if (isset($headers['Host'])) {
+        $sfRequest-&gt;server-&gt;set('SERVER_NAME', explode(':', $headers['Host'])[0]);
+    }
     $sfResponse = $kernel-&gt;handle($sfRequest);
 
     $response-&gt;writeHead(
@@ -172,6 +188,7 @@ $callback = function ($request, $response) use ($kernel) {
         $sfResponse-&gt;headers-&gt;all()
     );
     $response-&gt;end($sfResponse-&gt;getContent());
+    $kernel-&gt;terminate($request, $response);
 };
 
 $loop = React\EventLoop\Factory::create();
@@ -182,6 +199,11 @@ $http-&gt;on('request', $callback);
 $socket-&gt;listen(1337);
 $loop-&gt;run();
 </code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Request conversion code from React to Symfony has been borrowed from
+  <a href="https://github.com/M6Web/PhpProcessManagerBundle/blob/dcb7d971250ec504821dca040e6e2effbdb5adc5/Bridge/HttpKernel.php#L102">M6Web PhpProcessManagerBundle</a>.</p>
+</blockquote>
 
 <p>And as easy as that, we can run it:</p>
 
@@ -249,22 +271,36 @@ require __DIR__.'/../app/autoload.php';
 
 $kernel = new AppKernel('prod', false);
 $callback = function ($request, $response) use ($kernel) {
+    $method = $request-&gt;getMethod();
     $headers = $request-&gt;getHeaders();
     $enableProfiling = isset($headers['X-Blackfire-Query']);
     if ($enableProfiling) {
         $blackfire = new Blackfire\Client();
         $probe = $blackfire-&gt;createProbe();
     }
-
-    $sfRequest = Symfony\Component\HttpFoundation\Request::create(
-        $request-&gt;getPath(),
-        $request-&gt;getMethod(),
-        $request-&gt;getQuery(),
+    $query = $request-&gt;getQuery();
+    $content = $request-&gt;getBody();
+    $post = array();
+    if (in_array(strtoupper($method), array('POST', 'PUT', 'DELETE', 'PATCH')) &amp;&amp;
+        isset($headers['Content-Type']) &amp;&amp; (0 === strpos($headers['Content-Type'], 'application/x-www-form-urlencoded'))
+    ) {
+        parse_str($content, $post);
+    }
+    $sfRequest = new Symfony\Component\HttpFoundation\Request(
+        $query,
+        $post,
+        array(),
         array(), // To get the cookies, we'll need to parse the headers
         $request-&gt;getFiles(),
-        $headers,
-        $request-&gt;getBody()
+        array(), // Server is partially filled a few lines below
+        $content
     );
+    $sfRequest-&gt;setMethod($method);
+    $sfRequest-&gt;headers-&gt;replace($headers);
+    $sfRequest-&gt;server-&gt;set('REQUEST_URI', $request-&gt;getPath());
+    if (isset($headers['Host'])) {
+        $sfRequest-&gt;server-&gt;set('SERVER_NAME', explode(':', $headers['Host'])[0]);
+    }
     $sfResponse = $kernel-&gt;handle($sfRequest);
 
     $response-&gt;writeHead(
@@ -272,7 +308,7 @@ $callback = function ($request, $response) use ($kernel) {
         $sfResponse-&gt;headers-&gt;all()
     );
     $response-&gt;end($sfResponse-&gt;getContent());
-
+    $kernel-&gt;terminate($request, $response);
     if ($enableProfiling) {
         $blackfire-&gt;endProbe($probe);
     }
@@ -337,8 +373,8 @@ Symfony application by <strong>8</strong>!</p>
 
 <h2 id="alternatives-to-reactphp">Alternatives to ReactPHP</h2>
 
-<p>After running some silly benchmarks, we've picked ReactPHP as it yielded better
-results:</p>
+<p>After running some silly benchmarks, we've picked ReactPHP as it was seemingly
+yielding better results:</p>
 
 <p><img src="/images/super-speed-sf-react-php-graph.png" alt="ReactPHP is faster than Aerys which is faster than IcicleIO which is faster than PHP FastCGI" /></p>
 
@@ -346,15 +382,16 @@ results:</p>
 projects, it's worth mentioning them and their differences:</p>
 
 <ul>
-<li><a href="phpfastcgi.github.io">PHPFastCGI</a> aims at building a long running FastCGI application, rather than a HTTP server
+<li><a href="http://phpfastcgi.github.io">PHPFastCGI</a> aims at building a long running FastCGI application, rather than a HTTP server
 (see <a href="http://andrewcarteruk.github.io/slides/breaking-boundaries-with-fastcgi/">Breaking Boundaries with FastCGI</a>)</li>
-<li><a href="http://icicle.io/">IcicleIO</a> is ReactPHP, but powered by Generators/Coroutines</li>
-<li><a href="http://amphp.org/">Amp</a> is IcicleIO, but with HTTP/2.0 support
+<li><a href="http://icicle.io/">IcicleIO</a> Icicle is a library for writing asynchronous code using synchronous coding techniques,
+it's powered by Generators/Coroutines</li>
+<li><a href="http://amphp.org/">Amp</a> is a non-blocking concurrency framework
 (see <a href="http://blog.kelunik.com/2015/09/20/getting-started-with-amp.html">Getting started with Amp</a>)
 
 <ul>
-<li>its HTTP server component, <a href="http://amphp.org/docs/aerys/">Aerys</a>, also includes
-a load balancer (see <a href="http://blog.kelunik.com/2015/10/21/getting-started-with-aerys.html">Getting started with Aerys</a>)</li>
+<li>its Application Server component, <a href="http://amphp.org/docs/aerys/">Aerys</a>, also supports HTTP/2
+(see <a href="http://blog.kelunik.com/2015/10/21/getting-started-with-aerys.html">Getting started with Aerys</a>)</li>
 </ul></li>
 </ul>
 
@@ -367,8 +404,8 @@ a load balancer (see <a href="http://blog.kelunik.com/2015/10/21/getting-started
 <ul>
 <li>benchmarks showed it was actually slower than vanilla Symfony, which might be due to configuration issues</li>
 </ul></li>
-<li><a href="https://github.com/php-pm/php-pm">PHP-PM</a>, a load balancer managing ReactPHP applications
-(see <a href="http://marcjschmidt.de/blog/2014/02/08/php-high-performance.html">Bring High Performance Into Your PHP App </a>)
+<li><a href="https://github.com/php-pm/php-pm">PHP-PM</a>, manages ReactPHP processes
+(see <a href="http://marcjschmidt.de/blog/2014/02/08/php-high-performance.html">Bring High Performance Into Your PHP App</a>)
 
 <ul>
 <li>benchmarks showed it wasn't much faster than vanilla Symfony, which might be due to configuration issues</li>
