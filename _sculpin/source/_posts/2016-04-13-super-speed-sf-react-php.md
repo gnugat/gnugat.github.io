@@ -123,15 +123,31 @@ require __DIR__.'/../app/autoload.php';
 
 $kernel = new AppKernel('prod', false);
 $callback = function ($request, $response) use ($kernel) {
-    $sfRequest = Symfony\Component\HttpFoundation\Request::create(
-        $request->getPath(),
-        $request->getMethod(),
-        $request->getQuery(),
+    $method = $request->getMethod();
+    $headers = $request->getHeaders();
+    $query = $request->getQuery();
+    $content = $request->getBody();
+    $post = array();
+    if (in_array(strtoupper($method), array('POST', 'PUT', 'DELETE', 'PATCH')) &&
+        isset($headers['Content-Type']) && (0 === strpos($headers['Content-Type'], 'application/x-www-form-urlencoded'))
+    ) {
+        parse_str($content, $post);
+    }
+    $sfRequest = new Symfony\Component\HttpFoundation\Request(
+        $query,
+        $post,
+        array(),
         array(), // To get the cookies, we'll need to parse the headers
         $request->getFiles(),
-        $request->getHeaders(),
-        $request->getBody()
+        array(), // Server is partially filled a few lines below
+        $content
     );
+    $sfRequest->setMethod($method);
+    $sfRequest->headers->replace($headers);
+    $sfRequest->server->set('REQUEST_URI', $request->getPath());
+    if (isset($headers['Host'])) {
+        $sfRequest->server->set('SERVER_NAME', explode(':', $headers['Host'])[0]);
+    }
     $sfResponse = $kernel->handle($sfRequest);
 
     $response->writeHead(
@@ -139,6 +155,7 @@ $callback = function ($request, $response) use ($kernel) {
         $sfResponse->headers->all()
     );
     $response->end($sfResponse->getContent());
+    $kernel->terminate($request, $response);
 };
 
 $loop = React\EventLoop\Factory::create();
@@ -149,6 +166,9 @@ $http->on('request', $callback);
 $socket->listen(1337);
 $loop->run();
 ```
+
+> **Note**: Request conversion code from React to Symfony has been borrowed from
+> [M6Web PhpProcessManagerBundle](https://github.com/M6Web/PhpProcessManagerBundle/blob/dcb7d971250ec504821dca040e6e2effbdb5adc5/Bridge/HttpKernel.php#L102).
 
 And as easy as that, we can run it:
 
@@ -216,22 +236,36 @@ require __DIR__.'/../app/autoload.php';
 
 $kernel = new AppKernel('prod', false);
 $callback = function ($request, $response) use ($kernel) {
+    $method = $request->getMethod();
     $headers = $request->getHeaders();
     $enableProfiling = isset($headers['X-Blackfire-Query']);
     if ($enableProfiling) {
         $blackfire = new Blackfire\Client();
         $probe = $blackfire->createProbe();
     }
-
-    $sfRequest = Symfony\Component\HttpFoundation\Request::create(
-        $request->getPath(),
-        $request->getMethod(),
-        $request->getQuery(),
+    $query = $request->getQuery();
+    $content = $request->getBody();
+    $post = array();
+    if (in_array(strtoupper($method), array('POST', 'PUT', 'DELETE', 'PATCH')) &&
+        isset($headers['Content-Type']) && (0 === strpos($headers['Content-Type'], 'application/x-www-form-urlencoded'))
+    ) {
+        parse_str($content, $post);
+    }
+    $sfRequest = new Symfony\Component\HttpFoundation\Request(
+        $query,
+        $post,
+        array(),
         array(), // To get the cookies, we'll need to parse the headers
         $request->getFiles(),
-        $headers,
-        $request->getBody()
+        array(), // Server is partially filled a few lines below
+        $content
     );
+    $sfRequest->setMethod($method);
+    $sfRequest->headers->replace($headers);
+    $sfRequest->server->set('REQUEST_URI', $request->getPath());
+    if (isset($headers['Host'])) {
+        $sfRequest->server->set('SERVER_NAME', explode(':', $headers['Host'])[0]);
+    }
     $sfResponse = $kernel->handle($sfRequest);
 
     $response->writeHead(
@@ -239,7 +273,7 @@ $callback = function ($request, $response) use ($kernel) {
         $sfResponse->headers->all()
     );
     $response->end($sfResponse->getContent());
-
+    $kernel->terminate($request, $response);
     if ($enableProfiling) {
         $blackfire->endProbe($probe);
     }
