@@ -303,8 +303,8 @@ Symfony application by **8**!
 
 ## Alternatives to ReactPHP
 
-After running some silly benchmarks, we've picked ReactPHP as it yielded better
-results:
+After running some silly benchmarks, we've picked ReactPHP as it was seemingly
+yielding better results:
 
 ![ReactPHP is faster than Aerys which is faster than IcicleIO which is faster than PHP FastCGI](/images/super-speed-sf-react-php-graph.png)
 
@@ -313,19 +313,20 @@ projects, it's worth mentioning them and their differences:
 
 * [PHPFastCGI](phpfastcgi.github.io) aims at building a long running FastCGI application, rather than a HTTP server
   (see [Breaking Boundaries with FastCGI](http://andrewcarteruk.github.io/slides/breaking-boundaries-with-fastcgi/))
-* [IcicleIO](http://icicle.io/) is ReactPHP, but powered by Generators/Coroutines
-* [Amp](http://amphp.org/) is IcicleIO, but with HTTP/2.0 support
+* [IcicleIO](http://icicle.io/) Icicle is a library for writing asynchronous code using synchronous coding techniques,
+  it's powered by Generators/Coroutines
+* [Amp](http://amphp.org/) is a non-blocking concurrency framework
   (see [Getting started with Amp](http://blog.kelunik.com/2015/09/20/getting-started-with-amp.html))
-  - its HTTP server component, [Aerys](http://amphp.org/docs/aerys/), also includes
-  a load balancer (see [Getting started with Aerys](http://blog.kelunik.com/2015/10/21/getting-started-with-aerys.html))
+  - its Application Server component, [Aerys](http://amphp.org/docs/aerys/), also supports HTTP/2
+  (see [Getting started with Aerys](http://blog.kelunik.com/2015/10/21/getting-started-with-aerys.html))
 
 Not mentioned in the graph, there's also:
 
 * [appserver.io](http://appserver.io/) a full Application Server, powered by threads
   (see [Appserver – a Production-Ready PHP-Based Server](http://www.sitepoint.com/appserver-a-production-ready-php-based-server/))
   - benchmarks showed it was actually slower than vanilla Symfony, which might be due to configuration issues
-* [PHP-PM](https://github.com/php-pm/php-pm), a load balancer managing ReactPHP applications
-  (see [Bring High Performance Into Your PHP App ](http://marcjschmidt.de/blog/2014/02/08/php-high-performance.html))
+* [PHP-PM](https://github.com/php-pm/php-pm), manages ReactPHP processes
+  (see [Bring High Performance Into Your PHP App](http://marcjschmidt.de/blog/2014/02/08/php-high-performance.html))
   - benchmarks showed it wasn't much faster than vanilla Symfony, which might be due to configuration issues
 * [M6Web PHP process manager Bundle](https://github.com/M6Web/PhpProcessManagerBundle),
   provides your Symfony application as a ReactPHP server via a command
