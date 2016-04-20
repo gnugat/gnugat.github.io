@@ -3,11 +3,423 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-04-14T18:21:32+01:00</updated>
+    <updated>2016-04-20T09:03:15+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Super Speed Symfony - nginx]]></title>
+            <link href="https://gnugat.github.io/2016/04/20/super-speed-sf-nginx.html"/>
+            <updated>2016-04-20T00:00:00+01:00</updated>
+            <id>https://gnugat.github.io/2016/04/20/super-speed-sf-nginx.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: Put a reverse proxy (for HTTP cache or load balancing purpose) in
+  front of your application, to increase its performances.</p>
+</blockquote>
+
+<p>HTTP frameworks, such as <a href="https://symfony.com/">Symfony</a>, allow us to build
+applications that have the <em>potential</em> to achieve Super Speed.</p>
+
+<p>We've already seen a first way to do so (<a href="/2016/04/13/super-speed-sf-react-php.html">by turning it into a HTTP server</a>),
+another way would be to put a reverse proxy in front of it.</p>
+
+<p>In this article we'll take a Symfony application and demonstrate how to do so
+using <a href="http://nginx.com/">nginx</a>.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: those two ways can be combined, or used independently.</p>
+</blockquote>
+
+<h2 id="nginx-with-php-fpm">nginx with PHP-FPM</h2>
+
+<p>The regular PHP application set up is with nginx and <a href="http://php-fpm.org/">PHP-FPM</a>:</p>
+
+<pre><code>sudo apt-get install nginx php7.0-fpm
+</code></pre>
+
+<p>PHP-FPM is going to run our PHP application in a <a href="https://en.wikipedia.org/wiki/Shared_nothing_architecture">shared-nothing architecture</a>.
+We might want it to be run with <a href="http://symfony.com/doc/current/book/installation.html#book-installation-permissions">the same user as the CLI one</a>
+to avoid permissions issues:</p>
+
+<pre><code>; /etc/php/7.0/fpm/pool.d/www.conf
+
+; ...
+
+user = foobar
+group = foobar
+
+; ...
+
+listen.owner = foobar
+listen.group = foobar
+
+; ...
+</code></pre>
+
+<p>We should probably do the same for nginx:</p>
+
+<pre><code># /etc/nginx/nginx.conf
+user foobar foobar;
+
+# ...
+</code></pre>
+
+<p>Now we should be ready to set up a virtual host for our application:</p>
+
+<pre><code># /etc/nginx/sites-available/super-speed-nginx
+server {
+    listen 80;
+    server_name super-speed-nginx.example.com;
+    root /home/foobar/super-speed-nginx/web;
+
+    location / {
+        # try to serve file directly, fallback to app.php
+        try_files $uri /app.php$is_args$args;
+    }
+
+    location ~ ^/app\.php(/|$) {
+        fastcgi_pass unix:/run/php/php7.0-fpm.sock;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+
+        # Prevents URIs that include the front controller. This will 404:
+        # http://domain.tld/app.php/some-path
+        # Remove the internal directive to allow URIs like this
+        internal;
+    }
+
+    # Keep your nginx logs with the symfony ones
+    error_log /home/foobar/super-speed-nginx/var/logs/nginx_error.log;
+    access_log /home/foobar/super-speed-nginx/var/logs/nginx_access.log;
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>:</p>
+  
+  <ul>
+  <li><code>fastcgi_pass</code>: the address of the FastCGI server, can be an IP and port (e.g. <code>127.0.0.1:9000</code> or a socket)</li>
+  <li><code>fastcgi_split_path_info</code>: a regex capturing
+  
+  <ul>
+  <li>the script name (here <code>(.+\.php)</code> is a file with the <code>.php</code> extension), used to set <code>$fastcgi_script_name</code></li>
+  <li>the path info (here <code>(/.*)</code> is a URL like string), used to set <code>$fastcgi_path_info</code></li>
+  </ul></li>
+  <li><code>include</code>: includes a file (here <code>/etc/nginx/fastcgi_params</code>)</li>
+  <li><code>fastcgi_param</code>: set a FastCGI parameter (check defaults values in <code>/etc/nginx/fastcgi_params</code>)</li>
+  </ul>
+</blockquote>
+
+<p>Then we'll make sure it's enabled:</p>
+
+<pre><code>sudo ln -s /etc/nginx/sites-available/super-speed-nginx /etc/nginx/sites-enabled/super-speed-nginx
+</code></pre>
+
+<p>The only thing missing is a Symfony application! Let's create one using the
+<a href="https://github.com/symfony/symfony-standard">Standard Edition</a>:</p>
+
+<pre><code>composer create-project symfony/framework-standard-edition super-speed-nginx
+cd super-speed-nginx
+SYMFONY_ENV=prod SYMFONY_DEBUG=0 composer install -o --no-dev
+</code></pre>
+
+<p>Finally, we can set up the domain name and restart nginx:</p>
+
+<pre><code>echo '127.0.0.1 super-speed-nginx.example.com' | sudo tee --append /etc/hosts
+sudo service nginx restart
+</code></pre>
+
+<p>Let's check if it works: <a href="http://super-speed-nginx.example.com/">http://super-speed-nginx.example.com/</a>.
+If a helpful "Welcome" message is displayed, then everything is fine.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: If it doesn't work, check the logs:</p>
+  
+  <ul>
+  <li>application ones in <code>/home/foobar/super-speed-nginx/var/logs</code></li>
+  <li>nginx ones in <code>/var/log/nginx</code></li>
+  <li>PHP-FPM ones in <code>/var/log/php7.0-fpm.log</code></li>
+  </ul>
+</blockquote>
+
+<p>Let's have a quick benchmark:</p>
+
+<pre><code>curl 'http://super-speed-nginx.example.com/'
+ab -t 10 -c 10 'http://super-speed-nginx.example.com/'
+</code></pre>
+
+<p>The result:</p>
+
+<ul>
+<li>Requests per second: 146.86 [#/sec] (mean)</li>
+<li>Time per request: 68.091 [ms] (mean)</li>
+<li>Time per request: 6.809 [ms] (mean, across all concurrent requests)</li>
+</ul>
+
+<h2 id="http-cache">HTTP cache</h2>
+
+<p>Compared to <a href="https://httpd.apache.org/">Apache2</a>, nginx performs better at
+serving static files and when under high traffic (<a href="https://www.nginx.com/blog/nginx-vs-apache-our-view/">see why</a>).</p>
+
+<p>But our main interest here is in nginx's HTTP caching features.</p>
+
+<p>Applications built with HTTP frameworks (e.g. Symfony) benefit from the HTTP cache
+specification, all they need is to add some headers to their response:</p>
+
+<ul>
+<li><code>Cache-Control: max-age=60</code> will ask <em>caches</em> to keep a copy for 60 seconds after receiving the response</li>
+<li><code>Expires: Fri, 30 Oct 1998 14:19:41 GMT</code> will ask <em>caches</em> to keep a copy of the response until the given date</li>
+<li><code>Last-Modified: Tue, 8 Sep 2015 13:35:23 GMT</code> allows <em>caches</em> to keep a copy and check later in the background if there's a more recent "last modified" date</li>
+<li><code>Etag: a3e455afd</code> allows <em>caches</em> to keep a copy and check later in the background if there's a different "etag" (<em>e</em>ntity <em>tag</em>)</li>
+</ul>
+
+<blockquote>
+  <p><strong>Note</strong>: For more information about those headers, check this <a href="/2015/11/26/http-cache.html">HTTP cache article</a>.</p>
+</blockquote>
+
+<p>Since nginx sits between clients (e.g. browsers) and the application, it can act
+as the <em>cache</em>:</p>
+
+<ul>
+<li>if the request doesn't match any copies, ask the application to create a response and make a copy of it (that's a MISS scenario)</li>
+<li>if the request matches a fresh copy return it, the application does nothing here (that's a HIT scenario)</li>
+<li>if the request matches a stale copy return it, and in the background ask the application to create a response to replace the copy with a fresh one (that's an UPDATING scenario, only if configured)</li>
+</ul>
+
+<p>It can even serve stale data when the application is failing (e.g. 500 errors)!</p>
+
+<p>To make use of this feature, we first need to set up nginx:</p>
+
+<pre><code># /etc/nginx/nginx.conf
+
+# ...
+
+http {
+    proxy_cache_path /home/foobar/super-speed-nginx/var/nginx levels=1:2 keys_zone=super-speed-nginx:10m max_size=10g inactive=60m use_temp_path=off;
+
+    # ...
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>:</p>
+  
+  <ul>
+  <li><code>levels</code>: sets up the directory depth in the cache folder, <code>2</code> is recommended
+  as putting all files in one directory could slow it down</li>
+  <li><code>keys_zone</code>: sets up an in memory store for cache keys, to avoid avoid fetching
+  them from the disk (cache name associated to the memory size to use)</li>
+  <li><code>max-size</code>: sets up the maximum disk size of the cache, when this limit is
+  reached least used copies are removed</li>
+  <li><code>inactive</code>: sets up the time after which an unused copy can be removed</li>
+  <li><code>use_temp_path</code>: enables / disables writing cached copies to a temporary path
+  before they're moved to the permanent one, <code>off</code> is recommended to avoid
+  unecessary filesystem operations</li>
+  </ul>
+</blockquote>
+
+<p>Then we need to edit the virtual host by changing the port from <code>80</code> to something
+else (e.g. <code>8042</code>) and add a "cache server" in front of it (the cache server will
+listen to port <code>80</code>, it's the one exposed to clients):</p>
+
+<pre><code># /etc/nginx/sites-available/super-speed-nginx
+server {
+    listen 80;
+    server_name super-speed-nginx.example.com;
+
+    location / {
+        proxy_pass http://super-speed-nginx.example.com:8042;
+
+        proxy_cache super-speed-nginx;
+        proxy_cache_key "$scheme://$host$request_uri";
+        proxy_cache_lock on;
+        proxy_cache_use_stale updating error timeout http_500 http_502 http_503 http_504;
+        add_header X-Cache $upstream_cache_status;
+    }
+
+    # Keep your nginx logs with the symfony ones
+    error_log /home/foobar/super-speed-nginx/var/logs/nginx_cache_error.log;
+    access_log /home/foobar/super-speed-nginx/var/logs/nginx_cache_access.log;
+}
+
+server {
+    listen 8042;
+    server_name super-speed-nginx.example.com;
+    root /home/foobar/super-speed-nginx/web;
+
+    location / {
+        # try to serve file directly, fallback to app.php
+        try_files $uri /app.php$is_args$args;
+    }
+
+    location ~ ^/app\.php(/|$) {
+        fastcgi_pass unix:/run/php/php7.0-fpm.sock;
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+
+        # Prevents URIs that include the front controller. This will 404:
+        # http://domain.tld/app.php/some-path
+        # Remove the internal directive to allow URIs like this
+        internal;
+    }
+
+    # Keep your nginx logs with the symfony ones
+    error_log /home/foobar/super-speed-nginx/var/logs/nginx_error.log;
+    access_log /home/foobar/super-speed-nginx/var/logs/nginx_access.log;
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>:</p>
+  
+  <ul>
+  <li><code>proxy_pass</code>: the address of the server we'd like to forward the requests to</li>
+  <li><code>proxy_cache</code>: sets up the name of the cache, it echoes the one used in <code>keys_zone</code></li>
+  <li><code>proxy_cache_key</code>: key used to store the copy (the result is converted to md5)</li>
+  <li><code>proxy_cache_lock</code>: enables / disables concurent cache writing for a given key</li>
+  <li><code>proxy_cache_use_stale</code>: sets up usage of a stale copy
+  
+  <ul>
+  <li><code>updating</code> when the copy is being refreshed</li>
+  <li><code>error</code>, <code>timeout</code>, <code>http_5**</code> when the application fails</li>
+  </ul></li>
+  <li><code>add_header</code>: adds a header to the HTTP Response
+  (e.g. the value of <code>$upstream_cache_status</code> which could be <code>MISS</code>, <code>HIT</code>, <code>EXPIRED</code>, etc)</li>
+  </ul>
+</blockquote>
+
+<p>Now it's the turn of our application. By default Symfony set a
+<code>Cache-Control: no-cache</code> header to all responses. Let's change it:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/DefaultController.php
+
+namespace AppBundle\Controller;
+
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
+
+class DefaultController extends Controller
+{
+    /**
+     * @Route("/", name="homepage")
+     * @Cache(maxage="20", public=true)
+     */
+    public function indexAction(Request $request)
+    {
+        // replace this example code with whatever you need
+        return $this-&gt;render('default/index.html.twig', [
+            'base_dir' =&gt; realpath($this-&gt;getParameter('kernel.root_dir').'/..'),
+        ]);
+    }
+}
+</code></pre>
+
+<p>To apply those changes, restart nginx and clear symfony cache:</p>
+
+<pre><code>sudo service nginx restart
+bin/console cache:clear -e=prod --no-debug
+</code></pre>
+
+<p>Now we can check the Response's headers:</p>
+
+<pre><code>curl -I 'http://super-speed-nginx.example.com/'
+curl -I 'http://super-speed-nginx.example.com/'
+</code></pre>
+
+<p>The first one should contain a <code>X-Cache</code> header set to <code>MISS</code>, while the second
+one should be set to <code>HIT</code>.</p>
+
+<p>Let's have a quick benchmark:</p>
+
+<pre><code>curl 'http://super-speed-nginx.example.com/'
+ab -t 10 -c 10 'http://super-speed-nginx.example.com/'
+</code></pre>
+
+<p>The result:</p>
+
+<ul>
+<li>Requests per second: 21994.33 [#/sec] (mean)</li>
+<li>Time per request: 0.455 [ms] (mean)</li>
+<li>Time per request: 0.045 [ms] (mean, across all concurrent requests)</li>
+</ul>
+
+<p>That's around <strong>140</strong> times faster than without cache.</p>
+
+<h2 id="load-balancing">Load balancing</h2>
+
+<p>In the above examples, we've seen some usage of <code>proxy_pass</code> in nginx. It allows
+the proxy to forward the request to an "upstream" server (e.g. PHP-FPM).</p>
+
+<p>By providing many upstream servers for one <code>proxy_pass</code>, we enable nginx's load
+balancing which can be useful with the ReactPHP set up from the previous article
+for example:</p>
+
+<pre><code># /etc/nginx/sites-available/super-speed-nginx
+upstream backend  {
+    server 127.0.0.1:5500 max_fails=1 fail_timeout=5s;
+    server 127.0.0.1:5501 max_fails=1 fail_timeout=5s;
+    server 127.0.0.1:5502 max_fails=1 fail_timeout=5s;
+    server 127.0.0.1:5503 max_fails=1 fail_timeout=5s;
+}
+
+server {
+    root /home/foobar/bench-sf-standard/web/;
+    server_name localhost;
+
+    location / {
+        try_files $uri @backend;
+    }
+
+    location @backend {
+        proxy_pass http://backend;
+        proxy_next_upstream http_502 timeout error;
+        proxy_connect_timeout 1;
+        proxy_send_timeout 5;
+        proxy_read_timeout 5;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>:</p>
+  
+  <ul>
+  <li><code>proxy_next_upstream</code>: conditions to satisfy in order to forward the request to another server (here errors and timeouts)</li>
+  <li><code>proxy_connect_timeout</code>: maximum time when trying to connect to an upstream server</li>
+  <li><code>proxy_send_timeout</code>: maximum time when trying to send date to an upstream server</li>
+  <li><code>proxy_read_timeout</code>: maximum time when trying to read data from an upstream server</li>
+  </ul>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>With a reverse proxy such as nginx, we can decrease the number of calls to our
+applications by:</p>
+
+<ul>
+<li>enabling HTTP caching (add a HTTP header to responses, use ~50 lines of configuration)</li>
+<li>enabling load balancing (use ~30 lines of configuration)</li>
+</ul>
+
+<p>This results in a drastic reduction of response time from the point of view of
+the client.</p>
+
+<p>Resources:</p>
+
+<ul>
+<li><a href="https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/">nginx, PHP FastCGI Example</a></li>
+<li><a href="https://www.nginx.com/blog/nginx-caching-guide/">nginx a guide to caching</a></li>
+<li><a href="https://www.nginx.com/blog/benefits-of-microcaching-nginx/">The Benefits of Microcaching with nginx</a></li>
+<li><a href="https://speakerdeck.com/thijsferyn/varnish-or-nginx-symfony-live">Varnish or nginx?</a></li>
+</ul>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Super Speed Symfony - ReactPHP]]></title>
             <link href="https://gnugat.github.io/2016/04/13/super-speed-sf-react-php.html"/>
@@ -523,6 +935,8 @@ applications:</p>
 <li><a href="http://phpfastcgi.github.io/general/2015/08/21/things-to-consider-using-phpfastcgi.html">Things to consider when developing an application with PHPFastCGI</a></li>
 <li><a href="https://www.symfony.fi/entry/running-symfony-applications-with-php-pm">Running Symofny applications with PHP-PM or PHPFastCGI</a></li>
 <li><a href="https://www.youtube.com/watch?v=gpNbmEnRLBU">Fabien Potencier's take on PHP</a></li>
+<li><a href="http://marcjschmidt.de/blog/2016/04/16/php-high-performance-reactphp-jarves-symfony-follow-up.html">PHP High-Performance - Follow Up with Symfony/Jarves.io and PHP-PM</a></li>
+<li><a href="https://mwop.net/blog/2016-04-17-react2psr7.html">Serve PSR-7 Middleware Via React</a></li>
 </ul>
 ]]></content>
         </entry>

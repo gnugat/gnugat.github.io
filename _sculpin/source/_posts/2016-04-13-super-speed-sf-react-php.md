@@ -481,3 +481,5 @@ applications:
 * [Things to consider when developing an application with PHPFastCGI](http://phpfastcgi.github.io/general/2015/08/21/things-to-consider-using-phpfastcgi.html)
 * [Running Symofny applications with PHP-PM or PHPFastCGI](https://www.symfony.fi/entry/running-symfony-applications-with-php-pm)
 * [Fabien Potencier's take on PHP](https://www.youtube.com/watch?v=gpNbmEnRLBU)
+* [PHP High-Performance - Follow Up with Symfony/Jarves.io and PHP-PM](http://marcjschmidt.de/blog/2016/04/16/php-high-performance-reactphp-jarves-symfony-follow-up.html)
+* [Serve PSR-7 Middleware Via React](https://mwop.net/blog/2016-04-17-react2psr7.html)
