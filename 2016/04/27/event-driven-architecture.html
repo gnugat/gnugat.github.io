@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Event Driven Architecture &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/04/27/event-driven-architecture.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Event Driven Architecture
+    <span class="sub-title">27/04/2016</span>
+</h2>
+                                </header>
+
+                <p>Ever wondered how <a href="http://nginx.com/">nginx</a> outperforms <a href="https://httpd.apache.org/">Apache</a>
+or what does <a href="http://nodejs.org/">NodeJs</a> mean by "event-driven, non-blocking I/O"?</p>
+
+<p>Then you're in luck! This article aims at answering the "how" question, we'll
+explore the implementation details of Event Driven Architecture by:</p>
+
+<ol>
+<li>implementing a simple (and inefficient) HTTP server</li>
+<li>adding multiple client handling to it by creating an Event Loop</li>
+<li>adding time control to it by creating a Scheduler</li>
+<li>solving the callback hell issue by creating Deferrer and Promise</li>
+<li>adding "non-blocking" capacity to "blocking" calls by using a Thread Pool</li>
+</ol>
+
+<h2 id="a-story-of-input-%2F-output">A story of Input / Output</h2>
+
+<p>Input / Output (I/O) can refer to Client / Server communication through sockets,
+for example a HTTP server.</p>
+
+<p><a href="https://gist.github.com/jboner/2841832#file-latency-txt">Compared to calculations, I/O is really slow!</a>
+To understand how this latency can be a performance bottleneck for our applications,
+we're going to create a simple HTTP server implementation.</p>
+
+<p>In order to do so, we need to make use of some system calls:</p>
+
+<ol>
+<li>create a new "internet" <a href="http://linux.die.net/man/2/socket">socket</a>
+(there are other types of sockets, e.g. unix ones)</li>
+<li><a href="http://linux.die.net/man/2/bind">bind</a> this socket to a host and port</li>
+<li>start to <a href="http://linux.die.net/man/2/listen">listen</a> by creating a connection queue</li>
+</ol>
+
+<p>From this point clients can ask the permission to connect to the socket, they're
+going to be queued up until the given maximum in <code>listen</code> is reached, at which
+point errors are going to be thrown everywhere.</p>
+
+<p>To prevent this nightmare, our priority will be to keep this queue empty by calling
+<a href="http://linux.die.net/man/2/accept">accept</a>: it's going to unqueue the first client
+and return a new socket dedicated for it, allowing the "server" socket to accept
+more clients.</p>
+
+<p>At some point the client will send data in the socket: the HTTP Request. We'll
+need to call <a href="http://linux.die.net/man/2/read">read</a> to retrieve it. We usually
+need to parse the received string, for example to create a Request value object
+our HTTP application can understand.</p>
+
+<p>The HTTP application could then return a Response value object that we'll need
+to convert back to string and send it to the client using <a href="http://linux.die.net/man/2/write">write</a>.</p>
+
+<p>Finally, once done we can call <a href="http://linux.die.net/man/2/close">close</a> to get
+rid of the client and start accepting more.</p>
+
+<p>If we put everything in a loop that runs forever we can handle one client at a
+time. Here's an implementation example (written in pseudo language):</p>
+
+<pre><code class="python"># Socket abstracts `socket`, `bind` and `listen`
+http_server = new Socket(host, port, max_connections_to_queue)
+while true:
+    http_connection = http_server.accept()
+    data = http_connection.read()
+    request = http_request_parse(data)
+    response = application(request)
+    http_connection.write((string) response)
+    http_connection.close()
+</code></pre>
+
+<p>In our loop, for each request we call 3 I/O operations:</p>
+
+<ul>
+<li><code>accept</code>, this call will wait until a new connection is available</li>
+<li><code>read</code>, this call will <em>wait</em> until some data is sent from the client</li>
+<li><code>write</code>, this call will <strong>wait</strong> until the data is sent to the client</li>
+</ul>
+
+<p>That's a lot of <strong>waiting</strong>! While we <em>wait</em> for data to be sent, more
+clients can try to connect, be queued and eventually reach the limit.</p>
+
+<p>In other words, waiting is blocking. If only we could do something else
+while waiting...</p>
+
+<h2 id="hang-on%21">Hang on!</h2>
+
+<p>Turns out we can, thanks to polling system calls:</p>
+
+<ol>
+<li>we first have to add sockets we want to use to a collection</li>
+<li>we then call <code>poll</code> with the collection of sockets to watch</li>
+<li><code>poll</code> will <strong>wait</strong> until it detects activity on those, and returns the ones that are ready</li>
+</ol>
+
+<p>As goes the saying: "Blocking. If it's not solving all your problems, you simply
+aren't using enough of it".</p>
+
+<blockquote>
+  <p><strong>Note</strong>: There's actually many polling system calls:</p>
+  
+  <ul>
+  <li><code>select</code>, a POSIX standard which takes 3 size fixed bitmap of sockets (read, write, error)</li>
+  <li><code>poll</code>, another POSIX standard which takes an array of sockets</li>
+  <li><code>epoll</code>, a stateful Linux specific system call equivalent to <code>select</code>/<code>poll</code></li>
+  <li><code>kqueue</code>, a stateful BSD (that includes Mac OS) specific system call equivalent to <code>select</code>/<code>poll</code></li>
+  <li><code>IOCP</code>, a Windows equivalent to <code>epoll</code>/<code>kqueue</code></li>
+  </ul>
+  
+  <p>For more information about those, check <a href="http://www.eecs.berkeley.edu/~sangjin/2012/12/21/epoll-vs-kqueue.html">epoll VS kqueue</a>.
+  In our article <code>poll</code> will refer to polling in general, not to a specific implementation.</p>
+</blockquote>
+
+<p>With this we can change the architecture of our HTTP server:</p>
+
+<ol>
+<li>create the HTTP server socket</li>
+<li>add it to the collection of sockets to watch</li>
+<li>start our infinite loop:
+
+<ul>
+<li>wait until some sockets are ready</li>
+<li>if the socket is the HTTP server one:
+
+<ol>
+<li><code>accept</code> it to get a HTTP client socket</li>
+<li>add the HTTP client socket to the collection of sockets to watch</li>
+</ol></li>
+<li>if the socket is a HTTP client one:
+
+<ol>
+<li><code>read</code> it to get its data</li>
+<li>convert the data into a HTTP Request</li>
+<li>forward the HTTP Request to the application to get a HTTP Response</li>
+<li>convert the HTTP Response to a string and <code>write</code> it</li>
+<li><code>close</code> the HTTP client socket</li>
+<li>remove the HTTP client socket from the collection of sockets to watch</li>
+</ol></li>
+</ul></li>
+</ol>
+
+<p>Let's change our HTTP server to use <code>poll</code>:</p>
+
+<pre><code class="python">http_server = new Socket(host, port, max_connections_to_queue)
+connections = new SocketCollection()
+connections.append(http_server)
+while true:
+    connections_ready = poll(connections)
+    for connection in connections_ready:
+        if http_server == connection:
+            http_connection = http_server.accept()
+            connections.append(http_connection)
+        else:
+            data = connection.read()
+            request = http_request_parse(data)
+            response = application(request)
+            connection.write((string) response)
+            connection.close()
+            connections.remove(connection)
+</code></pre>
+
+<p>Now we can see the advantage of polling: while waiting for data to be ready on
+client sockets, we can now accept more connections on the server socket.</p>
+
+<p>Before we continue, let's refactor our code a bit to abstract away the polling
+logic:</p>
+
+<pre><code class="python">class EventLoop:
+    function append(connection, callback):
+        key = (int) connection
+        self._connections[key] = connection
+        self._callbacks[key] = callback
+
+    function remove(connection):
+        key = (int) connection
+        self._connections.pop(key)
+        self._callbacks.pop(key)
+
+    function run():
+        while true:
+            connections_ready = poll(self._connections)
+            for connection in connections_ready:
+                key = (int) connection
+                self._callbacks[key](connection, self)
+</code></pre>
+
+<p>We've named the class <code>EventLoop</code>: every time something happens (an <em>Event</em>) in
+the <em>Loop</em>, we call the appropriate callback. Here's our HTTP server with the
+<code>EventLoop</code>:</p>
+
+<pre><code class="python">function handle_http_request(http_connection, event_loop):
+    data = http_connection.read()
+    request = http_request_parse(data)
+    response = application(request)
+    http_connection.write((string) response)
+    http_connection.close()
+    event_loop.remove(http_connection)
+
+function handle_http_connection(http_server, event_loop):
+    http_connection = http_server.accept()
+    event_loop.append(http_connection, handle_http_request)
+
+http_server = new Socket(host, port, max_connections_to_queue)
+event_loop = new EventLoop()
+event_loop.append(http_server, handle_http_connection)
+event_loop.run()
+</code></pre>
+
+<p>In the previous implementation, we couldn't make a distinction between client sockets,
+with this refactoring we can split our application even more by waiting for
+<code>write</code> to be ready (usually <code>poll</code> is able to make a distinction between sockets
+ready to be read and sockets ready to be written).</p>
+
+<p>If we don't have any connections, our server will spend most of its time waiting.
+If only we could do something else while waiting...</p>
+
+<h2 id="wait-a-second%21">Wait a second!</h2>
+
+<p>Polling system calls usually take a <code>timeout</code> argument: if nothing happens for
+the given time it's going to return an empty collection.</p>
+
+<p>By combining it with a <code>OneOffScheduler</code>, we can achieve interesting things.
+Here's an implementation:</p>
+
+<pre><code class="python">class OneOffScheduler:
+    function append(interval, callback, arguments):
+        self._callbacks[interval][] = callback
+        self._arguments[interval][] = arguments
+
+    function lowest_interval():
+        return self._callbacks.keys().min()
+
+    function tick():
+        for interval, callbacks in self._callbacks:
+            if time.now() % interval != 0:
+                continue
+            for id, callback in callbacks:
+                arguments = self._arguments[interval][id]
+                callback(arguments)
+                self._callbacks[interval].pop(id)
+                self._arguments[interval].pop(id)
+</code></pre>
+
+<p>By "ticking" the clock we check if any registered callback is due.
+The <code>lowest_interval</code> method will allow us to set a smart timeout for <code>poll</code>
+(e.g. no callback will mean no timeout, a callback with 5s interval will mean 5s timeout, etc).</p>
+
+<p>Here's our <code>EventLoop</code> improved with the <code>OneOffScheduler</code>:</p>
+
+<pre><code class="python">class EventLoop:
+    function constructor():
+        self.one_off_scheduler = new OneOffScheduler()
+
+    function append(connection, callback):
+        key = (int) connection
+        self._connections[key] = connection
+        self._callbacks[key] = callback
+
+    function remove(connection):
+        key = (int) connection
+        self._connections.pop(key)
+        self._callbacks.pop(key)
+
+    function run():
+        while true:
+            timeout = self.one_off_scheduler.lowest_interval()
+            connections_ready = poll(self._connections, timeout)
+            for connection in connections_ready:
+                key = (int) connection
+                self._callbacks[key](connection, self)
+            self.one_off_scheduler.tick()
+</code></pre>
+
+<p>There are many <code>Scheduler</code> variants possible:</p>
+
+<ul>
+<li>periodic ones: instead of removing the callback once it's called, we could keep it for the next interval</li>
+<li>idle ones: instead of calling callback every time, we could only call them if nothing is ready</li>
+</ul>
+
+<p>As goes the saying: "Scheduler. If it's not solving all your problems, you simply
+aren't using enough of it".</p>
+
+<p>We're now able to execute actions even if no actual events happened. All we need
+is to register in our <code>EventLoop</code> a callback. And in this callback we can also
+register a new callback for our <code>EventLoop</code>. And in this callback...</p>
+
+<h2 id="async-what-you-did-here...">Async what you did here...</h2>
+
+<p>That's a lot of nested callbacks! It might become hard to understand the
+"flow of execution" of our application: we're used to read "synchronous" code,
+not "asynchronous" code.</p>
+
+<p>What if I told you there's a way to make "asynchronous" code look like "synchronous"
+code? One of the way to do this is to implement <a href="http://wiki.commonjs.org/wiki/Promises/A">promise</a>:</p>
+
+<ol>
+<li>Create a <code>Deferrer</code></li>
+<li>ask politely the <code>Deferrer</code> to create a <code>Promise</code>
+
+<ul>
+<li>when creating the <code>Promise</code>, the <code>Deferrer</code> injects into it a <code>resolver</code> callback</li>
+</ul></li>
+<li>register a <code>on_fulfilled</code> callback in the <code>Promise</code>
+
+<ul>
+<li>the <code>Promise</code> calls the injected <code>resolver</code> callback with the given <code>on_fulfilled</code> callback as argument</li>
+<li>this sets <code>on_fulfilled</code> callback as an attribute in <code>Deferrer</code></li>
+</ul></li>
+<li>tell the <code>Deferrer</code> that we finally got a <code>value</code>
+
+<ul>
+<li>the <code>Deferrer</code> calls the <code>on_fulfilled</code> callback with the <code>value</code> as argument</li>
+</ul></li>
+</ol>
+
+<p>As goes the saying: "Callback. If it's not solving all your problems, you simply
+aren't using enough of it".</p>
+
+<p>Here's an implementation for <code>Deferrer</code>:</p>
+
+<pre><code class="python">class Deferrer:
+    function promise():
+        return new Promise(self.resolver)
+
+    function resolve(value):
+        for on_fulfill in self._on_fulfilled:
+            on_fulfill(value)
+
+    function resolver(on_fulfilled):
+        self._on_fulfilled.append(on_fulfilled)
+</code></pre>
+
+<p>And for <code>Promise</code>:</p>
+
+<pre><code class="python">class Promise:
+    function constructor(resolver):
+        self._resolver = resolver
+
+    function then(on_fulfilled):
+        self._resolver(on_fulfilled)
+
+        return new Promise(resolver)
+</code></pre>
+
+<p>And finally here's a basic usage example:</p>
+
+<pre><code class="python">function hello_world(name):
+    print 'Hello ' + name + '!'
+
+function welcome_world(name):
+    print 'Welcome ' + name + '!'
+
+deferrer = new Deferrer()
+promise = new deferrer.promise()
+promise.then(hello_world).then(welcome_world)
+
+deferrer.resolve('Igor') # prints `Hello Igor!` and `Welcome Igor!`
+</code></pre>
+
+<p>With this, we contain the complexity to two classes, the rest of the application
+becomes easier to read: instead of nesting callbacks we can chain them.</p>
+
+<p><code>Promise</code> and <code>Deferrer</code> both look neat. But what's the link with our scheduled
+<code>EventLoop</code>? Turns out the link is Filesystem.</p>
+
+<h2 id="filesystem-u%2Fo">Filesystem U/O</h2>
+
+<p>When it comes to Filesystem, we're actually dealing with "U/O" (uh oh) rather
+than I/O: they've been ranked as the slowest in the <a href="https://gist.github.com/jboner/2841832#file-latency-txt">latency comparison</a>,
+but unlike sockets they are <a href="http://blog.libtorrent.org/2012/10/asynchronous-disk-io/">blocking</a>.</p>
+
+<p>Thankfully we've got a solution for that: wrapping "blocking" filesystem operations
+in a class that will simulate a "non-blocking" behavior:</p>
+
+<ol>
+<li>ask for regular arguments (e.g. <code>filename</code>), and an additional <code>on_fulfilled</code> callback</li>
+<li>execute the "blocking" operation in a thread pool, which acts as a <code>Deferrer</code> and returns a <code>Promise</code></li>
+<li>set the <code>Promise</code> callback to add <code>on_fulfilled</code> in the <code>EventLoop</code>, scheduled immediately</li>
+</ol>
+
+<p>Here's an implementation example of such a wrapper:</p>
+
+<pre><code>class NonBlockingFilesystem:
+    function constructor(event_loop, filesystem, thread_pool):
+        self._event_loop = event_loop
+        self._filesystem = filesystem
+        self._thread_pool = thread_pool
+
+    function open(file, on_opened):
+        promise = self._thread_pool.map(self._filesystem.open, file)
+        promise.then(lambda file_descriptor: self._on_file_opened(file_descriptor, on_opened))
+
+    function _on_file_opened(file_descriptor, on_opened):
+        self._event_loop.scheduler.append(1, on_opened, file_descriptor)
+
+    function read(file_descriptor, on_read):
+        promise = self._thread_pool.map(self._filesystem.read, file_descriptor)
+        promise.then(lambda content: self._on_file_read(content, on_read))
+
+    function _on_file_read(content, on_read):
+        self._event_loop.scheduler.append(1, on_read, content)
+</code></pre>
+
+<p>By deferring actual filesystem operations to threads, our HTTP server can accept
+more connections and handle more clients until the call is ready.The thread pool
+is usually set up with 4 threads.</p>
+
+<p>As goes the saying: "Threading. If it's not solving all your problems, you simply
+aren't using enough of it... <strong>NOT!</strong>".</p>
+
+<p>For once, limits are good. If we put too many threads in the pool, we’ll soon
+reach another limit: the number of filesystem operations allowed by the kernel.
+If we increase this limit, we’ll soon reach another limit: the number of filesystem
+operations physically allowed by the hardware
+(<a href="https://blog.wyrihaximus.net/2015/03/reactphp-filesystem/#a-word-of-caution">some people tried it, they ended up with burned disks</a>).</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Our server and application are still single-threaded. The use of a
+  <code>ThreadPool</code> is done in a decoupled way, isolating us from multi-threaded issues.</p>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>By "non-blocking I/O", Node.js means that it's using an Event Loop to make use
+of the network latency to handle multiple clients in parallel.</p>
+
+<p>It's been built with <a href="http://libuv.org/">libuv</a>, a low-level C library which
+embeds in its Event Loop many types of Schedulers and a Thread Pool: it allows
+it to simulate "non-blocking" behavior by wrapping "blocking" calls
+(e.g. Filesystem).</p>
+
+<p>Instead of implementing our server in a "sequential" way, like Apache2 does, we
+can instead implement it with "polling events" in mind: nginx is using this
+"Event-Driven Architecture" and it allows it <a href="https://www.nginx.com/blog/nginx-vs-apache-our-view/">to outperform Apache</a>.</p>
+
+<p>Systems built in this way often use Promises, as they help us perceive our
+"asynchronous" code as "synchronous".</p>
+
+<p>If you're interested to read more on the topic, here are some links:</p>
+
+<ul>
+<li><a href="https://speakerdeck.com/igorw/build-your-own-webserver-with-php">PHP - build your own server</a></li>
+<li><a href="https://speakerdeck.com/igorw/react-phpnw">ReactPHP</a></li>
+<li><a href="https://blog.wyrihaximus.net/2015/01/reactphp-introduction/">ReactPHP - components</a></li>
+<li><a href="https://medium.com/async-php/reactive-php-events-d0cd866e9285">ReactPHP - reactive PHP events</a></li>
+<li><a href="https://medium.com/async-php/co-operative-php-multitasking-ce4ef52858a0">PHP - co-operative PHP multitasking</a></li>
+<li><a href="http://stackoverflow.com/questions/22644328/when-is-the-thread-pool-used/22644735#22644735">Node.js - When is the Thread Pool used?</a></li>
+<li><a href="https://www.future-processing.pl/blog/on-problems-with-threads-in-node-js/">Node.js - Thread Pool usage</a></li>
+<li><a href="http://www.kegel.com/c10k.html">C - the C10K problem</a></li>
+<li><a href="http://www.binarytides.com/multiple-socket-connections-fdset-select-linux/">C - Handle multiple socket connections with fd_set and select on Linux</a></li>
+<li><a href="http://www.kegel.com/dkftpbench/nonblocking.html">C - Introduction to non-blocking I/O</a></li>
+<li><a href="http://pod.tst.eu/http://cvs.schmorp.de/libev/ev.pod">C - libev documentation</a></li>
+<li><a href="http://docs.libuv.org/en/v1.x/">C - libuv documentation</a></li>
+<li><a href="https://nikhilm.github.io/uvbook/introduction.html">C - libuv online book</a></li>
+</ul>
+
+<blockquote>
+  <p><strong>Note</strong>: In the PHP landscape, there are many libraries that allow us to build
+  Event Driven applications:</p>
+  
+  <ul>
+  <li><a href="http://reactphp.org/">ReactPHP</a></li>
+  <li><a href="http://icicle.io/">IcicleIO</a></li>
+  <li><a href="http://amphp.org/">Amphp</a></li>
+  </ul>
+  
+  <p>There's even a <a href="https://github.com/async-interop/">PHP Async Interop Group</a>
+  that started researching, to create PHP Standard Recommandation (PSR) for
+  Event Loops, Promise, etc.</p>
+</blockquote>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/04/20/super-speed-sf-nginx.html" title="Super Speed Symfony - nginx">Previous &lt; Super Speed Symfony - nginx</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>
