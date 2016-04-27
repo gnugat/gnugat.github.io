@@ -361,7 +361,7 @@ server {
 >
 > * `proxy_next_upstream`: conditions to satisfy in order to forward the request to another server (here errors and timeouts)
 > * `proxy_connect_timeout`: maximum time when trying to connect to an upstream server
-> * `proxy_send_timeout`: maximum time when trying to send date to an upstream server
+> * `proxy_send_timeout`: maximum time when trying to send data to an upstream server
 > * `proxy_read_timeout`: maximum time when trying to read data from an upstream server
 
 ## Conclusion
