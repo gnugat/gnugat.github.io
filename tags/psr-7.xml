@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-04-27T13:05:24+01:00</updated>
+    <updated>2016-05-11T08:14:16+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -131,7 +131,7 @@ and returns a <code>ResponseInterface</code>:</p>
 use Psr\Message\RequestInterface;
 use Psr\Message\ResponseInterface;
 
-interface RequestHanler
+interface RequestHandler
 {
     // @return ResponseInterface
     public function handleRequest(RequestInterface $request);
@@ -141,7 +141,7 @@ interface RequestHanler
 <p>Names can be debated, but the point here is that calling the next middleware is
 up to the implementation (can use dependency injection).</p>
 
-<p><a href="http://php-http.readthedocs.org/en/latest/httplug/">Httplug</a> is a good example
+<p><a href="http://docs.php-http.org/en/latest/httplug/introduction.html">Httplug</a> is a good example
 using this implementation.</p>
 
 <h3 id="2.-take-request%2C-response-and-next">2. Take request, response and next</h3>

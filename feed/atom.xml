@@ -3,11 +3,440 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-04-27T13:05:24+01:00</updated>
+    <updated>2016-05-11T08:14:16+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Towards CQRS, Command Bus]]></title>
+            <link href="https://gnugat.github.io/2016/05/11/towards-cqrs-command-bus.html"/>
+            <updated>2016-05-11T00:00:00+01:00</updated>
+            <id>https://gnugat.github.io/2016/05/11/towards-cqrs-command-bus.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: The <code>Command Bus</code> pattern can help you get the CQRS "Command" part right.</p>
+</blockquote>
+
+<p>By following the <a href="http://martinfowler.com/bliki/CQRS.html">Command / Query Responsibility Segregation</a>
+(CQRS) principle, we separate "write" logic from "read" logic.
+This can be applied on many levels, for example on the macro one we can have a
+single "Publisher" server (write) with many "Subscribers" servers (read), and on
+a micro level we can use this principle to keep our controllers small.</p>
+
+<p>However, transitioning from a regular mindset to a CQRS one can be difficult.</p>
+
+<p>In this article, we'll explore the "Command Bus" pattern, to help us to get the
+Command (write) part right.</p>
+
+<h2 id="starting-example">Starting Example</h2>
+
+<p>Let's take the following code for our example:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Controller/ProfileCreationController.php;
+
+namespace AppBundle\Controller;
+
+use AppBundle\Entity\Profile;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationController extends Controller
+{
+    /**
+     * @Route("/api/v1/profiles")
+     * @Method({"POST"})
+     */
+    public function createProfileAction(Request $request)
+    {
+        $em = $this-&gt;get('doctrine.orm.entity_manager');
+
+        $name = $request-&gt;request-&gt;get('name');
+        if (null === $name) {
+            return new JsonResponse(array('error' =&gt; 'The "name" parameter is missing from the request\'s body'), 422);
+        }
+        if (null !== $em-&gt;getRepository('AppBundle:Profile')-&gt;findOneByName($name)) {
+            return new JsonResponse(array('error' =&gt; 'The name "'.$name.'" is already taken'), 422);
+        }
+        $createdProfile = new Profile($name);
+        $em-&gt;persist($createdProfile);
+        $em-&gt;flush();
+
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+    }
+}
+</code></pre>
+
+<p>It's an endpoint allowing us to create new "profiles". All the logic is done in
+the Controller:</p>
+
+<ul>
+<li>we get a <code>name</code> parameter from the <code>Request</code></li>
+<li>we validate it (is it missing? Does it duplicate an existing name?)</li>
+<li>we create a new <code>Profile</code> out of it</li>
+<li>we persist it</li>
+<li>we return it as JSON in the <code>Response</code></li>
+</ul>
+
+<h2 id="command-bus">Command Bus</h2>
+
+<p>The Command Bus pattern relies on 3 types of classes:</p>
+
+<ul>
+<li><code>Command</code>: encapsulate our input, does simple validation on it</li>
+<li><code>CommandHandler</code>: dedicated to a single <code>Command</code>, does the actual logic</li>
+</ul>
+
+<p>Finally there's a <code>CommandBus</code> interface allowing us to build <code>Middlewares</code>:</p>
+
+<ol>
+<li>we can have a <code>CommandBus</code> that calls the appropriate <code>CommandHandle</code> for the given <code>Command</code></li>
+<li>we can have a <code>CommandBus</code> that wraps the above one in a database transaction</li>
+<li>we can have a <code>CommandBus</code> that wraps the above ones to logs all incoming commands</li>
+<li>we can have a <code>CommandBus</code> that wraps the above ones to check permissions</li>
+<li>etc</li>
+</ol>
+
+<p><code>Middlewares</code> can do any action we want before and/or after the wrapped <code>CommandBus</code>.
+They can be nested in a specific order, allowing us a fine grained control over
+how the <code>Command</code> will be handled.</p>
+
+<h2 id="using-command-bus-in-the-controller">Using Command Bus in the controller</h2>
+
+<p>Using our previous example, we're going to create the <code>Command</code> first. It needs
+to contain all the input parameters, do a simple validation on it and have an
+intention revealing name describing the action we'd like to do:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Profile/CreateNewProfile.php;
+
+namespace AppBundle\Profile;
+
+class CreateNewProfile
+{
+    public $name;
+
+    public function __construct($name)
+    {
+        if (null === $name) {
+            throw new \DomainException('Missing required "name" parameter');
+        }
+        $this-&gt;name = (string) $name;
+    }
+}
+</code></pre>
+
+<p>Unit tests can be created for Commands, to document their input requirements:</p>
+
+<pre><code class="php">&lt;?php
+// File: tests/AppBundle/Profile/CreateNewProfileTest.php;
+
+namespace tests\AppBundle\Profile;
+
+use AppBundle\Profile\CreateNewProfile;
+
+class CreateNewProfileTest extends \PHPUnit_Framework_TestCase
+{
+    const NAME = 'Arthur Dent';
+
+    private $checkProfileNameDuplicates;
+    private $saveNewProfile;
+    private $createNewProfileHandler;
+
+    /**
+     * @test
+     */
+    public function it_has_a_name()
+    {
+        $createNewProfile = new CreateNewProfile(self::NAME);
+
+        self::assertSame(self::NAME, $createNewProfile-&gt;name);
+    }
+
+    /**
+     * @test
+     */
+    public function it_cannot_miss_a_name()
+    {
+        $this-&gt;expectException(\DomainException::class);
+        $createNewProfile = new CreateNewProfile(null);
+    }
+}
+</code></pre>
+
+<p>The second step is to create the <code>CommandHandler</code>. It needs to do more complex
+validation, and the actual logic associated to the <code>Command</code>'s intention:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Profile/CreateNewProfileHandler.php;
+
+namespace AppBundle\Profile;
+
+use AppBundle\Entity\Profile;
+use Doctrine\ORM\EntityManager;
+
+class CreateNewProfileHandler
+{
+    private $entityManager;
+
+    public function __construct(EntityManager $entityManager)
+    {
+        $this-&gt;entityManager = $entityManager;
+    }
+
+    public function handle(CreateNewProfile $createNewProfile)
+    {
+        if (null !== $this-&gt;entityManager-&gt;getRepository('AppBundle:Profile')-&gt;findOneByName($createNewProfile-&gt;name)) {
+            throw new \DomainException("Invalid \"name\" parameter: \"$name\" already exists and duplicates are not allowed");
+        }
+        $createdProfile = new Profile($name);
+        $em-&gt;persist($createdProfile);
+        $em-&gt;flush();
+
+        return $createdProfile
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: a unit test can be created for CommandHandlers, to document use cases
+  and their edge cases (happy and unhappy scenario).</p>
+</blockquote>
+
+<p>Finally we can use the Command Bus in our controller:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Controller/ProfileCreationController.php;
+
+namespace AppBundle\Controller;
+
+use AppBundle\Profile\CreateNewProfile;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationController extends Controller
+{
+    /**
+     * @Route("/api/v1/profiles")
+     * @Method({"POST"})
+     */
+    public function createProfileAction(Request $request)
+    {
+        try {
+            $createdProfile = $this-&gt;get('command_bus')-&gt;handle(new CreateNewProfile(
+                $request-&gt;request-&gt;get('name')
+            ));
+        } catch (\DomainException $e) {
+            return new JsonResponse(array('error' =&gt; $e-&gt;getMessage()), 422);
+        }
+
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Exceptions could be handled in an event listener.</p>
+</blockquote>
+
+<h2 id="refactoring-the-command-handler">Refactoring the Command Handler</h2>
+
+<p>Our Command Handler is tightly coupled to Doctrine. We can <a href="/2015/10/12/decouple-from-libraries.html">decouple from libraries</a>
+by introducing interfaces:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Profile/CreateNewProfileHandler.php;
+
+namespace AppBundle\Profile;
+
+use AppBundle\Profile\Service\CheckProfileNameDuplicates;
+use AppBundle\Profile\Service\SaveNewProfile;
+
+class CreateNewProfileHandler
+{
+    private $checkProfileNameDuplicates;
+    private $saveNewProfile;
+
+    public function __construct(
+        CheckProfileNameDuplicates $checkProfileNameDuplicates,
+        SaveNewProfile $saveNewProfile
+    ) {
+        $this-&gt;checkProfileNameDuplicates = $checkProfileNameDuplicates;
+        $this-&gt;saveNewProfile = $saveNewProfile;
+    }
+
+    public function handle(CreateNewProfile $createNewProfile)
+    {
+        if (true !== $this-&gt;checkProfileNameDuplicates-&gt;check($createNewProfile-&gt;name)) {
+            throw new \DomainException("Invalid \"name\" parameter: \"$name\" already exists and duplicates are not allowed");
+        }
+        $newProfile = new Profile($name); // Entity moved to Profile namespace
+        $this-&gt;saveNewProfile-&gt;save($newProfile);
+
+        return $newProfile
+    }
+}
+</code></pre>
+
+<p>In this way, it becomes much easier to write a unit test:</p>
+
+<pre><code class="php">&lt;?php
+// File: tests/AppBundle/Profile/CreateNewProfileHandlerTest.php;
+
+namespace tests\AppBundle\Profile;
+
+use AppBundle\Profile\CreateNewProfile;
+use AppBundle\Profile\CreateNewProfileHandler;
+use AppBundle\Profile\Profile;
+use AppBundle\Profile\Service\CheckProfileNameDuplicates;
+use AppBundle\Profile\Service\SaveNewProfile;
+use Prophecy\Argument;
+
+class CreateNewProfileHandlerTest extends \PHPUnit_Framework_TestCase
+{
+    const NAME = 'Arthur Dent';
+
+    private $checkProfileNameDuplicates;
+    private $saveNewProfile;
+    private $createNewProfileHandler;
+
+    protected function setUp()
+    {
+        $this-&gt;checkProfileNameDuplicates = $this-&gt;prophesize(CheckProfileNameDuplicates::class);
+        $this-&gt;saveNewProfile = $this-&gt;prophesize(SaveNewProfile::class);
+
+        $this-&gt;createNewProfileHandler = new CreateNewProfileHandler(
+            $this-&gt;checkProfileNameDuplicates,
+            $this-&gt;saveNewProfile
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_creates_new_profiles()
+    {
+        $createNewProfile = new CreateNewProfile(self::NAME);
+
+        $this-&gt;checkProfileNameDuplicates-&gt;check(self::NAME)-&gt;willReturn(false);
+        $this-&gt;saveNewProfile-&gt;save(Argument::type(Profile::class))-&gt;shouldBeCalled();
+
+        self::assertType(
+            Profile::class,
+            $this-&gt;createNewProfileHandler-&gt;handle($createNewProfile)
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_cannot_create_profiles_with_duplicated_name()
+    {
+        $createNewProfile = new CreateNewProfile(self::NAME);
+
+        $this-&gt;checkProfileNameDuplicates-&gt;check(self::NAME)-&gt;willReturn(true);
+        $this-&gt;saveNewProfile-&gt;save(Argument::type(Profile::class))-&gt;shouldNotBeCalled();
+
+        $this-&gt;expectException(\DomainException::class);
+        $this-&gt;createNewProfileHandler-&gt;handle($createNewProfile);
+    }
+}
+</code></pre>
+
+<p>Doctrine implementations are easy to write, for example <code>CheckProfileNameDuplicates</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\Profile\Bridge;
+
+use AppBundle\Profile\Service\CheckProfileNameDuplicates;
+use Doctrine\ORM\EntityManager;
+
+class DoctrineCheckProfileNameDuplicates implements CheckProfileNameDuplicates
+{
+    private $entityManager;
+
+    public function __construct($entityManager)
+    {
+        $this-&gt;entityManager = $entityManager;
+    }
+
+    public function check(name)
+    {
+        return null === $this-&gt;entityManager-&gt;getRepository('AppBundle:Profile')-&gt;findOneByName($name));
+    }
+}
+</code></pre>
+
+<h2 id="to-sum-up">To sum up</h2>
+
+<p>With the Command Bus pattern, we've reduced our controller to the following
+repsonsibilities:</p>
+
+<ul>
+<li>Create a Command by extracting input parameters from the Request</li>
+<li>Create a Response by using the Command Handler returned value (via the Command Bus)</li>
+</ul>
+
+<p>Our Command allows us to make explicit all input parameters and their requirements
+(thanks to its unit tests, and by doing a simple validation on them).</p>
+
+<p>Our Command Handler allows us to make explicit the actual logic with and to
+highlight its edge cases in tests.</p>
+
+<p>While refactoring our controller, we took the opportunity to use the Dependency
+Inversion Principle to decouple our code from thrid party libraries (Doctrine).
+This was simply done by introducing interfaces, which have the benefit to provide
+more explicit names.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The best way to learn how to get the Command part in CQRS right is to start using
+the Command Bus pattern. And to abuse it, by using it everywhere and returning
+values from Command Handlers.</p>
+
+<p>Once we feel more at ease with the Command Bus pattern, we can start considering
+alternative uses:</p>
+
+<ul>
+<li>do we really need a Command Bus? For example do we use any Middlewares?</li>
+<li>do we really need to return a value from the Command Handler? For example with asynchronous commands?</li>
+<li>do we really need to use it everywhere? For example in "read" endpoints?</li>
+</ul>
+
+<p>We might realize that ditching the Command Bus and keeping the Command Handler
+and the Command can still be beneficial. We also might realize that Commands don't
+solve our "read" logic...</p>
+
+<p>In the next article, we'll experiment with a "Search Engine" pattern to try to
+get the Query part of CQRS right!</p>
+
+<p>In the meantime, here's some resources related to Command Bus and CQRS:</p>
+
+<ul>
+<li><a href="http://shawnmc.cool/command-bus">CommandBus</a>
+by <a href="https://twitter.com/ShawnMcCool">Shawn McCool</a></li>
+<li><a href="https://www.reddit.com/r/PHP/comments/29a6qz/what_am_i_missing_with_this_whole_command_bus/">What am I missing with this whole command bus (reddit question)</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/tags/SimpleBus/">A wave of command buses (series)</a>
+by <a href="https://twitter.com/matthiasnoback">Matthias Noback</a></li>
+<li><a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avoid the Mud (slides)</a>
+by <a href="https://twitter.com/mr_r_miller">Richard Miller</a></li>
+<li><a href="http://verraes.net/2015/01/messaging-flavours/">Messaging Flavours</a>
+and <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command, Model validation</a>
+and also <a href="http://verraes.net/2014/05/functional-foundation-for-cqrs-event-sourcing/">Functional Foundation for CQRS/ES</a>
+by <a href="https://twitter.com/mathiasverraes">Mathias Verraes</a></li>
+<li><a href="http://tactician.thephpleague.com/">Tactician</a>, a simple Command Bus library for PHP</li>
+<li><a href="http://www.udidahan.com/2009/12/09/clarified-cqrs/">Clarified CQRS</a>
+by <a href="https://twitter.com/UdiDahan">Udi Dahan</a></li>
+</ul>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Event Driven Architecture]]></title>
             <link href="https://gnugat.github.io/2016/04/27/event-driven-architecture.html"/>
@@ -865,7 +1294,7 @@ server {
   <ul>
   <li><code>proxy_next_upstream</code>: conditions to satisfy in order to forward the request to another server (here errors and timeouts)</li>
   <li><code>proxy_connect_timeout</code>: maximum time when trying to connect to an upstream server</li>
-  <li><code>proxy_send_timeout</code>: maximum time when trying to send date to an upstream server</li>
+  <li><code>proxy_send_timeout</code>: maximum time when trying to send data to an upstream server</li>
   <li><code>proxy_read_timeout</code>: maximum time when trying to read data from an upstream server</li>
   </ul>
 </blockquote>
@@ -7093,6 +7522,7 @@ it with with the cached copy.</p>
 <li><a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13">HTTP 1.1 (RFC 2616), caching chapter</a></li>
 <li><a href="http://2ndscale.com/rtomayko/2008/things-caches-do">Things caches do</a></li>
 <li><a href="https://www.mnot.net/cache_docs/">Caching tutorial</a></li>
+<li><a href="https://jakearchibald.com/2016/caching-best-practices/">Caching best practices</a></li>
 </ul>
 ]]></content>
         </entry>
@@ -7219,7 +7649,7 @@ and returns a <code>ResponseInterface</code>:</p>
 use Psr\Message\RequestInterface;
 use Psr\Message\ResponseInterface;
 
-interface RequestHanler
+interface RequestHandler
 {
     // @return ResponseInterface
     public function handleRequest(RequestInterface $request);
@@ -7229,7 +7659,7 @@ interface RequestHanler
 <p>Names can be debated, but the point here is that calling the next middleware is
 up to the implementation (can use dependency injection).</p>
 
-<p><a href="http://php-http.readthedocs.org/en/latest/httplug/">Httplug</a> is a good example
+<p><a href="http://docs.php-http.org/en/latest/httplug/introduction.html">Httplug</a> is a good example
 using this implementation.</p>
 
 <h3 id="2.-take-request%2C-response-and-next">2. Take request, response and next</h3>
@@ -9051,7 +9481,7 @@ viewed as a "message". Messages can be classified in 3 different types:</p>
 
 <blockquote>
   <p><strong>Note</strong>: For more information, have a look at <a href="http://verraes.net/2015/01/messaging-flavours/">Messaging Flavours</a>
-  by <a href="https://twitter.com/mathiasverraes">Mathias Verreas</a>.</p>
+  by <a href="https://twitter.com/mathiasverraes">Mathias Verraes</a>.</p>
 </blockquote>
 
 <p>The CQRS principle states that Imperative messages should not be mixed with
@@ -9223,8 +9653,8 @@ even if, like every principles, it cannot be applied everywhere.</p>
   <p><strong>Note</strong>: Here's a list of interresting articles about CQRS:</p>
   
   <ul>
-  <li><a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avoiding the mug</a></li>
-  <li><a href="http://benjamindulau.com/blog/posts/do-not-mistake-ddd-for-cqrs-yeah-but-where-to-start">Do not mistake DDD for CQRS, yeah, but where to start?</a></li>
+  <li><a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avoiding the mud</a></li>
+  <li><a href="https://medium.com/@benjamindulau/do-not-mistake-ddd-for-cqrs-yeah-but-where-to-start-5595b8e68a4d">Do not mistake DDD for CQRS, yeah, but where to start?</a></li>
   <li><a href="http://verraes.net/2014/05/functional-foundation-for-cqrs-event-sourcing/">functional foundation for CQRS Event Sourcing</a></li>
   <li><a href="http://www.udidahan.com/2009/12/09/clarified-cqrs/">clarified CQRS</a></li>
   <li><a href="http://martinfowler.com/bliki/CQRS.html">CQRS</a></li>

@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-04-27T13:05:24+01:00</updated>
+    <updated>2016-05-11T08:14:16+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -218,6 +218,7 @@ it with with the cached copy.</p>
 <li><a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13">HTTP 1.1 (RFC 2616), caching chapter</a></li>
 <li><a href="http://2ndscale.com/rtomayko/2008/things-caches-do">Things caches do</a></li>
 <li><a href="https://www.mnot.net/cache_docs/">Caching tutorial</a></li>
+<li><a href="https://jakearchibald.com/2016/caching-best-practices/">Caching best practices</a></li>
 </ul>
 ]]></content>
         </entry>

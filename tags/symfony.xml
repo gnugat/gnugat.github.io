@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-04-27T13:05:24+01:00</updated>
+    <updated>2016-05-11T08:14:16+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -392,7 +392,7 @@ server {
   <ul>
   <li><code>proxy_next_upstream</code>: conditions to satisfy in order to forward the request to another server (here errors and timeouts)</li>
   <li><code>proxy_connect_timeout</code>: maximum time when trying to connect to an upstream server</li>
-  <li><code>proxy_send_timeout</code>: maximum time when trying to send date to an upstream server</li>
+  <li><code>proxy_send_timeout</code>: maximum time when trying to send data to an upstream server</li>
   <li><code>proxy_read_timeout</code>: maximum time when trying to read data from an upstream server</li>
   </ul>
 </blockquote>
