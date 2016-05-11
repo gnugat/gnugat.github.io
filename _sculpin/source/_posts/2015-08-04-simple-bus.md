@@ -4,6 +4,7 @@ title: Simple Bus
 tags:
     - introducing library
     - simple bus
+    - command bus
 ---
 
 [Simple Bus](http://simplebus.github.io/MessageBus/) is a lightweight library

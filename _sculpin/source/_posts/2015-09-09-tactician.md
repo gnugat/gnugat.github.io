@@ -4,6 +4,7 @@ title: Tactician
 tags:
     - introducing library
     - tactician
+    - command bus
 ---
 
 Just like [SimpleBus](/2015/08/04/simple-bus.html),

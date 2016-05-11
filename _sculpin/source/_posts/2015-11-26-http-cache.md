@@ -187,3 +187,4 @@ More readings about HTTP Cache can be found here:
 * [HTTP 1.1 (RFC 2616), caching chapter](http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13)
 * [Things caches do](http://2ndscale.com/rtomayko/2008/things-caches-do)
 * [Caching tutorial](https://www.mnot.net/cache_docs/)
+* [Caching best practices](https://jakearchibald.com/2016/caching-best-practices/)
