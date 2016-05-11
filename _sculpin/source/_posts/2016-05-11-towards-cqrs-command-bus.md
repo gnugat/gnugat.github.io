@@ -130,10 +130,6 @@ class CreateNewProfileTest extends \PHPUnit_Framework_TestCase
 {
     const NAME = 'Arthur Dent';
 
-    private $checkProfileNameDuplicates;
-    private $saveNewProfile;
-    private $createNewProfileHandler;
-
     /**
      * @test
      */
@@ -366,7 +362,7 @@ class DoctrineCheckProfileNameDuplicates implements CheckProfileNameDuplicates
 ## To sum up
 
 With the Command Bus pattern, we've reduced our controller to the following
-repsonsibilities:
+responsibilities:
 
 * Create a Command by extracting input parameters from the Request
 * Create a Response by using the Command Handler returned value (via the Command Bus)
