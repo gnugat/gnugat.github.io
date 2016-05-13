@@ -296,8 +296,8 @@ class CreateNewProfileHandlerTest extends \PHPUnit_Framework_TestCase
         $this->saveNewProfile = $this->prophesize(SaveNewProfile::class);
 
         $this->createNewProfileHandler = new CreateNewProfileHandler(
-            $this->checkProfileNameDuplicates,
-            $this->saveNewProfile
+            $this->checkProfileNameDuplicates->reveal(),
+            $this->saveNewProfile->reveal()
         );
     }
 
