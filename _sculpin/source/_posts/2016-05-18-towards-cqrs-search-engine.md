@@ -569,6 +569,7 @@ class SearchProfilesController extends Controller
     public function searchProfilesAction(Request $request)
     {
         $criteria = Criteria::fromQueryParameters(
+            'profile',
             $request->query->all()
         );
         $page = $this->get('app.search_engine')->match($criteria)->take(

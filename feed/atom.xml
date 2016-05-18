@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-05-18T07:34:24+01:00</updated>
+    <updated>2016-05-18T07:41:48+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -579,6 +579,7 @@ class SearchProfilesController extends Controller
     public function searchProfilesAction(Request $request)
     {
         $criteria = Criteria::fromQueryParameters(
+            'profile',
             $request-&gt;query-&gt;all()
         );
         $page = $this-&gt;get('app.search_engine')-&gt;match($criteria)-&gt;take(

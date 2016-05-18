@@ -603,6 +603,7 @@ class SearchProfilesController extends Controller
     public function searchProfilesAction(Request $request)
     {
         $criteria = Criteria::fromQueryParameters(
+            'profile',
             $request-&gt;query-&gt;all()
         );
         $page = $this-&gt;get('app.search_engine')-&gt;match($criteria)-&gt;take(
