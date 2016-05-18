@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-05-11T08:14:16+01:00</updated>
+    <updated>2016-05-18T07:34:24+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -141,10 +141,6 @@ use AppBundle\Profile\CreateNewProfile;
 class CreateNewProfileTest extends \PHPUnit_Framework_TestCase
 {
     const NAME = 'Arthur Dent';
-
-    private $checkProfileNameDuplicates;
-    private $saveNewProfile;
-    private $createNewProfileHandler;
 
     /**
      * @test
@@ -312,8 +308,8 @@ class CreateNewProfileHandlerTest extends \PHPUnit_Framework_TestCase
         $this-&gt;saveNewProfile = $this-&gt;prophesize(SaveNewProfile::class);
 
         $this-&gt;createNewProfileHandler = new CreateNewProfileHandler(
-            $this-&gt;checkProfileNameDuplicates,
-            $this-&gt;saveNewProfile
+            $this-&gt;checkProfileNameDuplicates-&gt;reveal(),
+            $this-&gt;saveNewProfile-&gt;reveal()
         );
     }
 
@@ -377,7 +373,7 @@ class DoctrineCheckProfileNameDuplicates implements CheckProfileNameDuplicates
 <h2 id="to-sum-up">To sum up</h2>
 
 <p>With the Command Bus pattern, we've reduced our controller to the following
-repsonsibilities:</p>
+responsibilities:</p>
 
 <ul>
 <li>Create a Command by extracting input parameters from the Request</li>

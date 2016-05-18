@@ -166,10 +166,6 @@ class CreateNewProfileTest extends \PHPUnit_Framework_TestCase
 {
     const NAME = 'Arthur Dent';
 
-    private $checkProfileNameDuplicates;
-    private $saveNewProfile;
-    private $createNewProfileHandler;
-
     /**
      * @test
      */
@@ -336,8 +332,8 @@ class CreateNewProfileHandlerTest extends \PHPUnit_Framework_TestCase
         $this-&gt;saveNewProfile = $this-&gt;prophesize(SaveNewProfile::class);
 
         $this-&gt;createNewProfileHandler = new CreateNewProfileHandler(
-            $this-&gt;checkProfileNameDuplicates,
-            $this-&gt;saveNewProfile
+            $this-&gt;checkProfileNameDuplicates-&gt;reveal(),
+            $this-&gt;saveNewProfile-&gt;reveal()
         );
     }
 
@@ -401,7 +397,7 @@ class DoctrineCheckProfileNameDuplicates implements CheckProfileNameDuplicates
 <h2 id="to-sum-up">To sum up</h2>
 
 <p>With the Command Bus pattern, we've reduced our controller to the following
-repsonsibilities:</p>
+responsibilities:</p>
 
 <ul>
 <li>Create a Command by extracting input parameters from the Request</li>
@@ -464,7 +460,8 @@ by <a href="https://twitter.com/UdiDahan">Udi Dahan</a></li>
             <footer>
                             <nav class="row">
                             <a class="button six columns" href="https://gnugat.github.io/2016/04/27/event-driven-architecture.html" title="Event Driven Architecture">Previous &lt; Event Driven Architecture</a>
-                                </nav>
+                                        <a class="button six columns" href="https://gnugat.github.io/2016/05/18/towards-cqrs-search-engine.html" title="Towards CQRS, Search Engine">Next &gt; Towards CQRS, Search Engine</a>
+                    </nav>
                     <hr />
             </footer>
         </article>

@@ -1,19 +1,43 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-    <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2016-05-18T07:34:24+01:00</updated>
-    <id>http://gnugat.github.com</id>
-            <author>
-            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
-        <generator uri="http://sculpin.io/">Sculpin</generator>
-            <entry>
-            <title type="html"><![CDATA[Towards CQRS, Search Engine]]></title>
-            <link href="https://gnugat.github.io/2016/05/18/towards-cqrs-search-engine.html"/>
-            <updated>2016-05-18T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/05/18/towards-cqrs-search-engine.html</id>
-            <content type="html"><![CDATA[<blockquote>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Towards CQRS, Search Engine &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/05/18/towards-cqrs-search-engine.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Towards CQRS, Search Engine
+    <span class="sub-title">18/05/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/cqrs">cqrs</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/porpaginas">porpaginas</a>
+                    </nav>
+                </header>
+
+                <blockquote>
   <p><strong>TL;DR</strong>: A <code>Search Engine</code> component can help you get the CQRS "Query" part right.</p>
 </blockquote>
 
@@ -612,48 +636,38 @@ design pattern in combination with the "Specification" one can help us get the
 
 <p>Building a private Search Engine component for our project is one way to achieve
 this.</p>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[porpaginas]]></title>
-            <link href="https://gnugat.github.io/2015/11/05/porpaginas.html"/>
-            <updated>2015-11-05T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2015/11/05/porpaginas.html</id>
-            <content type="html"><![CDATA[<p>Pagination libraries like <a href="https://github.com/whiteoctober/Pagerfanta">Pagerfanta</a>
-or <a href="https://github.com/KnpLabs/KnpPaginatorBundle">KnpPaginator</a> usually require
-a <code>QueryBuilder</code>:</p>
 
-<pre><code>// Usually in a controller
-$queryBuilder = $this-&gt;itemRepository-&gt;queryBuilderForFindAll();
-$results = $paginationService-&gt;paginate(
-    $queryBuilder,
-    $currentPageNumber,
-    $itemsPerPage
-);
-</code></pre>
 
-<p>This is necessary because we need to get the result for the page as well as the
-number of total results (with a database it would mean two queries).
-Unfortunately this kind of logic tends to leak in our controllers which is why
-<a href="http://www.whitewashing.de/">Benjamin Eberlei</a> suggests an elegant alternative:</p>
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/05/11/towards-cqrs-command-bus.html" title="Towards CQRS, Command Bus">Previous &lt; Towards CQRS, Command Bus</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
 
-<pre><code class="php">// Can be done in a service
-$result = $this-&gt;itemRepository-&gt;findAll();
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
-// Can be done in a ViewListener
-$page = $result-&gt;take($currentPageNumber, $itemsPerPage);
-</code></pre>
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
 
-<p>The <code>QueryBuilder</code> is actually wrapped in a <code>Result</code> which provides the possibility
-to get all of them or a single portion.
-Its <code>take</code> method returns the <code>PaginatorService</code> wrapped in a <code>Page</code> which contains
-all the meta data we usually expect (page number, total elements, etc).</p>
-
-<p>To make it possible he created <a href="http://github.com/beberlei/porpaginas">porpaginas</a>,
-a small library that provides <code>Result</code> and <code>Page</code> as interfaces.
-The actual pagination logic is delegated to the library of our choice, using adapters.</p>
-
-<p>Enjoy!</p>
-]]></content>
-        </entry>
-    </feed>
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>
