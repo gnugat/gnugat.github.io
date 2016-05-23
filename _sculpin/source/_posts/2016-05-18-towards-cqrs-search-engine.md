@@ -136,7 +136,6 @@ It can be constructed using the query parameters:
 
 namespace AppBundle\Search;
 
-use AppBundle\Search\Criteria\Embeding;
 use AppBundle\Search\Criteria\Filtering;
 use AppBundle\Search\Criteria\Ordering;
 use AppBundle\Search\Criteria\Paginating;
@@ -189,13 +188,13 @@ class Paginating
     public $itemsPerPage;
     public $offset;
 
-    public function __construct($currentPage, $itemsPerPage)
+    public function __construct(int $currentPage, int $itemsPerPage)
     {
-        $this->currentPage = (int) $currentPage;
+        $this->currentPage = $currentPage;
         if ($this->currentPage <= 0) {
             $this->currentPage = self::DEFAULT_CURRENT_PAGE;
         }
-        $this->itemsPerPage = (int) $itemsPerPage;
+        $this->itemsPerPage = $itemsPerPage;
         if ($this->itemsPerPage <= 0) {
             $this->itemsPerPage = self::DEFAULT_ITEMS_PER_PAGE;
         }
@@ -242,7 +241,7 @@ class Orderings
             $column = trim($column, '-');
         }
 
-        new self($column, $direction);
+        return new self($column, $direction);
     }
 }
 ```
@@ -284,7 +283,7 @@ All implementations of `SearchEngine` need to be able to handle many types of
 parameters (pagination, filtering, etc).
 
 To [avoid our Doctrine implementation to become a big ball of mud](https://speakerdeck.com/richardmiller/avoiding-the-mud),
-we're going split the work into `Builders`, which construct the DQL query using
+we're going to split the work into `Builders`, which construct the DQL query using
 the `QueryBuilder`:
 
 ```php
