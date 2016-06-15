@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2016-06-15T07:27:44+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Introduction]]></title>
+            <link href="https://gnugat.github.io/2016/06/15/mars-rover-introduction.html"/>
+            <updated>2016-06-15T00:00:00+01:00</updated>
+            <id>https://gnugat.github.io/2016/06/15/mars-rover-introduction.html</id>
+            <content type="html"><![CDATA[<p>Welcome to this Mars Rover series where we're going to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>In this introductory article, we're simply going to describe our Mars Rover
+specifications.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: This programming exercise originally comes from
+  <a href="http://dallashackclub.com/rover">Dallas Hack Club</a>, which is now
+  unfortunately down.</p>
+  
+  <p>This Mars Rover <a href="https://en.wikipedia.org/wiki/Kata_(programming)">kata</a>
+  has been adapted for the needs of this series.</p>
+</blockquote>
+
+<h2 id="specifications">Specifications</h2>
+
+<p>The purpose of this series is to create the software of a Mars Rover, according
+to the following specifications.</p>
+
+<p>Mars Rovers need first to be landed at a given position. A position is composed
+of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an orientation
+(a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+
+<p>It is then possible to drive them, using instructions such as <code>move_forward</code>
+(keeps orientation, but moves along the <code>x</code> or <code>y</code> axis) or
+<code>turn_left</code> / <code>turn_right</code> (keeps the same coordinates, but changes the
+orientation).</p>
+
+<p>From time to time, they'll be requested to give their current location
+(again, <code>x</code> and <code>y</code> coordinates and the orientation).</p>
+
+<p>For example, a rover can be landed at <code>23</code>, <code>42</code>, <code>north</code> and then can be
+instructed to move forward twice, then to turn left, then to move forward once.
+When requested to, it should provide this location: <code>22</code>, <code>44</code>, <code>west</code>.</p>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article we'll see what MonoRepo is, by setting up our project
+(using PHP 7, git and <a href="https://getcomposer.org">Composer</a>) and creating
+sub-packages.</p>
+]]></content>
+        </entry>
+    </feed>

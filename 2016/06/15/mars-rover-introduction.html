@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Mars Rover, Introduction &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/06/15/mars-rover-introduction.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Mars Rover, Introduction
+    <span class="sub-title">15/06/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/mars%20rover">mars rover</a>
+                    </nav>
+                </header>
+
+                <p>Welcome to this Mars Rover series where we're going to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>In this introductory article, we're simply going to describe our Mars Rover
+specifications.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: This programming exercise originally comes from
+  <a href="http://dallashackclub.com/rover">Dallas Hack Club</a>, which is now
+  unfortunately down.</p>
+  
+  <p>This Mars Rover <a href="https://en.wikipedia.org/wiki/Kata_(programming)">kata</a>
+  has been adapted for the needs of this series.</p>
+</blockquote>
+
+<h2 id="specifications">Specifications</h2>
+
+<p>The purpose of this series is to create the software of a Mars Rover, according
+to the following specifications.</p>
+
+<p>Mars Rovers need first to be landed at a given position. A position is composed
+of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an orientation
+(a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+
+<p>It is then possible to drive them, using instructions such as <code>move_forward</code>
+(keeps orientation, but moves along the <code>x</code> or <code>y</code> axis) or
+<code>turn_left</code> / <code>turn_right</code> (keeps the same coordinates, but changes the
+orientation).</p>
+
+<p>From time to time, they'll be requested to give their current location
+(again, <code>x</code> and <code>y</code> coordinates and the orientation).</p>
+
+<p>For example, a rover can be landed at <code>23</code>, <code>42</code>, <code>north</code> and then can be
+instructed to move forward twice, then to turn left, then to move forward once.
+When requested to, it should provide this location: <code>22</code>, <code>44</code>, <code>west</code>.</p>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article we'll see what MonoRepo is, by setting up our project
+(using PHP 7, git and <a href="https://getcomposer.org">Composer</a>) and creating
+sub-packages.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/05/18/towards-cqrs-search-engine.html" title="Towards CQRS, Search Engine">Previous &lt; Towards CQRS, Search Engine</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>
