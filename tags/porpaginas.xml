@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-06-15T07:27:44+01:00</updated>
+    <updated>2016-06-16T21:24:09+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -157,7 +157,6 @@ interface SearchEngine
 
 namespace AppBundle\Search;
 
-use AppBundle\Search\Criteria\Embeding;
 use AppBundle\Search\Criteria\Filtering;
 use AppBundle\Search\Criteria\Ordering;
 use AppBundle\Search\Criteria\Paginating;
@@ -209,13 +208,13 @@ class Paginating
     public $itemsPerPage;
     public $offset;
 
-    public function __construct($currentPage, $itemsPerPage)
+    public function __construct(int $currentPage, int $itemsPerPage)
     {
-        $this-&gt;currentPage = (int) $currentPage;
+        $this-&gt;currentPage = $currentPage;
         if ($this-&gt;currentPage &lt;= 0) {
             $this-&gt;currentPage = self::DEFAULT_CURRENT_PAGE;
         }
-        $this-&gt;itemsPerPage = (int) $itemsPerPage;
+        $this-&gt;itemsPerPage = $itemsPerPage;
         if ($this-&gt;itemsPerPage &lt;= 0) {
             $this-&gt;itemsPerPage = self::DEFAULT_ITEMS_PER_PAGE;
         }
@@ -261,7 +260,7 @@ class Orderings
             $column = trim($column, '-');
         }
 
-        new self($column, $direction);
+        return new self($column, $direction);
     }
 }
 </code></pre>
@@ -302,7 +301,7 @@ implementation.</p>
 parameters (pagination, filtering, etc).</p>
 
 <p>To <a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">avoid our Doctrine implementation to become a big ball of mud</a>,
-we're going split the work into <code>Builders</code>, which construct the DQL query using
+we're going to split the work into <code>Builders</code>, which construct the DQL query using
 the <code>QueryBuilder</code>:</p>
 
 <pre><code class="php">&lt;?php

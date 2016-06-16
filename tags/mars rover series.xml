@@ -1,46 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Mars Rover, Introduction &mdash; Loïc Faugeron &mdash; Technical Blog</title>
-    <meta name="description" content="Technical articles about Symfony and TDD">
-    <meta name="author" content="Loïc Faugeron">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <link rel="canonical" href="/2016/06/15/mars-rover-introduction.html"/>
-        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
-    
-    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
-    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
-    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
-    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
-</head>
-<body>
-    <div class="container">
-        <header class="title">
-            <h1>
-                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
-                <span class="sub-title">Technical Blog</span>
-            </h1>
-        </header>
-
-        <article>
-            <header>
-                <h2>
-    Mars Rover, Introduction
-    <span class="sub-title">15/06/2016</span>
-</h2>
-                            <nav>
-                                                            <a class="button " href="https://gnugat.github.io/tags/mars%20rover%20series">mars rover series</a>
-                                                            <a class="button " href="https://gnugat.github.io/tags/mono%20repo">mono repo</a>
-                                                            <a class="button " href="https://gnugat.github.io/tags/cqrs">cqrs</a>
-                                                            <a class="button " href="https://gnugat.github.io/tags/event%20sourcing">event sourcing</a>
-                                                            <a class="button " href="https://gnugat.github.io/tags/tdd">tdd</a>
-                    </nav>
-                </header>
-
-                <p>Welcome to this Mars Rover series where we're going to practice the followings:</p>
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2016-06-16T21:24:09+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Introduction]]></title>
+            <link href="https://gnugat.github.io/2016/06/15/mars-rover-introduction.html"/>
+            <updated>2016-06-15T00:00:00+01:00</updated>
+            <id>https://gnugat.github.io/2016/06/15/mars-rover-introduction.html</id>
+            <content type="html"><![CDATA[<p>Welcome to this Mars Rover series where we're going to practice the followings:</p>
 
 <ul>
 <li>Monolithic Repositories (MonoRepo)</li>
@@ -246,38 +219,6 @@ When requested to, it should provide this location: <code>22</code>, <code>44</c
   and its <a href="http://memio.github.io/spec-gen">SpecGen extension</a></li>
   </ul>
 </blockquote>
-
-
-            <footer>
-                            <nav class="row">
-                            <a class="button six columns" href="https://gnugat.github.io/2016/05/18/towards-cqrs-search-engine.html" title="Towards CQRS, Search Engine">Previous &lt; Towards CQRS, Search Engine</a>
-                                </nav>
-                    <hr />
-            </footer>
-        </article>
-
-        <footer>
-            <nav class="row">
-                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
-                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
-                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
-                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
-            </nav>
-        </footer>
-    </div>
-
-    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
-    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
-    <script type="text/javascript">
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-47822314-1']);
-        _gaq.push(['_trackPageview']);
-
-        (function() {
-            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-        })();
-    </script>
-</body>
-</html>
+]]></content>
+        </entry>
+    </feed>
