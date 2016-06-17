@@ -169,8 +169,8 @@ From the above specifications, we can identify at least three use cases:
 
 ## What's next
 
-In the next article, we'll start developing for the first use case:
-"Landing a Rover on Mars".
+In the next article we'll initialize the project by creating the MonoRepo and
+its first package: `navigation`.
 
 > **Note** We'll be using:
 >

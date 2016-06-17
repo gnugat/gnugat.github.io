@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-06-16T21:24:09+01:00</updated>
+    <updated>2016-06-17T18:04:23+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -205,8 +205,8 @@ When requested to, it should provide this location: <code>22</code>, <code>44</c
 
 <h2 id="what%27s-next">What's next</h2>
 
-<p>In the next article, we'll start developing for the first use case:
-"Landing a Rover on Mars".</p>
+<p>In the next article we'll initialize the project by creating the MonoRepo and
+its first package: <code>navigation</code>.</p>
 
 <blockquote>
   <p><strong>Note</strong> We'll be using:</p>
