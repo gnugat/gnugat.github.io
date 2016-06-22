@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Mars Rover, Initialization &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/06/22/mars-rover-initialization.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Mars Rover, Initialization
+    <span class="sub-title">22/06/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/mars%20rover%20series">mars rover series</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/mono%20repo">mono repo</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/phpspec">phpspec</a>
+                    </nav>
+                </header>
+
+                <p>In this series we're going to build the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It will allow us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>But first, we need to initialize our project.</p>
+
+<h2 id="creating-the-repository">Creating the repository</h2>
+
+<p>Let's start by creating a new git repository:</p>
+
+<pre><code>mkdir rover
+cd rover
+git init
+</code></pre>
+
+<p>Since we're going to use <a href="https://getcomposer.org/">Composer</a>, we can create
+a <code>composer.json</code> file:</p>
+
+<pre><code>{
+    "name": "mars-rover/mars-rover",
+    "license": "MIT",
+    "type": "project",
+    "description": "Mars Rover",
+    "require": {
+        "php": "^7.0"
+    }
+}
+</code></pre>
+
+<p>We're then going to ignore some third party library related stuff by
+creating <code>.gitignore</code>:</p>
+
+<pre><code># Third Party libraries
+/vendor/
+/composer.lock
+</code></pre>
+
+<p>With this we've finished creating our repository. We can run composer:</p>
+
+<pre><code>composer install --optimize-autoloader
+</code></pre>
+
+<p>That should be enough for a first commit:</p>
+
+<pre><code>git add composer.json .gitignore
+git commit -m '0: Created project'
+</code></pre>
+
+<h2 id="creating-the-%60navigation%60-package">Creating the <code>navigation</code> package</h2>
+
+<p>By having a look at the <a href="/2016/06/15/mars-rover-introduction.html#identifying-use-cases">use cases</a>,
+we can see that there's going to be "write-only" dedicated ones and "read-only"
+dedicated ones:</p>
+
+<ol>
+<li>Landing a Rover on Mars: is write only</li>
+<li>Driving a Rover: is write only</li>
+<li>Requesting the Rover's location: is read only</li>
+</ol>
+
+<p>Since we'd like to follow the CQRS principle, we'll put the "write-only"
+logic in a different package than the "read-only" logic. Landing and Driving
+is all about navigation, so we'll create a <code>navigation</code> package:</p>
+
+<pre><code>git checkout -b 1-navigation
+mkdir -p packages/navigation
+cd packages/navigation
+</code></pre>
+
+<p>Composer needs us to set up the package by creating a <code>composer.json</code> file:</p>
+
+<pre><code>{
+    "name": "mars-rover/navigation",
+    "license": "MIT",
+    "type": "library",
+    "description": "Mars Rover - Navigation",
+    "autoload": {
+        "psr-4": { "MarsRover\\Navigation\\": "src/MarsRover/Navigation" }
+    },
+    "require": {
+        "php": "^7.0"
+    },
+    "require-dev": {
+        "memio/spec-gen": "^0.5",
+        "phpspec/phpspec": "^3.0@beta"
+    }
+}
+</code></pre>
+
+<p>We've decided to use <a href="http://phpspec.net/">phpspec</a> as a test framework, and
+to get the most of it we'd like to use its <a href="memio.github.io/spec-gen">SpecGen</a>
+extension. To do so we need to create the <code>phpspec.yml.dist</code> file:</p>
+
+<pre><code>extensions:
+  - Memio\SpecGen\MemioSpecGenExtension
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: For more information about phpspec
+  <a href="2015/08/03/phpspec.md">see this article</a>.</p>
+</blockquote>
+
+<p>Finally, we can configure this package's git by creating a <code>.gitignore</code> file:</p>
+
+<pre><code># Configuration
+/phpspec.yml
+
+# Third Party libraries
+/vendor/
+/composer.lock
+</code></pre>
+
+<p>With this we've finished creating our package. We can run Composer:</p>
+
+<pre><code>composer install --optimize-autoloader
+</code></pre>
+
+<p>That should be enough for a second commit:</p>
+
+<pre><code>git add composer.json .gitignore phpspec.yml.dist
+git commit -m '1: Created Navigation package'
+</code></pre>
+
+<h2 id="adding-%60navigation%60-to-the-project">Adding <code>navigation</code> to the project</h2>
+
+<p>Let's go back to the project's root:</p>
+
+<pre><code>cd ../../
+</code></pre>
+
+<p>One benefit of MonoRepos is to be able to run all packages tests in one
+command. To do so, we need to require <code>navigation</code> in our project's
+<code>composer.json</code> file:</p>
+
+<pre><code>{
+    "name": "mars-rover/mars-rover",
+    "license": "MIT",
+    "type": "project",
+    "description": "Mars Rover",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "./packages/*"
+        }
+    ],
+    "require": {
+        "mars-rover/navigation": "*@dev",
+        "php": "^7.0"
+    }
+}
+</code></pre>
+
+<p>By default, Composer looks for packages only in <a href="https://packagist.org/">Packagist</a>.
+By ading the new <code>repositories</code> section we can tell it to also check locally
+in <code>./packages</code>, allowing us to add them in the <code>require</code> section.</p>
+
+<p>Composer needs us to tell it what version of the package we'd like, but in
+MonoRepos all packages share the same version, so we simply use <code>*</code> (any).
+But to be able to use the latest changes, and not only the tagged one, we
+have to specify the development stability (<code>@dev</code>).</p>
+
+<p>Since we've decided to use phpspec for our test, we're also going to need to
+require it in the project's development dependencies:</p>
+
+<pre><code>composer require --dev phpspec/phpspec:^3.0@beta
+</code></pre>
+
+<p>By default phpspec is going to look for test in the project's root. We need to
+create a <code>phpspec.yml.dist</code> file to tell it to use <code>navigation</code>'s ones:</p>
+
+<pre><code>suites:
+    navigation:
+        namespace: 'MarsRover\Navigation'
+        src_path: packages/navigation/src
+        spec_path: packages/navigation
+</code></pre>
+
+<p>We'll also update <code>.gitignore</code> to ignore local configuration:</p>
+
+<pre><code># Configuration
+/phpspec.yml
+
+# Third Party libraries
+/vendor/
+/composer.lock
+</code></pre>
+
+<p>And that's it! We are now able to run Composer and then phpspec:</p>
+
+<pre><code>composer update --optimize-autoloader
+./vendor/bin/phpspec run
+</code></pre>
+
+<p>That should be enough for a last commit:</p>
+
+<pre><code>git add .gitignore composer.json phpspec.yml.dist
+git commit -m '1: Added navigation package to main project'
+</code></pre>
+
+<p>Let's merge it to master:</p>
+
+<pre><code>git checkout master
+git merge --no-ff 1-navigation
+git branch -D 1-navigation
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>With Composer we can create many packages inside a single repository. With this
+MonoRepo, we can then execute all the tests in one command.</p>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article we'll tackle down the "Landing a Rover on Mars" use case,
+allowing us to showcase an example of Event Sourcing and TDD.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/06/15/mars-rover-introduction.html" title="Mars Rover, Introduction">Previous &lt; Mars Rover, Introduction</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

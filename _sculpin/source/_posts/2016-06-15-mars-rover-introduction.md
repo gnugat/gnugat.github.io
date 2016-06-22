@@ -174,7 +174,7 @@ its first package: `navigation`.
 
 > **Note** We'll be using:
 >
-> * PHP 7:
+> * PHP 7
 > * [Composer](https://getcomposer.org)
 > * git
 > * [phpspec](http://phpspec.net/)
