@@ -107,7 +107,7 @@ Composer needs us to set up the package by creating a `composer.json` file:
 ```
 
 We've decided to use [phpspec](http://phpspec.net/) as a test framework, and
-to get the most of it we'd like to use its [SpecGen](memio.github.io/spec-gen)
+to get the most of it we'd like to use its [SpecGen](http://memio.github.io/spec-gen)
 extension. To do so we need to create the `phpspec.yml.dist` file:
 
 ```
