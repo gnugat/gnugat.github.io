@@ -174,7 +174,7 @@ command. To do so, we need to require `navigation` in our project's
 ```
 
 By default, Composer looks for packages only in [Packagist](https://packagist.org/).
-By ading the new `repositories` section we can tell it to also check locally
+By adding the new `repositories` section we can tell it to also check locally
 in `./packages`, allowing us to add them in the `require` section.
 
 Composer needs us to tell it what version of the package we'd like, but in
