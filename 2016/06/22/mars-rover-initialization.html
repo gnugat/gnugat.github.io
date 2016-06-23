@@ -134,7 +134,7 @@ cd packages/navigation
 </code></pre>
 
 <p>We've decided to use <a href="http://phpspec.net/">phpspec</a> as a test framework, and
-to get the most of it we'd like to use its <a href="memio.github.io/spec-gen">SpecGen</a>
+to get the most of it we'd like to use its <a href="http://memio.github.io/spec-gen">SpecGen</a>
 extension. To do so we need to create the <code>phpspec.yml.dist</code> file:</p>
 
 <pre><code>extensions:
@@ -143,7 +143,7 @@ extension. To do so we need to create the <code>phpspec.yml.dist</code> file:</p
 
 <blockquote>
   <p><strong>Note</strong>: For more information about phpspec
-  <a href="2015/08/03/phpspec.md">see this article</a>.</p>
+  <a href="/2015/08/03/phpspec.html">see this article</a>.</p>
 </blockquote>
 
 <p>Finally, we can configure this package's git by creating a <code>.gitignore</code> file:</p>
@@ -197,7 +197,7 @@ command. To do so, we need to require <code>navigation</code> in our project's
 </code></pre>
 
 <p>By default, Composer looks for packages only in <a href="https://packagist.org/">Packagist</a>.
-By ading the new <code>repositories</code> section we can tell it to also check locally
+By adding the new <code>repositories</code> section we can tell it to also check locally
 in <code>./packages</code>, allowing us to add them in the <code>require</code> section.</p>
 
 <p>Composer needs us to tell it what version of the package we'd like, but in

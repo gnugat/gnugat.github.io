@@ -115,7 +115,7 @@ extensions:
 ```
 
 > **Note**: For more information about phpspec
-> [see this article](/2015/08/03/phpspec).
+> [see this article](/2015/08/03/phpspec.html).
 
 Finally, we can configure this package's git by creating a `.gitignore` file:
 
