@@ -49,7 +49,6 @@ creating `.gitignore`:
 ```
 # Third Party libraries
 /vendor/
-/composer.lock
 ```
 
 With this we've finished creating our repository. We can run composer:
@@ -138,7 +137,7 @@ composer install --optimize-autoloader
 That should be enough for a second commit:
 
 ```
-git add composer.json .gitignore phpspec.yml.dist
+git add -A
 git commit -m '1: Created Navigation package'
 ```
 
@@ -208,7 +207,6 @@ We'll also update `.gitignore` to ignore local configuration:
 
 # Third Party libraries
 /vendor/
-/composer.lock
 ```
 
 And that's it! We are now able to run Composer and then phpspec:
@@ -221,7 +219,7 @@ composer update --optimize-autoloader
 That should be enough for a last commit:
 
 ```
-git add .gitignore composer.json phpspec.yml.dist
+git add -A
 git commit -m '1: Added navigation package to main project'
 ```
 
@@ -230,7 +228,6 @@ Let's merge it to master:
 ```
 git checkout master
 git merge --no-ff 1-navigation
-git branch -D 1-navigation
 ```
 
 ## Conclusion

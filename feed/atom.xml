@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-06-22T07:29:29+01:00</updated>
+    <updated>2016-06-23T08:54:49+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -54,7 +54,6 @@ creating <code>.gitignore</code>:</p>
 
 <pre><code># Third Party libraries
 /vendor/
-/composer.lock
 </code></pre>
 
 <p>With this we've finished creating our repository. We can run composer:</p>
@@ -139,7 +138,7 @@ extension. To do so we need to create the <code>phpspec.yml.dist</code> file:</p
 
 <p>That should be enough for a second commit:</p>
 
-<pre><code>git add composer.json .gitignore phpspec.yml.dist
+<pre><code>git add -A
 git commit -m '1: Created Navigation package'
 </code></pre>
 
@@ -204,7 +203,6 @@ create a <code>phpspec.yml.dist</code> file to tell it to use <code>navigation</
 
 # Third Party libraries
 /vendor/
-/composer.lock
 </code></pre>
 
 <p>And that's it! We are now able to run Composer and then phpspec:</p>
@@ -215,7 +213,7 @@ create a <code>phpspec.yml.dist</code> file to tell it to use <code>navigation</
 
 <p>That should be enough for a last commit:</p>
 
-<pre><code>git add .gitignore composer.json phpspec.yml.dist
+<pre><code>git add -A
 git commit -m '1: Added navigation package to main project'
 </code></pre>
 
@@ -223,7 +221,6 @@ git commit -m '1: Added navigation package to main project'
 
 <pre><code>git checkout master
 git merge --no-ff 1-navigation
-git branch -D 1-navigation
 </code></pre>
 
 <h2 id="conclusion">Conclusion</h2>
