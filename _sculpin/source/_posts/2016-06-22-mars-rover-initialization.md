@@ -106,7 +106,7 @@ Composer needs us to set up the package by creating a `composer.json` file:
 ```
 
 We've decided to use [phpspec](http://phpspec.net/) as a test framework, and
-to get the most of it we'd like to use its [SpecGen](memio.github.io/spec-gen)
+to get the most of it we'd like to use its [SpecGen](http://memio.github.io/spec-gen)
 extension. To do so we need to create the `phpspec.yml.dist` file:
 
 ```
@@ -115,7 +115,7 @@ extensions:
 ```
 
 > **Note**: For more information about phpspec
-> [see this article](2015/08/03/phpspec.md).
+> [see this article](/2015/08/03/phpspec).
 
 Finally, we can configure this package's git by creating a `.gitignore` file:
 
@@ -173,7 +173,7 @@ command. To do so, we need to require `navigation` in our project's
 ```
 
 By default, Composer looks for packages only in [Packagist](https://packagist.org/).
-By ading the new `repositories` section we can tell it to also check locally
+By adding the new `repositories` section we can tell it to also check locally
 in `./packages`, allowing us to add them in the `require` section.
 
 Composer needs us to tell it what version of the package we'd like, but in
