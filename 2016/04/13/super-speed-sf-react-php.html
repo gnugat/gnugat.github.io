@@ -308,7 +308,7 @@ $callback = function ($request, $response) use ($kernel) {
         $sfResponse-&gt;headers-&gt;all()
     );
     $response-&gt;end($sfResponse-&gt;getContent());
-    $kernel-&gt;terminate($request, $response);
+    $kernel-&gt;terminate($sfRequest, $sfResponse);
     if ($enableProfiling) {
         $blackfire-&gt;endProbe($probe);
     }
