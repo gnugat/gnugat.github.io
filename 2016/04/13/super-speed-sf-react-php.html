@@ -10,7 +10,7 @@
 
     <link rel="canonical" href="/2016/04/13/super-speed-sf-react-php.html"/>
         <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
-    
+
     <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
     <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
     <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
@@ -188,7 +188,7 @@ $callback = function ($request, $response) use ($kernel) {
         $sfResponse-&gt;headers-&gt;all()
     );
     $response-&gt;end($sfResponse-&gt;getContent());
-    $kernel-&gt;terminate($request, $response);
+    $kernel-&gt;terminate($sfRequest, $sfResponse);
 };
 
 $loop = React\EventLoop\Factory::create();
