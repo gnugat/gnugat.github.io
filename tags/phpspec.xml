@@ -3,11 +3,378 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-07-20T07:55:12+01:00</updated>
+    <updated>2016-07-20T08:05:24+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Landing event]]></title>
+            <link href="https://gnugat.github.io/2016/07/20/mars-rover-landing-event.html"/>
+            <updated>2016-07-20T00:00:00+01:00</updated>
+            <id>https://gnugat.github.io/2016/07/20/mars-rover-landing-event.html</id>
+            <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It will allow us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>Previously we've created a
+<a href="/2016/06/22/mars-rover-initialization.html">navigation package</a>, and in it
+a <code>LandRover</code> class that
+<a href="/2016/06/29/mars-rover-landing.html">validates input parameters</a> for our
+first use case:</p>
+
+<blockquote>
+  <p>Mars Rovers need first to be landed at a given position. A position is
+  composed of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an
+  orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+</blockquote>
+
+<p>We've then refactored it to extract
+<a href="/2016/07/06/mars-rover-landing-coordinates.html">coordinates</a>
+and <a href="/2016/07/13/mars-rover-landing-orientation.html">orientation</a>
+in their own classes.</p>
+
+<p>In this article we're going to create the actual landing logic, using
+Event Sourcing:</p>
+
+<pre><code>cd packages/navigation
+git checkout 2-landing
+</code></pre>
+
+<h2 id="landroverhandler">LandRoverHandler</h2>
+
+<p>Following our <a href="/2016/06/29/mars-rover-landing.html#twisting-command-bus">Command Bus twist</a>,
+we're now going to create the <code>LandRoverHandler</code> class that's going to take
+care of the actual logic associated to the <code>Landrover</code> use case. We're starting
+by bootstraping the test class:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\LandRoverHandler'
+</code></pre>
+
+<p>this should create the following
+<code>spec/MarsRover/Navigation/LandRoverHandlerSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\LandRoverHandler;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class LandRoverHandlerSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(LandRoverHandler::class);
+    }
+}
+</code></pre>
+
+<p><a href="/2016/06/15/mars-rover-introduction.html#event-sourcing">Event Sourcing</a> is
+all about recording significant actions. Landing a rover seems significant
+enough, so that's what <code>LandroverHandler</code> should do:</p>
+
+<pre><code class="php">We can now start to edit it.
+&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\AnEventHappened;
+use MarsRover\Navigation\Event;
+use MarsRover\Navigation\EventStore;
+use MarsRover\Navigation\LandRover;
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LandRoverHandlerSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    const EVENT_NAME = 'rover_landed';
+    const EVENT_DATA = [
+        'x' =&gt; self::X,
+        'y' =&gt; self::Y,
+        'orientation' =&gt; self::ORIENTATION,
+    ];
+
+    function it_lands_a_rover_at_given_location(
+        AnEventHappened $anEventHappened,
+        Event $roverLanded,
+        EventStore $eventStore
+    ) {
+        $this-&gt;beConstructedwith($anEventHappened, $eventStore);
+        $landRover = new LandRover(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $anEventHappened-&gt;justNow(
+            self::EVENT_NAME,
+            self::EVENT_DATA
+        )-&gt;willReturn($roverLanded);
+        $eventStore-&gt;log($event)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($landRover);
+    }
+}
+</code></pre>
+
+<p>In this test, we rely on:</p>
+
+<ul>
+<li><code>Event</code>, a Data Transfer Object (DTO) that contains the name and the data</li>
+<li><code>AnEventHappened</code>, which is actually an <code>Event</code> factory</li>
+<li><code>EventStore</code>, a service responsible for "logging" <code>Event</code>s</li>
+</ul>
+
+<p>We could have done without the factory and create directly <code>Event</code> in
+<code>LandRoverHandler</code>, but then we'd have no way to check in our tests that it
+was constructed with the right data.</p>
+
+<p>Those classes don't exist yet, we've made them up to build a coherent
+<strong>story</strong>. Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>They fail because of the missing classes... But phpspec bootstrapped them for
+us!</p>
+
+<p>It created the <code>src/MarsRover/Navigation/AnEventHappened.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+interface AnEventHappened
+{
+
+    public function justNow($argument1, $argument2);
+}
+</code></pre>
+
+<p>It also created the <code>src/MarsRover/Navigation/Event.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+interface Event
+{
+}
+</code></pre>
+
+<p>And it created the <code>src/MarsRover/Navigation/EventStore.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+interface EventStore
+{
+
+    public function log($argument1);
+}
+</code></pre>
+
+<p>As we can see, when we reference a non existence class, phpspec generates an
+interface for us. It also generates methods, if we've described method calls
+in out test.</p>
+
+<p>For now we'll leave them like this, and have a look at the generated
+<code>src/MarsRover/Navigation/LandRoverHandler.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRoverHandler
+{
+    private $anEventHappened;
+
+    private $eventStore;
+
+    public function __construct(AnEventHappened $anEventHappened, EventStore $eventStore)
+    {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(LandRover $landRover)
+    {
+    }
+}
+</code></pre>
+
+<p>Thanks to the <a href="https://github.com/memio/spec-gen">SpecGen extension</a>, phpspec
+was able to detect Dependency Injection, and bootstrapped a constructor with
+an attribute initialization for us. How nice!</p>
+
+<p>We'll just need to complete the <code>handle</code> method:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRoverHandler
+{
+    const EVENT_NAME = 'rover_landed';
+
+    private $anEventHappened;
+    private $eventStore;
+
+    public function __construct(
+        AnEventHappened $anEventHappened,
+        EventStore $eventStore
+    ) {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(LandRover $landRover)
+    {
+        $roverLanded = $this-&gt;anEventHappened-&gt;justNow(self::EVENT_NAME, [
+            'x' =&gt; $landRover-&gt;getCoordinates()-&gt;getX(),
+            'y' =&gt; $landRover-&gt;getCoordinates()-&gt;getY(),
+            'orientation' =&gt; $landRover-&gt;getOrientation()-&gt;get(),
+        ]);
+        $this-&gt;eventStore-&gt;log($roverLanded);
+    }
+}
+</code></pre>
+
+<p>Overall, the code looks very similar to the test. Let's run them:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We might want to use the same event name in both the code and the
+test, so let's create a <code>src/MarsRover/Navigation/Events.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Events
+{
+    const ROVER_LANDED = 'rover_landed';
+}
+</code></pre>
+
+<p>Then use it in the code:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRoverHandler
+{
+    private $anEventHappened;
+    private $eventStore;
+
+    public function __construct(
+        AnEventHappened $anEventHappened,
+        EventStore $eventStore
+    ) {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(LandRover $landRover)
+    {
+        $roverLanded = $this-&gt;anEventHappened-&gt;justNow(Events::ROVER_LANDED, [
+            'x' =&gt; $landRover-&gt;getCoordinates()-&gt;getX(),
+            'y' =&gt; $landRover-&gt;getCoordinates()-&gt;getY(),
+            'orientation' =&gt; $landRover-&gt;getOrientation()-&gt;get(),
+        ]);
+        $this-&gt;eventStore-&gt;log($roverLanded);
+    }
+}
+</code></pre>
+
+<p>and finally in the test:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\AnEventHappened;
+use MarsRover\Navigation\Event;
+use MarsRover\Navigation\Events;
+use MarsRover\Navigation\EventStore;
+use MarsRover\Navigation\LandRover;
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LandRoverHandlerSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    const EVENT_NAME = Events::ROVER_LANDED;
+    const EVENT_DATA = [
+        'x' =&gt; self::X,
+        'y' =&gt; self::Y,
+        'orientation' =&gt; self::ORIENTATION,
+    ];
+
+    function it_lands_a_rover_at_given_location(
+        AnEventHappened $anEventHappened,
+        Event $roverLanded,
+        EventStore $eventStore
+    ) {
+        $this-&gt;beConstructedwith($anEventHappened, $eventStore);
+        $landRover = new LandRover(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $anEventHappened-&gt;justNow(
+            self::EVENT_NAME,
+            self::EVENT_DATA
+        )-&gt;willReturn($roverLanded);
+        $eventStore-&gt;log($roverLanded)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($landRover);
+    }
+}
+</code></pre>
+
+<p>We can run the tests one last time:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>Still green! We can commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '2: Created LandRoverHandler'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>With Event Sourcing, the logic associated to our "Landing a Rover on Mars" use
+case is quite simple: we just record it as an event.</p>
+
+<h2 id="what%27s-next%3F">What's next?</h2>
+
+<p>In the next article, we'll extract Event Sourcing logic from the <code>navigation</code>
+package and put it in its own <code>event-sourcing</code> one.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Landing orientation]]></title>
             <link href="https://gnugat.github.io/2016/07/13/mars-rover-landing-orientation.html"/>
