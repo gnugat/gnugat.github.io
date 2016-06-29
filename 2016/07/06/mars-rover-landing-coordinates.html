@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Mars Rover, Landing &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <title>Mars Rover, Landing coordinates &mdash; Loïc Faugeron &mdash; Technical Blog</title>
     <meta name="description" content="Technical articles about Symfony and TDD">
     <meta name="author" content="Loïc Faugeron">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="canonical" href="/2016/06/29/mars-rover-landing.html"/>
+    <link rel="canonical" href="/2016/07/06/mars-rover-landing-coordinates.html"/>
         <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
     
     <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
@@ -28,8 +28,8 @@
         <article>
             <header>
                 <h2>
-    Mars Rover, Landing
-    <span class="sub-title">29/06/2016</span>
+    Mars Rover, Landing coordinates
+    <span class="sub-title">06/07/2016</span>
 </h2>
                             <nav>
                                                             <a class="button " href="https://gnugat.github.io/tags/mars%20rover%20series">mars rover series</a>
@@ -50,8 +50,10 @@ It will allow us to practice the followings:</p>
 </ul>
 
 <p>Previously we've created a
-<a href="/2016/06/22/mars-rover-initialization.html">navigation package</a>, we can now
-start developing the first use case:</p>
+<a href="/2016/06/22/mars-rover-initialization.html">navigation package</a>, and in it
+a <code>LandRover</code> class that
+<a href="/2016/06/29/mars-rover-landing.html">validates input parameters</a> for our
+first use case:</p>
 
 <blockquote>
   <p>Mars Rovers need first to be landed at a given position. A position is
@@ -59,59 +61,52 @@ start developing the first use case:</p>
   orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
 </blockquote>
 
-<h2 id="twisting-command-bus">Twisting Command Bus</h2>
-
-<p>The <a href="/2016/05/11/towards-cqrs-command-bus.md">Command Bus design pattern</a>
-is composed of 3 classes:</p>
-
-<ul>
-<li>a <code>Command</code> class which validates use case input and with a name that
-communicates imperative intention (e.g. <code>LandRover</code>)</li>
-<li>associated to it (one to one relationship) is the <code>CommandHandler</code>,
-which does the actual logic for the use case</li>
-<li>a <code>CommandBus</code> that takes a <code>Command</code> and executes the appropriate
-<code>CommandHandler</code>, and that allows for middlewares</li>
-</ul>
-
-<p>We're going to twist this design pattern for the Mars Rover by omiting the
-<code>CommandBus</code> class, as we don't really need middlewares or to find the
-appropriate <code>CommandHandler</code> for a given <code>Command</code>.</p>
-
-<p>Let's start by creating the <code>Command</code> class that'll take care of the input
-parameter validation:</p>
+<p>In this article we're going to refactor <code>LandRover</code>:</p>
 
 <pre><code>cd packages/navigation
-git checkout -b 2-landing
+git checkout 2-landing
 </code></pre>
 
-<h2 id="land-rover">Land Rover</h2>
+<h2 id="responsibilities">Responsibilities</h2>
 
-<p>We're going to bootstrap the test class for <code>LandRover</code>, using
+<p>By having a look at <code>LandRover</code>, we can guess that it has 2 reasons to change:</p>
+
+<ul>
+<li>coordinates <code>x</code> and <code>y</code> might become floats, or have an additional <code>z</code></li>
+<li>orientation might become an angular degree, or have a vertical orientation</li>
+</ul>
+
+<p>This hints toward two new classes, extracted from <code>LandRover</code>: <code>Coordinates</code>
+and <code>Orientation</code>. In this article we'll take care of <code>Cooridnates</code>.</p>
+
+<h2 id="coordinates">Coordinates</h2>
+
+<p>First let's bootstrap the test class, using
 <a href="http://www.phpspec.net/en/stable/">phpspec</a>:</p>
 
-<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\LandRover'
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\Coordinates'
 </code></pre>
 
-<p>This should generate this <code>spec\MarsRover/Navigation/LandRoverSpec.php</code> class:</p>
+<p>This will create the <code>spec/MarsRover/Navigation/CoordinatesSpec.php</code> file:</p>
 
 <pre><code class="php">&lt;?php
 
 namespace spec\MarsRover\Navigation;
 
-use MarsRover\Navigation\LandRover;
+use MarsRover\Navigation\Coordinates;
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
-class LandRoverSpec extends ObjectBehavior
+class CoordinatesSpec extends ObjectBehavior
 {
     function it_is_initializable()
     {
-        $this-&gt;shouldHaveType(LandRover::class);
+        $this-&gt;shouldHaveType(Coordinates::class);
     }
 }
 </code></pre>
 
-<p>This leaves us the task of editing it to start describing input parameters:</p>
+<p>We can edit it, by using what we've done in <code>LandRover</code> test class:</p>
 
 <pre><code class="php">&lt;?php
 
@@ -119,71 +114,78 @@ namespace spec\MarsRover\Navigation;
 
 use PhpSpec\ObjectBehavior;
 
-class LandRoverSpec extends ObjectBehavior
+class CoordinatesSpec extends ObjectBehavior
 {
     const X = 23;
     const Y = 42;
-    const ORIENTATION = 'north';
 
     function it_has_x_coordinate()
     {
         $this-&gt;beConstructedWith(
             self::X,
-            self::Y,
-            self::ORIENTATION
+            self::Y
         );
 
         $this-&gt;getX()-&gt;shouldBe(self::X);
+    }
+
+    function it_cannot_have_non_integer_x_coordinate()
+    {
+        $this-&gt;beConstructedWith(
+            'Nobody expects the Spanish Inquisition!',
+            self::Y
+        );
+
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
     }
 
     function it_has_y_coordinate()
     {
         $this-&gt;beConstructedWith(
             self::X,
-            self::Y,
-            self::ORIENTATION
+            self::Y
         );
 
         $this-&gt;getY()-&gt;shouldBe(self::Y);
     }
 
-    function it_has_an_orientation()
+    function it_cannot_have_non_integer_y_coordinate()
     {
         $this-&gt;beConstructedWith(
             self::X,
-            self::Y,
-            self::ORIENTATION
+            'No one expects the Spanish Inquisition!'
         );
 
-        $this-&gt;getOrientation()-&gt;shouldBe(self::ORIENTATION);
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
     }
 }
 </code></pre>
 
-<p>We can now run the tests:</p>
+<p>If we run the tests now, it will bootsrap the <code>Coordinates</code> class:</p>
 
 <pre><code>vendor/bin/phpspec run
 </code></pre>
 
-<p>This will generate the <code>src/MarsRover/Navigation/LandRover.php</code> file:</p>
+<p>And it indeed created the <code>src/MarsRover/Navigation/Coordinates.php</code> file:</p>
 
 <pre><code class="php">&lt;?php
 
 namespace MarsRover\Navigation;
 
-class LandRover
+class Coordinates
 {
     private $argument1;
 
     private $argument2;
 
-    private $argument3;
-
-    public function __construct($argument1, $argument2, $argument3)
+    public function __construct($argument1, $argument2)
     {
         $this-&gt;argument1 = $argument1;
         $this-&gt;argument2 = $argument2;
-        $this-&gt;argument3 = $argument3;
     }
 
     public function getX()
@@ -193,30 +195,35 @@ class LandRover
     public function getY()
     {
     }
-
-    public function getOrientation()
-    {
-    }
 }
 </code></pre>
 
-<p>All we need to do is to edit it:</p>
+<p>This leaves us with the task of completing it, reusing what's been done in
+<code>LandRover</code> class:</p>
 
 <pre><code class="php">&lt;?php
 
 namespace MarsRover\Navigation;
 
-class LandRover
+class Coordinates
 {
     private $x;
     private $y;
-    private $orientation;
 
-    public function __construct($x, $y, $orientation)
+    public function __construct($x, $y)
     {
+        if (false === is_int($x)) {
+            throw new \InvalidArgumentException(
+                'X coordinate must be an integer'
+            );
+        }
         $this-&gt;x = $x;
+        if (false === is_int($y)) {
+            throw new \InvalidArgumentException(
+                'Y coordinate must be an integer'
+            );
+        }
         $this-&gt;y = $y;
-        $this-&gt;orientation = $orientation;
     }
 
     public function getX() : int
@@ -228,21 +235,16 @@ class LandRover
     {
         return $this-&gt;y;
     }
-
-    public function getOrientation() : string
-    {
-        return $this-&gt;orientation;
-    }
 }
 </code></pre>
 
-<p>Let's run the tests again:</p>
+<p>We can run the tests:</p>
 
 <pre><code>vendor/bin/phpspec run
 </code></pre>
 
-<p>All green! But our job isn't finished yet, we haven't described invalid input
-parameters:</p>
+<p>All green! Now all we have to do is update <code>LandRover</code> test class to use
+<code>Coordinates</code>:</p>
 
 <pre><code class="php">&lt;?php
 
@@ -256,7 +258,7 @@ class LandRoverSpec extends ObjectBehavior
     const Y = 42;
     const ORIENTATION = 'north';
 
-    function it_has_x_coordinate()
+    function it_has_coordinates()
     {
         $this-&gt;beConstructedWith(
             self::X,
@@ -264,44 +266,9 @@ class LandRoverSpec extends ObjectBehavior
             self::ORIENTATION
         );
 
-        $this-&gt;getX()-&gt;shouldBe(self::X);
-    }
-
-    function it_cannot_have_non_integer_x_coordinate()
-    {
-        $this-&gt;beConstructedWith(
-            'Nobody expects the Spanish Inquisition!',
-            self::Y,
-            self::ORIENTATION
-        );
-
-        $this-&gt;shouldThrow(
-            \InvalidArgumentException::class
-        )-&gt;duringInstantiation();
-    }
-
-    function it_has_y_coordinate()
-    {
-        $this-&gt;beConstructedWith(
-            self::X,
-            self::Y,
-            self::ORIENTATION
-        );
-
-        $this-&gt;getY()-&gt;shouldBe(self::Y);
-    }
-
-    function it_cannot_have_non_integer_y_coordinate()
-    {
-        $this-&gt;beConstructedWith(
-            self::X,
-            'No one expects the Spanish Inquisition!',
-            self::ORIENTATION
-        );
-
-        $this-&gt;shouldThrow(
-            \InvalidArgumentException::class
-        )-&gt;duringInstantiation();
+        $coordinates = $this-&gt;getCoordinates();
+        $coordinates-&gt;getX()-&gt;shouldBe(self::X);
+        $coordinates-&gt;getY()-&gt;shouldBe(self::Y);
     }
 
     function it_has_an_orientation()
@@ -330,12 +297,8 @@ class LandRoverSpec extends ObjectBehavior
 }
 </code></pre>
 
-<p>Running the tests again:</p>
-
-<pre><code>vendor/bin/phpspec run
-</code></pre>
-
-<p>They fail, because we need to check input parameters:</p>
+<p>We no longer need to check for invalid <code>x</code> and <code>y</code> values, as we trust
+<code>Coordinates</code> to take care of them for us. We can now update <code>LandRover</code> class:</p>
 
 <pre><code class="php">&lt;?php
 
@@ -345,24 +308,12 @@ class LandRover
 {
     const VALID_ORIENTATIONS = ['north', 'east', 'west', 'south'];
 
-    private $x;
-    private $y;
+    private $coordinates;
     private $orientation;
 
     public function __construct($x, $y, $orientation)
     {
-        if (false === is_int($x)) {
-            throw new \InvalidArgumentException(
-                'X coordinate must be an integer'
-            );
-        }
-        $this-&gt;x = $x;
-        if (false === is_int($y)) {
-            throw new \InvalidArgumentException(
-                'Y coordinate must be an integer'
-            );
-        }
-        $this-&gt;y = $y;
+        $this-&gt;coordinates = new Coordinates($x, $y);
         if (false === in_array($orientation, self::VALID_ORIENTATIONS, true)) {
             throw new \InvalidArgumentException(
                 'Orientation must be one of: '
@@ -372,14 +323,9 @@ class LandRover
         $this-&gt;orientation = $orientation;
     }
 
-    public function getX() : int
+    public function getCoordinates() : Coordinates
     {
-        return $this-&gt;x;
-    }
-
-    public function getY() : int
-    {
-        return $this-&gt;y;
+        return $this-&gt;coordinates;
     }
 
     public function getOrientation() : string
@@ -389,68 +335,32 @@ class LandRover
 }
 </code></pre>
 
-<p>Let's run the tests again:</p>
+<p>And that should make our test pass:</p>
 
 <pre><code>vendor/bin/phpspec run
 </code></pre>
 
-<p>All green! We can now commit our work:</p>
+<p>All green! That's enough for us to commit our work:</p>
 
 <pre><code>git add -A
-git commit -m '2: Created LandRover'
+git commit -m '2: Created Coordinates'
 </code></pre>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>We've followed the first steps of TDD: write a test then write the code.</p>
-
-<p>Using phpspec makes this process easier as the code gets bootstrapped for us
-once we've written the test.</p>
-
-<p>Since we write those tests first, in a descriptive way (test method names
-are sentences), we can use them as runnable self-checking specifications!
-phpspec allows us to display them explicitly:</p>
-
-<pre><code>vendor/bin/phpspec run --format=pretty
-</code></pre>
-
-<p>This should display:</p>
-
-<pre><code><br />      MarsRover\Navigation\LandRover
-
-  13  ✔ has x coordinate
-  24  ✔ cannot have non integer x coordinate
-  37  ✔ has y coordinate
-  48  ✔ cannot have non integer y coordinate
-  61  ✔ has an orientation
-  72  ✔ cannot have a non cardinal orientation
-
-
-1 specs
-6 examples (6 passed)
-10ms
-</code></pre>
-
-<blockquote>
-  <p><strong>Note</strong>: <code>navigation</code> tests can also be run from the MonoRepo:</p>
-
-<pre><code>cd ../../
-composer update --optimize-autoloader
-vendor/bin/phpspec run
-</code></pre>
-</blockquote>
+<p>We've followed the full cycle of TDD: test, code and refactor. Using phpspec
+has been really helpful as it bootstraped the test classes and then their code
+classes for us.</p>
 
 <h2 id="what%27s-next">What's next</h2>
 
-<p>In the next article we'll complete the TDD cycle by refactoring <code>LandRover</code>:
-we'll extract <code>x</code> and <code>y</code> coordinates into their own class.</p>
+<p>In the next article, we'll extract <code>Orientation</code> from <code>LandRover</code>.</p>
 
 
             <footer>
                             <nav class="row">
-                            <a class="button six columns" href="https://gnugat.github.io/2016/06/22/mars-rover-initialization.html" title="Mars Rover, Initialization">Previous &lt; Mars Rover, Initialization</a>
-                                        <a class="button six columns" href="https://gnugat.github.io/2016/07/06/mars-rover-landing-coordinates.html" title="Mars Rover, Landing coordinates">Next &gt; Mars Rover, Landing coordinates</a>
-                    </nav>
+                            <a class="button six columns" href="https://gnugat.github.io/2016/06/29/mars-rover-landing.html" title="Mars Rover, Landing">Previous &lt; Mars Rover, Landing</a>
+                                </nav>
                     <hr />
             </footer>
         </article>
