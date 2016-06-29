@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Mars Rover, Landing orientation &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/07/13/mars-rover-landing-orientation.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Mars Rover, Landing orientation
+    <span class="sub-title">13/07/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/mars%20rover%20series">mars rover series</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/TDD">TDD</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/phpspec">phpspec</a>
+                    </nav>
+                </header>
+
+                <p>In this series we're going to build the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It will allow us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>Previously we've created a
+<a href="/2016/06/22/mars-rover-initialization.html">navigation package</a>, and in it
+a <code>LandRover</code> class that
+<a href="/2016/06/29/mars-rover-landing.html">validates input parameters</a> for our
+first use case:</p>
+
+<blockquote>
+  <p>Mars Rovers need first to be landed at a given position. A position is
+  composed of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an
+  orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+</blockquote>
+
+<p>We've also started to refactor it by
+<a href="/2016/07/06/mars-rover-landing-coordinates.html">extracting coordinates in their own class</a>.</p>
+
+<p>In this article we're going to further refactor <code>LandRover</code>:</p>
+
+<pre><code>cd packages/navigation
+git checkout 2-landing
+</code></pre>
+
+<h2 id="responsibilities">Responsibilities</h2>
+
+<p>By having a look at <code>LandRover</code>, we can guess that it has 2 reasons to change:</p>
+
+<ul>
+<li>coordinates <code>x</code> and <code>y</code> might become floats, or have an additional <code>z</code></li>
+<li>orientation might become an angular degree, or have a vertical orientation</li>
+</ul>
+
+<p>This hints toward two new classes, extracted from <code>LandRover</code>: <code>Coordinates</code>
+and <code>Orientation</code>. In this article we'll take care of <code>Orientation</code>.</p>
+
+<h2 id="orientation">Orientation</h2>
+
+<p>Let's start by bootstraping <code>Orientation</code> test class using
+<a href="http://www.phpspec.net/en/stable/">phpspec</a>:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\Orientation'
+</code></pre>
+
+<p>It should create the <code>spec/MarsRover/Navigation/OrientationSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class OrientationSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(self::class);
+    }
+}
+</code></pre>
+
+<p>Instead of reusing tests from <code>LandRover</code>, we'll try to describe all the
+possible orientations:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use PhpSpec\ObjectBehavior;
+
+class OrientationSpec extends ObjectBehavior
+{
+    const NORTH = 'north';
+    const EAST = 'east';
+    const WEST = 'west';
+    const SOUTH = 'south';
+
+    function it_can_face_north()
+    {
+        $this-&gt;beConstructedWith(self::NORTH);
+
+        $this-&gt;get()-&gt;shouldBe(self::NORTH);
+    }
+
+    function it_can_face_east()
+    {
+        $this-&gt;beConstructedWith(self::EAST);
+
+        $this-&gt;get()-&gt;shouldBe(self::EAST);
+    }
+
+    function it_can_face_west()
+    {
+        $this-&gt;beConstructedWith(self::WEST);
+
+        $this-&gt;get()-&gt;shouldBe(self::WEST);
+    }
+
+    function it_can_face_south()
+    {
+        $this-&gt;beConstructedWith(self::SOUTH);
+
+        $this-&gt;get()-&gt;shouldBe(self::SOUTH);
+    }
+
+    function it_cannot_face_anywhere_else()
+    {
+        $this-&gt;beConstructedWith('Somehwere else');
+
+        $this
+            -&gt;shouldThrow(\InvalidArgumentException::class)
+            -&gt;duringInstantiation()
+        ;
+    }
+}
+</code></pre>
+
+<p>Now we can run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>They fail because <code>src/MarsRover/Navigation/Orientation.php</code> doesn't exist,
+so phpspec bootstrapped it for us:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Orientation
+{
+    private $argument;
+
+    public function __construct($argument)
+    {
+        $this-&gt;argument = $argument;
+    }
+
+    public function get()
+    {
+    }
+}
+</code></pre>
+
+<p>We can edit it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Orientation
+{
+    const NORTH = 'north';
+    const EAST = 'east';
+    const WEST = 'west';
+    const SOUTH = 'south';
+
+    const ALLOWED_ORIENTATIONS = [
+        self::NORTH,
+        self::EAST,
+        self::WEST,
+        self::SOUTH,
+    ];
+
+    private $orienation;
+
+    public function __construct($orienation)
+    {
+        if (false === in_array($orienation, self::ALLOWED_ORIENTATIONS, true)) {
+            throw new \InvalidArgumentException(
+                'Orientation must be one of: '
+                .implode(', ', self::ALLOWED_ORIENTATIONS)
+            );
+        }
+        $this-&gt;orienation = $orienation;
+    }
+
+    public function get() : string
+    {
+        return $this-&gt;orienation;
+    }
+}
+</code></pre>
+
+<p>And run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! It's important to note that tests should also be refactored.
+We're going to use <code>Orientation</code> constants in the tests:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class OrientationSpec extends ObjectBehavior
+{
+    function it_can_face_north()
+    {
+        $this-&gt;beConstructedWith(Orientation::NORTH);
+
+        $this-&gt;get()-&gt;shouldBe(Orientation::NORTH);
+    }
+
+    function it_can_face_east()
+    {
+        $this-&gt;beConstructedWith(Orientation::EAST);
+
+        $this-&gt;get()-&gt;shouldBe(Orientation::EAST);
+    }
+
+    function it_can_face_west()
+    {
+        $this-&gt;beConstructedWith(Orientation::WEST);
+
+        $this-&gt;get()-&gt;shouldBe(Orientation::WEST);
+    }
+
+    function it_can_face_south()
+    {
+        $this-&gt;beConstructedWith(Orientation::SOUTH);
+
+        $this-&gt;get()-&gt;shouldBe(Orientation::SOUTH);
+    }
+
+    function it_cannot_face_anywhere_else()
+    {
+        $this-&gt;beConstructedWith('Somehwere else');
+
+        $this
+            -&gt;shouldThrow(\InvalidArgumentException::class)
+            -&gt;duringInstantiation()
+        ;
+    }
+}
+</code></pre>
+
+<p>Running the tests again:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>Still green! We can now update <code>LandRover</code> tests to use <code>Orientation</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LandRoverSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    function it_has_coordinates()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $coordinates = $this-&gt;getCoordinates();
+        $coordinates-&gt;getX()-&gt;shouldBe(self::X);
+        $coordinates-&gt;getY()-&gt;shouldBe(self::Y);
+    }
+
+    function it_has_an_orientation()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $this-&gt;getOrientation()-&gt;get()-&gt;shouldBe(self::ORIENTATION);
+    }
+}
+</code></pre>
+
+<p>We've removed orientation checking from <code>LandRover</code> tests, as we now trust
+<code>Orientation</code> to do the job. Now We can use <code>Orientation</code> in <code>LandRover</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRover
+{
+    private $coordinates;
+    private $orientation;
+
+    public function __construct($x, $y, $orientation)
+    {
+        $this-&gt;coordinates = new Coordinates($x, $y);
+        $this-&gt;orientation = new Orientation($orientation);
+    }
+
+    public function getCoordinates() : Coordinates
+    {
+        return $this-&gt;coordinates;
+    }
+
+    public function getOrientation() : Orientation
+    {
+        return $this-&gt;orientation;
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We can now commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '2: Created Orientation'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Once again we've completed the full TDD cycle: first test, then code and
+finally refactor.</p>
+
+<p>Before we started to extract <code>Coordinates</code> and <code>Orienation</code>, <code>LandRover</code> tests
+were starting to get long and so we didn't bother to go too much into details.
+This refactoring allowed us to get more confidence and add more testing cases.</p>
+
+<p>phpspec has been really helpful by boostraping tests, and then when running the
+tests by bootstraping code: it makes the whole TDD cycle more natural. But
+it also allows us to have runnable self-checking specifications:</p>
+
+<pre><code>vendor/bin/phpspec run --format=pretty
+</code></pre>
+
+<p>This should now output:</p>
+
+<pre><code><br />      MarsRover\Navigation\Coordinates
+
+  12  ✔ has x coordinate
+  22  ✔ cannot have non integer x coordinate
+  34  ✔ has y coordinate
+  44  ✔ cannot have non integer y coordinate
+
+      MarsRover\Navigation\LandRover
+
+  14  ✔ has coordinates
+  27  ✔ has an orientation
+
+      MarsRover\Navigation\Orientation
+
+  10  ✔ can face north
+  17  ✔ can face east
+  24  ✔ can face west
+  31  ✔ can face south
+  38  ✔ cannot face anywhere else
+
+
+3 specs
+11 examples (11 passed)
+12ms
+</code></pre>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article we'll create the actual landing logic, using Event Sourcing.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/07/06/mars-rover-landing-coordinates.html" title="Mars Rover, Landing coordinates">Previous &lt; Mars Rover, Landing coordinates</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>
