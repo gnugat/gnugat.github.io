@@ -127,7 +127,7 @@ cd packages/navigation
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.5",
+        "memio/spec-gen": "^0.6",
         "phpspec/phpspec": "^3.0@beta"
     }
 }
@@ -138,7 +138,7 @@ to get the most of it we'd like to use its <a href="http://memio.github.io/spec-
 extension. To do so we need to create the <code>phpspec.yml.dist</code> file:</p>
 
 <pre><code>extensions:
-  - Memio\SpecGen\MemioSpecGenExtension
+    Memio\SpecGen\MemioSpecGenExtension: ~
 </code></pre>
 
 <blockquote>

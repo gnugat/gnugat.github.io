@@ -99,7 +99,7 @@ Composer needs us to set up the package by creating a `composer.json` file:
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.5",
+        "memio/spec-gen": "^0.6",
         "phpspec/phpspec": "^3.0@beta"
     }
 }
@@ -111,7 +111,7 @@ extension. To do so we need to create the `phpspec.yml.dist` file:
 
 ```
 extensions:
-  - Memio\SpecGen\MemioSpecGenExtension
+    Memio\SpecGen\MemioSpecGenExtension: ~
 ```
 
 > **Note**: For more information about phpspec
