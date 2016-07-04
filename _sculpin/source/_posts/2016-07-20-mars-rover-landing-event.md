@@ -367,6 +367,8 @@ Still green! We can commit our work:
 ```
 git add -A
 git commit -m '2: Created LandRoverHandler'
+git checkout master
+git merge --no-ff 2-landing
 ```
 
 ## Conclusion

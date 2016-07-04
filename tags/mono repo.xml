@@ -3,11 +3,303 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-07-20T08:05:24+01:00</updated>
+    <updated>2016-07-27T07:50:14+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Event Sourcing package]]></title>
+            <link href="https://gnugat.github.io/2016/07/27/mars-rover-event-sourcing-package.html"/>
+            <updated>2016-07-27T00:00:00+01:00</updated>
+            <id>https://gnugat.github.io/2016/07/27/mars-rover-event-sourcing-package.html</id>
+            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to the
+<a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It will allow us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>Up until now, we've implemented the first use case, "Landing a rover on Mars":</p>
+
+<blockquote>
+  <p>Mars Rovers need first to be landed at a given position. A position is
+  composed of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an
+  orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+</blockquote>
+
+<p>In order to do so, we've:</p>
+
+<ul>
+<li>created a <a href="/2016/06/22/mars-rover-initialization.html">navigation package</a></li>
+<li>created <a href="/2016/06/29/mars-rover-landing.html">LandRover for input validation</a></li>
+<li>refactored it by:
+
+<ul>
+<li>extracting <a href="/2016/07/06/mars-rover-landing-coordinates.html">Coordinates</a></li>
+<li>extracting <a href="/2016/07/13/mars-rover-landing-orientation.html">Orientation</a></li>
+</ul></li>
+<li>created <a href="/2016/07/20/mars-rover-landing-event.html">LandRoverHandler for the actual logic</a></li>
+</ul>
+
+<p>In the last article, We wrote some Event Sourcing code:</p>
+
+<ul>
+<li><code>Event</code>, a Data Transfer Object (DTO) that contains the name and the data</li>
+<li><code>AnEventHappened</code>, which is actually an <code>Event</code> factory</li>
+<li><code>EventStore</code>, a service responsible for "logging" <code>Event</code>s</li>
+</ul>
+
+<p>In this article, we're going to extract them from the <code>navigation</code> package and
+put them in their own <code>event-sourcing</code> package.</p>
+
+<h2 id="creating-the-%60event-sourcing%60-package">Creating the <code>event-sourcing</code> package</h2>
+
+<p>We can start by creating the directory:</p>
+
+<pre><code>git checkout -b 3-event-sourcing
+mkdir -p packages/event-sourcing
+cd packages/event-sourcing
+</code></pre>
+
+<p>Composer needs us to set up the package by creating a <code>composer.json</code> file:</p>
+
+<pre><code>{
+    "name": "mars-rover/event-sourcing",
+    "license": "MIT",
+    "type": "library",
+    "description": "Mars Rover - Event Sourcing",
+    "autoload": {
+        "psr-4": { "MarsRover\\EventSourcing\\": "src/MarsRover/EventSourcing" }
+    },
+    "require": {
+        "php": "^7.0"
+    },
+    "require-dev": {
+        "memio/spec-gen": "^0.6",
+        "phpspec/phpspec": "^3.0@beta"
+    }
+}
+</code></pre>
+
+<p>We've decided to use <a href="http://phpspec.net/">phpspec</a> as a test framework, and
+to get the most of it we'd like to use its <a href="http://memio.github.io/spec-gen">SpecGen</a>
+extension. To do so we need to create the <code>phpspec.yml.dist</code> file:</p>
+
+<pre><code>extensions:
+    Memio\SpecGen\MemioSpecGenExtension: ~
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: For more information about phpspec
+  <a href="/2015/08/03/phpspec.html">see this article</a>.</p>
+</blockquote>
+
+<p>Finally, we can configure this package's git by creating a <code>.gitignore</code> file:</p>
+
+<pre><code># Configuration
+/phpspec.yml
+
+# Third Party libraries
+/vendor/
+/composer.lock
+</code></pre>
+
+<p>With this we've finished creating our package. We can run Composer:</p>
+
+<pre><code>composer install --optimize-autoloader
+</code></pre>
+
+<p>That should be enough for a second commit:</p>
+
+<pre><code>git add -A
+git commit -m '3: Created Event Sourcing package'
+</code></pre>
+
+<h2 id="adding-%60event-sourcing%60-to-the-project">Adding <code>event-sourcing</code> to the project</h2>
+
+<p>Let's go back to the project's root:</p>
+
+<pre><code>cd ../../
+</code></pre>
+
+<p>All we need to do is to add a new line in the <code>require</code> section of our
+<code>composer.json</code> file:</p>
+
+<pre><code>{
+    "name": "mars-rover/mars-rover",
+    "license": "MIT",
+    "type": "project",
+    "description": "Mars Rover",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "./packages/*"
+        }
+    ],
+    "require": {
+        "mars-rover/event-sourcing": "*@dev",
+        "mars-rover/navigation": "*@dev",
+        "php": "^7.0"
+    },
+    "require-dev": {
+        "phpspec/phpspec": "^3.0@beta"
+    }
+}
+</code></pre>
+
+<p>Actually, we also need to add a new section in <code>phpspec.yml.dist</code>:</p>
+
+<pre><code>suites:
+    event-sourcing:
+        namespace: 'MarsRover\EventSourcing'
+        src_path: packages/event-sourcing/src
+        spec_path: packages/event-sourcing
+
+    navigation:
+        namespace: 'MarsRover\Navigation'
+        src_path: packages/navigation/src
+        spec_path: packages/navigation
+</code></pre>
+
+<p>And that's it! We are now able to run Composer and then phpspec:</p>
+
+<pre><code>composer update --optimize-autoloader
+vendor/bin/phpspec run
+</code></pre>
+
+<p>That should be enough for a second commit:</p>
+
+<pre><code>git add -A
+git commit -m '3: Added event-sourcing package to main project'
+</code></pre>
+
+<h2 id="event-sourcing-files">Event Sourcing files</h2>
+
+<p>It's now time to move Event Sourcing files from <code>navigation</code> to
+<code>event-sourcing</code>:</p>
+
+<pre><code>cd packages/event-sourcing
+mkdir -p src/MarsRover/EventSourcing
+mv ../navigation/src/MarsRover/Navigation/{EventStore.php,Event.php,AnEventHappened.php} ./src/MarsRover/EventSourcing/
+</code></pre>
+
+<p>We then need to change namespaces:</p>
+
+<pre><code>sed -i 's/Navigation/EventSourcing/g' ./src/MarsRover/EventSourcing/*
+</code></pre>
+
+<p>To continue those namespace changes we'll have to move back to the <code>navigation</code>
+package:</p>
+
+<pre><code>cd ../navigation
+</code></pre>
+
+<p>Then rename the namespaces:</p>
+
+<pre><code>sed -i 's/Navigation\\Event;/EventSourcing\\Event;/g' ./spec/MarsRover/Navigation/*
+sed -i 's/Navigation\\EventStore;/EventSourcing\\EventStore;/g' ./spec/MarsRover/Navigation/*
+sed -i 's/Navigation\\AnEventHappened;/EventSourcing\\AnEventHappened;/g' ./spec/MarsRover/Navigation/*
+</code></pre>
+
+<p>We'll also need to add use statements to
+<code>./src/MarsRover/Navigation/LandRoverHandler.php</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+use MarsRover\EventSourcing\{
+    AnEventHappened,
+    EventStore
+};
+
+class LandRoverHandler
+{
+    private $anEventHappened;
+    private $eventStore;
+
+    public function __construct(
+        AnEventHappened $anEventHappened,
+        EventStore $eventStore
+    ) {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(LandRover $landRover)
+    {
+        $roverLanded = $this-&gt;anEventHappened-&gt;justNow(Events::ROVER_LANDED, [
+            'x' =&gt; $landRover-&gt;getCoordinates()-&gt;getX(),
+            'y' =&gt; $landRover-&gt;getCoordinates()-&gt;getY(),
+            'orientation' =&gt; $landRover-&gt;getOrientation()-&gt;get(),
+        ]);
+        $this-&gt;eventStore-&gt;log($roverLanded);
+    }
+}
+</code></pre>
+
+<p>Since <code>navigation</code> now relies on <code>event-soucring</code> classes, we need to add it in
+<code>composer.json</code>:</p>
+
+<pre><code>{
+    "name": "mars-rover/navigation",
+    "license": "MIT",
+    "type": "library",
+    "description": "Mars Rover - Navigation",
+    "autoload": {
+        "psr-4": { "MarsRover\\Navigation\\": "src/MarsRover/Navigation" }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../*"
+        }
+    ],
+    "require": {
+        "mars-rover/event-sourcing": "*@dev",
+        "php": "^7.0"
+    },
+    "require-dev": {
+        "memio/spec-gen": "^0.6",
+        "phpspec/phpspec": "^3.0@beta"
+    }
+}
+</code></pre>
+
+<p>As we can see, it's quite similar to what we've done in the project's root:
+we've added a <code>repositories</code> section with the path to packages (<code>../</code>) and
+then added <code>mars-rover/event-sourcing</code> to the <code>require</code> section, with the
+version <code>*@dev</code> (any version, including unstable ones).</p>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We can now succesfully commit our new package:</p>
+
+<pre><code>cd ../../
+git add -A
+git commit -m '3: Moved Event Sourcing classes to their own package'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We identified <code>AnEventHappened</code>, <code>Event</code> and <code>EventStore</code> as objects that
+could be in their own package, so we created <code>event-sourcing</code> and moved them
+in it. This also meant we had to add this package to the project's root and to
+navigation.</p>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article, we'll implement <code>AnEventHappened</code> and <code>Event</code>.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Initialization]]></title>
             <link href="https://gnugat.github.io/2016/06/22/mars-rover-initialization.html"/>

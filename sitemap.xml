@@ -2,19 +2,19 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://gnugat.github.io</loc>
-    <lastmod>2016-07-20T08:05:24+01:00</lastmod>
+    <lastmod>2016-07-27T07:50:14+01:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://gnugat.github.io/about</loc>
-    <lastmod>2016-07-20T08:05:24+01:00</lastmod>
+    <lastmod>2016-07-27T07:50:14+01:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
     <url>
-    <loc>https://gnugat.github.io/_posts/.2016-07-20-mars-rover-landing-event.md.swp</loc>
-    <lastmod>2016-07-20T00:00:00+01:00</lastmod>
+    <loc>https://gnugat.github.io/2016/07/27/mars-rover-event-sourcing-package.html</loc>
+    <lastmod>2016-07-27T00:00:00+01:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
