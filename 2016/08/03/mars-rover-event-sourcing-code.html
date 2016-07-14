@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Mars Rover, Event Sourcing code &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/08/03/mars-rover-event-sourcing-code.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Mars Rover, Event Sourcing code
+    <span class="sub-title">03/08/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/mars%20rover%20series">mars rover series</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/TDD">TDD</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/phpspec">phpspec</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/event%20sourcing">event sourcing</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/mono%20repo">mono repo</a>
+                    </nav>
+                </header>
+
+                <p>In this series we're building the software of a Mars Rover, according to the
+<a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It will allow us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>Up until now, we've implemented the first use case, "Landing a rover on Mars":</p>
+
+<blockquote>
+  <p>Mars Rovers need first to be landed at a given position. A position is
+  composed of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an
+  orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+</blockquote>
+
+<p>We've also created an <code>event-sourcing</code> package with the following interfaces:</p>
+
+<ul>
+<li><code>Event</code>, a Data Transfer Object (DTO) that contains the name and the data</li>
+<li><code>AnEventHappened</code>, which is actually an <code>Event</code> factory</li>
+<li><code>EventStore</code>, a service responsible for "logging" <code>Event</code>s</li>
+</ul>
+
+<p>In this article, we're going to implement them.</p>
+
+<h2 id="event">Event</h2>
+
+<p>Let's start by asking <a href="http://phpspec.net/">phpspec</a> to generate the test
+class:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\EventSourcing\Event'
+</code></pre>
+
+<p>It should have generated the following
+<code>spec/MarsRover/EventSourcing/EventSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\EventSourcing;
+
+use MarsRover\EventSourcing\Event;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class EventSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(Event::class);
+    }
+}
+</code></pre>
+
+<p>We're going to start writing test methods that describe what kind of data this
+DTO holds:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\EventSourcing;
+
+use PhpSpec\ObjectBehavior;
+
+class EventSpec extends ObjectBehavior
+{
+    const NAME = 'something_happened';
+    const DATA = [
+        'message' =&gt; 'We are the knights who say Ni!',
+    ];
+
+    function let(\DateTime $receivedAt)
+    {
+        $this-&gt;beConstructedWith(
+            self::NAME,
+            self::DATA,
+            $receivedAt
+        );
+    }
+
+    function it_has_a_name()
+    {
+        $this-&gt;getName()-&gt;shouldBe(self::NAME);
+    }
+
+    function it_has_data()
+    {
+        $this-&gt;getData()-&gt;shouldBe(self::DATA);
+    }
+
+    function it_has_been_received_at_a_date_and_time(\DateTime $receivedAt)
+    {
+        $this-&gt;getReceivedAt()-&gt;shouldBe($receivedAt);
+    }
+}
+</code></pre>
+
+<p>We can now run the tests to bootstrap the class:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>It will overwrite the existing <code>src/MarsRover/EventSourcing/Event.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\EventSourcing;
+
+use DateTimeInterface;
+
+class Event
+{
+    public function __construct($argument1, array $argument2, DateTimeInterface $dateTime)
+    {
+    }
+
+    public function getName()
+    {
+    }
+
+    public function getData()
+    {
+    }
+
+    public function getReceivedAt()
+    {
+    }
+}
+</code></pre>
+
+<p>We can edit it to make the tests pass:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\EventSourcing;
+
+class Event
+{
+    private $name;
+    private $data;
+    private $receivedAt;
+
+    public function __construct(
+        string $name,
+        array $data,
+        \DateTimeInterface $receivedAt
+    ) {
+        $this-&gt;name = $name;
+        $this-&gt;data = $data;
+        $this-&gt;receivedAt = $receivedAt;
+    }
+
+    public function getName() : string
+    {
+        return $this-&gt;name;
+    }
+
+    public function getData() : array
+    {
+        return $this-&gt;data;
+    }
+
+    public function getReceivedAt() : \DateTimeInterface
+    {
+        return $this-&gt;receivedAt;
+    }
+}
+</code></pre>
+
+<p>Let's check if everything is alright:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>And it is! Time to commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '3: Created Event'
+</code></pre>
+
+<h2 id="aneventhappened">AnEventHappened</h2>
+
+<p>The next class to implement is <code>AnEventHappened</code>. Let's create its test:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\EventSourcing\AnEventHappened'
+</code></pre>
+
+<p>It should generate the <code>spec/MarsRover/EventSourcing/AnEventHappenedSpec.php</code>
+file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\EventSourcing;
+
+use MarsRover\EventSourcing\AnEventHappened;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class AnEventHappenedSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(AnEventHappened::class);
+    }
+}
+</code></pre>
+
+<p>We can start describing this factory by writing test methods:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\EventSourcing;
+
+use MarsRover\EventSourcing\Event;
+use PhpSpec\ObjectBehavior;
+
+class AnEventHappenedSpec extends ObjectBehavior
+{
+    const NAME = 'something_happened';
+    const DATA = [
+        'message' =&gt; 'And now for something completly different',
+    ];
+
+    function it_can_create_events()
+    {
+        $this-&gt;justNow(self::NAME, self::DATA)-&gt;shouldHaveType(Event::class);
+    }
+}
+</code></pre>
+
+<p>Running the tests will generate the class:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>It should have overwritten the
+<code>src/MarsRover/EventSourcing/AnEventHappened.php</code> file with:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\EventSourcing;
+
+class AnEventHappened
+{
+    public function justNow($argument1, $argument2)
+    {
+    }
+}
+</code></pre>
+
+<p>We can now complete it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\EventSourcing;
+
+class AnEventHappened
+{
+    public function justNow(string $name, array $data) : Event
+    {
+        return new Event($name, $data, new \DateTime());
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! Time to commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Created AnEventHappened'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We replaced the generated interfaces for <code>AnEventHappened</code> and <code>Event</code> with
+classes, which have been tested.</p>
+
+<p><code>EventStore</code> could log events in a log file, or in a database, or send them as
+messages to a queue to be treated later... For that reason we'll keep the
+interface.</p>
+
+<p>We're going to delay its implementations for later, when the rover will be
+almost done.</p>
+
+<p>If we run the tests from the project's root, we'll see that it runs tests for
+both <code>navigation</code> and <code>event-sourcing</code> in one go. This is one advantage of
+MonoRepo: it makes it easy to make sure that changes in a package don't break
+the other that depend on it.</p>
+
+<p>We can now merge our branch:</p>
+
+<pre><code>cd ../../
+git checkout master
+git merge --no-ff 3-event-sourcing
+</code></pre>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article we'll start developing the second use case: Driving the
+rover.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/07/27/mars-rover-event-sourcing-package.html" title="Mars Rover, Event Sourcing package">Previous &lt; Mars Rover, Event Sourcing package</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>
