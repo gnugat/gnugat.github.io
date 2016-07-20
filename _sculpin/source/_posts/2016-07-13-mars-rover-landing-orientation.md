@@ -182,22 +182,22 @@ class Orientation
         self::SOUTH,
     ];
 
-    private $orienation;
+    private $orientation;
 
-    public function __construct($orienation)
+    public function __construct($orientation)
     {
-        if (false === in_array($orienation, self::ALLOWED_ORIENTATIONS, true)) {
+        if (false === in_array($orientation, self::ALLOWED_ORIENTATIONS, true)) {
             throw new \InvalidArgumentException(
                 'Orientation must be one of: '
                 .implode(', ', self::ALLOWED_ORIENTATIONS)
             );
         }
-        $this->orienation = $orienation;
+        $this->orientation = $orientation;
     }
 
     public function get() : string
     {
-        return $this->orienation;
+        return $this->orientation;
     }
 }
 ```
@@ -358,7 +358,7 @@ git commit -m '2: Created Orientation'
 Once again we've completed the full TDD cycle: first test, then code and
 finally refactor.
 
-Before we started to extract `Coordinates` and `Orienation`, `LandRover` tests
+Before we started to extract `Coordinates` and `orientation`, `LandRover` tests
 were starting to get long and so we didn't bother to go too much into details.
 This refactoring allowed us to get more confidence and add more testing cases.
 

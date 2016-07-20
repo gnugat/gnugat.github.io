@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-07-13T08:00:15+01:00</updated>
+    <updated>2016-07-20T07:55:12+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -187,22 +187,22 @@ class Orientation
         self::SOUTH,
     ];
 
-    private $orienation;
+    private $orientation;
 
-    public function __construct($orienation)
+    public function __construct($orientation)
     {
-        if (false === in_array($orienation, self::ALLOWED_ORIENTATIONS, true)) {
+        if (false === in_array($orientation, self::ALLOWED_ORIENTATIONS, true)) {
             throw new \InvalidArgumentException(
                 'Orientation must be one of: '
                 .implode(', ', self::ALLOWED_ORIENTATIONS)
             );
         }
-        $this-&gt;orienation = $orienation;
+        $this-&gt;orientation = $orientation;
     }
 
     public function get() : string
     {
-        return $this-&gt;orienation;
+        return $this-&gt;orientation;
     }
 }
 </code></pre>
@@ -356,7 +356,7 @@ git commit -m '2: Created Orientation'
 <p>Once again we've completed the full TDD cycle: first test, then code and
 finally refactor.</p>
 
-<p>Before we started to extract <code>Coordinates</code> and <code>Orienation</code>, <code>LandRover</code> tests
+<p>Before we started to extract <code>Coordinates</code> and <code>orientation</code>, <code>LandRover</code> tests
 were starting to get long and so we didn't bother to go too much into details.
 This refactoring allowed us to get more confidence and add more testing cases.</p>
 
