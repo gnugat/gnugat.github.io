@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-08-03T07:58:13+01:00</updated>
+    <updated>2016-08-10T07:57:08+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -687,8 +687,7 @@ class LandRoverHandlerSpec extends ObjectBehavior
 all about recording significant actions. Landing a rover seems significant
 enough, so that's what <code>LandroverHandler</code> should do:</p>
 
-<pre><code class="php">We can now start to edit it.
-&lt;?php
+<pre><code class="php">&lt;?php
 
 namespace spec\MarsRover\Navigation;
 

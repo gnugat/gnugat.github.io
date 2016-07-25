@@ -57,7 +57,7 @@ We're going to bootstrap the test class for `LandRover`, using
 vendor/bin/phpspec describe 'MarsRover\Navigation\LandRover'
 ```
 
-This should generate this `spec\MarsRover/Navigation/LandRoverSpec.php` class:
+This should generate this `spec/MarsRover/Navigation/LandRoverSpec.php` class:
 
 ```php
 <?php
