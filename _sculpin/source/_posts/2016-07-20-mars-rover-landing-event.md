@@ -77,7 +77,6 @@ all about recording significant actions. Landing a rover seems significant
 enough, so that's what `LandroverHandler` should do:
 
 ```php
-We can now start to edit it.
 <?php
 
 namespace spec\MarsRover\Navigation;
