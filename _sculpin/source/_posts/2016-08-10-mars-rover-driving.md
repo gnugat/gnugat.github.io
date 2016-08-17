@@ -19,7 +19,7 @@ It allows us to practice the followings:
 We just finished developing the first use case, so we can now get cracking on
 the second one, Driving the rover:
 
-> Once a rover has been landed on Marsm it is possible to drive them, using
+> Once a rover has been landed on Mars it is possible to drive them, using
 > instructions such as `move_forward` (keeps orientation, but moves along the
 > `x` or `y` axis) or `turn_left` / `turn_right` (keeps the same coordinates,
 > but changes the orientation).
@@ -244,5 +244,5 @@ validation on the input.
 
 ## What's next
 
-In the next article, we'll proceed to the third step of TDD: rafactoring
+In the next article, we'll proceed to the third step of TDD: refactoring
 `DriveRover` by extracting `instruction` in its own class.

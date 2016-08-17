@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Mars Rover, Driving instruction &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/08/17/mars-rover-driving-instruction.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Mars Rover, Driving instruction
+    <span class="sub-title">17/08/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/mars%20rover%20series">mars rover series</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/TDD">TDD</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/phpspec">phpspec</a>
+                    </nav>
+                </header>
+
+                <p>In this series we're building the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It allows us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>We've already developed the first use case about landing the rover on mars,
+and we've started the second one about driving it:</p>
+
+<blockquote>
+  <p>Once a rover has been landed on Mars it is possible to drive them, using
+  instructions such as <code>move_forward</code> (keeps orientation, but moves along the
+  <code>x</code> or <code>y</code> axis) or <code>turn_left</code> / <code>turn_right</code> (keeps the same coordinates,
+  but changes the orientation).</p>
+</blockquote>
+
+<p>In this article we're going to refactor <code>DriveRover</code>:</p>
+
+<pre><code>cd packages/navigation
+git checkout -b 4-driving
+</code></pre>
+
+<h2 id="responsibilities">Responsibilities</h2>
+
+<p>By having a look at <code>DriveRover</code>, we can guess that it has 1 reason to change:
+the list of instruction might grow bigger.</p>
+
+<p>This hints toward one new class: <code>Instruction</code>. Let's get cracking!</p>
+
+<h2 id="instruction">Instruction</h2>
+
+<p>First let's bootstrap the test class using <a href="http://phpspec.net">phpspec</a>:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\Instruction'
+</code></pre>
+
+<p>This will create the following <code>spec/MarsRover/Navigation/InstructionSpec.php</code>
+file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Instruction;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class InstructionSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(Instruction::class);
+    }
+}
+</code></pre>
+
+<p>We can edit it reusing what we've done in <code>DriveRover</code> test class, only with
+more information about the possible instruction:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use PhpSpec\ObjectBehavior;
+
+class InstructionSpec extends ObjectBehavior
+{
+    const MOVE_FORWARD = 'move_forward';
+    const TURN_LEFT = 'turn_left';
+    const TURN_RIGHT = 'turn_right';
+
+    const INVALID_INSTRUCTION = 'wake_up_polly_parrot';
+
+    function it_can_be_move_forward()
+    {
+        $this-&gt;beConstructedWith(self::MOVE_FORWARD);
+
+        $this-&gt;get()-&gt;shouldBe(self::MOVE_FORWARD);
+    }
+
+    function it_can_be_turn_left()
+    {
+        $this-&gt;beConstructedWith(self::TURN_LEFT);
+
+        $this-&gt;get()-&gt;shouldBe(self::TURN_LEFT);
+    }
+
+    function it_can_be_turn_right()
+    {
+        $this-&gt;beConstructedWith(self::TURN_RIGHT);
+
+        $this-&gt;get()-&gt;shouldBe(self::TURN_RIGHT);
+    }
+
+    function it_cannot_be_anything_else()
+    {
+        $this-&gt;beConstructedWith(self::INVALID_INSTRUCTION);
+
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
+    }
+}
+</code></pre>
+
+<p>Since this test is dedicated to instructions, we feel more free than in
+<code>DriveRover</code> to describe all the possible instructions. If we run the tests
+now, phpspec will bootstrap the <code>Instruction</code> class for us:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>Indeed, it created the <code>src/MarsRover/Navigation/Instruction.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Instruction
+{
+    public function __construct($argument)
+    {
+    }
+
+    public function get()
+    {
+    }
+}
+</code></pre>
+
+<p>All that's left for us to do is complete it, we can reuse the code in
+<code>DriveRover</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Instruction
+{
+    const MOVE_FORWARD = 'move_forward';
+    const TURN_LEFT = 'turn_left';
+    const TURN_RIGHT = 'turn_right';
+
+    const VALID_INSTRUCTIONS = [
+        self::MOVE_FORWARD,
+        self::TURN_LEFT,
+        self::TURN_RIGHT,
+    ];
+
+    private $instruction;
+
+    public function __construct($instruction)
+    {
+        if (false === in_array($instruction, self::VALID_INSTRUCTIONS, true)) {
+            throw new \InvalidArgumentException(
+                'Instruction should be one of: '
+                .implode(', ', self::VALID_INSTRUCTIONS)
+            );
+        }
+        $this-&gt;instruction = $instruction;
+    }
+
+    public function get() : string
+    {
+        return $this-&gt;instruction;
+    }
+}
+</code></pre>
+
+<p>We can now run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! <code>Instruction</code> is ready to be used in <code>DriveRover</code>, so let's update
+its test:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Instruction;
+use PhpSpec\ObjectBehavior;
+
+class DriveRoverSpec extends ObjectBehavior
+{
+    const DRIVING_INSTRUCTION = Instruction::MOVE_FORWARD;
+
+    function it_has_a_driving_instruction()
+    {
+        $this-&gt;beConstructedWith(
+            self::DRIVING_INSTRUCTION
+        );
+
+        $this-&gt;getInstruction()-&gt;get()-&gt;shouldBe(self::DRIVING_INSTRUCTION);
+    }
+}
+</code></pre>
+
+<p>We no longer need to check for invalid instructions as we trust <code>Instruction</code>
+to take care of it for us. Now let's update its code:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class DriveRover
+{
+    private $instruction;
+
+    public function __construct($instruction)
+    {
+        $this-&gt;instruction = new Instruction($instruction);
+    }
+
+    public function getInstruction() : string
+    {
+        return $this-&gt;instruction;
+    }
+}
+</code></pre>
+
+<p>And that should make our tests pass:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We can refactor <code>Instruction</code> test class a bit, by reusing
+<code>Instruction</code> constants:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Instruction;
+use PhpSpec\ObjectBehavior;
+
+class InstructionSpec extends ObjectBehavior
+{
+    const MOVE_FORWARD = Instruction::MOVE_FORWARD;
+    const TURN_LEFT = Instruction::TURN_LEFT;
+    const TURN_RIGHT = Instruction::TURN_RIGHT;
+
+    const INVALID_INSTRUCTION = 'wake_up_polly_parrot';
+
+    function it_can_be_move_forward()
+    {
+        $this-&gt;beConstructedWith(self::MOVE_FORWARD);
+
+        $this-&gt;get()-&gt;shouldBe(self::MOVE_FORWARD);
+    }
+
+    function it_can_be_turn_left()
+    {
+        $this-&gt;beConstructedWith(self::TURN_LEFT);
+
+        $this-&gt;get()-&gt;shouldBe(self::TURN_LEFT);
+    }
+
+    function it_can_be_turn_right()
+    {
+        $this-&gt;beConstructedWith(self::TURN_RIGHT);
+
+        $this-&gt;get()-&gt;shouldBe(self::TURN_RIGHT);
+    }
+
+    function it_cannot_be_anything_else()
+    {
+        $this-&gt;beConstructedWith(self::INVALID_INSTRUCTION);
+
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
+    }
+}
+</code></pre>
+
+<p>Let's run the tests one last time:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All <em>grin</em> ;) . That's enough for us to commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '4: Created Instruction'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We've refactored <code>DriveRover</code> by extracting an <code>Instruction</code> value object. It
+allowed us to write more tests to describe all the possible values.</p>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article, we'll write the actual driving logic.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/08/10/mars-rover-driving.html" title="Mars Rover, Driving">Previous &lt; Mars Rover, Driving</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>
