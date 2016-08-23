@@ -106,7 +106,7 @@ class LandRoverHandlerSpec extends ObjectBehavior
         Event $roverLanded,
         EventStore $eventStore
     ) {
-        $this->beConstructedwith($anEventHappened, $eventStore);
+        $this->beConstructedWith($anEventHappened, $eventStore);
         $landRover = new LandRover(
             self::X,
             self::Y,
@@ -117,7 +117,7 @@ class LandRoverHandlerSpec extends ObjectBehavior
             self::EVENT_NAME,
             self::EVENT_DATA
         )->willReturn($roverLanded);
-        $eventStore->log($event)->shouldBeCalled();
+        $eventStore->log($roverLanded)->shouldBeCalled();
 
         $this->handle($landRover);
     }
@@ -337,7 +337,7 @@ class LandRoverHandlerSpec extends ObjectBehavior
         Event $roverLanded,
         EventStore $eventStore
     ) {
-        $this->beConstructedwith($anEventHappened, $eventStore);
+        $this->beConstructedWith($anEventHappened, $eventStore);
         $landRover = new LandRover(
             self::X,
             self::Y,
