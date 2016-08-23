@@ -233,7 +233,7 @@ class DriveRover
         $this->instruction = new Instruction($instruction);
     }
 
-    public function getInstruction() : string
+    public function getInstruction() : Instruction
     {
         return $this->instruction;
     }
