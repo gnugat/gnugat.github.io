@@ -252,7 +252,10 @@ Since `navigation` now relies on `event-soucring` classes, we need to add it in
     "type": "library",
     "description": "Mars Rover - Navigation",
     "autoload": {
-        "psr-4": { "MarsRover\\Navigation\\": "src/MarsRover/Navigation" }
+        "psr-4": {
+            "MarsRover\\EventSourcing\\": "src/MarsRover/EventSourcing",
+            "MarsRover\\Navigation\\": "src/MarsRover/Navigation"
+        }
     },
     "repositories": [
         {
