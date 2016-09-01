@@ -44,7 +44,7 @@ git checkout 2-landing
 
 Following our [Command Bus twist](/2016/06/29/mars-rover-landing.html#twisting-command-bus),
 we're now going to create the `LandRoverHandler` class that's going to take
-care of the actual logic associated to the `Landrover` use case. We're starting
+care of the actual logic associated to the `LandRover` use case. We're starting
 by bootstraping the test class:
 
 ```
@@ -74,7 +74,7 @@ class LandRoverHandlerSpec extends ObjectBehavior
 
 [Event Sourcing](/2016/06/15/mars-rover-introduction.html#event-sourcing) is
 all about recording significant actions. Landing a rover seems significant
-enough, so that's what `LandroverHandler` should do:
+enough, so that's what `LandRoverHandler` should do:
 
 ```php
 <?php
@@ -186,7 +186,7 @@ interface EventStore
 
 As we can see, when we reference a non existence class, phpspec generates an
 interface for us. It also generates methods, if we've described method calls
-in out test.
+in our test.
 
 For now we'll leave them like this, and have a look at the generated
 `src/MarsRover/Navigation/LandRoverHandler.php` file:
