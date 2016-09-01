@@ -33,7 +33,7 @@ In order to do so, we've:
     * extracting [Orientation](/2016/07/13/mars-rover-landing-orientation.html)
 * created [LandRoverHandler for the actual logic](/2016/07/20/mars-rover-landing-event.html)
 
-In the last article, We wrote some Event Sourcing code:
+In the last article, we wrote some Event Sourcing code:
 
 * `Event`, a Data Transfer Object (DTO) that contains the name and the data
 * `AnEventHappened`, which is actually an `Event` factory
@@ -242,7 +242,7 @@ class LandRoverHandler
 }
 ```
 
-Since `navigation` now relies on `event-soucring` classes, we need to add it in
+Since `navigation` now relies on `event-sourcing` classes, we need to add it in
 `composer.json`:
 
 ```
