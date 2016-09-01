@@ -358,7 +358,7 @@ git commit -m '2: Created Orientation'
 Once again we've completed the full TDD cycle: first test, then code and
 finally refactor.
 
-Before we started to extract `Coordinates` and `orientation`, `LandRover` tests
+Before we started to extract `Coordinates` and `Orientation`, `LandRover` tests
 were starting to get long and so we didn't bother to go too much into details.
 This refactoring allowed us to get more confidence and add more testing cases.
 
