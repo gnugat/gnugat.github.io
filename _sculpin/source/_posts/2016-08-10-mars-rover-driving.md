@@ -235,7 +235,7 @@ git commit -m '4: Created DriveRover'
 ## Conclusion
 
 We've followed again the TDD methodology: write the test, then the code. We
-took care of decribing first the happy scenario and then unhappy scenarios to
+took care of describing first the happy scenario and then unhappy scenarios to
 cover all the cases.
 
 We've also used the same twist on the Command Bus pattern: we created a Command
@@ -245,4 +245,4 @@ validation on the input.
 ## What's next
 
 In the next article, we'll proceed to the third step of TDD: refactoring
-`DriveRover` by extracting `instruction` in its own class.
+`DriveRover` by extracting `Instruction` in its own class.
