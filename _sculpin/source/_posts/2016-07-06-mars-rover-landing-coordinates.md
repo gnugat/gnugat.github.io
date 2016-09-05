@@ -41,7 +41,7 @@ By having a look at `LandRover`, we can guess that it has 2 reasons to change:
 * orientation might become an angular degree, or have a vertical orientation
 
 This hints toward two new classes, extracted from `LandRover`: `Coordinates`
-and `Orientation`. In this article we'll take care of `Cooridnates`.
+and `Orientation`. In this article we'll take care of `Coordinates`.
 
 ## Coordinates
 
