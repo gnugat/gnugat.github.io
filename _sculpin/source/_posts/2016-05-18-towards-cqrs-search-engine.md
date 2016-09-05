@@ -155,7 +155,7 @@ class Criteria
     ) {
         $this->resourceName = $resourceName;
         $this->filtering = $filtering;
-        $this->ordering = $orderings;
+        $this->ordering = $ordering;
         $this->paginating = $paginating;
     }
 
@@ -218,7 +218,7 @@ The `Ordering` value object takes care of the `sort` parameter (e.g. `-name`):
 
 namespace AppBundle\Search\Criteria;
 
-class Orderings
+class Ordering
 {
     const DEFAULT_FIELD = 'name';
     const DEFAULT_DIRECTION = 'ASC';
