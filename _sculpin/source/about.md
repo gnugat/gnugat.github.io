@@ -5,22 +5,51 @@ title: About
 
 Hi there!
 
-I'm Loïc (it's pronounced low-ic), an enthusiast developer constantly curating content
-(twitter, blogs, etc) for better practices and tools.
-I'm concerned with code quality and I work with agile methodologies (lately Scrum and spec BDD).
+I'm Loïc (it's pronounced "low-ic"), an enthusiast developer constantly curating
+content (twitter, blogs, etc) for better practices and tools.
+
+> I wrote about the methodology and tools I use to keep up:
+> [Read it Later](/2014/11/21/read-it-later.html).
+> You can find most of the Twitter accounts and blogs I follow
+> [here](https://github.com/gnugat/knowledge/blob/master/read-it-later.md),
+> as well as the list of links I've found interesting every year
+> [here](/tags/radar).
+
+I'm concerned with code quality and I work with agile methodologies
+(lately Scrum and spec BDD).
+
+> I also wrote about how I develop: you can check the
+> [Mars Rover series](/tags/mars-rover)
 
 Everything started in 2004 when I decided to learn on my own PHP and Python.
-This then led me to a master degree at EPITECH University (2008-2013) where traditional
-lectures don't exist: you must work on multiple projects in parallel in many teams,
-and the only libraries you're allowed to use are the ones you create (C and C++).
+This then led me to a master degree at
+[EPITECH University](http://www.epitech.eu/) (2008-2013) where traditional
+lectures don't exist: you learn by developing multiple projects (in parallel
+and in many teams), and the only libraries you're allowed to use are the
+ones you created yourself (C and C++).
 
-I've mainly worked in web agencies (since 2011), with some frameworks: CakePHP, home made, Drupal 7
-and last but not least Symfony.
+I've mainly worked in web agencies (since 2011), with some frameworks: CakePHP,
+home made, Drupal 7 and last but not least Symfony.
 This last one is my favourite as it allows the creation of decoupled code
 (which means less risk of legacy / technical debt).
 
-On my free time, I spend between 10 to 15 hours a week on pet projects in order to learn new things.
-I also to contribute to Free and Open Source projects, as I've always believed in this initiative.
+> I wrote a tutorial to learn Symfony:
+> [The Ultimate Developer Guide To Symfony](/tags/ultimate%20symfony%20series).
+
+I'm currently a Lead Developer at [Constant Commerce](http://constant.co/),
+a start up based in London.
+
+> Our customers are mainly brands (e.g. Unilever) and media websites
+> (e.g. [BBC Good Food](http://www.bbcgoodfood.com/) in the UK,
+> [Foodiful](http://foodiful.com.au/) in Australia): we make their content
+> (items, recipes, articles, videos, etc) shoppable in one click via your
+> favourite retailer like Sainsbury (UK), Woolworth (Australia),
+> Stop & Shop (US), etc.
+
+On my free time, I spend between 10 to 15 hours a week on pet projects in order
+to learn new things.
+I also to contribute to Free and Open Source projects, as I've always believed
+in this initiative.
 
 > **Hint**: this blog might talk a lot about design patterns/principles, Symfony and tests.
 
