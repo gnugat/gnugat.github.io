@@ -200,7 +200,7 @@ class Criteria
     ) {
         $this-&gt;resourceName = $resourceName;
         $this-&gt;filtering = $filtering;
-        $this-&gt;ordering = $orderings;
+        $this-&gt;ordering = $ordering;
         $this-&gt;paginating = $paginating;
     }
 
@@ -261,7 +261,7 @@ class Paginating
 
 namespace AppBundle\Search\Criteria;
 
-class Orderings
+class Ordering
 {
     const DEFAULT_FIELD = 'name';
     const DEFAULT_DIRECTION = 'ASC';

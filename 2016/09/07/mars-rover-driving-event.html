@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Mars Rover, Driving event &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/09/07/mars-rover-driving-event.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Mars Rover, Driving event
+    <span class="sub-title">07/09/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/mars%20rover%20series">mars rover series</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/TDD">TDD</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/phpspec">phpspec</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/event%20sourcing">event sourcing</a>
+                    </nav>
+                </header>
+
+                <p>In this series we're building the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It allows us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>We've already developed the first use case about landing the rover on mars,
+and we've started the second one about driving it:</p>
+
+<blockquote>
+  <p>Once a rover has been landed on Mars it is possible to drive them, using
+  instructions such as <code>move_forward</code> (keeps orientation, but moves along the
+  <code>x</code> or <code>y</code> axis) or <code>turn_left</code> / <code>turn_right</code> (keeps the same coordinates,
+  but changes the orientation).</p>
+</blockquote>
+
+<p>In this article we're going to create the actual driving logic, using
+Event Sourcing:</p>
+
+<pre><code>cd packages/navigation
+git checkout 4-driving
+</code></pre>
+
+<h2 id="driveroverhandler">DriveRoverHandler</h2>
+
+<p>Following our <a href="/2016/06/29/mars-rover-landing.html#twisting-command-bus">Command Bus twist</a>,
+we're now going to create the <code>DriveRoverHandler</code> class that's going to take
+care of the actual logic associated to the <code>DriveRover</code> use case. We're
+starting by bootstraping the test class:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\DriveRoverHandler'
+</code></pre>
+
+<p>This should create the following
+<code>spec/MarsRover/Navigation/DriveRoverHandlerSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\DriveRoverHandler;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class DriveRoverHandlerSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(DriveRoverHandler::class);
+    }
+}
+</code></pre>
+
+<p><a href="/2016/06/15/mars-rover-introduction.html#event-sourcing">Event Sourcing</a> is
+all about recording significant actions. Driving a rover seems significant
+enough, so that's what <code>DriveRoverHandler</code> should do:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\EventSourcing\AnEventHappened;
+use MarsRover\EventSourcing\Event;
+use MarsRover\EventSourcing\EventStore;
+use MarsRover\Navigation\DriveRover;
+use MarsRover\Navigation\Instruction;
+use PhpSpec\ObjectBehavior;
+
+class DriveRoverHandlerSpec extends ObjectBehavior
+{
+    const DRIVING_INSTRUCTION = Instruction::MOVE_FORWARD;
+
+    const EVENT_NAME = 'rover_driven';
+    const EVENT_DATA = [
+        'instruction' =&gt; self::DRIVING_INSTRUCTION,
+    ];
+
+    function it_drives_a_rover_with_given_instruction(
+        AnEventHappened $anEventHappened,
+        Event $roverDriven,
+        EventStore $eventStore
+    ) {
+        $this-&gt;beConstructedWith($anEventHappened, $eventStore);
+        $driveRover = new DriveRover(
+            self::DRIVING_INSTRUCTION
+        );
+
+        $anEventHappened-&gt;justNow(
+            self::EVENT_NAME,
+            self::EVENT_DATA
+        )-&gt;willReturn($roverDriven);
+        $eventStore-&gt;log($roverDriven)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($driveRover);
+    }
+}
+</code></pre>
+
+<p>It's very similar to what we've done for <code>LandRoverHandler</code>, all we've done
+is create and event specific to driving the rover with its instructions
+and "logged" it in an `EventStore. Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>They fail because <code>DriveRoverHandler</code> doesn't exists, but phpspec bootstrapped
+it for us in the <code>src/MarsRover/Navigation/DriveRoverHandler.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+use MarsRover\EventSourcing\AnEventHappened;
+use MarsRover\EventSourcing\EventStore;
+
+class DriveRoverHandler
+{
+    private $anEventHappened;
+
+    private $eventStore;
+
+    public function __construct(AnEventHappened $anEventHappened, EventStore $eventStore)
+    {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(DriveRover $driveRover)
+    {
+    }
+}
+</code></pre>
+
+<p>Thanks to the <a href="https://github.com/memio/spec-gen">SpecGen extension</a>, phpspec
+was able to detect Dependency Injection, and bootstrapped a constructor with
+an attribute initialization for us. How nice!</p>
+
+<p>We'll just need to complete the <code>handle</code> method:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+use MarsRover\EventSourcing\{
+    AnEventHappened,
+    EventStore
+};
+
+class DriveRoverHandler
+{
+    const EVENT_NAME = 'rover_driven';
+
+    private $anEventHappened;
+    private $eventStore;
+
+    public function __construct(
+        AnEventHappened $anEventHappened,
+        EventStore $eventStore
+    ) {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(DriveRover $driveRover)
+    {
+        $roverDriven = $this-&gt;anEventHappened-&gt;justNow(self::EVENT_NAME, [
+            'instruction' =&gt; $driveRover-&gt;getInstruction()-&gt;get(),
+        ]);
+        $this-&gt;eventStore-&gt;log($roverDriven);
+    }
+}
+</code></pre>
+
+<p>Overall, the code looks very similar to the test. Let's run them again:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We're going to do a quick refactoring to move the event name in
+the <code>src/MarsRover/Navigation/Events.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Events
+{
+    const ROVER_LANDED = 'rover_landed';
+    const ROVER_DRIVEN = 'rover_driven';
+}
+</code></pre>
+
+<p>Then use it in the code:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+use MarsRover\EventSourcing\{
+    AnEventHappened,
+    EventStore
+};
+
+class DriveRoverHandler
+{
+    private $anEventHappened;
+    private $eventStore;
+
+    public function __construct(
+        AnEventHappened $anEventHappened,
+        EventStore $eventStore
+    ) {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(DriveRover $driveRover)
+    {
+        $roverDriven = $this-&gt;anEventHappened-&gt;justNow(Events::ROVER_DRIVEN, [
+            'instruction' =&gt; $driveRover-&gt;getInstruction()-&gt;get(),
+        ]);
+        $this-&gt;eventStore-&gt;log($roverDriven);
+    }
+}
+</code></pre>
+
+<p>and finally in the test:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\EventSourcing\AnEventHappened;
+use MarsRover\EventSourcing\Event;
+use MarsRover\EventSourcing\EventStore;
+use MarsRover\Navigation\DriveRover;
+use MarsRover\Navigation\Events;
+use MarsRover\Navigation\Instruction;
+use PhpSpec\ObjectBehavior;
+
+class DriveRoverHandlerSpec extends ObjectBehavior
+{
+    const DRIVING_INSTRUCTION = Instruction::MOVE_FORWARD;
+
+    const EVENT_NAME = Events::ROVER_DRIVEN;
+    const EVENT_DATA = [
+        'instruction' =&gt; self::DRIVING_INSTRUCTION,
+    ];
+
+    function it_drives_a_rover_with_given_instruction(
+        AnEventHappened $anEventHappened,
+        Event $roverDriven,
+        EventStore $eventStore
+    ) {
+        $this-&gt;beConstructedWith($anEventHappened, $eventStore);
+        $driveRover = new DriveRover(
+            self::DRIVING_INSTRUCTION
+        );
+
+        $anEventHappened-&gt;justNow(
+            self::EVENT_NAME,
+            self::EVENT_DATA
+        )-&gt;willReturn($roverDriven);
+        $eventStore-&gt;log($roverDriven)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($driveRover);
+    }
+}
+</code></pre>
+
+<p>We can run the tests one last time:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>Still green! We can commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '4: Created DriveRoverHandler'
+git checkout master
+git merge --no-ff 4-driving
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>With Event Sourcing, the logic associated to our "Driving a Rover on Mars" use
+case is quite simple: we just record it as an event.</p>
+
+<h2 id="what%27s-next%3F">What's next?</h2>
+
+<p>In the next article, we'll create a new package to take care of the last use
+case: "Requesting the Rover's location".</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/08/17/mars-rover-driving-instruction.html" title="Mars Rover, Driving instruction">Previous &lt; Mars Rover, Driving instruction</a>
+                                        <a class="button six columns" href="https://gnugat.github.io/_posts/.2016-09-07-mars-rover-driving-event.md.swp" title="">Next &gt; </a>
+                    </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

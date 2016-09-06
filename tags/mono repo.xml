@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-08-17T10:33:49+01:00</updated>
+    <updated>2016-09-07T09:09:01+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -359,7 +359,7 @@ It will allow us to practice the followings:</p>
 <li>created <a href="/2016/07/20/mars-rover-landing-event.html">LandRoverHandler for the actual logic</a></li>
 </ul>
 
-<p>In the last article, We wrote some Event Sourcing code:</p>
+<p>In the last article, we wrote some Event Sourcing code:</p>
 
 <ul>
 <li><code>Event</code>, a Data Transfer Object (DTO) that contains the name and the data</li>
@@ -556,7 +556,7 @@ class LandRoverHandler
 }
 </code></pre>
 
-<p>Since <code>navigation</code> now relies on <code>event-soucring</code> classes, we need to add it in
+<p>Since <code>navigation</code> now relies on <code>event-sourcing</code> classes, we need to add it in
 <code>composer.json</code>:</p>
 
 <pre><code>{

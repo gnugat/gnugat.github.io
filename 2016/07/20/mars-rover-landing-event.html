@@ -78,7 +78,7 @@ git checkout 2-landing
 
 <p>Following our <a href="/2016/06/29/mars-rover-landing.html#twisting-command-bus">Command Bus twist</a>,
 we're now going to create the <code>LandRoverHandler</code> class that's going to take
-care of the actual logic associated to the <code>Landrover</code> use case. We're starting
+care of the actual logic associated to the <code>LandRover</code> use case. We're starting
 by bootstraping the test class:</p>
 
 <pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\LandRoverHandler'
@@ -106,7 +106,7 @@ class LandRoverHandlerSpec extends ObjectBehavior
 
 <p><a href="/2016/06/15/mars-rover-introduction.html#event-sourcing">Event Sourcing</a> is
 all about recording significant actions. Landing a rover seems significant
-enough, so that's what <code>LandroverHandler</code> should do:</p>
+enough, so that's what <code>LandRoverHandler</code> should do:</p>
 
 <pre><code class="php">&lt;?php
 
@@ -137,7 +137,7 @@ class LandRoverHandlerSpec extends ObjectBehavior
         Event $roverLanded,
         EventStore $eventStore
     ) {
-        $this-&gt;beConstructedwith($anEventHappened, $eventStore);
+        $this-&gt;beConstructedWith($anEventHappened, $eventStore);
         $landRover = new LandRover(
             self::X,
             self::Y,
@@ -148,7 +148,7 @@ class LandRoverHandlerSpec extends ObjectBehavior
             self::EVENT_NAME,
             self::EVENT_DATA
         )-&gt;willReturn($roverLanded);
-        $eventStore-&gt;log($event)-&gt;shouldBeCalled();
+        $eventStore-&gt;log($roverLanded)-&gt;shouldBeCalled();
 
         $this-&gt;handle($landRover);
     }
@@ -215,7 +215,7 @@ interface EventStore
 
 <p>As we can see, when we reference a non existence class, phpspec generates an
 interface for us. It also generates methods, if we've described method calls
-in out test.</p>
+in our test.</p>
 
 <p>For now we'll leave them like this, and have a look at the generated
 <code>src/MarsRover/Navigation/LandRoverHandler.php</code> file:</p>
@@ -360,7 +360,7 @@ class LandRoverHandlerSpec extends ObjectBehavior
         Event $roverLanded,
         EventStore $eventStore
     ) {
-        $this-&gt;beConstructedwith($anEventHappened, $eventStore);
+        $this-&gt;beConstructedWith($anEventHappened, $eventStore);
         $landRover = new LandRover(
             self::X,
             self::Y,

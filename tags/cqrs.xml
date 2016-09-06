@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-08-17T10:33:49+01:00</updated>
+    <updated>2016-09-07T09:09:01+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -389,7 +389,7 @@ class Criteria
     ) {
         $this-&gt;resourceName = $resourceName;
         $this-&gt;filtering = $filtering;
-        $this-&gt;ordering = $orderings;
+        $this-&gt;ordering = $ordering;
         $this-&gt;paginating = $paginating;
     }
 
@@ -450,7 +450,7 @@ class Paginating
 
 namespace AppBundle\Search\Criteria;
 
-class Orderings
+class Ordering
 {
     const DEFAULT_FIELD = 'name';
     const DEFAULT_DIRECTION = 'ASC';
