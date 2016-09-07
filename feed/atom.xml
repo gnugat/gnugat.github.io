@@ -3,18 +3,11 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-09-07T09:09:01+01:00</updated>
+    <updated>2016-09-07T10:04:02+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
-            <entry>
-            <title type="html"><![CDATA[]]></title>
-            <link href="https://gnugat.github.io/_posts/.2016-09-07-mars-rover-driving-event.md.swp"/>
-            <updated>2016-09-07T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/_posts/.2016-09-07-mars-rover-driving-event.md.swp</id>
-            <content type="html"><![CDATA[]]></content>
-        </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Driving event]]></title>
             <link href="https://gnugat.github.io/2016/09/07/mars-rover-driving-event.html"/>
