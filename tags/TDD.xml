@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-09-07T10:04:02+01:00</updated>
+    <updated>2016-09-14T08:02:44+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -1242,8 +1242,7 @@ cd packages/event-sourcing
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.6",
-        "phpspec/phpspec": "^3.0@beta"
+        "memio/spec-gen": "^0.6"
     }
 }
 </code></pre>
@@ -1427,8 +1426,7 @@ class LandRoverHandler
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.6",
-        "phpspec/phpspec": "^3.0@beta"
+        "memio/spec-gen": "^0.6"
     }
 }
 </code></pre>

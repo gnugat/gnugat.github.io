@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-09-07T10:04:02+01:00</updated>
+    <updated>2016-09-14T08:02:44+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -1242,8 +1242,7 @@ cd packages/event-sourcing
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.6",
-        "phpspec/phpspec": "^3.0@beta"
+        "memio/spec-gen": "^0.6"
     }
 }
 </code></pre>
@@ -1427,8 +1426,7 @@ class LandRoverHandler
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.6",
-        "phpspec/phpspec": "^3.0@beta"
+        "memio/spec-gen": "^0.6"
     }
 }
 </code></pre>
@@ -3053,8 +3051,7 @@ cd packages/navigation
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.6",
-        "phpspec/phpspec": "^3.0@beta"
+        "memio/spec-gen": "^0.6"
     }
 }
 </code></pre>
@@ -3134,7 +3131,7 @@ have to specify the development stability (<code>@dev</code>).</p>
 <p>Since we've decided to use phpspec for our test, we're also going to need to
 require it in the project's development dependencies:</p>
 
-<pre><code>composer require --dev phpspec/phpspec:^3.0@beta
+<pre><code>composer require --dev phpspec/phpspec:^3.0
 </code></pre>
 
 <p>By default phpspec is going to look for test in the project's root. We need to

@@ -99,8 +99,7 @@ Composer needs us to set up the package by creating a `composer.json` file:
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.6",
-        "phpspec/phpspec": "^3.0@beta"
+        "memio/spec-gen": "^0.6"
     }
 }
 ```
@@ -185,7 +184,7 @@ Since we've decided to use phpspec for our test, we're also going to need to
 require it in the project's development dependencies:
 
 ```
-composer require --dev phpspec/phpspec:^3.0@beta
+composer require --dev phpspec/phpspec:^3.0
 ```
 
 By default phpspec is going to look for test in the project's root. We need to

@@ -67,8 +67,7 @@ Composer needs us to set up the package by creating a `composer.json` file:
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.6",
-        "phpspec/phpspec": "^3.0@beta"
+        "memio/spec-gen": "^0.6"
     }
 }
 ```
@@ -265,8 +264,7 @@ Since `navigation` now relies on `event-sourcing` classes, we need to add it in
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.6",
-        "phpspec/phpspec": "^3.0@beta"
+        "memio/spec-gen": "^0.6"
     }
 }
 ```

@@ -3,11 +3,192 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-09-07T10:04:02+01:00</updated>
+    <updated>2016-09-14T08:02:44+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Locating package]]></title>
+            <link href="https://gnugat.github.io/2016/09/14/mars-rover-locating-package.html"/>
+            <updated>2016-09-14T00:00:00+01:00</updated>
+            <id>https://gnugat.github.io/2016/09/14/mars-rover-locating-package.html</id>
+            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It allows us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>We've already developed the first use case about landing the rover on mars,
+and the second one about driving it. We're now going to start developing the
+last one, requesting its location:</p>
+
+<blockquote>
+  <p>Mars rover will be requested to give their current location (<code>x</code> and <code>y</code>
+  coordinates and the orientation).</p>
+</blockquote>
+
+<p>In this article we're going to create a new package for the location logic.</p>
+
+<h2 id="why-a-new-package%3F">Why a new package?</h2>
+
+<p>Until now we've been putting our Landing and Driving code in the <code>navigation</code>
+package. It's a "write" type of logic: an event occurs and we log it in the
+Event Store.</p>
+
+<p>On the other hand, requesting the location of the rover is a "read" type of
+logic, since we've decided to follow the CQRS principle we're going to
+separate them and put it in its own package.</p>
+
+<p>The benefit of this approach can become more apparent if we decide to create
+web APIs to control our Mars Rover and replicate the data accross multiple
+servers: we could put the "write" endpoints on a single "Publishing" server,
+and then put the "read" endpoints on many "Subsriber" servers.</p>
+
+<p>The "Subscriber" servers only need to synchronize their data with the
+"Publisher" server, allowing us to scale.</p>
+
+<h2 id="creating-the-%60location%60-package">Creating the <code>location</code> package</h2>
+
+<p>We can start by creating the directory:</p>
+
+<pre><code>git checkout -b 5-location
+mkdir -p packages/location
+cd packages/location
+</code></pre>
+
+<p>Composer needs us to set up the package by creating a <code>composer.json</code> file:</p>
+
+<pre><code>{
+    "name": "mars-rover/location",
+    "license": "MIT",
+    "type": "library",
+    "description": "Mars Rover - Location",
+    "autoload": {
+        "psr-4": { "MarsRover\\Location\\": "src/MarsRover/Location" }
+    },
+    "require": {
+        "php": "^7.0"
+    },
+    "require-dev": {
+        "memio/spec-gen": "^0.6"
+    }
+}
+</code></pre>
+
+<p>We've decided to use <a href="http://phpspec.net/">phpspec</a> as a test framework, and
+to get the most of it we'd like to use its <a href="http://memio.github.io/spec-gen">SpecGen</a>
+extension. To do so we need to create the <code>phpspec.yml.dist</code> file:</p>
+
+<pre><code>extensions:
+    Memio\SpecGen\MemioSpecGenExtension: ~
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: For more information about phpspec
+  <a href="/2015/08/03/phpspec.html">see this article</a>.</p>
+</blockquote>
+
+<p>Finally, we can configure this package's git by creating a <code>.gitignore</code> file:</p>
+
+<pre><code># Configuration
+/phpspec.yml
+
+# Third Party libraries
+/vendor/
+/composer.lock
+</code></pre>
+
+<p>With this we've finished creating our package. We can run Composer:</p>
+
+<pre><code>composer install --optimize-autoloader
+</code></pre>
+
+<p>That should be enough for a first commit:</p>
+
+<pre><code>git add -A
+git commit -m '5: Created Location package'
+</code></pre>
+
+<h2 id="adding-%60location%60-to-the-project">Adding <code>location</code> to the project</h2>
+
+<p>Let's go back to the project's root:</p>
+
+<pre><code>cd ../../
+</code></pre>
+
+<p>All we need to do is to add a new line in the <code>require</code> section of our
+<code>composer.json</code> file:</p>
+
+<pre><code>{
+    "name": "mars-rover/mars-rover",
+    "license": "MIT",
+    "type": "project",
+    "description": "Mars Rover",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "./packages/*"
+        }
+    ],
+    "require": {
+        "mars-rover/event-sourcing": "*@dev",
+        "mars-rover/location": "*@dev",
+        "mars-rover/navigation": "*@dev",
+        "php": "^7.0"
+    },
+    "require-dev": {
+        "phpspec/phpspec": "^3.0"
+    }
+}
+</code></pre>
+
+<p>Actually, we also need to add a new section in <code>phpspec.yml.dist</code>:</p>
+
+<pre><code>suites:
+    event-sourcing:
+        namespace: 'MarsRover\EventSourcing'
+        src_path: packages/event-sourcing/src
+        spec_path: packages/event-sourcing
+
+    location:
+        namespace: 'MarsRover\Location'
+        src_path: packages/location/src
+        spec_path: packages/location
+
+    navigation:
+        namespace: 'MarsRover\Navigation'
+        src_path: packages/navigation/src
+        spec_path: packages/navigation
+</code></pre>
+
+<p>And that's it! We are now able to run Composer and then phpspec:</p>
+
+<pre><code>composer update --optimize-autoloader
+vendor/bin/phpspec run
+</code></pre>
+
+<p>That should be enough for a second commit:</p>
+
+<pre><code>git add -A
+git commit -m '5: Added location package to main project'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>In order to keep the "write" logic in the <code>navigation</code> package separated
+from the "read" logic, we've created a new <code>location</code> package.</p>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article, we'll start creating the <code>LocateDriverHandler</code> class.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Driving event]]></title>
             <link href="https://gnugat.github.io/2016/09/07/mars-rover-driving-event.html"/>
@@ -1242,8 +1423,7 @@ cd packages/event-sourcing
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.6",
-        "phpspec/phpspec": "^3.0@beta"
+        "memio/spec-gen": "^0.6"
     }
 }
 </code></pre>
@@ -1427,8 +1607,7 @@ class LandRoverHandler
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.6",
-        "phpspec/phpspec": "^3.0@beta"
+        "memio/spec-gen": "^0.6"
     }
 }
 </code></pre>
@@ -3053,8 +3232,7 @@ cd packages/navigation
         "php": "^7.0"
     },
     "require-dev": {
-        "memio/spec-gen": "^0.6",
-        "phpspec/phpspec": "^3.0@beta"
+        "memio/spec-gen": "^0.6"
     }
 }
 </code></pre>
@@ -3134,7 +3312,7 @@ have to specify the development stability (<code>@dev</code>).</p>
 <p>Since we've decided to use phpspec for our test, we're also going to need to
 require it in the project's development dependencies:</p>
 
-<pre><code>composer require --dev phpspec/phpspec:^3.0@beta
+<pre><code>composer require --dev phpspec/phpspec:^3.0
 </code></pre>
 
 <p>By default phpspec is going to look for test in the project's root. We need to
