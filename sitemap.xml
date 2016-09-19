@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://gnugat.github.io</loc>
-    <lastmod>2016-09-14T08:02:44+01:00</lastmod>
+    <lastmod>2016-09-21T07:55:54+01:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://gnugat.github.io/about</loc>
-    <lastmod>2016-09-14T08:02:44+01:00</lastmod>
+    <lastmod>2016-09-21T07:55:54+01:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>https://gnugat.github.io/2016/09/21/mars-rover-locating-handler.html</loc>
+    <lastmod>2016-09-21T00:00:00+01:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>https://gnugat.github.io/2016/09/14/mars-rover-locating-package.html</loc>

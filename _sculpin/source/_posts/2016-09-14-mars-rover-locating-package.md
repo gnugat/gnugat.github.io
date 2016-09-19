@@ -20,7 +20,7 @@ We've already developed the first use case about landing the rover on mars,
 and the second one about driving it. We're now going to start developing the
 last one, requesting its location:
 
-> Mars rover will be requested to give their current location (`x` and `y`
+> Mars rover will be requested to give its current location (`x` and `y`
 > coordinates and the orientation).
 
 In this article we're going to create a new package for the location logic.

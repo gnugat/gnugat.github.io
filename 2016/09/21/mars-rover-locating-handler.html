@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Mars Rover, Locating handler &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/09/21/mars-rover-locating-handler.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Mars Rover, Locating handler
+    <span class="sub-title">21/09/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/mars%20rover%20series">mars rover series</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/TDD">TDD</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/phpspec">phpspec</a>
+                    </nav>
+                </header>
+
+                <p>In this series we're building the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It allows us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>We've already developed the first use case about landing the rover on mars,
+and the second one about driving it. We're now developing the last one,
+requesting its location:</p>
+
+<blockquote>
+  <p>Mars rover will be requested to give its current location (<code>x</code> and <code>y</code>
+  coordinates and the orientation).</p>
+</blockquote>
+
+<p>In this article we're going to create the locating logic:</p>
+
+<pre><code>cd packages/location
+git checkout 5-location
+</code></pre>
+
+<h2 id="locate-rover">Locate Rover</h2>
+
+<p>As usual, we're going to use our
+<a href="/2016/06/29/mars-rover-landing.html#twisting-command-bus">Command Bus twist</a>:</p>
+
+<ul>
+<li>create a Command object that contains and validates input parameters</li>
+<li>create a Command Handler object that receives the Command and does the
+actual logic</li>
+</ul>
+
+<p>However in this case we don't have any input parameters: we only want the
+location of the rover. So do we really need to create an empty <code>LocateRover</code>
+class?</p>
+
+<p>If in the future we want to handle many rovers (a Rover name or ID parameter)
+or if we want to know the location of a rover at a given time (time parameter),
+then having this empty class can make sense: we can then fill it later.</p>
+
+<p>However, in this tutorial anyway, we don't have such a need so we can be
+pragmatic about it and just omit it.</p>
+
+<h2 id="locateroverhandler">LocateRoverHandler</h2>
+
+<p>Let's start straight away by creating the <code>LocateRoverHandler</code>. We're starting
+by bootstraping the test class:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Location\LocateRoverHandler'
+</code></pre>
+
+<p>This should create the following
+<code>spec/MarsRover/Location/LocateRoverHandlerSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Location;
+
+use MarsRover\Location\LocateRoverHandler;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class LocateRoverHandlerSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(LocateRoverHandler::class);
+    }
+}
+</code></pre>
+
+<p>We'll need a service which is able to replay all the landing and driving events
+to compute the latest location of the rover. Let's call it <code>FindLatestLocation</code>.
+Or maybe it'd be faster if we computed that latest location on the go, while
+we receive each landing and driving event? In that case our <code>FindLatestLocation</code>
+would just need to retrieve those values from a sort of cache.</p>
+
+<p>It sounds like we can have many ways of finding the rover location, and
+commiting to one right now only to find out later that another implementation
+was better would be a shame. So let's delay our decision and rely on an
+interface for now:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Location;
+
+use MarsRover\Location\Service\FindLatestLocation;
+use PhpSpec\ObjectBehavior;
+
+class LocateRoverHandlerSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = 'north';
+
+    const LOCATION = [
+        'x' =&gt; self::X,
+        'y' =&gt; self::Y,
+        'orientation' =&gt; self::ORIENTATION,
+    ];
+
+    function it_finds_a_rover_latest_location(
+        FindLatestLocation $findLatestLocation
+    ) {
+        $this-&gt;beConstructedWith($findLatestLocation);
+
+        $findLatestLocation-&gt;find()-&gt;willReturn(self::LOCATION);
+
+        $this-&gt;handle()-&gt;shouldBe(self::LOCATION);
+    }
+}
+</code></pre>
+
+<p>It might be our smallest Handler of all. Since it only uses one service, we
+might start wondering if it was worth to have a handler at all (we could just
+use the <code>FindLatestLocation</code> service directly), after all we did skip the
+Command for similar reasons.</p>
+
+<p>However, if we throw away our handler, we'll lose our "automated use case
+documentation": the service is an interface and cannot be tested. So let's keep
+it. Let's run the tests now:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>They fail because <code>LocateRoverHandler</code> doesn't exist, but phpspec bootstrapped
+it for us in the <code>src/MarsRover/Location/LocateRoverHandler.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Location;
+
+use MarsRover\Location\Service\FindLatestLocation;
+
+class LocateRoverHandler
+{
+    private $findLatestLocation;
+
+    public function __construct(FindLatestLocation $findLatestLocation)
+    {
+        $this-&gt;findLatestLocation = $findLatestLocation;
+    }
+
+    public function handle()
+    {
+    }
+}
+</code></pre>
+
+<p>Thanks to the <a href="https://github.com/memio/spec-gen">SpecGen extension</a>, phpspec
+was able to detect Dependency Injection, and bootstrapped a constructor with
+an attribute initialization for us. How nice!</p>
+
+<p>We'll just need to complete the <code>handle</code> method:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Location;
+
+use MarsRover\Location\Service\FindLatestLocation;
+
+class LocateRoverHandler
+{
+    private $findLatestLocation;
+
+    public function __construct(FindLatestLocation $findLatestLocation)
+    {
+        $this-&gt;findLatestLocation = $findLatestLocation;
+    }
+
+    public function handle()
+    {
+        return $this-&gt;findLatestLocation-&gt;find();
+    }
+}
+</code></pre>
+
+<p>Overall, the code looks very similar to the test. Let's run them again:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We can commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '5: Created LocateRoverHandler'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Locating the rover is as simple as retrieving it from somewhere. We've
+delegated the decision on where this "somewhere" is because there are many
+valid solutions (replaying all the events from the EventStore, a cache, etc).</p>
+
+<p>Delegating those decisions can be done by creating an interface, it allows us
+to create as many implementations as we want, without having to modify the
+logic we've just written.</p>
+
+<h2 id="what%27s-next%3F">What's next?</h2>
+
+<p>The Test Driven Development cycle wouldn't be complete without a refactoring
+step. In the next article we'll create a <code>Location</code> value object, to make our
+<code>FindLatestLocation</code> and <code>LocateRoverHandler</code> classes return something more
+explicit.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/09/14/mars-rover-locating-package.html" title="Mars Rover, Locating package">Previous &lt; Mars Rover, Locating package</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>
