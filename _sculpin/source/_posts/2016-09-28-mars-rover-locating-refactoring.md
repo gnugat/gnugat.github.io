@@ -192,7 +192,7 @@ git add -A
 git commit -m '5: Created Location'
 ```
 
-## Refacotring LandRover
+## Refactoring LandRover
 
 This `Location` value object looks great! Why didn't we create it in the first
 place? That'll be pragmatism for you: don't create something you might need in
