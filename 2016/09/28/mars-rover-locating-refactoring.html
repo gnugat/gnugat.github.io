@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Mars Rover, Locating refactoring &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2016/09/28/mars-rover-locating-refactoring.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Mars Rover, Locating refactoring
+    <span class="sub-title">28/09/2016</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/mars%20rover%20series">mars rover series</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/TDD">TDD</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/phpspec">phpspec</a>
+                    </nav>
+                </header>
+
+                <p>In this series we're building the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It allows us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>We've already developed the first use case about landing the rover on mars,
+and the second one about driving it. We're now developing the last one,
+requesting its location:</p>
+
+<blockquote>
+  <p>Mars rover will be requested to give its current location (<code>x</code> and <code>y</code>
+  coordinates and the orientation).</p>
+</blockquote>
+
+<p>In this article we're going to create the locating logic:</p>
+
+<pre><code>git checkout 5-location
+</code></pre>
+
+<h2 id="location">Location</h2>
+
+<p>Our <code>LocateRover</code> command object relies on a <code>FindLatestLocation</code> service. They
+both currently return an array containing the coordinates and orientation of
+our rover. Since <code>FindLatestLocation</code> is an interface, we can't control what's
+being actually returned... This could be fixed by specifying a <code>Location</code>
+object as a return type, and it would make things more explicit.</p>
+
+<p>Since Our <code>Location</code> object will contain <code>Coordinates</code> and <code>Orientation</code>, we
+might want to create it in the <code>navigation</code> packages, where those two other
+objects are alreay:</p>
+
+<pre><code>cd packages/navigation
+</code></pre>
+
+<p>We can now start writing <code>Location</code>'s test:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\Location'
+</code></pre>
+
+<p>This should have bootstrapped the following
+<code>spec/MarsRover/Navigation/LocationSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Location;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class LocationSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(Location::class);
+    }
+}
+</code></pre>
+
+<p>We can then edit it to specify that it should contain <code>Coordinates</code> and
+<code>Orientation</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Coordinates;
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LocationSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    function it_has_coordinates()
+    {
+        $coordinates = new Coordinates(self::X, self::Y);
+        $orientation = new Orientation(self::ORIENTATION);
+        $this-&gt;beConstructedWith($coordinates, $orientation);
+
+        $this-&gt;getCoordinates()-&gt;shouldBe($coordinates);
+    }
+
+    function it_has_orientation()
+    {
+        $coordinates = new Coordinates(self::X, self::Y);
+        $orientation = new Orientation(self::ORIENTATION);
+        $this-&gt;beConstructedWith($coordinates, $orientation);
+
+        $this-&gt;getOrientation()-&gt;shouldBe($orientation);
+    }
+}
+</code></pre>
+
+<p>That sounds simple enough, we can run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>And of course they fail because <code>Location</code> doesn't exist yet. to help us write
+it, phpspec bootstrapped the following <code>src/MarsRover/Navigation/Location.php</code>
+file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Location
+{
+    private $coordinates;
+
+    private $orientation;
+
+    public function __construct(Coordinates $coordinates, Orientation $orientation)
+    {
+        $this-&gt;coordinates = $coordinates;
+        $this-&gt;orientation = $orientation;
+    }
+
+    public function getCoordinates()
+    {
+    }
+
+    public function getOrientation()
+    {
+    }
+}
+</code></pre>
+
+<p>Let's complete it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Location
+{
+    private $coordinates;
+    private $orientation;
+
+    public function __construct(
+        Coordinates $coordinates,
+        Orientation $orientation
+    ) {
+        $this-&gt;coordinates = $coordinates;
+        $this-&gt;orientation = $orientation;
+    }
+
+    public function getCoordinates() : Coordinates
+    {
+        return $this-&gt;coordinates;
+    }
+
+    public function getOrientation() : Orientation
+    {
+        return $this-&gt;orientation;
+    }
+}
+</code></pre>
+
+<p>This should be enough to make our tests pass:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We can now commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '5: Created Location'
+</code></pre>
+
+<h2 id="refacotring-landrover">Refacotring LandRover</h2>
+
+<p>This <code>Location</code> value object looks great! Why didn't we create it in the first
+place? That'll be pragmatism for you: don't create something you might need in
+the future, create something you need now. But now that's it's here, we can
+refactor <code>LocateRover</code> to use it.</p>
+
+<p>First let's update its test:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Location;
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LandRoverSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    function it_has_location()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $location = $this-&gt;getLocation();
+        $location-&gt;shouldHaveType(Location::class);
+        $coordinates = $location-&gt;getCoordinates();
+        $coordinates-&gt;getX()-&gt;shouldBe(self::X);
+        $coordinates-&gt;getY()-&gt;shouldBe(self::Y);
+        $location-&gt;getOrientation()-&gt;get()-&gt;shouldBe(self::ORIENTATION);
+    }
+}
+</code></pre>
+
+<p>Then its code:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRover
+{
+    private $location;
+
+    public function __construct($x, $y, $orientation)
+    {
+        $this-&gt;location = new Location(
+            new Coordinates($x, $y),
+            new Orientation($orientation)
+        );
+    }
+
+    public function getLocation() : Location
+    {
+        return $this-&gt;location;
+    }
+}
+</code></pre>
+
+<p>And finally <code>LandRoverHandler</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+use MarsRover\EventSourcing\{
+    AnEventHappened,
+    EventStore
+};
+
+class LandRoverHandler
+{
+    private $anEventHappened;
+    private $eventStore;
+
+    public function __construct(
+        AnEventHappened $anEventHappened,
+        EventStore $eventStore
+    ) {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(LandRover $landRover)
+    {
+        $location = $landRover-&gt;getLocation();
+        $coordinates = $location-&gt;getCoordinates();
+        $orientation = $location-&gt;getOrientation();
+        $roverLanded = $this-&gt;anEventHappened-&gt;justNow(Events::ROVER_LANDED, [
+            'x' =&gt; $coordinates-&gt;getX(),
+            'y' =&gt; $coordinates-&gt;getY(),
+            'orientation' =&gt; $orientation-&gt;get(),
+        ]);
+        $this-&gt;eventStore-&gt;log($roverLanded);
+    }
+}
+</code></pre>
+
+<p>Let's check the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! That should be enough to commit:</p>
+
+<pre><code>git add -A
+git commit -m '5: Used Location in LandRover'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>While we've been playing with the notion of <code>Location</code> since the very first
+use case, it's only now that we really need it that we created it.</p>
+
+<p>It encapsulates X and Y coordinates as well as an orientation.</p>
+
+<h2 id="what%27s-next%3F">What's next?</h2>
+
+<p><code>Location</code> is currently in the <code>navigation</code> package, but we also need it in
+the <code>location</code> package... To fix this we have the following solutions:</p>
+
+<ul>
+<li>add <code>navigation</code> as a dependency of <code>location</code></li>
+<li>merge together <code>navigation</code> and <code>location</code></li>
+<li>create a new <code>geolocation</code> package, with <code>Location</code>, <code>Coordinates</code> and
+<code>Orientation</code></li>
+</ul>
+
+<p>Since we want to keep <code>navigation</code> and <code>location</code> separate, we'll opt for the
+third option and create this new package in the next article.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2016/09/21/mars-rover-locating-handler.html" title="Mars Rover, Locating handler">Previous &lt; Mars Rover, Locating handler</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button three columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button three columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button three columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>
