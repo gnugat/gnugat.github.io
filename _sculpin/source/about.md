@@ -79,6 +79,22 @@ in this initiative.
 
 <div class="row">
     <section class="twelve columns">
+        <h3>Talks</h3>
+
+        <ul>
+            <li>
+                <a href="https://speakerdeck.com/gnugat/event-driven-architecture">Event Driven Architecture</a>:
+                <ul>
+                    <li>28/09/16 <a href="http://www.meetup.com/london-nodejs/events/231423533/">London NodeJs User Group</a>, 174 attendees</li>
+                    <li>17/08/16 <a href="http://www.meetup.com/symfony/events/233256011/">London Symfony meetup</a>, 72 attendees</li>
+                <ul>
+            </li>
+        </ul>
+    </section>
+</div>
+
+<div class="row">
+    <section class="twelve columns">
         <h3>Technical readings (books)</h3>
 
         <ul>
