@@ -3,11 +3,381 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2016-10-05T07:52:17+01:00</updated>
+    <updated>2016-10-12T18:47:04+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Locating moving]]></title>
+            <link href="https://gnugat.github.io/2016/10/12/mars-rover-locating-moving.html"/>
+            <updated>2016-10-12T00:00:00+01:00</updated>
+            <id>https://gnugat.github.io/2016/10/12/mars-rover-locating-moving.html</id>
+            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It allows us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>We've already developed the first use case about landing the rover on mars,
+and the second one about driving it. We're now developing the last one,
+requesting its location:</p>
+
+<blockquote>
+  <p>Mars rover will be requested to give its current location (<code>x</code> and <code>y</code>
+  coordinates and the orientation).</p>
+</blockquote>
+
+<p>In this article we're going to move geolocation value objects (<code>Location</code>,
+<code>Coordinates</code> and <code>Orientation</code>) into their new package (<code>geolocation</code>):</p>
+
+<pre><code>git checkout 5-location
+cd packages/geolocation
+</code></pre>
+
+<h2 id="geolocation">Geolocation</h2>
+
+<p>Let's move our value objects to their new package:</p>
+
+<pre><code>mkdir -p src/MarsRover/Geolocation spec/MarsRover/Geolocation
+mv ../navigation/src/MarsRover/Navigation/{Coordinates,Location,Orientation}.php ./src/MarsRover/Geolocation/
+mv ../navigation/spec/MarsRover/Navigation/{Coordinates,Location,Orientation}Spec.php ./spec/MarsRover/Geolocation/
+</code></pre>
+
+<p>We then need to fix the namespace:</p>
+
+<pre><code>sed -i 's/Navigation/Geolocation/' */MarsRover/Geolocation/*.php
+</code></pre>
+
+<p>This should allow us to run successfully our tests for this package:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All Green!</p>
+
+<h2 id="navigation">Navigation</h2>
+
+<p>Now let's update the <code>navigation</code> package:</p>
+
+<pre><code>cd ../navigation
+</code></pre>
+
+<p>In order to find where our <code>Location</code> class is used, we can use the following:</p>
+
+<pre><code>grep -R Location src spec/
+</code></pre>
+
+<p>We need to fix the use statement in <code>spec/MarsRover/Navigation/LandRoverSpec.php</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Geolocation\Location;
+use MarsRover\Geolocation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LandRoverSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    function it_has_location()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $location = $this-&gt;getLocation();
+        $location-&gt;shouldHaveType(Location::class);
+        $coordinates = $location-&gt;getCoordinates();
+        $coordinates-&gt;getX()-&gt;shouldBe(self::X);
+        $coordinates-&gt;getY()-&gt;shouldBe(self::Y);
+        $location-&gt;getOrientation()-&gt;get()-&gt;shouldBe(self::ORIENTATION);
+    }
+}
+</code></pre>
+
+<p>We can see that we also use <code>Orientation</code>, so we fix it here and we'lldo a search later.</p>
+
+<p>Then we need to add use statements in <code>src/MarsRover/Navigation/LandRover.php</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+use MarsRover\Geolocation\{
+    Coordinates,
+    Location,
+    Orientation
+};
+
+class LandRover
+{
+    private $location;
+
+    public function __construct($x, $y, $orientation)
+    {
+        $this-&gt;location = new Location(
+            new Coordinates($x, $y),
+            new Orientation($orientation)
+        );
+    }
+
+    public function getLocation() : Location
+    {
+        return $this-&gt;location;
+    }
+}
+</code></pre>
+
+<p>We also spot a use of <code>Coordinates</code>, so we fix it here now and we'll do a search later.</p>
+
+<p>All done. Let's search for <code>Coordinates</code>:</p>
+
+<pre><code>grep -R Coordinates src spec
+</code></pre>
+
+<p>There's nothing we haven't fixed yet, so let's search for <code>Orientation</code>:</p>
+
+<pre><code>grep -R Orientation src spec
+</code></pre>
+
+<p>It looks like <code>spec/MarsRover/Navigation/LandRoverHandlerSpec.php</code> uses it, so let's fix it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\EventSourcing\AnEventHappened;
+use MarsRover\EventSourcing\Event;
+use MarsRover\Navigation\Events;
+use MarsRover\EventSourcing\EventStore;
+use MarsRover\Navigation\LandRover;
+use MarsRover\Geolocation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LandRoverHandlerSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    const EVENT_NAME = Events::ROVER_LANDED;
+    const EVENT_DATA = [
+        'x' =&gt; self::X,
+        'y' =&gt; self::Y,
+        'orientation' =&gt; self::ORIENTATION,
+    ];
+
+    function it_lands_a_rover_at_given_location(
+        AnEventHappened $anEventHappened,
+        Event $roverLanded,
+        EventStore $eventStore
+    ) {
+        $this-&gt;beConstructedwith($anEventHappened, $eventStore);
+        $landRover = new LandRover(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $anEventHappened-&gt;justNow(
+            self::EVENT_NAME,
+            self::EVENT_DATA
+        )-&gt;willReturn($roverLanded);
+        $eventStore-&gt;log($roverLanded)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($landRover);
+    }
+}
+</code></pre>
+
+<p>That should be it for our <code>navigation</code> package. Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All Green!</p>
+
+<h2 id="location">Location</h2>
+
+<p>Finally we can use our value objects in our <code>location</code> package:</p>
+
+<pre><code>cd ../location
+</code></pre>
+
+<p>We can now use <code>Orientation</code> for our constant in <code>spec/MarsRover/Location/LocateRoverHandlerSpec.php</code>,
+and also make sure both <code>FindLatestLocation</code> and <code>LocateRoverHandler</code> return a <code>Location</code>
+value object:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Location;
+
+use MarsRover\Geolocation\Coordinates;
+use MarsRover\Geolocation\Location;
+use MarsRover\Geolocation\Orientation;
+use MarsRover\Location\Service\FindLatestLocation;
+use PhpSpec\ObjectBehavior;
+
+class LocateRoverHandlerSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    const LOCATION = [
+        'x' =&gt; self::X,
+        'y' =&gt; self::Y,
+        'orientation' =&gt; self::ORIENTATION,
+    ];
+
+    function it_finds_a_rover_latest_location(
+        FindLatestLocation $findLatestLocation
+    ) {
+        $this-&gt;beConstructedWith($findLatestLocation);
+        $location = new Location(
+            new Coordinates(self::X, self::Y),
+            new Orientation(self::ORIENTATION)
+        );
+
+        $findLatestLocation-&gt;find()-&gt;willReturn($location);
+
+        $this-&gt;handle()-&gt;shouldBe($location);
+    }
+}
+</code></pre>
+
+<p>Let's update <code>src/MarsRover/Location/Service/FindLatestLocation.php</code> to add the return type:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Location\Service;
+
+use MarsRover\Geolocation\Location;
+
+interface FindLatestLocation
+{
+    public function find() : Location;
+}
+</code></pre>
+
+<p>And finally let's update <code>src/MarsRover/Location/LocateRoverHandler.php</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Location;
+
+use MarsRover\Geolocation\Location;
+use MarsRover\Location\Service\FindLatestLocation;
+
+class LocateRoverHandler
+{
+    private $findLatestLocation;
+
+    public function __construct(FindLatestLocation $findLatestLocation)
+    {
+        $this-&gt;findLatestLocation = $findLatestLocation;
+    }
+
+    public function handle() : Location
+    {
+        return $this-&gt;findLatestLocation-&gt;find();
+    }
+}
+</code></pre>
+
+<p>Now tests should pass:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! Let's check all tests across our project:</p>
+
+<pre><code>cd ../../
+vendor/bin/phpspec run
+</code></pre>
+
+<p><a href="https://www.youtube.com/watch?v=rKHh3EIFcZw">Super green</a>!
+We can now commit our work:</p>
+
+<pre><code>git add -A
+git commit -m 'Moved geolocation value objects in their package'
+git checkout master
+git merge --no-ff 5-location
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>And that's it! We now have a fully functional Mars Rover, that covers the
+following use cases:</p>
+
+<blockquote>
+  <ol>
+  <li>Mars Rovers need first to be landed at a given position. A position is
+  composed of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an
+  orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</li>
+  <li>Once a rover has been landed on Mars it is possible to drive them, using
+  instructions such as:
+  
+  <ul>
+  <li><code>move_forward</code> (keeps orientation, but moves along the <code>x</code> or <code>y</code> axis)</li>
+  <li><code>turn_left</code> / <code>turn_right</code> (keeps the same coordinates, but changes the
+  orientation).</li>
+  </ul></li>
+  <li>Mars rover will be requested to give its current location (<code>x</code> and <code>y</code>
+  coordinates and the orientation).</li>
+  </ol>
+</blockquote>
+
+<p>In order to follow the CQRS principle, we've decided to separate our code in
+two main packages:</p>
+
+<ul>
+<li><code>navigation</code>: write logic</li>
+<li><code>location</code>: read logic</li>
+</ul>
+
+<p>With this we can imagine deploying <code>navigation</code> on a central, restricted in
+access server, and deploy many <code>location</code> servers, all synchronized with the
+data received in <code>navigation</code>.</p>
+
+<p>Splitting our code into many packages would have been quite bothersome without
+Mono Repo: all our packages are versioned in the same git repository and can be
+linked together using Composer.</p>
+
+<p>For each use case, we've structured our code as follow:</p>
+
+<ol>
+<li>create a "Command" object that represents user input and intentation</li>
+<li>create a "Value Object" for each Command parameter, with simple input validation</li>
+<li>create a "CommandHandler" object that does the actual work</li>
+</ol>
+
+<p>With Event Sourcing, the "actual work" for "write" use cases is simply creating
+an event and store it. For the "read" use cases it could be retrieving the
+latests state by replaying all the past events in the store, or simply retrieving
+the latest state from a cache.</p>
+
+<p>And last but not least, we've written tests before writing the actual code, which
+helped us to think about how the code will be used. Our test method names were
+written as if they were sentences, which has the consequence to make our test
+a descriptive and accurate documentation. And of course our tests make sure we
+don't introduce regressions.</p>
+
+<p>I hope this series has helped to introduce you to those concepts.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating refactoring]]></title>
             <link href="https://gnugat.github.io/2016/09/28/mars-rover-locating-refactoring.html"/>
