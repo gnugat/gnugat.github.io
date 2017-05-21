@@ -10,6 +10,7 @@ use:
             <a href="{{ site.url }}{{ post.url }}">{{ post.title|capitalize }}</a>
             <span class="sub-title">{{ post.date | date('d/m/Y') }}</span>
         </h3>
+
         <nav>
             {% for tag in post.meta.tags %}
             {% set tag_class = '' %}
