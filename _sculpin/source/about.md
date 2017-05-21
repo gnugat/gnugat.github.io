@@ -83,6 +83,12 @@ in this initiative.
 
         <ul>
             <li>
+                <a href="https://speakerdeck.com/gnugat/symfony-nano-framework-a-cunning-plan">Symfony Nano Framework, a cunning plan</a>:
+                <ul>
+                    <li>15/05/17 <a href="https://www.meetup.com/symfony/events/239754603/">London Symfony meetup</a>, 76 attendees</li>
+                </ul>
+            </li>
+            <li>
                 <a href="https://speakerdeck.com/gnugat/spec-gen-phpspec-extension-for-better-code-generation">spec-gen, phpspec extension taking code generation to the next level</a> (lightning talk):
                 <ul>
                     <li>19/10/16 <a href="https://www.meetup.com/symfony/events/234637757/">London Symfony meetup</a>, 95 attendees</li>
