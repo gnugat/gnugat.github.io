@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>PragmatiClean - introduction &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2017/09/13/pragmaticlean-introdution.html"/>
+        <link rel="alternate" href="https://gnugat.github.io/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="https://gnugat.github.io/css/normalize.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/skeleton.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="https://gnugat.github.io/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="https://gnugat.github.io/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+            
+            <nav class="row">
+                <a class="button two columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button two columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/best-articles">Best Articles</a>
+                <a class="button two columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    PragmatiClean - introduction
+    <span class="sub-title">13/09/2017</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="https://gnugat.github.io/tags/pragmaticlean">pragmaticlean</a>
+                                                            <a class="button " href="https://gnugat.github.io/tags/symfony">symfony</a>
+                    </nav>
+                </header>
+
+                <p>There are only 10 types of debates in the software world,
+<a href="https://www.amazon.co.uk/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882">Clean Code</a>
+v <a href="https://www.amazon.co.uk/Pragmatic-Programmer-Andrew-Hunt/dp/020161622X">Pragmatic Code</a>
+and those which don't matter.</p>
+
+<p>In this new series we'll see how to stop wasting time arguing which one is best
+and start using both instead.</p>
+
+<h2 id="what%27s-clean-code%3F">What's Clean Code?</h2>
+
+<p>Clean Code is about writing for the long term, usually by structuring it with
+the help of Design Patterns and Principles.</p>
+
+<p>The assumption is that everything will change given enough time, be it code or
+people, and so things should be easy to understand and easy to change.</p>
+
+<p>The opposite of Clean Code would be "taking shortcuts" to get the job done,
+which causes maintenance to become harder and harder over time.</p>
+
+<h2 id="what%27s-pragmatic-code%3F">What's Pragmatic Code?</h2>
+
+<p>Pragmatic Code is about writing for the short term, usually by selecting the
+most simple and quickest way to achieve a task.</p>
+
+<p>The assumption is that things need to be done as quickly as possible, and the
+simplest solution is always the best.</p>
+
+<p>The opposite of Pragmatic Code would be "over engineering" for the sake of it,
+which wastes time, makes the code harder to maintain and also makes it less
+efficient.</p>
+
+<h2 id="what%27s-pragmaticlean-code%3F">What's PragmatiClean Code?</h2>
+
+<p>As we can see both school seem diametrically opposed, hence the heated debates.</p>
+
+<p>But both seem to be making good points, so why not try to adopt both?</p>
+
+<p>Pragmatic Programmers don't resent structured code or even Design Patterns and
+Principles, what they find aberrant is the over use of them and their misuse.</p>
+
+<p>Clean Coders don't dislike simple solutions and they don't like spending more
+time on a task than necessary, what they find abnormal is code that has become
+too hard to maintain because it grew more and more out of control over time.</p>
+
+<p>So let's <a href="https://xkcd.com/927/">develop one universal school of thought that covers both</a>:
+PragmatiClean. We'll do so by going over the following Design Patterns/Principles
+and give them a twist:</p>
+
+<ul>
+<li>Command Bus, by dropping the bus</li>
+<li>Adapter to decouple from third part libraries, but only the ones that matter</li>
+<li>Test Driven Development, by not testing everything</li>
+<li>Command/Query Responsibility Segregation, by making it synchronous</li>
+<li>Event Sourcing, by skipping the sourcing</li>
+</ul>
+
+<p>And to make all this learning applicable, we'll show some Symfony code!</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="https://gnugat.github.io/2017/05/24/links-from-2016.html" title="Links from 2016">Previous &lt; Links from 2016</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button two columns" href="https://gnugat.github.io/about">About</a>
+                <a class="button two columns" href="https://gnugat.github.io/">Articles</a>
+                <a class="button three columns" href="https://gnugat.github.io/best-articles">Best Articles</a>
+                <a class="button two columns" href="https://gnugat.github.io/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="https://gnugat.github.io/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

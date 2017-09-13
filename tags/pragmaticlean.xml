@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
+    <link href="https://gnugat.github.io/"/>
+    <updated>2017-09-13T08:17:53+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[PragmatiClean - introduction]]></title>
+            <link href="https://gnugat.github.io/2017/09/13/pragmaticlean-introdution.html"/>
+            <updated>2017-09-13T00:00:00+01:00</updated>
+            <id>https://gnugat.github.io/2017/09/13/pragmaticlean-introdution.html</id>
+            <content type="html"><![CDATA[<p>There are only 10 types of debates in the software world,
+<a href="https://www.amazon.co.uk/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882">Clean Code</a>
+v <a href="https://www.amazon.co.uk/Pragmatic-Programmer-Andrew-Hunt/dp/020161622X">Pragmatic Code</a>
+and those which don't matter.</p>
+
+<p>In this new series we'll see how to stop wasting time arguing which one is best
+and start using both instead.</p>
+
+<h2 id="what%27s-clean-code%3F">What's Clean Code?</h2>
+
+<p>Clean Code is about writing for the long term, usually by structuring it with
+the help of Design Patterns and Principles.</p>
+
+<p>The assumption is that everything will change given enough time, be it code or
+people, and so things should be easy to understand and easy to change.</p>
+
+<p>The opposite of Clean Code would be "taking shortcuts" to get the job done,
+which causes maintenance to become harder and harder over time.</p>
+
+<h2 id="what%27s-pragmatic-code%3F">What's Pragmatic Code?</h2>
+
+<p>Pragmatic Code is about writing for the short term, usually by selecting the
+most simple and quickest way to achieve a task.</p>
+
+<p>The assumption is that things need to be done as quickly as possible, and the
+simplest solution is always the best.</p>
+
+<p>The opposite of Pragmatic Code would be "over engineering" for the sake of it,
+which wastes time, makes the code harder to maintain and also makes it less
+efficient.</p>
+
+<h2 id="what%27s-pragmaticlean-code%3F">What's PragmatiClean Code?</h2>
+
+<p>As we can see both school seem diametrically opposed, hence the heated debates.</p>
+
+<p>But both seem to be making good points, so why not try to adopt both?</p>
+
+<p>Pragmatic Programmers don't resent structured code or even Design Patterns and
+Principles, what they find aberrant is the over use of them and their misuse.</p>
+
+<p>Clean Coders don't dislike simple solutions and they don't like spending more
+time on a task than necessary, what they find abnormal is code that has become
+too hard to maintain because it grew more and more out of control over time.</p>
+
+<p>So let's <a href="https://xkcd.com/927/">develop one universal school of thought that covers both</a>:
+PragmatiClean. We'll do so by going over the following Design Patterns/Principles
+and give them a twist:</p>
+
+<ul>
+<li>Command Bus, by dropping the bus</li>
+<li>Adapter to decouple from third part libraries, but only the ones that matter</li>
+<li>Test Driven Development, by not testing everything</li>
+<li>Command/Query Responsibility Segregation, by making it synchronous</li>
+<li>Event Sourcing, by skipping the sourcing</li>
+</ul>
+
+<p>And to make all this learning applicable, we'll show some Symfony code!</p>
+]]></content>
+        </entry>
+    </feed>
