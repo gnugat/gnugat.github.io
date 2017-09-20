@@ -3,11 +3,372 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
     <link href="https://gnugat.github.io/"/>
-    <updated>2017-09-13T08:17:53+01:00</updated>
+    <updated>2017-09-20T09:23:27+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[PragmatiClean - TDD]]></title>
+            <link href="https://gnugat.github.io/2017/09/27/pragmaticlean-tdd.html"/>
+            <updated>2017-09-27T00:00:00+01:00</updated>
+            <id>https://gnugat.github.io/2017/09/27/pragmaticlean-tdd.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: Write tests first, then code, then refactor.
+  Only unit test Commands and Command Handlers.
+  Only functional test Controllers and Commands.</p>
+</blockquote>
+
+<p>TDD can be summed up in the following steps when developing:</p>
+
+<ol>
+<li>create a test</li>
+<li>then write just enough code to make the test pass (quick and dirty, or
+"make it work")</li>
+<li>then refactor the code (clean, or "make it right")</li>
+</ol>
+
+<p>Writing the test before the code forces us to think about how we'd like the
+future code to be <em>used</em>. It's like writing specifications, but with 3
+purposes: design, documentation and automated regression checking.</p>
+
+<p>This discipline makes it easy to have a high code coverage (although rigour
+still needs to be applied: we need to test all the happy paths and all the
+unhappy ones).</p>
+
+<h2 id="clean-code">Clean Code</h2>
+
+<h2 id="pragmatic-code">Pragmatic Code</h2>
+
+<h2 id="symfony-example">Symfony Example</h2>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Command Bus allows us to decouple our application logic from the framework,
+protecting us from Backward Compability Breaking changes.</p>
+
+<p>However since the Bus can be replaced by Event Listeners, we can simply drop it
+and inject the Command Handlers directly in Controllers. If our application
+isn't asynchronous, then Command Handlers should be able to return values.</p>
+
+<p>So our PragmatiClean Command Bus is simply a Command and Command Handler pair
+for each Use Case in our application (so one pair per Controller action).</p>
+
+<blockquote>
+  <p>For more resources on TDD, check these links:</p>
+  
+  <ul>
+  <li><a href="http://codemanship.co.uk/parlezuml/blog/?postid=1170">Straw man TDD</a></li>
+  <li><a href="http://codemanship.co.uk/parlezuml/blog/?postid=1202">Coverage!!!</a></li>
+  <li><a href="http://blog.testdouble.com/posts/2014-01-25-the-failures-of-intro-to-tdd.html">The Failures of "Intro to TDD"</a></li>
+  <li><a href="http://tech.mybuilder.com/coupling-tests/">TDD, avoid testing implementation details</a></li>
+  <li><a href="http://blog.8thlight.com/uncle-bob/2014/04/25/MonogamousTDD.html">Monogamous TDD</a></li>
+  <li><a href="http://blog.8thlight.com/uncle-bob/2014/04/30/When-tdd-does-not-work.html">When TDD doesn't work</a></li>
+  <li><a href="http://codurance.com/2015/05/12/does-tdd-lead-to-good-design/">Does TDD really lead to good design?</a></li>
+  <li><a href="http://david.heinemeierhansson.com/2014/tdd-is-dead-long-live-testing.html">TDD is dead, long live testing</a></li>
+  <li><a href="http://www.daedtech.com/what-tdd-is-and-is-not/">What TDD is and is not</a></li>
+  <li><a href="https://vimeo.com/68375232">TDD, where it all went wrong</a></li>
+  <li><a href="https://medium.com/@davidihunt/tdd-and-complexity-1bbd5ca51ee7#.4mzrdro57">TDD and Complexity</a></li>
+  <li><a href="http://blog.cleancoder.com/uncle-bob/2016/03/19/GivingUpOnTDD.html">Giving up on TDD</a></li>
+  </ul>
+  
+  <p>Also here are some usage examples, with code and everything:</p>
+  
+  <ul>
+  <li><a href="https://gnugat.github.io/2016/06/15/mars-rover-introduction.html">Mars Rover</a>:
+  an application coded chapter after chapter, using TDD</li>
+  <li><a href="https://gnugat.github.io/2016/03/24/ultimate-symfony-api-example.html">The Ultimate Developer Guide to Symfony</a>
+  Examples on how to create an API endpoint, a full stack web page and a console command
+  with Symfony and TDD</li>
+  </ul>
+</blockquote>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[PragmatiClean - Command Bus]]></title>
+            <link href="https://gnugat.github.io/2017/09/20/pragmaticlean-command-bus.html"/>
+            <updated>2017-09-20T00:00:00+01:00</updated>
+            <id>https://gnugat.github.io/2017/09/20/pragmaticlean-command-bus.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: Use Command Bus pattern in your controllers, but drop the bus.</p>
+</blockquote>
+
+<p>The Command Bus pattern relies on 3 types of classes:</p>
+
+<p>The first one is the <em>Command</em>:</p>
+
+<ul>
+<li>its class name should describe the intended action in an imperative manner
+(eg <code>SubmitNewQuote</code>, <code>AssignReviewers</code>, etc)</li>
+<li>it is constructed using the input parameters
+(eg a Request's query/post/header parameters, a Console's input argument/option, etc)</li>
+<li>it applies "simple" validation on those parameters
+(eg parameter type, missing required parameter, etc)</li>
+</ul>
+
+<p>Next is the <em>Command Handler</em>:</p>
+
+<ul>
+<li>it is dedicated to a single Command
+and its class name is its Command's name suffixed with <code>Handler</code></li>
+<li>it applies "complex" validation on the Command's parameters
+(eg existence of referenced resource, existence of duplicates, etc)</li>
+<li>it calls services to apply the actual logic,
+reading it should feel like reading the steps of a use case</li>
+<li>it shouldn't return anything, to allow asynchronous actions</li>
+</ul>
+
+<p>And Finally there's a <em>Command Bus</em> interface allowing us to build Middlewares:</p>
+
+<ol>
+<li>we can have a Command Bus that calls the appropriate Command Handler for the given Command</li>
+<li>we can have a Command Bus that wraps the above one in a database transaction</li>
+<li>we can have a Command Bus that wraps the above ones to log all incoming commands</li>
+<li>we can have a Command Bus that wraps the above ones to check permissions</li>
+<li>etc</li>
+</ol>
+
+<p>Middlewares can do any action we want before and/or after the wrapped Command Bus.
+They can be nested in a specific order, allowing us a fine grained control over
+how the Command will be handled.</p>
+
+<h2 id="clean-code">Clean Code</h2>
+
+<p>Command Bus can be described as a routing for the domain:
+a Command (like a Request) is given to the Command Bus (like a Router)
+which is going to call the appropriate Command Handler (like a Controller).</p>
+
+<p>We can use Command Bus in our controller: create the Command using the
+Request's inputs, and then take the code that would be in the Controller
+and move it in the Command Handler.</p>
+
+<p>This way our Domain logic is decoupled from the Framework. The idea of being
+able to switch an application to a different framework might seem ludicrous
+(when does that ever happen?), but the truth is that two major versions of
+a single framework often feel like having two different frameworks
+(eg symony1 V Symfony2) and in some cases it's even the case for minor versions
+(eg Symfony 2.0 V Symfony 2.1).</p>
+
+<h2 id="pragmatic-code">Pragmatic Code</h2>
+
+<p>The main point of Command Bus is the possibility to create Middlewares, however
+the same thing could be achieved with a good old Event Dispatcher, so let's
+ditch the Bus.</p>
+
+<p>The Routing thing should already be done for us by the framework, and it should
+be true regardless of the framework or version upgrades. So we can safely inject
+Command Handlers directly in Controllers.</p>
+
+<p>Finally, most of the time applications aren't asynchronous. So when it's not
+the case it should be OK for the Command Handler to return a value
+(eg the created or updated resource).</p>
+
+<h2 id="symfony-example">Symfony Example</h2>
+
+<p>Let's put all this wisdom into practice by creating a Controller allowing us to
+submit a code to reset a counter.</p>
+
+<p>First we're going to create the Command, it should contain all the input
+parameters, do a simple validation on it and have an
+intention revealing name describing the action we'd like to do:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/Dharma/Swan/SubmitCode.php;
+
+namespace Dharma\Swan\Code;
+
+class SubmitCode
+{
+    public $code;
+
+    /**
+     * @throws \DomainException If the required "code" parameter is missing
+     * @throws \DomainException If the "code" parameter is not a string
+     */
+    public function __construct($code)
+    {
+        if (null === $code) {
+            throw new \DomainException(
+                'Missing required "code" parameter',
+                422
+            );
+        }
+        if (!is_string($code)) {
+            throw new \DomainException(
+                'Invalid "code" parameter: should be a string',
+                422
+            );
+        }
+        $this-&gt;code = (string) $code;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><em>Note 1</em>: Command class attributes are set in the constructor, and then read
+  in the Command Handler. Since it's never used anywhere else, there's no point
+  creating a getter or setter for it, we can just make those attributes public.</p>
+  
+  <p><em>Note 2</em>: Commands are going to check the parameters type, so there's no need
+  to type hint the constructor arguments (we should allow wrong types so we can
+  throw an exception with a helpful message).</p>
+  
+  <p><em>Note 3:</em> <code>DomainException</code> is the PHP standard exception for application
+  errors (eg not found, forbidden, etc). Here we use the code <code>422</code> which is
+  the HTTP status code for <code>UNPROCESSABLE ENTITY</code> ("validation failed").
+  Our advice is to create custom Application Exceptions that extend
+  <code>DomainException</code> and set the right code (eg <code>ValidationFailed</code> with code 422,
+  <code>NotFound</code> with code 404, etc).</p>
+</blockquote>
+
+<p>The second step is to create the Command Handler. It needs to do more complex
+validation, and the actual logic associated to the Command's intention:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/Dharma/Swan/SubmitCodeHandler.php;
+
+namespace Dharma\Swan;
+
+use Dharma\Swan\Service\CheckCode;
+use Dharma\Swan\Service\ResetCounter;
+
+class SubmitCodeHandler
+{
+    private $checkCode;
+    private $resetCounter;
+
+    public function __construct(
+        CheckCode $checkCode,
+        ResetCounter $resetCounter
+    ) {
+        $this-&gt;checkCode = $checkCode;
+        $this-&gt;resetCounter = $resetCounter;
+    }
+
+    /**
+     * @throws \DomainException If the "code" parameter is not a valid code
+     */
+    public function handle(SubmitCode $submitCode): int
+    {
+        $this-&gt;checkCode-&gt;check(
+            $submitCode-&gt;code
+        );
+        $newCount = $this-&gt;resetCounter-&gt;reset();
+
+        return $newCount;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><em>Note 4</em>: Services with descriptive names are injected and used in the
+  Command Handler, so that reading the <code>handle</code> methods feels like reading the
+  steps of the current use case.</p>
+  
+  <p><em>Note 5</em>: The <code>CheckCode</code> service will throw a 442 exception if the code is
+  invalid (eg if the code is not <code>4 8 15 16 23 42</code>).</p>
+  
+  <p><em>Note 6</em>: We've decided for <code>ResetCounter</code> to return the new count.
+  For an asynchronous application, it wouldn't return anything, neither would
+  the Command Handler.</p>
+</blockquote>
+
+<p>Finally we can use the Command and Command Handler in our Controller:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/Dharma/Swan/Controller/SubmitCodeController.php;
+
+namespace Dharma\Swan\Controller;
+
+use Dharma\Swan\SubmitCode;
+use Dharma\Swan\SubmitCodeHandler;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
+
+class SubmitCodeController
+{
+    private $submitCodeHandler;
+
+    public function __construct(SubmitCodeHandler $submitCodeHandler)
+    {
+        $this-&gt;submitCodeHandler = $submitCodeHandler;
+    }
+
+    /**
+     * @throws \DomainException If the required "code" parameter is missing
+     * @throws \DomainException If the "code" parameter is not a string
+     * @throws \DomainException If the "code" parameter is not a valid code
+     */
+    public function submitCode(Request $request): Response
+    {
+        $newCount = $this-&gt;submitCodeHandler-&gt;handle(new SubmitCode(
+            $request-&gt;request-&gt;get('code')
+        ));
+
+        return new Response(json_encode(['counter' =&gt; $newCount]), 200, [
+            'Content-Type' =&gt; 'application/json',
+        ]);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><em>Note 7</em>: Exceptions should be handled by event listeners, those should log
+  important errors and create an appropriate response.</p>
+  
+  <p><em>Note 8</em>: Some controllers have more than one action meaning they'd be
+  injected with more than one Command Handler, however only one will be called
+  per Request. Since Symfony 3.3 <a href="https://symfony.com/blog/new-in-symfony-3-3-service-locators">Service Locators</a>
+  can be injected so that the controller can only access the listed Command
+  Handlers, and only one Command Handler will actually be instantiated.
+  Before Symfony 3.3, the Container should be injected (same effect, but all
+  services are accessible).</p>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Command Bus allows us to decouple our application logic from the framework,
+protecting us from Backward Compability Breaking changes.</p>
+
+<p>However since the Bus can be replaced by Event Listeners, we can simply drop it
+and inject the Command Handlers directly in Controllers. If our application
+isn't asynchronous, then Command Handlers should be able to return values.</p>
+
+<p>So our PragmatiClean Command Bus is simply a Command and Command Handler pair
+for each Use Case in our application (so one pair per Controller action).</p>
+
+<blockquote>
+  <p>For more resources one the Command Bus design pattern, check these links:</p>
+  
+  <ul>
+  <li><a href="http://shawnmc.cool/command-bus">CommandBus</a>
+  by <a href="https://twitter.com/ShawnMcCool">Shawn McCool</a></li>
+  <li><a href="https://www.reddit.com/r/PHP/comments/29a6qz/what_am_i_missing_with_this_whole_command_bus/">What am I missing with this whole command bus (reddit question)</a></li>
+  <li><a href="http://php-and-symfony.matthiasnoback.nl/tags/SimpleBus/">A wave of command buses (series)</a>
+  by <a href="https://twitter.com/matthiasnoback">Matthias Noback</a></li>
+  <li><a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avoid the Mud (slides)</a>
+  by <a href="https://twitter.com/mr_r_miller">Richard Miller</a></li>
+  <li><a href="http://verraes.net/2015/01/messaging-flavours/">Messaging Flavours</a>
+  and <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command, Model validation</a>
+  and also <a href="http://verraes.net/2014/05/functional-foundation-for-cqrs-event-sourcing/">Functional Foundation for CQRS/ES</a>
+  by <a href="https://twitter.com/mathiasverraes">Mathias Verraes</a></li>
+  <li><a href="http://tactician.thephpleague.com/">Tactician</a>, a simple Command Bus library for PHP</li>
+  <li><a href="http://www.udidahan.com/2009/12/09/clarified-cqrs/">Clarified CQRS</a>
+  by <a href="https://twitter.com/UdiDahan">Udi Dahan</a></li>
+  </ul>
+  
+  <p>Also here are some usage examples, with code and everything:</p>
+  
+  <ul>
+  <li><a href="https://gnugat.github.io/2016/06/15/mars-rover-introduction.html">Mars Rover</a>:
+  an application coded chapter after chapter, using this design pattern</li>
+  <li><a href="https://gnugat.github.io/2016/03/24/ultimate-symfony-api-example.html">The Ultimate Developer Guide to Symfony</a>
+  Examples on how to create an API endpoint, a full stack web page and a console command
+  with Symfony and this design pattern</li>
+  </ul>
+</blockquote>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[PragmatiClean - introduction]]></title>
             <link href="https://gnugat.github.io/2017/09/13/pragmaticlean-introdution.html"/>
