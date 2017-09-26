@@ -274,6 +274,12 @@ we've added a `repositories` section with the path to packages (`../`) and
 then added `mars-rover/event-sourcing` to the `require` section, with the
 version `*@dev` (any version, including unstable ones).
 
+We are now able to run Composer:
+            
+```
+composer update --optimize-autoloader
+```
+
 Let's run the tests:
 
 ```
