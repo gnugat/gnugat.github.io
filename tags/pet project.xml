@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2017-09-20T09:25:09+01:00</updated>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2018-06-15T08:00:53+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[SpecGen v0.3]]></title>
-            <link href="https://gnugat.github.io/2015/05/28/spec-gen-0-3.html"/>
+            <link href="/2015/05/28/spec-gen-0-3.html"/>
             <updated>2015-05-28T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/05/28/spec-gen-0-3.html</id>
+            <id>/2015/05/28/spec-gen-0-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.3 inserts a property for each constructor argument.</p>
 </blockquote>
@@ -171,9 +171,9 @@ probably be about using it for collaborators.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[SpecGen v0.2]]></title>
-            <link href="https://gnugat.github.io/2015/05/20/spec-gen-0-2.html"/>
+            <link href="/2015/05/20/spec-gen-0-2.html"/>
             <updated>2015-05-20T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/05/20/spec-gen-0-2.html</id>
+            <id>/2015/05/20/spec-gen-0-2.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.2 inserts use statements.</p>
 </blockquote>
@@ -363,9 +363,9 @@ of a new generator: insertion of properties when the method is a constructor.</p
         </entry>
             <entry>
             <title type="html"><![CDATA[Memio SpecGen v0.1]]></title>
-            <link href="https://gnugat.github.io/2015/05/13/memio-spec-gen.html"/>
+            <link href="/2015/05/13/memio-spec-gen.html"/>
             <updated>2015-05-13T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/05/13/memio-spec-gen.html</id>
+            <id>/2015/05/13/memio-spec-gen.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> is a <a href="http://phpspec.net">phpspec</a>
   extension that improves its code generator. Currently available: type hinted method arguments.</p>
@@ -688,9 +688,9 @@ generation.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Memio v1.0]]></title>
-            <link href="https://gnugat.github.io/2015/05/06/memio.html"/>
+            <link href="/2015/05/06/memio.html"/>
             <updated>2015-05-06T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/05/06/memio.html</id>
+            <id>/2015/05/06/memio.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://memio.github.io/memio">Memio</a> is a PHP code generator library,
   the main repository provides integration with Twig templates, but by using the
@@ -879,9 +879,9 @@ code generator.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Memio Pretty Printer]]></title>
-            <link href="https://gnugat.github.io/2015/04/29/memio-pretty-printer.html"/>
+            <link href="/2015/04/29/memio-pretty-printer.html"/>
             <updated>2015-04-29T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/04/29/memio-pretty-printer.html</id>
+            <id>/2015/04/29/memio-pretty-printer.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/pretty-printer">PrettyPrinter</a> converts a
   <a href="http://github.com/memio/model">Model</a> into its PHP code (returns a string),
@@ -1069,9 +1069,9 @@ but we can install Memio's TwigTemplateEngine package .</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Memio validator and linter]]></title>
-            <link href="https://gnugat.github.io/2015/04/22/memio-validator-linter.html"/>
+            <link href="/2015/04/22/memio-validator-linter.html"/>
             <updated>2015-04-22T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/04/22/memio-validator-linter.html</id>
+            <id>/2015/04/22/memio-validator-linter.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Write <a href="http://github.com/memio/validator">constraints</a> to check
   <a href="http://github.com/memio/model">models</a> integrity.
@@ -1230,9 +1230,9 @@ are valid. Linter is a set of constraints ready to use, allowing to prevent synt
         </entry>
             <entry>
             <title type="html"><![CDATA[Memio models]]></title>
-            <link href="https://gnugat.github.io/2015/04/15/memio-models.html"/>
+            <link href="/2015/04/15/memio-models.html"/>
             <updated>2015-04-15T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/04/15/memio-models.html</id>
+            <id>/2015/04/15/memio-models.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Describe code by building <a href="http://github.com/memio/model">models</a>.</p>
 </blockquote>
@@ -1389,9 +1389,9 @@ function phpspec_generator($methodName, array $arguments) {
         </entry>
             <entry>
             <title type="html"><![CDATA[Introducing Memio, code generator]]></title>
-            <link href="https://gnugat.github.io/2015/04/08/introducing-memio-code-generator.html"/>
+            <link href="/2015/04/08/introducing-memio-code-generator.html"/>
             <updated>2015-04-08T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/04/08/introducing-memio-code-generator.html</id>
+            <id>/2015/04/08/introducing-memio-code-generator.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Work in Progress: Memio, a library for PHP code generation.</p>
 </blockquote>
@@ -1516,9 +1516,9 @@ by <a href="https://github.com/webmozart">webmozart</a>).</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Lightweight console library]]></title>
-            <link href="https://gnugat.github.io/2014/12/03/lightweight-console-lib.html"/>
+            <link href="/2014/12/03/lightweight-console-lib.html"/>
             <updated>2014-12-03T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2014/12/03/lightweight-console-lib.html</id>
+            <id>/2014/12/03/lightweight-console-lib.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This article has been deprecated.</p>
   
@@ -1782,9 +1782,9 @@ from an array could improve the situation.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Find all available Fully Qualified ClassNames]]></title>
-            <link href="https://gnugat.github.io/2014/11/26/find-all-available-fqcn.html"/>
+            <link href="/2014/11/26/find-all-available-fqcn.html"/>
             <updated>2014-11-26T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2014/11/26/find-all-available-fqcn.html</id>
+            <id>/2014/11/26/find-all-available-fqcn.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/nomo-spaco">Nomo Spaco</a> finds a given
   project's PHP files, and read them to give you the available Fully Qualified
@@ -1913,9 +1913,9 @@ provides you with a package, so you don't have to copy paste anything :) .</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Redaktilo 1.3]]></title>
-            <link href="https://gnugat.github.io/2014/11/06/redaktilo-1-3.html"/>
+            <link href="/2014/11/06/redaktilo-1-3.html"/>
             <updated>2014-11-06T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2014/11/06/redaktilo-1-3.html</id>
+            <id>/2014/11/06/redaktilo-1-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> is a library
   which wraps array manipulation to make it feel like using a text editor.</p>
@@ -2146,9 +2146,9 @@ maturity point.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[PHP array manipulation]]></title>
-            <link href="https://gnugat.github.io/2014/10/15/php-array-manipulation.html"/>
+            <link href="/2014/10/15/php-array-manipulation.html"/>
             <updated>2014-10-15T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/10/15/php-array-manipulation.html</id>
+            <id>/2014/10/15/php-array-manipulation.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> provides a nice
   API to manipulate array of lines (insert, replace, go to line, etc).</p>
@@ -2647,9 +2647,9 @@ you.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Redaktilo v0.7]]></title>
-            <link href="https://gnugat.github.io/2014/05/27/redaktilo-0-7.html"/>
+            <link href="/2014/05/27/redaktilo-0-7.html"/>
             <updated>2014-05-27T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/05/27/redaktilo-0-7.html</id>
+            <id>/2014/05/27/redaktilo-0-7.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>Since the announcement of <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> on
@@ -2830,9 +2830,9 @@ start a discussion here.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Facade design pattern, by example]]></title>
-            <link href="https://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html"/>
+            <link href="/2014/05/21/facade-design-pattern-by-example.html"/>
             <updated>2014-05-21T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/05/21/facade-design-pattern-by-example.html</id>
+            <id>/2014/05/21/facade-design-pattern-by-example.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>Sometimes, you just want to hide low level complexity behind a unique interface
@@ -2928,9 +2928,9 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
         </entry>
             <entry>
             <title type="html"><![CDATA[Open/Closed principle, by example]]></title>
-            <link href="https://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html"/>
+            <link href="/2014/05/14/open-closed-principle-by-example.html"/>
             <updated>2014-05-14T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/05/14/open-closed-principle-by-example.html</id>
+            <id>/2014/05/14/open-closed-principle-by-example.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>This week I've read two articles, which just have been published, on the
@@ -3186,9 +3186,9 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
         </entry>
             <entry>
             <title type="html"><![CDATA[Redaktilo: because your code too needs an editor]]></title>
-            <link href="https://gnugat.github.io/2014/05/09/redaktilo.html"/>
+            <link href="/2014/05/09/redaktilo.html"/>
             <updated>2014-05-09T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/05/09/redaktilo.html</id>
+            <id>/2014/05/09/redaktilo.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>I've been working on a silly library lately:
@@ -3438,9 +3438,9 @@ to manipulate files, through the editor metaphor:</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Bootstrap the markdown files of your FOSS project]]></title>
-            <link href="https://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html"/>
+            <link href="/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html"/>
             <updated>2014-01-15T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html</id>
+            <id>/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: Fossil is currently unmaintained.</p>
 </blockquote>

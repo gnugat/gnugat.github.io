@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2017-09-20T09:25:09+01:00</updated>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2018-06-15T08:00:53+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Symfony Differently - part 3: Conclusion]]></title>
-            <link href="https://gnugat.github.io/2015/08/02/sf-differently-part-3-conclusion.html"/>
+            <link href="/2015/08/02/sf-differently-part-3-conclusion.html"/>
             <updated>2015-08-02T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/08/02/sf-differently-part-3-conclusion.html</id>
+            <id>/2015/08/02/sf-differently-part-3-conclusion.html</id>
             <content type="html"><![CDATA[<p>This series isn't really working for me, so I've decided to conclude it prematurely.
 Have a look at the first ones:</p>
 
@@ -91,9 +91,9 @@ called.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony Differently - part 2: Bootstrap]]></title>
-            <link href="https://gnugat.github.io/2015/06/10/sf-differently-part-2-bootstrap.html"/>
+            <link href="/2015/06/10/sf-differently-part-2-bootstrap.html"/>
             <updated>2015-06-10T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/06/10/sf-differently-part-2-bootstrap.html</id>
+            <id>/2015/06/10/sf-differently-part-2-bootstrap.html</id>
             <content type="html"><![CDATA[<p>This is the second article of the <a href="https://symfony.com">Symfony</a> Differently series,
 Have a look at the first one: <a href="/2015/06/03/sf-differently-part-1-introduction.html">Introduction</a>.</p>
 
@@ -504,9 +504,9 @@ application in the future, we've chosen to stay consistent with the rest.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony Differently - part 1: Introduction]]></title>
-            <link href="https://gnugat.github.io/2015/06/03/sf-differently-part-1-introduction.html"/>
+            <link href="/2015/06/03/sf-differently-part-1-introduction.html"/>
             <updated>2015-06-03T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/06/03/sf-differently-part-1-introduction.html</id>
+            <id>/2015/06/03/sf-differently-part-1-introduction.html</id>
             <content type="html"><![CDATA[<p><a href="https://symfony.com">Symfony</a> is an amazing HTTP framework which powers
 <a href="http://labs.octivi.com/handling-1-billion-requests-a-week-with-symfony2/">high traffic websites</a>.
 Performance shouldn't be a concern when first creating a website, because between

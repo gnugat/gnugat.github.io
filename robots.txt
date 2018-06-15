@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: /tags/
 
-Sitemap: https://gnugat.github.io/sitemap.xml
+Sitemap: /sitemap.xml

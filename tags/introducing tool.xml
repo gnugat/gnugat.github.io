@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2017-09-20T09:25:09+01:00</updated>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2018-06-15T08:00:53+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Couscous]]></title>
-            <link href="https://gnugat.github.io/2016/01/20/couscous.html"/>
+            <link href="/2016/01/20/couscous.html"/>
             <updated>2016-01-20T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2016/01/20/couscous.html</id>
+            <id>/2016/01/20/couscous.html</id>
             <content type="html"><![CDATA[<p><a href="http://couscous.io">Couscous</a> is a static site generator tool for your Github projects,
 converting all markdown files into an online documentation hosted by
 <a href="https://pages.github.com/">Github Pages</a>.</p>
@@ -102,9 +102,9 @@ thanks to its simplicity.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Scuplin]]></title>
-            <link href="https://gnugat.github.io/2016/01/15/sculpin.html"/>
+            <link href="/2016/01/15/sculpin.html"/>
             <updated>2016-01-15T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2016/01/15/sculpin.html</id>
+            <id>/2016/01/15/sculpin.html</id>
             <content type="html"><![CDATA[<p>Previously using <a href="http://carew.github.io/">Carew</a>, the static website generator,
 this blog has now been migrated to <a href="http://sculpin.io">Sculpin</a>.</p>
 
@@ -198,9 +198,9 @@ to extend.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[phpspec: a quick tour]]></title>
-            <link href="https://gnugat.github.io/2014/03/11/phpspec-quick-tour.html"/>
+            <link href="/2014/03/11/phpspec-quick-tour.html"/>
             <updated>2014-03-11T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2014/03/11/phpspec-quick-tour.html</id>
+            <id>/2014/03/11/phpspec-quick-tour.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>This article is part of a series on Tests in general and on how to practice
@@ -311,9 +311,9 @@ provides a non verbose API. Even its documentations is complete and small!</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Bootstrap the markdown files of your FOSS project]]></title>
-            <link href="https://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html"/>
+            <link href="/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html"/>
             <updated>2014-01-15T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html</id>
+            <id>/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: Fossil is currently unmaintained.</p>
 </blockquote>
@@ -556,9 +556,9 @@ documentation so everyone can see how awesome your work is!</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Carew, the static site generator]]></title>
-            <link href="https://gnugat.github.io/2014/01/01/carew-static-site-generator.html"/>
+            <link href="/2014/01/01/carew-static-site-generator.html"/>
             <updated>2014-01-01T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2014/01/01/carew-static-site-generator.html</id>
+            <id>/2014/01/01/carew-static-site-generator.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This article has been re-written - see <a href="/2016/01/15/sculpin.html">Scuplin</a></p>
 </blockquote>
