@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2017-09-20T09:25:09+01:00</updated>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2018-06-15T08:00:53+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Find all available Fully Qualified ClassNames]]></title>
-            <link href="https://gnugat.github.io/2014/11/26/find-all-available-fqcn.html"/>
+            <link href="/2014/11/26/find-all-available-fqcn.html"/>
             <updated>2014-11-26T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2014/11/26/find-all-available-fqcn.html</id>
+            <id>/2014/11/26/find-all-available-fqcn.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/nomo-spaco">Nomo Spaco</a> finds a given
   project's PHP files, and read them to give you the available Fully Qualified
@@ -141,9 +141,9 @@ provides you with a package, so you don't have to copy paste anything :) .</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[PHP array manipulation]]></title>
-            <link href="https://gnugat.github.io/2014/10/15/php-array-manipulation.html"/>
+            <link href="/2014/10/15/php-array-manipulation.html"/>
             <updated>2014-10-15T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/10/15/php-array-manipulation.html</id>
+            <id>/2014/10/15/php-array-manipulation.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> provides a nice
   API to manipulate array of lines (insert, replace, go to line, etc).</p>
@@ -642,9 +642,9 @@ you.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[PHP Tokenizer]]></title>
-            <link href="https://gnugat.github.io/2014/06/04/php-tokenizer.html"/>
+            <link href="/2014/06/04/php-tokenizer.html"/>
             <updated>2014-06-04T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/06/04/php-tokenizer.html</id>
+            <id>/2014/06/04/php-tokenizer.html</id>
             <content type="html"><![CDATA[<p>The <a href="http://www.php.net/manual/en/book.tokenizer.php">PHP Tokenizer documentation</a>
 looks a bit empty, and you have to try it out by yourself to understand how it
 works.</p>
@@ -790,9 +790,9 @@ use <code>token_name($token)</code>.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[PHP generators and coroutines]]></title>
-            <link href="https://gnugat.github.io/2014/04/30/php-generators-and-coroutines.html"/>
+            <link href="/2014/04/30/php-generators-and-coroutines.html"/>
             <updated>2014-04-30T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/04/30/php-generators-and-coroutines.html</id>
+            <id>/2014/04/30/php-generators-and-coroutines.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>In PHP ~5.5, a function containing <code>yield</code> becomes an instance of the

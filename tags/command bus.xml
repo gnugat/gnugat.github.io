@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2017-09-20T09:25:09+01:00</updated>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2018-06-15T08:00:53+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[PragmatiClean - Command Bus]]></title>
-            <link href="https://gnugat.github.io/2017/09/20/pragmaticlean-command-bus.html"/>
+            <link href="/2017/09/20/pragmaticlean-command-bus.html"/>
             <updated>2017-09-20T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2017/09/20/pragmaticlean-command-bus.html</id>
+            <id>/2017/09/20/pragmaticlean-command-bus.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Use Command Bus pattern in your controllers, but drop the bus.</p>
 </blockquote>
@@ -295,9 +295,9 @@ for each Use Case in our application (so one pair per Controller action).</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Towards CQRS, Command Bus]]></title>
-            <link href="https://gnugat.github.io/2016/05/11/towards-cqrs-command-bus.html"/>
+            <link href="/2016/05/11/towards-cqrs-command-bus.html"/>
             <updated>2016-05-11T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/05/11/towards-cqrs-command-bus.html</id>
+            <id>/2016/05/11/towards-cqrs-command-bus.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: The <code>Command Bus</code> pattern can help you get the CQRS "Command" part right.</p>
 </blockquote>
@@ -720,9 +720,9 @@ by <a href="https://twitter.com/UdiDahan">Udi Dahan</a></li>
         </entry>
             <entry>
             <title type="html"><![CDATA[Decouple from Frameworks]]></title>
-            <link href="https://gnugat.github.io/2015/09/30/decouple-from-frameworks.html"/>
+            <link href="/2015/09/30/decouple-from-frameworks.html"/>
             <updated>2015-09-30T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/09/30/decouple-from-frameworks.html</id>
+            <id>/2015/09/30/decouple-from-frameworks.html</id>
             <content type="html"><![CDATA[<p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
 While necessary, those concerns don't add any value to your project: the business
 need will not be fulfilled by creating an empty application.</p>
@@ -1314,9 +1314,9 @@ by <a href="https://twitter.com/mrkrstphr">Kristopher Wilson</a></li>
         </entry>
             <entry>
             <title type="html"><![CDATA[Tactician]]></title>
-            <link href="https://gnugat.github.io/2015/09/09/tactician.html"/>
+            <link href="/2015/09/09/tactician.html"/>
             <updated>2015-09-09T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/09/09/tactician.html</id>
+            <id>/2015/09/09/tactician.html</id>
             <content type="html"><![CDATA[<p>Just like <a href="/2015/08/04/simple-bus.html">SimpleBus</a>,
 <a href="https://tactician.thephpleague.com/">Tactician</a> is a lightweight library created by
 <a href="http://rosstuck.com/">Ross Tuck</a> allowing you to use the Command Bus design pattern
@@ -1452,9 +1452,9 @@ the "good" way or the "pragmatic" way (if you don't choose wisely, then shame on
         </entry>
             <entry>
             <title type="html"><![CDATA[Simple Bus]]></title>
-            <link href="https://gnugat.github.io/2015/08/04/simple-bus.html"/>
+            <link href="/2015/08/04/simple-bus.html"/>
             <updated>2015-08-04T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/08/04/simple-bus.html</id>
+            <id>/2015/08/04/simple-bus.html</id>
             <content type="html"><![CDATA[<p><a href="http://simplebus.github.io/MessageBus/">Simple Bus</a> is a lightweight library
 created by <a href="https://twitter.com/matthiasnoback">Matthias Noback</a> allowing you to
 use the Command Bus design pattern in your applications.</p>

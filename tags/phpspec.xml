@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2017-09-20T09:25:09+01:00</updated>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2018-06-15T08:00:53+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating moving]]></title>
-            <link href="https://gnugat.github.io/2016/10/12/mars-rover-locating-moving.html"/>
+            <link href="/2016/10/12/mars-rover-locating-moving.html"/>
             <updated>2016-10-12T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/10/12/mars-rover-locating-moving.html</id>
+            <id>/2016/10/12/mars-rover-locating-moving.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It allows us to practice the followings:</p>
@@ -380,9 +380,9 @@ don't introduce regressions.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating refactoring]]></title>
-            <link href="https://gnugat.github.io/2016/09/28/mars-rover-locating-refactoring.html"/>
+            <link href="/2016/09/28/mars-rover-locating-refactoring.html"/>
             <updated>2016-09-28T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/09/28/mars-rover-locating-refactoring.html</id>
+            <id>/2016/09/28/mars-rover-locating-refactoring.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It allows us to practice the followings:</p>
@@ -703,9 +703,9 @@ third option and create this new package in the next article.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating handler]]></title>
-            <link href="https://gnugat.github.io/2016/09/21/mars-rover-locating-handler.html"/>
+            <link href="/2016/09/21/mars-rover-locating-handler.html"/>
             <updated>2016-09-21T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/09/21/mars-rover-locating-handler.html</id>
+            <id>/2016/09/21/mars-rover-locating-handler.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It allows us to practice the followings:</p>
@@ -919,9 +919,9 @@ explicit.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Driving event]]></title>
-            <link href="https://gnugat.github.io/2016/09/07/mars-rover-driving-event.html"/>
+            <link href="/2016/09/07/mars-rover-driving-event.html"/>
             <updated>2016-09-07T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/09/07/mars-rover-driving-event.html</id>
+            <id>/2016/09/07/mars-rover-driving-event.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It allows us to practice the followings:</p>
@@ -1223,9 +1223,9 @@ case: "Requesting the Rover's location".</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Driving instruction]]></title>
-            <link href="https://gnugat.github.io/2016/08/17/mars-rover-driving-instruction.html"/>
+            <link href="/2016/08/17/mars-rover-driving-instruction.html"/>
             <updated>2016-08-17T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/08/17/mars-rover-driving-instruction.html</id>
+            <id>/2016/08/17/mars-rover-driving-instruction.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It allows us to practice the followings:</p>
@@ -1531,9 +1531,9 @@ allowed us to write more tests to describe all the possible values.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Driving]]></title>
-            <link href="https://gnugat.github.io/2016/08/10/mars-rover-driving.html"/>
+            <link href="/2016/08/10/mars-rover-driving.html"/>
             <updated>2016-08-10T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/08/10/mars-rover-driving.html</id>
+            <id>/2016/08/10/mars-rover-driving.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It allows us to practice the followings:</p>
@@ -1768,9 +1768,9 @@ validation on the input.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Event Sourcing code]]></title>
-            <link href="https://gnugat.github.io/2016/08/03/mars-rover-event-sourcing-code.html"/>
+            <link href="/2016/08/03/mars-rover-event-sourcing-code.html"/>
             <updated>2016-08-03T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/08/03/mars-rover-event-sourcing-code.html</id>
+            <id>/2016/08/03/mars-rover-event-sourcing-code.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to the
 <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It will allow us to practice the followings:</p>
@@ -2081,9 +2081,9 @@ rover.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Event Sourcing package]]></title>
-            <link href="https://gnugat.github.io/2016/07/27/mars-rover-event-sourcing-package.html"/>
+            <link href="/2016/07/27/mars-rover-event-sourcing-package.html"/>
             <updated>2016-07-27T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/07/27/mars-rover-event-sourcing-package.html</id>
+            <id>/2016/07/27/mars-rover-event-sourcing-package.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to the
 <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It will allow us to practice the followings:</p>
@@ -2345,6 +2345,11 @@ we've added a <code>repositories</code> section with the path to packages (<code
 then added <code>mars-rover/event-sourcing</code> to the <code>require</code> section, with the
 version <code>*@dev</code> (any version, including unstable ones).</p>
 
+<p>We are now able to run Composer:</p>
+
+<pre><code>composer update --optimize-autoloader
+</code></pre>
+
 <p>Let's run the tests:</p>
 
 <pre><code>vendor/bin/phpspec run
@@ -2371,9 +2376,9 @@ navigation.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Landing event]]></title>
-            <link href="https://gnugat.github.io/2016/07/20/mars-rover-landing-event.html"/>
+            <link href="/2016/07/20/mars-rover-landing-event.html"/>
             <updated>2016-07-20T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/07/20/mars-rover-landing-event.html</id>
+            <id>/2016/07/20/mars-rover-landing-event.html</id>
             <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It will allow us to practice the followings:</p>
@@ -2739,9 +2744,9 @@ package and put it in its own <code>event-sourcing</code> one.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Landing orientation]]></title>
-            <link href="https://gnugat.github.io/2016/07/13/mars-rover-landing-orientation.html"/>
+            <link href="/2016/07/13/mars-rover-landing-orientation.html"/>
             <updated>2016-07-13T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/07/13/mars-rover-landing-orientation.html</id>
+            <id>/2016/07/13/mars-rover-landing-orientation.html</id>
             <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It will allow us to practice the followings:</p>
@@ -3131,9 +3136,9 @@ it also allows us to have runnable self-checking specifications:</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Landing coordinates]]></title>
-            <link href="https://gnugat.github.io/2016/07/06/mars-rover-landing-coordinates.html"/>
+            <link href="/2016/07/06/mars-rover-landing-coordinates.html"/>
             <updated>2016-07-06T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/07/06/mars-rover-landing-coordinates.html</id>
+            <id>/2016/07/06/mars-rover-landing-coordinates.html</id>
             <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It will allow us to practice the followings:</p>
@@ -3455,9 +3460,9 @@ classes for us.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Landing]]></title>
-            <link href="https://gnugat.github.io/2016/06/29/mars-rover-landing.html"/>
+            <link href="/2016/06/29/mars-rover-landing.html"/>
             <updated>2016-06-29T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/06/29/mars-rover-landing.html</id>
+            <id>/2016/06/29/mars-rover-landing.html</id>
             <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It will allow us to practice the followings:</p>
@@ -3868,9 +3873,9 @@ we'll extract <code>x</code> and <code>y</code> coordinates into their own class
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Initialization]]></title>
-            <link href="https://gnugat.github.io/2016/06/22/mars-rover-initialization.html"/>
+            <link href="/2016/06/22/mars-rover-initialization.html"/>
             <updated>2016-06-22T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/06/22/mars-rover-initialization.html</id>
+            <id>/2016/06/22/mars-rover-initialization.html</id>
             <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It will allow us to practice the followings:</p>
@@ -4093,9 +4098,9 @@ allowing us to showcase an example of Event Sourcing and TDD.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Decouple from Libraries]]></title>
-            <link href="https://gnugat.github.io/2015/10/12/decouple-from-libraries.html"/>
+            <link href="/2015/10/12/decouple-from-libraries.html"/>
             <updated>2015-10-12T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/10/12/decouple-from-libraries.html</id>
+            <id>/2015/10/12/decouple-from-libraries.html</id>
             <content type="html"><![CDATA[<p>Libraries are similar to frameworks: they solve infrastructure problems (e.g.
 requesting remote endpoints or querying databases). They also don't directly
 add any value to our projects: the business need will not be fulfilled by
@@ -4691,9 +4696,9 @@ it can be worth it to protect ourselves from external changes.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Decouple from Frameworks]]></title>
-            <link href="https://gnugat.github.io/2015/09/30/decouple-from-frameworks.html"/>
+            <link href="/2015/09/30/decouple-from-frameworks.html"/>
             <updated>2015-09-30T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/09/30/decouple-from-frameworks.html</id>
+            <id>/2015/09/30/decouple-from-frameworks.html</id>
             <content type="html"><![CDATA[<p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
 While necessary, those concerns don't add any value to your project: the business
 need will not be fulfilled by creating an empty application.</p>
@@ -5285,9 +5290,9 @@ by <a href="https://twitter.com/mrkrstphr">Kristopher Wilson</a></li>
         </entry>
             <entry>
             <title type="html"><![CDATA[PHPUnit with phpspec]]></title>
-            <link href="https://gnugat.github.io/2015/09/23/phpunit-with-phpspec.html"/>
+            <link href="/2015/09/23/phpunit-with-phpspec.html"/>
             <updated>2015-09-23T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/09/23/phpunit-with-phpspec.html</id>
+            <id>/2015/09/23/phpunit-with-phpspec.html</id>
             <content type="html"><![CDATA[<p><a href="https://phpunit.de/">PHPUnit</a> is a port of <a href="http://junit.org/">jUnit</a>, its name
 might be deceptive: it allows you to write any type of tests (unit, but also functional,
 system, integration, end to end, acceptance, etc).</p>
@@ -5594,9 +5599,9 @@ class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
         </entry>
             <entry>
             <title type="html"><![CDATA[phpspec]]></title>
-            <link href="https://gnugat.github.io/2015/08/03/phpspec.html"/>
+            <link href="/2015/08/03/phpspec.html"/>
             <updated>2015-08-03T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/08/03/phpspec.html</id>
+            <id>/2015/08/03/phpspec.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is kept up to date.</p>
 </blockquote>
@@ -5949,9 +5954,9 @@ it to a collaborator you have two choices:</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[SpecGen v0.3]]></title>
-            <link href="https://gnugat.github.io/2015/05/28/spec-gen-0-3.html"/>
+            <link href="/2015/05/28/spec-gen-0-3.html"/>
             <updated>2015-05-28T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/05/28/spec-gen-0-3.html</id>
+            <id>/2015/05/28/spec-gen-0-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.3 inserts a property for each constructor argument.</p>
 </blockquote>
@@ -6110,9 +6115,9 @@ probably be about using it for collaborators.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[SpecGen v0.2]]></title>
-            <link href="https://gnugat.github.io/2015/05/20/spec-gen-0-2.html"/>
+            <link href="/2015/05/20/spec-gen-0-2.html"/>
             <updated>2015-05-20T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/05/20/spec-gen-0-2.html</id>
+            <id>/2015/05/20/spec-gen-0-2.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.2 inserts use statements.</p>
 </blockquote>
@@ -6302,9 +6307,9 @@ of a new generator: insertion of properties when the method is a constructor.</p
         </entry>
             <entry>
             <title type="html"><![CDATA[Memio SpecGen v0.1]]></title>
-            <link href="https://gnugat.github.io/2015/05/13/memio-spec-gen.html"/>
+            <link href="/2015/05/13/memio-spec-gen.html"/>
             <updated>2015-05-13T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2015/05/13/memio-spec-gen.html</id>
+            <id>/2015/05/13/memio-spec-gen.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> is a <a href="http://phpspec.net">phpspec</a>
   extension that improves its code generator. Currently available: type hinted method arguments.</p>
@@ -6627,9 +6632,9 @@ generation.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 3.3: Consuming, remote calls]]></title>
-            <link href="https://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html"/>
+            <link href="/2015/03/25/sf-ws-part-3-3-consuming-remote.html"/>
             <updated>2015-03-25T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2015/03/25/sf-ws-part-3-3-consuming-remote.html</id>
+            <id>/2015/03/25/sf-ws-part-3-3-consuming-remote.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -6984,9 +6989,9 @@ those should each have their own series of article :) .</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 3.2: Consuming, Guzzle]]></title>
-            <link href="https://gnugat.github.io/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html"/>
+            <link href="/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html"/>
             <updated>2015-03-18T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html</id>
+            <id>/2015/03/18/sf-ws-part-3-2-consuming-guzzle.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -7499,9 +7504,9 @@ really need.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 3.1: Consuming, RequestHandler]]></title>
-            <link href="https://gnugat.github.io/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html"/>
+            <link href="/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html"/>
             <updated>2015-03-11T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html</id>
+            <id>/2015/03/11/sf-ws-part-3-1-consuming-request-handler.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -7920,9 +7925,9 @@ implementations (yes, more than one!).</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 2.3: Creation, refactoring]]></title>
-            <link href="https://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html"/>
+            <link href="/2015/03/04/sf-ws-part-2-3-creation-refactoring.html"/>
             <updated>2015-03-04T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2015/03/04/sf-ws-part-2-3-creation-refactoring.html</id>
+            <id>/2015/03/04/sf-ws-part-2-3-creation-refactoring.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -8530,9 +8535,9 @@ who'd like to practice:</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Symfony / Web Services - part 2.2: Creation, the pragmatic way]]></title>
-            <link href="https://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html"/>
+            <link href="/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html"/>
             <updated>2015-01-28T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html</id>
+            <id>/2015/01/28/sf-ws-part-2-2-creation-pragmatic.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
   <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
@@ -9208,9 +9213,9 @@ where everything is hard to read, impossible to test and expensive to change.</p
         </entry>
             <entry>
             <title type="html"><![CDATA[phpspec: a quick tour]]></title>
-            <link href="https://gnugat.github.io/2014/03/11/phpspec-quick-tour.html"/>
+            <link href="/2014/03/11/phpspec-quick-tour.html"/>
             <updated>2014-03-11T00:00:00+00:00</updated>
-            <id>https://gnugat.github.io/2014/03/11/phpspec-quick-tour.html</id>
+            <id>/2014/03/11/phpspec-quick-tour.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>This article is part of a series on Tests in general and on how to practice

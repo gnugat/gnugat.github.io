@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2017-09-20T09:25:09+01:00</updated>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2018-06-15T08:00:53+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating geolocation]]></title>
-            <link href="https://gnugat.github.io/2016/10/05/mars-rover-locating-geolocation.html"/>
+            <link href="/2016/10/05/mars-rover-locating-geolocation.html"/>
             <updated>2016-10-05T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/10/05/mars-rover-locating-geolocation.html</id>
+            <id>/2016/10/05/mars-rover-locating-geolocation.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It allows us to practice the followings:</p>
@@ -273,9 +273,9 @@ and <code>location</code>, keeping them both separate.</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating package]]></title>
-            <link href="https://gnugat.github.io/2016/09/14/mars-rover-locating-package.html"/>
+            <link href="/2016/09/14/mars-rover-locating-package.html"/>
             <updated>2016-09-14T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2016/09/14/mars-rover-locating-package.html</id>
+            <id>/2016/09/14/mars-rover-locating-package.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
 It allows us to practice the followings:</p>
