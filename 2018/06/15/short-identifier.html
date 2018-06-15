@@ -47,14 +47,13 @@
 <p>In the later case, an ID needs to be artificially crafted.</p>
 
 <p>Two of the popular strategies is to use either an auto incremental one
-or a universally unique one, however when it comes to share publicly them,
+or a universally unique one, however when it comes to share them publicly,
 both strategies present some drawbacks</p>
 
 <h2 id="auto-incremental-ids">Auto Incremental IDs</h2>
 
-<p>Resources are attributed with a strictly positive integer
-that represents their number of addition:
-the first resource would have ID 1, the next one would have ID 2, etc.</p>
+<p>Resources are given a serial number, starting from 1
+and increased by 1 for every new entry added.</p>
 
 <p>This means that the ID of the last resource needs to be known
 in order to create a new one, so that's usually done by the database itself.</p>
@@ -72,7 +71,7 @@ in order to create a new one, so that's usually done by the database itself.</p>
 <p>Resources are attributed with a 36 characters long hexadecimal string,
 which is computed by an algorithm.</p>
 
-<p>A couple of Universally unique ID (UUID) strategies are available,
+<p>A couple of Universally Unique ID (UUID) strategies are available,
 the main ones being:</p>
 
 <ul>
@@ -168,23 +167,26 @@ and finally it's been changed to dynamically increment).</p>
 <p>Using the Birthday Problem formula,
 we can estimate that the first collision might happen after
 <code>2 ** (n / 2)</code> short hashes have been used
-(with <strong>n</strong> being the number of first bits, which is <strong>d</strong> * 4).</p>
+(with <strong>n</strong> being the number of first bits, which is <code>d * 4</code>,
+with <strong>d</strong> being the number of first hexadecimal characters).</p>
 
 <p>Here's a handy list:</p>
 
 <ul>
-<li>6 first characters: collision happens after  4 096 hashes generated (covers    16 777 216 hashes)</li>
-<li>7 first charecters: collision happens after 16 384 hashes generated (covers   268 435 456 hashes)</li>
-<li>8 first characters: collision happens after 65 536 hashes generated (covers 4 294 967 296 hashes)</li>
+<li>6 first characters: covers    16 777 216 hashes, but first collision happens after  4 096 hashes generated</li>
+<li>7 first charecters: covers   268 435 456 hashes, but first collision happens after 16 384 hashes generated</li>
+<li>8 first characters: covers 4 294 967 296 hashes, but first collision happens after 65 536 hashes generated</li>
 </ul>
 
 <blockquote>
   <p><em>References</em>:</p>
   
-  <p><a href="https://www.quora.com/Cryptography-What-is-the-smallest-prefix-length-of-an-SHA1-hash-that-would-guarantee-uniqueness-in-a-reasonable-object-space">Smallest SHA-1 prefix before collision?</a>
-  <a href="https://git-scm.com/book/en/v2/Git-Tools-Revision-Selection#Single-Revisions">Git hashes</a>
-  <a href="https://github.com/git/git/commit/dce96489162b05ae3463741f7f0365ff56f0de36">Git bumping default from 7 characters to configurable one</a>
-  <a href="https://github.com/git/git/commit/e6c587c733b4634030b353f4024794b08bc86892">Git introducing a way to automatically guess how many characters should be used</a></p>
+  <ul>
+  <li><a href="https://www.quora.com/Cryptography-What-is-the-smallest-prefix-length-of-an-SHA1-hash-that-would-guarantee-uniqueness-in-a-reasonable-object-space">Smallest SHA-1 prefix before collision?</a></li>
+  <li><a href="https://git-scm.com/book/en/v2/Git-Tools-Revision-Selection#Single-Revisions">Git hashes</a></li>
+  <li><a href="https://github.com/git/git/commit/dce96489162b05ae3463741f7f0365ff56f0de36">Git bumping default from 7 characters to configurable one</a></li>
+  <li><a href="https://github.com/git/git/commit/e6c587c733b4634030b353f4024794b08bc86892">Git introducing a way to automatically guess how many characters should be used</a></li>
+  </ul>
 </blockquote>
 
 <h3 id="alphabetical-representation-to-avoid">Alphabetical representation (to avoid)</h3>
