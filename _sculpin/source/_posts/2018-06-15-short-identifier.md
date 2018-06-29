@@ -106,7 +106,7 @@ Git allows to use the first few characters to be able to identify it
 (at first it was the first 7, then it's been changed to the first 12
 and finally it's been changed to dynamically increment).
 
-The number of hashes a subset covers can be calculated as follow: `16 * d`
+The number of hashes a subset covers can be calculated as follow: `16 ** d`
 (with **d** being the number of first hexadecimal characters selected).
 
 Using the Birthday Problem formula,
