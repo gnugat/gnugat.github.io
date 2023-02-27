@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Learn Symfony2 - part 4: Controllers
+title: "Learn Symfony2 - part 4: Controllers"
 tags:
     - symfony
     - learn symfony2 series

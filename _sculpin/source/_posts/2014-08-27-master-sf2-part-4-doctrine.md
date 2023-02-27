@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Master Symfony2 - part 4: Doctrine
+title: "Master Symfony2 - part 4: Doctrine"
 tags:
     - symfony
     - master symfony2 series

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Symfony Differently - part 3: Conclusion
+title: "Symfony Differently - part 3: Conclusion"
 tags:
     - symfony
     - symfony differently

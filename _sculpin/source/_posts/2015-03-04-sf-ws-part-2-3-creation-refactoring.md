@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Symfony / Web Services - part 2.3: Creation, refactoring
+title: "Symfony / Web Services - part 2.3: Creation, refactoring"
 tags:
     - symfony
     - phpspec

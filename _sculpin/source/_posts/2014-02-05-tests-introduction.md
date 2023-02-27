@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Tests: Introduction
+title: "Tests: Introduction"
 tags:
     - tests series
 ---

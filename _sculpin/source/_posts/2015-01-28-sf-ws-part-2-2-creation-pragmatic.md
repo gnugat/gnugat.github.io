@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Symfony / Web Services - part 2.2: Creation, the pragmatic way
+title: "Symfony / Web Services - part 2.2: Creation, the pragmatic way"
 tags:
     - symfony
     - phpspec

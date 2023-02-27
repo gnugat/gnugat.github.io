@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Symfony / Web Services - part 1: Introduction
+title: "Symfony / Web Services - part 1: Introduction"
 tags:
     - symfony
     - symfony / web services series

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Learn Symfony2 - part 2: Empty application
+title: "Learn Symfony2 - part 2: Empty application"
 tags:
     - symfony
     - learn symfony2 series

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Pomodoro: manage your breaks, improve your focus
+title: "Pomodoro: manage your breaks, improve your focus"
 tags:
     - introducing methodology
 ---

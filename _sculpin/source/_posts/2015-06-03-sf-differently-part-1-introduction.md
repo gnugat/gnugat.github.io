@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Symfony Differently - part 1: Introduction
+title: "Symfony Differently - part 1: Introduction"
 tags:
     - symfony
     - symfony differently

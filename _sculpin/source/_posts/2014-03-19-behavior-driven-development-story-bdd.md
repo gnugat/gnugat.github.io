@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Behavior Driven Development: story BDD
+title: "Behavior Driven Development: story BDD"
 tags:
     - tests series
 ---

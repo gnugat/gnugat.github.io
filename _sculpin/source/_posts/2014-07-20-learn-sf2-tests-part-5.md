@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Learn Symfony2 - part 5: Tests
+title: "Learn Symfony2 - part 5: Tests"
 tags:
     - symfony
     - learn symfony2 series

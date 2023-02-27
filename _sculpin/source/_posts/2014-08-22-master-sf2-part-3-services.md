@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Master Symfony2 - part 3: Services
+title: "Master Symfony2 - part 3: Services"
 tags:
     - symfony
     - master symfony2 series

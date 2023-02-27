@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Learn Symfony2 - part 1: Composer
+title: "Learn Symfony2 - part 1: Composer"
 tags:
     - symfony
     - Learn Symfony2 series

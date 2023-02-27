@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Symfony / Web Services - part 3.1: Consuming, RequestHandler
+title: "Symfony / Web Services - part 3.1: Consuming, RequestHandler"
 tags:
     - symfony
     - phpspec

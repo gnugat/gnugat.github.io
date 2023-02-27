@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Master Symfony2 - part 1: Bootstraping
+title: "Master Symfony2 - part 1: Bootstraping"
 tags:
     - symfony
     - master symfony2 series

@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Behat: a quick tour
+title: "Behat: a quick tour"
 tags:
     - tests series
 ---

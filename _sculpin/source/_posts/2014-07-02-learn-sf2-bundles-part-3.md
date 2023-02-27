@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Learn Symfony2 - part 3: Bundles
+title: "Learn Symfony2 - part 3: Bundles"
 tags:
     - symfony
     - learn symfony2 series

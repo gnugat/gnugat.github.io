@@ -1,6 +1,6 @@
 ---
 layout: post
-title: phpspec: a quick tour
+title: "phpspec: a quick tour"
 tags:
     - tests series
     - introducing tool

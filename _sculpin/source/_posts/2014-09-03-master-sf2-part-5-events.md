@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Master Symfony2 - part 5: Events
+title: "Master Symfony2 - part 5: Events"
 tags:
     - symfony
     - master symfony2 series

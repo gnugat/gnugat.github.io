@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Master Symfony2 - part 6: Annotations
+title: "Master Symfony2 - part 6: Annotations"
 tags:
     - symfony
     - master symfony2 series

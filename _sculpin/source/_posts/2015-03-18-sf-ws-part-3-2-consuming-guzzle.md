@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Symfony / Web Services - part 3.2: Consuming, Guzzle
+title: "Symfony / Web Services - part 3.2: Consuming, Guzzle"
 tags:
     - symfony
     - phpspec

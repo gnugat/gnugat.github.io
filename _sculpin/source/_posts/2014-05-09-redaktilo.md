@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Redaktilo: because your code too needs an editor
+title: "Redaktilo: because your code too needs an editor"
 tags:
     - redaktilo
     - pet project

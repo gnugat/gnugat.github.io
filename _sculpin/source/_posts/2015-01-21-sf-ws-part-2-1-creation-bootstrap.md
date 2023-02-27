@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Symfony / Web Services - part 2.1: Creation bootstrap
+title: "Symfony / Web Services - part 2.1: Creation bootstrap"
 tags:
     - symfony
     - symfony / web services series

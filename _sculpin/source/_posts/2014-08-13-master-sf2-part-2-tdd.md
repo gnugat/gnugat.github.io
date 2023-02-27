@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Master Symfony2 - part 2: Test Driven Development
+title: "Master Symfony2 - part 2: Test Driven Development"
 tags:
     - symfony
     - tdd

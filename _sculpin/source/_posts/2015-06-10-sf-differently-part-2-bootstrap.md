@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Symfony Differently - part 2: Bootstrap
+title: "Symfony Differently - part 2: Bootstrap"
 tags:
     - symfony
     - symfony differently
