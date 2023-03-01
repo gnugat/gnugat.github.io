@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ChatGPT: fluff or not? Prompt Engineering &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2023/03/01/chat-gpt.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+            
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    ChatGPT: fluff or not? Prompt Engineering
+    <span class="sub-title">01/03/2023</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="/tags/ChatGPT">ChatGPT</a>
+                    </nav>
+                </header>
+
+                <p>Now that a couple of months have passed since its over hyped launch,
+surely <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> has found some
+use cases where it could be of any actual use. Or is it all fluff? Let's find out.</p>
+
+<p>In my quest to find a use for ChatGPT in my day to day developer activity,
+I've stumbled upon this video:
+<a href="https://www.youtube.com/watch?v=Xs7wieu-35k]">ChatGPT Prompt Engineering: How to Write a Story</a>,
+by <a href="https://www.allabtai.com/">Kris - All About AI</a>).</p>
+
+<p>Granted, story writing is a bit irrelevant for what I'm looking for.
+Yet the way the messages sent to ChatGPT (aka "prompts") were crafted,
+proved quite interesting!</p>
+
+<p>Let me walk you through it,
+with some added references so we can learn a thing or two.</p>
+
+<h2 id="1st-prompt%3A-%22you%27re-an-expert%22">1st prompt: "You're an expert"</h2>
+
+<p>After opening a new conversation,
+the First Prompt (or user message) sent to ChatGPT is used to prime it:</p>
+
+<pre><code>You are a {Genre} author.
+Your task is to write {Genre} stories in a vivid and intriguing language.
+Answer with "..." if you acknowledge.
+Don't write anything yet.
+
+Genre = Sci-Fi
+</code></pre>
+
+<p>This is a variation of the <code>You are [job], you have been [doing thing] for 20 years</code> prompt,
+which helps ChatGPT narrow down the context that it's going to use to generate its replies.</p>
+
+<blockquote>
+  <p>Reference: "Give ChatGPT an identity" section from
+  <a href="https://wgmimedia.com/how-to-use-chatgpt-advanced-prompt-engineering/">How To Use ChatGPT: Advanced Prompt Engineering</a></p>
+</blockquote>
+
+<p>Interestingly, it uses a placeholder (<code>{Genre}</code>) and sets its value (<code>Genre = Sci-Fi</code>).</p>
+
+<p>It also makes sure that ChatGPT doesn't generate any reply.</p>
+
+<p>Could this be because ChatGPT will base its next replies
+on any text it will have already generated in the conversation?</p>
+
+<h2 id="2nd-prompt%3A-%22templates-within-templates%22">2nd prompt: "Templates within Templates"</h2>
+
+<p>The Second Prompt is used to specify more context for chatGPT:</p>
+
+<pre><code>Title: [Insert story title here]
+Setting: [Insert setting details here, including time period, location, and any relevant background information]
+Protagonist: [Insert protagonist's name, age, and occupation, as well as a brief description of their personality and motivations]
+Fill out the template above for a {Genre} story
+Genre = Sci-Fi
+</code></pre>
+
+<p>The brilliance of this one is that it uses a second kind of placeholder (<code>[Insert story title here]</code>),
+one that is intended for ChatGPT to replace (<code>Fill out template above</code>).</p>
+
+<p>If ChatGPT is indeed going to base its next reply
+on whatever it has already generated earlier in the conversation,
+then having it repeat the instructions with the added details is simply genius.</p>
+
+<p>The list format might also not be trivial,
+as I've seen claims that usage of colons (<code>Title: [insert story title here]</code>)
+is supposed to help ChatGPT be more specific in its replies too.</p>
+
+<blockquote>
+  <p>Reference: "Prompt 2" chapter from
+  <a href="https://youtu.be/HGDxu3kPErs">Advanced ChatGPT Prompt Tutorial</a></p>
+</blockquote>
+
+<h2 id="3rd-%26-4th-prompts%3A-%22now%2C-do-your-job%22">3rd &amp; 4th prompts: "Now, do your job"</h2>
+
+<p>While the First and Second prompts were about setting the context,
+the Third and Fourth ones are finally the calls to action.</p>
+
+<p>Here's the Third Prompt:</p>
+
+<pre><code>Build a story outlines from the factors above:
+</code></pre>
+
+<p>ChatGPT is going to generate an ordered list based on the context previously given.</p>
+
+<p>Then the Fourth Prompt:</p>
+
+<pre><code>Great, now create story chapters from the outlines above:
+</code></pre>
+
+<p>ChatGPT is going to reuse its reply for the Third Prompt, and expand on it.</p>
+
+<p>I'm taking note of the use of the word <code>Great</code>,
+could its purpose be to give some positive feedback to ChatGPT?</p>
+
+<p>Another thing worth mentioning is the use of the word <code>now</code>,
+which I see a lot from prompt engineers,
+and I'm not sure if it's delibarate to improve ChatGPT replies.</p>
+
+<p>But most importantly,
+I'm wondering how <code>from the factors above</code> is intepreted by ChatGPT:
+is it going to consider every messages sent in the current conversation,
+or is it going to focus on the immediately prior message.</p>
+
+<p>I've personally got a feeling that ChatGPT will focus mainly on its own
+replies from the conversation.</p>
+
+<p>The usage of a final colon <code>:</code> is especially noteworthy,
+I'd be curious to know if this is another hack to help ChatGPT write more focused replies.</p>
+
+<h2 id="5th-prompt%3A-%22use-given-style%22">5th prompt: "Use given style"</h2>
+
+<p>The Fifth Prompt is yet another call to action:</p>
+
+<pre><code>Write Chapter 1 in depth and in great detail, in a intriguing writing style:
+</code></pre>
+
+<p>It asks ChatGPT to reuse its previous reply and expand on it,
+but this time only a section of it by referencing the chapter number
+(<code>Write Chapter 1</code>)!</p>
+
+<p>The rest of the prompt is a variation of
+<code>Write a [length] [content type] on [topic] in the style of [style]</code>.</p>
+
+<p>Specifying some constraints such as these helps ChatGPT avoid irrelevant output.</p>
+
+<blockquote>
+  <p>Reference: "Be specific, descriptive and as detailed as possible about
+  the desired context, outcome, length, format, style, etc " section from
+  <a href="https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-openai-api">Best practices for prompt engineering with OpenAI API</a></p>
+</blockquote>
+
+<h2 id="5th-prompt-bis%3A-prompt-editing%21">5th prompt (bis): Prompt Editing!</h2>
+
+<p>In my opinion, the most important piece of advice from that video
+comes in play when writing the second to tenth chapters:</p>
+
+<pre><code>Write Chapter 2 in depth and in great detail, in a intriguing writing style:
+</code></pre>
+
+<p>Instead of copying the prompt, pasting it in the input message box,
+changing the chapter number and then sending it as the Sixth Prompt,
+the advice we're given is to <strong>edit the Fifth Prompt</strong> (through ChatGPT's UI),
+change the number and submit it!</p>
+
+<p>ChatGPT's UI will still allow you to check the previous versions of the prompt,
+as well as their generated replies, so you don't lose anything here.</p>
+
+<p>But this ties in with the idea that ChatGPT performs better with its immediately prior message,
+than asking it to expand on a reply it wrote 10 messages earlier.</p>
+
+<h2 id="takeways">Takeways</h2>
+
+<p>While the purpose of the video was to write a Sci-Fi story,
+it helped learn a lot of Prompt Engineering techniques
+(the art of crafting messages that will improve ChatGPT replies).</p>
+
+<p>The First Prompt needs to prime ChatGPT for the targeted domain,
+and make sure that it doesn't reply anything:</p>
+
+<pre><code>You're [JOB].
+You have been [DOING JOB] for 20 years.
+Your task is now to [TASK].
+Answer with "..." if you acknowledge.
+Don't write anything yet.
+</code></pre>
+
+<p>It seems to me that ChatGPT bases its reply on its own immediately prior message,
+so the Second Prompt needs to make ChatGPT repeat it in its reply,
+to set up the context for the Third Prompt's reply.</p>
+
+<p>The usage of colons (<code>:</code>) helps ChatGPT to be more specific in its replies,
+and it's possible to use placeholders that are going to be replaced
+with generated content in ChatGPT reply:</p>
+
+<pre><code>Title: [Insert title]
+Setting: [Insert setting details here]
+Fill out the template above for a Sci-Fi story
+</code></pre>
+
+<p>If the prompt is intended to be copy pasted and used in different scenarios,
+it's possible to use placeholders that act as variables,
+and to which the value is set further down the prompt:</p>
+
+<pre><code>You are a {Genre} author.
+Your task is to write {Genre} stories
+
+Genre = Sci-Fi
+</code></pre>
+
+<p>The Third Prompt is going to be a call to action,
+that's going to use the Second Prompt's reply for context.</p>
+
+<pre><code>Now, write [length] [content type] on [topic] in the style of [style], using [context] from above:
+</code></pre>
+
+<p>While we're on the topic of length it's very important to bear in mind that
+<em>shared between the prompt you write and the reply it generates,
+<strong>ChatGPT can only handle 4000 tokens</strong></em>, which is approximately 3000 words
+(when it uses the <a href="https://platform.openai.com/docs/models/gpt-3">text-davinci-003 model</a>).</p>
+
+<p>So for example, if your prompt contains 3000 tokens,
+it only leaves ChatGPT with a 1000 token left for its reply!</p>
+
+<blockquote>
+  <p>Reference: "Important: Prompt Size Matters" chapter from
+  <a href="https://www.youtube.com/watch?v=EYjG6i53-xk">This Will Make You Better than 99% ChatGPT Users</a></p>
+</blockquote>
+
+<p>The Fourth Prompt is going to be a call to action,
+that's going to use the Third Prompt's reply for context, and so on.</p>
+
+<p>If for some reason the Fifth Prompt needs to use the Third Prompt's reply for context,
+then we should instead edit directly the Third Prompt, make the required changes, and submit them.</p>
+
+<p>All in all, while I haven't found a practical use case for ChatGPT in my day to day developer activity,
+it still seems worth exploring its potential for generating content. The quest continues.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2018/06/15/short-identifier.html" title="Short Identifier">Previous &lt; Short Identifier</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

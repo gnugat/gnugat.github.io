@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2018-06-15T08:31:22+01:00</updated>
+    <updated>2023-03-01T14:11:27+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -11,7 +11,7 @@
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - Conclusion]]></title>
             <link href="/2014/07/23/learn-sf2-conclusion.html"/>
-            <updated>2014-07-23T00:00:00+01:00</updated>
+            <updated>2014-07-23T00:00:00+00:00</updated>
             <id>/2014/07/23/learn-sf2-conclusion.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -368,7 +368,7 @@ series of articles!</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 5: Tests]]></title>
             <link href="/2014/07/20/learn-sf2-tests-part-5.html"/>
-            <updated>2014-07-20T00:00:00+01:00</updated>
+            <updated>2014-07-20T00:00:00+00:00</updated>
             <id>/2014/07/20/learn-sf2-tests-part-5.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -742,7 +742,7 @@ need to check the precise HTTP response's status code).</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 4: Controllers]]></title>
             <link href="/2014/07/12/learn-sf2-controllers-part-4.html"/>
-            <updated>2014-07-12T00:00:00+01:00</updated>
+            <updated>2014-07-12T00:00:00+00:00</updated>
             <id>/2014/07/12/learn-sf2-controllers-part-4.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -1087,7 +1087,7 @@ git commit -m 'Created Ni route and controller'
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 3: Bundles]]></title>
             <link href="/2014/07/02/learn-sf2-bundles-part-3.html"/>
-            <updated>2014-07-02T00:00:00+01:00</updated>
+            <updated>2014-07-02T00:00:00+00:00</updated>
             <id>/2014/07/02/learn-sf2-bundles-part-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -1347,7 +1347,7 @@ makes too much fuss to no avail (that's my humble opinion anyway).</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 2: Empty application]]></title>
             <link href="/2014/06/25/learn-sf2-empty-app-part-2.html"/>
-            <updated>2014-06-25T00:00:00+01:00</updated>
+            <updated>2014-06-25T00:00:00+00:00</updated>
             <id>/2014/06/25/learn-sf2-empty-app-part-2.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see

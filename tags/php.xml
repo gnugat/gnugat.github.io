@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2018-06-15T08:31:22+01:00</updated>
+    <updated>2023-03-01T14:11:27+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -142,7 +142,7 @@ provides you with a package, so you don't have to copy paste anything :) .</p>
             <entry>
             <title type="html"><![CDATA[PHP array manipulation]]></title>
             <link href="/2014/10/15/php-array-manipulation.html"/>
-            <updated>2014-10-15T00:00:00+01:00</updated>
+            <updated>2014-10-15T00:00:00+00:00</updated>
             <id>/2014/10/15/php-array-manipulation.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> provides a nice
@@ -643,7 +643,7 @@ you.</p>
             <entry>
             <title type="html"><![CDATA[PHP Tokenizer]]></title>
             <link href="/2014/06/04/php-tokenizer.html"/>
-            <updated>2014-06-04T00:00:00+01:00</updated>
+            <updated>2014-06-04T00:00:00+00:00</updated>
             <id>/2014/06/04/php-tokenizer.html</id>
             <content type="html"><![CDATA[<p>The <a href="http://www.php.net/manual/en/book.tokenizer.php">PHP Tokenizer documentation</a>
 looks a bit empty, and you have to try it out by yourself to understand how it
@@ -791,7 +791,7 @@ use <code>token_name($token)</code>.</p>
             <entry>
             <title type="html"><![CDATA[PHP generators and coroutines]]></title>
             <link href="/2014/04/30/php-generators-and-coroutines.html"/>
-            <updated>2014-04-30T00:00:00+01:00</updated>
+            <updated>2014-04-30T00:00:00+00:00</updated>
             <id>/2014/04/30/php-generators-and-coroutines.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 

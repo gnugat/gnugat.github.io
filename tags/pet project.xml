@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2018-06-15T08:31:22+01:00</updated>
+    <updated>2023-03-01T14:11:27+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -11,7 +11,7 @@
             <entry>
             <title type="html"><![CDATA[SpecGen v0.3]]></title>
             <link href="/2015/05/28/spec-gen-0-3.html"/>
-            <updated>2015-05-28T00:00:00+01:00</updated>
+            <updated>2015-05-28T00:00:00+00:00</updated>
             <id>/2015/05/28/spec-gen-0-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.3 inserts a property for each constructor argument.</p>
@@ -172,7 +172,7 @@ probably be about using it for collaborators.</p>
             <entry>
             <title type="html"><![CDATA[SpecGen v0.2]]></title>
             <link href="/2015/05/20/spec-gen-0-2.html"/>
-            <updated>2015-05-20T00:00:00+01:00</updated>
+            <updated>2015-05-20T00:00:00+00:00</updated>
             <id>/2015/05/20/spec-gen-0-2.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.2 inserts use statements.</p>
@@ -364,7 +364,7 @@ of a new generator: insertion of properties when the method is a constructor.</p
             <entry>
             <title type="html"><![CDATA[Memio SpecGen v0.1]]></title>
             <link href="/2015/05/13/memio-spec-gen.html"/>
-            <updated>2015-05-13T00:00:00+01:00</updated>
+            <updated>2015-05-13T00:00:00+00:00</updated>
             <id>/2015/05/13/memio-spec-gen.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> is a <a href="http://phpspec.net">phpspec</a>
@@ -689,7 +689,7 @@ generation.</p>
             <entry>
             <title type="html"><![CDATA[Memio v1.0]]></title>
             <link href="/2015/05/06/memio.html"/>
-            <updated>2015-05-06T00:00:00+01:00</updated>
+            <updated>2015-05-06T00:00:00+00:00</updated>
             <id>/2015/05/06/memio.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://memio.github.io/memio">Memio</a> is a PHP code generator library,
@@ -880,7 +880,7 @@ code generator.</p>
             <entry>
             <title type="html"><![CDATA[Memio Pretty Printer]]></title>
             <link href="/2015/04/29/memio-pretty-printer.html"/>
-            <updated>2015-04-29T00:00:00+01:00</updated>
+            <updated>2015-04-29T00:00:00+00:00</updated>
             <id>/2015/04/29/memio-pretty-printer.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/pretty-printer">PrettyPrinter</a> converts a
@@ -1070,7 +1070,7 @@ but we can install Memio's TwigTemplateEngine package .</p>
             <entry>
             <title type="html"><![CDATA[Memio validator and linter]]></title>
             <link href="/2015/04/22/memio-validator-linter.html"/>
-            <updated>2015-04-22T00:00:00+01:00</updated>
+            <updated>2015-04-22T00:00:00+00:00</updated>
             <id>/2015/04/22/memio-validator-linter.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Write <a href="http://github.com/memio/validator">constraints</a> to check
@@ -1231,7 +1231,7 @@ are valid. Linter is a set of constraints ready to use, allowing to prevent synt
             <entry>
             <title type="html"><![CDATA[Memio models]]></title>
             <link href="/2015/04/15/memio-models.html"/>
-            <updated>2015-04-15T00:00:00+01:00</updated>
+            <updated>2015-04-15T00:00:00+00:00</updated>
             <id>/2015/04/15/memio-models.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Describe code by building <a href="http://github.com/memio/model">models</a>.</p>
@@ -1390,7 +1390,7 @@ function phpspec_generator($methodName, array $arguments) {
             <entry>
             <title type="html"><![CDATA[Introducing Memio, code generator]]></title>
             <link href="/2015/04/08/introducing-memio-code-generator.html"/>
-            <updated>2015-04-08T00:00:00+01:00</updated>
+            <updated>2015-04-08T00:00:00+00:00</updated>
             <id>/2015/04/08/introducing-memio-code-generator.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Work in Progress: Memio, a library for PHP code generation.</p>
@@ -2147,7 +2147,7 @@ maturity point.</p>
             <entry>
             <title type="html"><![CDATA[PHP array manipulation]]></title>
             <link href="/2014/10/15/php-array-manipulation.html"/>
-            <updated>2014-10-15T00:00:00+01:00</updated>
+            <updated>2014-10-15T00:00:00+00:00</updated>
             <id>/2014/10/15/php-array-manipulation.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> provides a nice
@@ -2648,7 +2648,7 @@ you.</p>
             <entry>
             <title type="html"><![CDATA[Redaktilo v0.7]]></title>
             <link href="/2014/05/27/redaktilo-0-7.html"/>
-            <updated>2014-05-27T00:00:00+01:00</updated>
+            <updated>2014-05-27T00:00:00+00:00</updated>
             <id>/2014/05/27/redaktilo-0-7.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -2831,7 +2831,7 @@ start a discussion here.</p>
             <entry>
             <title type="html"><![CDATA[Facade design pattern, by example]]></title>
             <link href="/2014/05/21/facade-design-pattern-by-example.html"/>
-            <updated>2014-05-21T00:00:00+01:00</updated>
+            <updated>2014-05-21T00:00:00+00:00</updated>
             <id>/2014/05/21/facade-design-pattern-by-example.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -2929,7 +2929,7 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
             <entry>
             <title type="html"><![CDATA[Open/Closed principle, by example]]></title>
             <link href="/2014/05/14/open-closed-principle-by-example.html"/>
-            <updated>2014-05-14T00:00:00+01:00</updated>
+            <updated>2014-05-14T00:00:00+00:00</updated>
             <id>/2014/05/14/open-closed-principle-by-example.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -3187,7 +3187,7 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
             <entry>
             <title type="html"><![CDATA[Redaktilo: because your code too needs an editor]]></title>
             <link href="/2014/05/09/redaktilo.html"/>
-            <updated>2014-05-09T00:00:00+01:00</updated>
+            <updated>2014-05-09T00:00:00+00:00</updated>
             <id>/2014/05/09/redaktilo.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 

@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2018-06-15T08:31:22+01:00</updated>
+    <updated>2023-03-01T14:11:27+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -11,7 +11,7 @@
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating geolocation]]></title>
             <link href="/2016/10/05/mars-rover-locating-geolocation.html"/>
-            <updated>2016-10-05T00:00:00+01:00</updated>
+            <updated>2016-10-05T00:00:00+00:00</updated>
             <id>/2016/10/05/mars-rover-locating-geolocation.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -274,7 +274,7 @@ and <code>location</code>, keeping them both separate.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating package]]></title>
             <link href="/2016/09/14/mars-rover-locating-package.html"/>
-            <updated>2016-09-14T00:00:00+01:00</updated>
+            <updated>2016-09-14T00:00:00+00:00</updated>
             <id>/2016/09/14/mars-rover-locating-package.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.

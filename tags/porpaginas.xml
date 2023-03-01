@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2018-06-15T08:31:22+01:00</updated>
+    <updated>2023-03-01T14:11:27+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -11,7 +11,7 @@
             <entry>
             <title type="html"><![CDATA[Towards CQRS, Search Engine]]></title>
             <link href="/2016/05/18/towards-cqrs-search-engine.html"/>
-            <updated>2016-05-18T00:00:00+01:00</updated>
+            <updated>2016-05-18T00:00:00+00:00</updated>
             <id>/2016/05/18/towards-cqrs-search-engine.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: A <code>Search Engine</code> component can help you get the CQRS "Query" part right.</p>

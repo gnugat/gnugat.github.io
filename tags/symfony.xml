@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2018-06-15T08:31:22+01:00</updated>
+    <updated>2023-03-01T14:11:27+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -11,7 +11,7 @@
             <entry>
             <title type="html"><![CDATA[PragmatiClean - Command Bus]]></title>
             <link href="/2017/09/20/pragmaticlean-command-bus.html"/>
-            <updated>2017-09-20T00:00:00+01:00</updated>
+            <updated>2017-09-20T00:00:00+00:00</updated>
             <id>/2017/09/20/pragmaticlean-command-bus.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Use Command Bus pattern in your controllers, but drop the bus.</p>
@@ -296,7 +296,7 @@ for each Use Case in our application (so one pair per Controller action).</p>
             <entry>
             <title type="html"><![CDATA[PragmatiClean - introduction]]></title>
             <link href="/2017/09/13/pragmaticlean-introdution.html"/>
-            <updated>2017-09-13T00:00:00+01:00</updated>
+            <updated>2017-09-13T00:00:00+00:00</updated>
             <id>/2017/09/13/pragmaticlean-introdution.html</id>
             <content type="html"><![CDATA[<p>There are only 10 types of debates in the software world,
 <a href="https://www.amazon.co.uk/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882">Clean Code</a>
@@ -360,7 +360,7 @@ and give them a twist:</p>
             <entry>
             <title type="html"><![CDATA[Links from 2016]]></title>
             <link href="/2017/05/24/links-from-2016.html"/>
-            <updated>2017-05-24T00:00:00+01:00</updated>
+            <updated>2017-05-24T00:00:00+00:00</updated>
             <id>/2017/05/24/links-from-2016.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Links I tweeted during 2016</p>
@@ -590,7 +590,7 @@ by <a href="https://medium.com/@jessitron">Jessica Kerr</a>, which was then foll
             <entry>
             <title type="html"><![CDATA[Super Speed Symfony - nginx]]></title>
             <link href="/2016/04/20/super-speed-sf-nginx.html"/>
-            <updated>2016-04-20T00:00:00+01:00</updated>
+            <updated>2016-04-20T00:00:00+00:00</updated>
             <id>/2016/04/20/super-speed-sf-nginx.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Put a reverse proxy (for HTTP cache or load balancing purpose) in
@@ -1002,7 +1002,7 @@ the client.</p>
             <entry>
             <title type="html"><![CDATA[Super Speed Symfony - ReactPHP]]></title>
             <link href="/2016/04/13/super-speed-sf-react-php.html"/>
-            <updated>2016-04-13T00:00:00+01:00</updated>
+            <updated>2016-04-13T00:00:00+00:00</updated>
             <id>/2016/04/13/super-speed-sf-react-php.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Run your application as a HTTP server to increase its performances.</p>
@@ -1522,7 +1522,7 @@ applications:</p>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - CLI Example]]></title>
             <link href="/2016/04/06/ultimate-symfony-cli-example.html"/>
-            <updated>2016-04-06T00:00:00+01:00</updated>
+            <updated>2016-04-06T00:00:00+00:00</updated>
             <id>/2016/04/06/ultimate-symfony-cli-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
@@ -2016,7 +2016,7 @@ them with third party libraries</li>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Web Example]]></title>
             <link href="/2016/03/30/ultimate-symfony-web-example.html"/>
-            <updated>2016-03-30T00:00:00+01:00</updated>
+            <updated>2016-03-30T00:00:00+00:00</updated>
             <id>/2016/03/30/ultimate-symfony-web-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
@@ -6804,7 +6804,7 @@ be a viable alternative (they are slimer in term of dependencies and faster).</p
             <entry>
             <title type="html"><![CDATA[Decouple from Frameworks]]></title>
             <link href="/2015/09/30/decouple-from-frameworks.html"/>
-            <updated>2015-09-30T00:00:00+01:00</updated>
+            <updated>2015-09-30T00:00:00+00:00</updated>
             <id>/2015/09/30/decouple-from-frameworks.html</id>
             <content type="html"><![CDATA[<p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
 While necessary, those concerns don't add any value to your project: the business
@@ -7398,7 +7398,7 @@ by <a href="https://twitter.com/mrkrstphr">Kristopher Wilson</a></li>
             <entry>
             <title type="html"><![CDATA[Symfony Differently - part 3: Conclusion]]></title>
             <link href="/2015/08/02/sf-differently-part-3-conclusion.html"/>
-            <updated>2015-08-02T00:00:00+01:00</updated>
+            <updated>2015-08-02T00:00:00+00:00</updated>
             <id>/2015/08/02/sf-differently-part-3-conclusion.html</id>
             <content type="html"><![CDATA[<p>This series isn't really working for me, so I've decided to conclude it prematurely.
 Have a look at the first ones:</p>
@@ -7479,7 +7479,7 @@ called.</p>
             <entry>
             <title type="html"><![CDATA[Symfony Differently - part 2: Bootstrap]]></title>
             <link href="/2015/06/10/sf-differently-part-2-bootstrap.html"/>
-            <updated>2015-06-10T00:00:00+01:00</updated>
+            <updated>2015-06-10T00:00:00+00:00</updated>
             <id>/2015/06/10/sf-differently-part-2-bootstrap.html</id>
             <content type="html"><![CDATA[<p>This is the second article of the <a href="https://symfony.com">Symfony</a> Differently series,
 Have a look at the first one: <a href="/2015/06/03/sf-differently-part-1-introduction.html">Introduction</a>.</p>
@@ -7892,7 +7892,7 @@ application in the future, we've chosen to stay consistent with the rest.</p>
             <entry>
             <title type="html"><![CDATA[Symfony Differently - part 1: Introduction]]></title>
             <link href="/2015/06/03/sf-differently-part-1-introduction.html"/>
-            <updated>2015-06-03T00:00:00+01:00</updated>
+            <updated>2015-06-03T00:00:00+00:00</updated>
             <id>/2015/06/03/sf-differently-part-1-introduction.html</id>
             <content type="html"><![CDATA[<p><a href="https://symfony.com">Symfony</a> is an amazing HTTP framework which powers
 <a href="http://labs.octivi.com/handling-1-billion-requests-a-week-with-symfony2/">high traffic websites</a>.
@@ -11955,7 +11955,7 @@ many advantages as it enables demonstrations and simple automated tests.</p>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - Conclusion]]></title>
             <link href="/2014/10/08/master-sf2-conclusion.html"/>
-            <updated>2014-10-08T00:00:00+01:00</updated>
+            <updated>2014-10-08T00:00:00+00:00</updated>
             <id>/2014/10/08/master-sf2-conclusion.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -12042,7 +12042,7 @@ before anything else. Here's a short selection of its available components:</p>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 6: Annotations]]></title>
             <link href="/2014/09/10/master-sf2-part-6-annotations.html"/>
-            <updated>2014-09-10T00:00:00+01:00</updated>
+            <updated>2014-09-10T00:00:00+00:00</updated>
             <id>/2014/09/10/master-sf2-part-6-annotations.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -12308,7 +12308,7 @@ git commit -m 'Used annotations'
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 5: Events]]></title>
             <link href="/2014/09/03/master-sf2-part-5-events.html"/>
-            <updated>2014-09-03T00:00:00+01:00</updated>
+            <updated>2014-09-03T00:00:00+00:00</updated>
             <id>/2014/09/03/master-sf2-part-5-events.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -12661,7 +12661,7 @@ code we cannot know that submitted JSON has been handled, we lose explicitness.<
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 4: Doctrine]]></title>
             <link href="/2014/08/27/master-sf2-part-4-doctrine.html"/>
-            <updated>2014-08-27T00:00:00+01:00</updated>
+            <updated>2014-08-27T00:00:00+00:00</updated>
             <id>/2014/08/27/master-sf2-part-4-doctrine.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -13110,7 +13110,7 @@ a standalone library allowing you to deploy database changes, it even has
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 3: Services]]></title>
             <link href="/2014/08/22/master-sf2-part-3-services.html"/>
-            <updated>2014-08-22T00:00:00+01:00</updated>
+            <updated>2014-08-22T00:00:00+00:00</updated>
             <id>/2014/08/22/master-sf2-part-3-services.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -13657,7 +13657,7 @@ that "Dependency Injection" is just a fancy term for "passing arguments".</p>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 2: Test Driven Development]]></title>
             <link href="/2014/08/13/master-sf2-part-2-tdd.html"/>
-            <updated>2014-08-13T00:00:00+01:00</updated>
+            <updated>2014-08-13T00:00:00+00:00</updated>
             <id>/2014/08/13/master-sf2-part-2-tdd.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -13911,7 +13911,7 @@ demonstrated how quick and simple it is to implement the first User Story
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 1: Bootstraping]]></title>
             <link href="/2014/08/05/master-sf2-part-1-bootstraping.html"/>
-            <updated>2014-08-05T00:00:00+01:00</updated>
+            <updated>2014-08-05T00:00:00+00:00</updated>
             <id>/2014/08/05/master-sf2-part-1-bootstraping.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -14139,7 +14139,7 @@ quickest way to bootstrap a project.</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - Conclusion]]></title>
             <link href="/2014/07/23/learn-sf2-conclusion.html"/>
-            <updated>2014-07-23T00:00:00+01:00</updated>
+            <updated>2014-07-23T00:00:00+00:00</updated>
             <id>/2014/07/23/learn-sf2-conclusion.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -14496,7 +14496,7 @@ series of articles!</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 5: Tests]]></title>
             <link href="/2014/07/20/learn-sf2-tests-part-5.html"/>
-            <updated>2014-07-20T00:00:00+01:00</updated>
+            <updated>2014-07-20T00:00:00+00:00</updated>
             <id>/2014/07/20/learn-sf2-tests-part-5.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -14870,7 +14870,7 @@ need to check the precise HTTP response's status code).</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 4: Controllers]]></title>
             <link href="/2014/07/12/learn-sf2-controllers-part-4.html"/>
-            <updated>2014-07-12T00:00:00+01:00</updated>
+            <updated>2014-07-12T00:00:00+00:00</updated>
             <id>/2014/07/12/learn-sf2-controllers-part-4.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -15215,7 +15215,7 @@ git commit -m 'Created Ni route and controller'
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 3: Bundles]]></title>
             <link href="/2014/07/02/learn-sf2-bundles-part-3.html"/>
-            <updated>2014-07-02T00:00:00+01:00</updated>
+            <updated>2014-07-02T00:00:00+00:00</updated>
             <id>/2014/07/02/learn-sf2-bundles-part-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -15475,7 +15475,7 @@ makes too much fuss to no avail (that's my humble opinion anyway).</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 2: Empty application]]></title>
             <link href="/2014/06/25/learn-sf2-empty-app-part-2.html"/>
-            <updated>2014-06-25T00:00:00+01:00</updated>
+            <updated>2014-06-25T00:00:00+00:00</updated>
             <id>/2014/06/25/learn-sf2-empty-app-part-2.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -15691,7 +15691,7 @@ to a controller which takes a HTTP request and returns a HTTP response.</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 1: Composer]]></title>
             <link href="/2014/06/18/learn-sf2-composer-part-1.html"/>
-            <updated>2014-06-18T00:00:00+01:00</updated>
+            <updated>2014-06-18T00:00:00+00:00</updated>
             <id>/2014/06/18/learn-sf2-composer-part-1.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -15861,7 +15861,7 @@ git commit -m 'Installed Symfony2'
             <entry>
             <title type="html"><![CDATA[Symfony Sessions introduction]]></title>
             <link href="/2014/04/23/sf2-sessions-introduction.html"/>
-            <updated>2014-04-23T00:00:00+01:00</updated>
+            <updated>2014-04-23T00:00:00+00:00</updated>
             <id>/2014/04/23/sf2-sessions-introduction.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
@@ -16262,7 +16262,7 @@ questions don't be shy and drop me a line on
             <entry>
             <title type="html"><![CDATA[Symfony2 Console component, by example]]></title>
             <link href="/2014/04/09/sf2-console-component-by-example.html"/>
-            <updated>2014-04-09T00:00:00+01:00</updated>
+            <updated>2014-04-09T00:00:00+00:00</updated>
             <id>/2014/04/09/sf2-console-component-by-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This article has been re-written - see

@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2018-06-15T08:31:22+01:00</updated>
+    <updated>2023-03-01T14:11:27+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -53,7 +53,7 @@ The actual pagination logic is delegated to the library of our choice, using ada
             <entry>
             <title type="html"><![CDATA[PHPUnit with phpspec]]></title>
             <link href="/2015/09/23/phpunit-with-phpspec.html"/>
-            <updated>2015-09-23T00:00:00+01:00</updated>
+            <updated>2015-09-23T00:00:00+00:00</updated>
             <id>/2015/09/23/phpunit-with-phpspec.html</id>
             <content type="html"><![CDATA[<p><a href="https://phpunit.de/">PHPUnit</a> is a port of <a href="http://junit.org/">jUnit</a>, its name
 might be deceptive: it allows you to write any type of tests (unit, but also functional,
@@ -362,7 +362,7 @@ class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
             <entry>
             <title type="html"><![CDATA[Tactician]]></title>
             <link href="/2015/09/09/tactician.html"/>
-            <updated>2015-09-09T00:00:00+01:00</updated>
+            <updated>2015-09-09T00:00:00+00:00</updated>
             <id>/2015/09/09/tactician.html</id>
             <content type="html"><![CDATA[<p>Just like <a href="/2015/08/04/simple-bus.html">SimpleBus</a>,
 <a href="https://tactician.thephpleague.com/">Tactician</a> is a lightweight library created by
@@ -500,7 +500,7 @@ the "good" way or the "pragmatic" way (if you don't choose wisely, then shame on
             <entry>
             <title type="html"><![CDATA[Diactoros (PSR-7)]]></title>
             <link href="/2015/08/07/diactoros-psr7.html"/>
-            <updated>2015-08-07T00:00:00+01:00</updated>
+            <updated>2015-08-07T00:00:00+00:00</updated>
             <id>/2015/08/07/diactoros-psr7.html</id>
             <content type="html"><![CDATA[<p><a href="https://github.com/zendframework/zend-diactoros">Zend Diactoros</a> is a lightweight
 library providing implementations for <a href="http://www.php-fig.org/psr/psr-7/">PSR-7 interfaces</a>.</p>
@@ -608,7 +608,7 @@ used in <a href="http://symfony.com/blog/psr-7-support-in-symfony-is-here">Symfo
             <entry>
             <title type="html"><![CDATA[Pomm Foundation]]></title>
             <link href="/2015/08/06/pomm-foundation.html"/>
-            <updated>2015-08-06T00:00:00+01:00</updated>
+            <updated>2015-08-06T00:00:00+00:00</updated>
             <id>/2015/08/06/pomm-foundation.html</id>
             <content type="html"><![CDATA[<p><a href="http://www.pomm-project.org/">Pomm</a> is an interresting alternative to Doctrine
 (<a href="http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/introduction.html">DBAL</a>
@@ -684,7 +684,7 @@ so if you're using PostgresSQL and don't need an ORM, you can give it a try!</p>
             <entry>
             <title type="html"><![CDATA[phinx]]></title>
             <link href="/2015/08/05/phinx.html"/>
-            <updated>2015-08-05T00:00:00+01:00</updated>
+            <updated>2015-08-05T00:00:00+00:00</updated>
             <id>/2015/08/05/phinx.html</id>
             <content type="html"><![CDATA[<p><a href="https://phinx.org/">phinx</a> is a lightweight migration library, completly decoupled
 from any framework and libraries. In its most simple form, it allows you to write SQL
@@ -827,7 +827,7 @@ coupled to any framework and it doesn't require any integration.</p>
             <entry>
             <title type="html"><![CDATA[Simple Bus]]></title>
             <link href="/2015/08/04/simple-bus.html"/>
-            <updated>2015-08-04T00:00:00+01:00</updated>
+            <updated>2015-08-04T00:00:00+00:00</updated>
             <id>/2015/08/04/simple-bus.html</id>
             <content type="html"><![CDATA[<p><a href="http://simplebus.github.io/MessageBus/">Simple Bus</a> is a lightweight library
 created by <a href="https://twitter.com/matthiasnoback">Matthias Noback</a> allowing you to
@@ -1014,7 +1014,7 @@ about CQRS: <a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avo
             <entry>
             <title type="html"><![CDATA[phpspec]]></title>
             <link href="/2015/08/03/phpspec.html"/>
-            <updated>2015-08-03T00:00:00+01:00</updated>
+            <updated>2015-08-03T00:00:00+00:00</updated>
             <id>/2015/08/03/phpspec.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is kept up to date.</p>
@@ -1369,7 +1369,7 @@ it to a collaborator you have two choices:</p>
             <entry>
             <title type="html"><![CDATA[SpecGen v0.3]]></title>
             <link href="/2015/05/28/spec-gen-0-3.html"/>
-            <updated>2015-05-28T00:00:00+01:00</updated>
+            <updated>2015-05-28T00:00:00+00:00</updated>
             <id>/2015/05/28/spec-gen-0-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.3 inserts a property for each constructor argument.</p>
@@ -1530,7 +1530,7 @@ probably be about using it for collaborators.</p>
             <entry>
             <title type="html"><![CDATA[SpecGen v0.2]]></title>
             <link href="/2015/05/20/spec-gen-0-2.html"/>
-            <updated>2015-05-20T00:00:00+01:00</updated>
+            <updated>2015-05-20T00:00:00+00:00</updated>
             <id>/2015/05/20/spec-gen-0-2.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.2 inserts use statements.</p>
@@ -1722,7 +1722,7 @@ of a new generator: insertion of properties when the method is a constructor.</p
             <entry>
             <title type="html"><![CDATA[Memio SpecGen v0.1]]></title>
             <link href="/2015/05/13/memio-spec-gen.html"/>
-            <updated>2015-05-13T00:00:00+01:00</updated>
+            <updated>2015-05-13T00:00:00+00:00</updated>
             <id>/2015/05/13/memio-spec-gen.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> is a <a href="http://phpspec.net">phpspec</a>
@@ -2047,7 +2047,7 @@ generation.</p>
             <entry>
             <title type="html"><![CDATA[Memio v1.0]]></title>
             <link href="/2015/05/06/memio.html"/>
-            <updated>2015-05-06T00:00:00+01:00</updated>
+            <updated>2015-05-06T00:00:00+00:00</updated>
             <id>/2015/05/06/memio.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://memio.github.io/memio">Memio</a> is a PHP code generator library,
@@ -2238,7 +2238,7 @@ code generator.</p>
             <entry>
             <title type="html"><![CDATA[Memio Pretty Printer]]></title>
             <link href="/2015/04/29/memio-pretty-printer.html"/>
-            <updated>2015-04-29T00:00:00+01:00</updated>
+            <updated>2015-04-29T00:00:00+00:00</updated>
             <id>/2015/04/29/memio-pretty-printer.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/pretty-printer">PrettyPrinter</a> converts a
@@ -2428,7 +2428,7 @@ but we can install Memio's TwigTemplateEngine package .</p>
             <entry>
             <title type="html"><![CDATA[Memio validator and linter]]></title>
             <link href="/2015/04/22/memio-validator-linter.html"/>
-            <updated>2015-04-22T00:00:00+01:00</updated>
+            <updated>2015-04-22T00:00:00+00:00</updated>
             <id>/2015/04/22/memio-validator-linter.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Write <a href="http://github.com/memio/validator">constraints</a> to check
@@ -2589,7 +2589,7 @@ are valid. Linter is a set of constraints ready to use, allowing to prevent synt
             <entry>
             <title type="html"><![CDATA[Memio models]]></title>
             <link href="/2015/04/15/memio-models.html"/>
-            <updated>2015-04-15T00:00:00+01:00</updated>
+            <updated>2015-04-15T00:00:00+00:00</updated>
             <id>/2015/04/15/memio-models.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Describe code by building <a href="http://github.com/memio/model">models</a>.</p>
@@ -2748,7 +2748,7 @@ function phpspec_generator($methodName, array $arguments) {
             <entry>
             <title type="html"><![CDATA[Introducing Memio, code generator]]></title>
             <link href="/2015/04/08/introducing-memio-code-generator.html"/>
-            <updated>2015-04-08T00:00:00+01:00</updated>
+            <updated>2015-04-08T00:00:00+00:00</updated>
             <id>/2015/04/08/introducing-memio-code-generator.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Work in Progress: Memio, a library for PHP code generation.</p>
@@ -2875,7 +2875,7 @@ by <a href="https://github.com/webmozart">webmozart</a>).</p>
             <entry>
             <title type="html"><![CDATA[Redaktilo: because your code too needs an editor]]></title>
             <link href="/2014/05/09/redaktilo.html"/>
-            <updated>2014-05-09T00:00:00+01:00</updated>
+            <updated>2014-05-09T00:00:00+00:00</updated>
             <id>/2014/05/09/redaktilo.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -3127,7 +3127,7 @@ to manipulate files, through the editor metaphor:</p>
             <entry>
             <title type="html"><![CDATA[Symfony Sessions introduction]]></title>
             <link href="/2014/04/23/sf2-sessions-introduction.html"/>
-            <updated>2014-04-23T00:00:00+01:00</updated>
+            <updated>2014-04-23T00:00:00+00:00</updated>
             <id>/2014/04/23/sf2-sessions-introduction.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
@@ -3528,7 +3528,7 @@ questions don't be shy and drop me a line on
             <entry>
             <title type="html"><![CDATA[Symfony2 Console component, by example]]></title>
             <link href="/2014/04/09/sf2-console-component-by-example.html"/>
-            <updated>2014-04-09T00:00:00+01:00</updated>
+            <updated>2014-04-09T00:00:00+00:00</updated>
             <id>/2014/04/09/sf2-console-component-by-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This article has been re-written - see
