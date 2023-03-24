@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ChatGPT: fluff or not? Academic Prompt Engineering &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2023/03/24/chat-gpt-academic-prompt-engineering.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+            
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    ChatGPT: fluff or not? Academic Prompt Engineering
+    <span class="sub-title">24/03/2023</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="/tags/ChatGPT">ChatGPT</a>
+                    </nav>
+                </header>
+
+                <p>Now that a couple of months have passed since its over hyped launch,
+surely <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> has found some
+use cases where it could be of any actual use. Or is it all fluff? Let's find out.</p>
+
+<p>In my quest to find a use for ChatGPT in my day to day developer activity,
+I've stumbled upon this online course website:
+<a href="https://learnprompting.org/]">Learn Prompting</a>,
+an initiative lead by <a href="https://trigaten.github.io/">Sander Schulhoff</a>,
+with contributions from <a href="https://towardsai.net/">Towards AI</a>.</p>
+
+<p>Granted, this doesn't bring me anywhere close to my goal...
+Yet, this is in stark contrast to all the resources that I've found so far,
+which are usually "hey I tried this hack and it worked", with no explanations
+on why.</p>
+
+<p>Let me walk you through the different Prompt Engineering techniques,
+and why they work, with some academic backing, so we can learn a thing or two.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: It was extremely tempting to describe how ChatGPT works,
+  but I didn't want the explanations to detract from the focus of the article
+  (which is academic backed prompt engineering).
+  I recommend these short articles for a detailed explanations:
+  * <a href="https://iq.opengenus.org/gpt-3-5-model/">GPT 3.5 model</a>
+  * <a href="https://gist.github.com/veekaybee/6f8885e9906aa9c5408ebe5c7e870698">Everything I (Vicki Boykis) understand about ChatGPT</a></p>
+</blockquote>
+
+<h2 id="x-shot-prompting"><a href="https://learnprompting.org/docs/basics/standard_prompt">X-Shot Prompting</a></h2>
+
+<p>X-Shot prompting allows Large Language Models to improve their accuracy,
+on previously unseen data, without the need to update their training parameters,
+by including examples in the prompt:</p>
+
+<pre><code>Extract the brand, product name and format from this item "Magnum White Chocolate Ice Cream 8 x 110 ml":
+* brand: Magnum
+* product name: White Chocolate Ice Cream
+* format: 8 x 110 ml
+
+Extract the brand, product name and format from this item "Birds Eye Garden Peas, 375g (Frozen)":
+* brand: Birds Eye
+* product name: Garden Peas
+* format: 375g
+
+Extract the brand, product name and format from this item "PG tips 160 Original Tea Bags":
+* brand: PG tips
+* product name: Original Tea Bags
+* format: 160
+
+Extract the brand, product name and format from this item "233g, Golden Eggs Chocolate Egg, Galaxy":
+</code></pre>
+
+<p>There's a distinction between Few-Shot, One-Shot and Zero-Shot prompting
+(referring to how many examples are included in the prompt).</p>
+
+<p>Isn't Zero-Shot prompting just... Prompting? Well X-Shot isn't just about
+having examples in the prompt, it's mainly about the capability of the model
+to perform better on new data it wasn't trained on, so we're going to see
+that "Zero-Shot" term used in conjunction with other techniques.</p>
+
+<blockquote>
+  <p>See also, <a href="https://www.allabtai.com/">Kris - All About AI</a>'s article:
+  <a href="https://www.allabtai.com/prompt-engineering-tips-zero-one-and-few-shot-prompting/">X-Shot Prompting</a></p>
+</blockquote>
+
+<h2 id="chain-of-thought-prompting"><a href="https://learnprompting.org/docs/intermediate/chain_of_thought">Chain of Thought Prompting</a></h2>
+
+<p>Few-Shot Chain of Thought prompting allows Large Language Models
+to perform better on logic based tasks (such as solving arithmetic,
+commonsense, and symbolic problems) by including in the examples
+the reasoning steps:</p>
+
+<pre><code>Q: Roger has 5 tennis balls. He buys 2 more cans of tennis balls.
+Each can has 3 tennis balls. How many tennis balls does he have now?
+
+A: Roger started with 5 balls. 2 cans of 3 tennis balls each is 6 tennis balls.
+5 + 6 = 11. The answer is 11.
+
+Q: The cafeteria had 23 apples. If they use 20 to make lunch and bought 6 more,
+how many apples do they have?
+</code></pre>
+
+<p>Zero-Shot Chain of Thought prompting can also be used to get better results
+for these tasks, by including in the prompt a request to detail the reasoning
+steps:</p>
+
+<pre><code>A juggler can juggle 16 balls. Half of the balls are golf balls,
+and half of the golf balls are blue. How many blue golf balls are there?
+Let's think step by step.
+</code></pre>
+
+<p>More specifically, ending the prompt with <code>Let's think step by step</code> proved
+to provide the best results
+(claim backed in the paper <a href="https://arxiv.org/abs/2201.11903">CoT Prompting Elicits Reasoning in LLM</a>).</p>
+
+<h2 id="generated-knowledge-prompting"><a href="https://learnprompting.org/docs/intermediate/generated_knowledge">Generated Knowledge prompting</a></h2>
+
+<p>Generated Knowledge prompting allows Large Language Models to perform better
+on commonsense reasoning by having a first prompt requesting the generation
+of knowledge on a topic, and then incorporating the output in a second prompt
+that requests top perform the related commonsense task.</p>
+
+<p>Here's the first prompt asking for knowledge generation:</p>
+
+<pre><code>Write 5 facts about test driven development
+</code></pre>
+
+<p>Then the second prompt which incorporates the output for the first prompt:</p>
+
+<pre><code>Here are 5 facts about TDD:
+1. Test-driven development (TDD) is a software development process that emphasizes the creation of automated tests before any code is written. In TDD, developers write a failing test case first, then write code to pass the test, and then refactor the code to improve it.
+2. TDD helps to ensure that the code is working correctly by testing it at every step of the development process. By creating tests first, developers can also ensure that their code meets the requirements and specifications of the project.
+3. TDD can be used with a variety of programming languages and frameworks, and it is often used in agile development methodologies. It can also be used in combination with other testing techniques, such as behavior-driven development (BDD) and acceptance test-driven development (ATDD).
+4. TDD can result in improved code quality, as developers are forced to think more deeply about the design of their code and the potential edge cases that their code may encounter. TDD can also result in faster development times, as bugs are caught early in the development process and can be fixed before they cause more significant issues.
+5. TDD is not a silver bullet solution for software development and may not be suitable for all projects or teams. It can require additional time and effort upfront to write tests and ensure that they are passing, and it may require a cultural shift in the development team to fully adopt the TDD methodology.
+
+With TDD, can I first write code that fails, then write a test and finally refactor the code to make the test pass?
+</code></pre>
+
+<blockquote>
+  <p><em>Note: I've seen this as also being referred to as Chain Prompting.</em></p>
+</blockquote>
+
+<h2 id="takeways">Takeways</h2>
+
+<p>The following prompt engineering techniques are proven by studies to improve
+the output quality of Large Language Models:</p>
+
+<ul>
+<li>X-Shot: include examples in the prompt</li>
+<li>Chain of Thought: end the prompt with <code>Let's think step by step</code></li>
+<li>Knowlegde Generated:
+
+<ul>
+<li>first ask to generate facts on a topic</li>
+<li>then ask a question on the topic, including the previously generated facts</li>
+</ul></li>
+</ul>
+
+<p>All in all, while I haven't found a practical use case for ChatGPT in my day to day developer activity,
+it still seems worth exploring its potential for generating content. The quest continues.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2023/03/01/chat-gpt.html" title="ChatGPT: fluff or not? Prompt Engineering">Previous &lt; ChatGPT: fluff or not? Prompt Engineering</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

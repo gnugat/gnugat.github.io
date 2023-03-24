@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc></loc>
-    <lastmod>2023-03-01T14:11:27+00:00</lastmod>
+    <lastmod>2023-03-24T16:36:48+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>/about</loc>
-    <lastmod>2023-03-01T14:11:27+00:00</lastmod>
+    <lastmod>2023-03-24T16:36:48+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>/2023/03/24/chat-gpt-academic-prompt-engineering.html</loc>
+    <lastmod>2023-03-24T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>/2023/03/01/chat-gpt.html</loc>
