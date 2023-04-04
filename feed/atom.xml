@@ -3,11 +3,212 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2023-03-24T16:36:48+00:00</updated>
+    <updated>2023-04-04T19:28:14+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[ChatGPT: fluff or not? Goldfish Memory]]></title>
+            <link href="/2023/04/04/chat-gpt-goldfish-memory.html"/>
+            <updated>2023-04-04T00:00:00+01:00</updated>
+            <id>/2023/04/04/chat-gpt-goldfish-memory.html</id>
+            <content type="html"><![CDATA[<p>Now that a couple of months have passed since its over hyped launch,
+surely <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> has found some
+use cases where it could be of any actual use. Or is it all fluff? Let's find out.</p>
+
+<p>In my quest to find a use for ChatGPT in my day to day developer activity,
+I've stumbled upon this article:
+<a href="https://allenpike.com/2023/175b-parameter-goldfish-gpt">a 175-Billion-Parameter Goldfish</a>,
+from <a href="http://www.twitter.com/apike/">Allen Pike</a>.</p>
+
+<p>Granted, this doesn't bring me anywhere close to my goal...
+Yet, this peaked my developer interest, by opening a window on some of the
+inner workings of ChatGPT.</p>
+
+<p>Let me walk you through my findings about ChatGPT and its Goldfish Memory
+problem, so we can learn a thing or two.</p>
+
+<h2 id="the-goldfish-memory-issue">The Goldfish Memory issue</h2>
+
+<p>When using ChatGPT, have you often encountered the frustrating
+"Goldfish Memory" issue, where it forgets the early conversation's context,
+resulting in responses that appear unrelated or inappropriate?</p>
+
+<p>This problem is due to how Large Language Models (LLMs), like OpenAI's GPT,
+work.</p>
+
+<p>They fundamentally are stateless functions that accept one prompt as an input,
+and return a completion as an ouptut (I believe the output actually also
+contains the prompt).</p>
+
+<p>Consider the following first "user" prompt:</p>
+
+<pre><code>Hi, my name is Loïc
+</code></pre>
+
+<p>And its completion:</p>
+
+<pre><code>Hello Loïc, it's nice to meet you! How can I assist you today?
+</code></pre>
+
+<p>Now, if we were to send the following second user prompt:</p>
+
+<pre><code>What is my name?
+</code></pre>
+
+<p>The LLM wouldn't be able to return the expected completion <code>Your name's Loïc</code>,
+because they only accept one single prompt, and the name is missing from that
+second user prompt.</p>
+
+<h2 id="llm%2C-but-for-chats">LLM, but for chats</h2>
+
+<p>To build a chat system similar to ChatGPT, instead of sending directly the
+user prompt to the LLM, we can create an "augmented" prompt which contains all
+the previous user prompts and their completions, as well as the new user prompt,
+in a conversation format:</p>
+
+<pre><code>User: Hi, my name is Loïc
+Chatbot: Hello Loïc, it's nice to meet you! How can I assist you today?
+User: What is my name?
+Chatbot:
+</code></pre>
+
+<p>By sending this augmented prompt to the LLM, we'll now be able to get the
+expected completion <code>Your name's Loïc</code>.</p>
+
+<h2 id="prompt-size-limit">Prompt Size Limit</h2>
+
+<p>But LLMs don't support unlimited sized prompts...</p>
+
+<p>For the sake of the example, let's say the size limit is 5 lines,
+and the conversation continued as follow:</p>
+
+<pre><code>User: Hi, my name is Loïc
+Chatbot: Hello Loïc, it's nice to meet you! How can I assist you today?
+User: What is my name?
+Chatbot: Your name's Loïc
+User: I'm a Lead Developer, my tech stack is: PHP, Symfony, PostgresSQL and git
+Chatbot: Do you have any specific questions related to your tech stack?
+User: I also follow these methodologies: SCRUM, TDD and OOP
+Chatbot: Do you have any topics related to those methodologies that you'd like to discuss?
+User: What is my name?
+Chatbot:
+</code></pre>
+
+<p>Because of the 5 lines limit, the chat system needs to truncate the augmented
+prompt before sending it to the LLM. A common solution seems to only keep the
+latest messages. Which means the LLM would end up only getting the following
+prompt:</p>
+
+<pre><code>Chatbot: Do you have any specific questions related to your tech stack?
+User: I also follow these methodologies: SCRUM, TDD and OOP
+Chatbot: Do you have any topics related to those methodologies that you'd like to discuss?
+User: What is my name?
+Chatbot:
+</code></pre>
+
+<p>And this is why ChatGPT is not able to answer the expected <code>Your name's Loïc</code>.</p>
+
+<blockquote>
+  <p>Note: at the time of writing this article, ChatGPT's limit is shared between
+  the prompt and the completion:
+  * for the <code>gpt-3.5-turbo</code> model, the token limit is 4096
+  * for <code>gpt-4</code> it's 8192
+  Before being sent to the LLM, the input text is broken down into tokens:
+  <code>Hi, my name is Loïc</code> is broken down into the following dictionary
+  <code>['Hi', ',', ' my', ' name', ' is', ' Lo', 'ï', 'c']</code>, which is then converted
+  into the following tokens <code>[17250, 11, 616, 1438, 318, 6706, 26884, 66]</code>.
+  A single word might be broken down into multiple tokens, and tokenisation
+  varies between models. The rule of thumb is to consider that a token is
+  equivalent to 3/4 of a word.</p>
+</blockquote>
+
+<h2 id="how-to-enable-infinite-memory%3F">How to enable Infinite Memory?</h2>
+
+<p>So. Where do we go from here? How do we enable Infinite Memory for chatbots,
+and more broadly LLMs?</p>
+
+<p>One solution would be to periodically summarize parts of the conversation.</p>
+
+<p>The summarization task itself can be done in a separate "summarizing" prompt:</p>
+
+<pre><code>Summarize the following conversation in a short sentence, in the past tense:
+User: Hi, my name is Loïc
+Chatbot: Hello Loïc, it's nice to meet you! How can I assist you today?
+User: What is my name?
+Chatbot: Your name is Loïc
+</code></pre>
+
+<p>Which should result in a completion similar to:</p>
+
+<pre><code>The user introduced themselves as Loïc, and the chatbot confirmed their name when asked.
+</code></pre>
+
+<p>The augmented prompt would then contain the summaries of older messages,
+as well as recent ones:</p>
+
+<pre><code>Previously:
+The user introduced themselves as Loïc, and the chatbot confirmed their name when asked.
+The user discussed their tech stack (PHP, Symfony, PostgresSQL and Git) and methodologies (SCRUM, TDD and OOP) as a Lead Developer, and the chatbot asked if they have any specific questions related to them.
+User: What is my name?
+Chatbot:
+</code></pre>
+
+<p>Now the LLM should be able to give a completion equivalent to:</p>
+
+<pre><code>Your name is Loïc. Is there anything else I can help you with related to your tech stack or methodologies as a Lead Developer?
+</code></pre>
+
+<p>And that's the gist of it!</p>
+
+<h2 id="takeways">Takeways</h2>
+
+<p>Augmenting the prompt with recent messages, as well as summaries of related
+older ones, can allow LLMs to have Infinite Memory!</p>
+
+<p>And that's when the "build a pet project" part of my brain started tingling,
+sometimes I just can't resist the urge to build something to get a better
+grasp on a concept that's intriguing me...</p>
+
+<p>So I've started to code a small CLI app (with PHP and Symfony of course)
+to explore the concepts.</p>
+
+<p>There definitely are some challenges and limits to the summarization approach.</p>
+
+<p>First would be how to select the chunks of conversation to summarize...
+Do we create a new summary:</p>
+
+<ul>
+<li>every 4 messages?</li>
+<li>every hour? every day?</li>
+<li>every time the topic seems to change? How do we detect that?</li>
+</ul>
+
+<p>Next is what summary to include in the prompt:</p>
+
+<ul>
+<li>a concatenation of all summaries?</li>
+<li>a summary of all the summaries?</li>
+<li>the summaries that are somehow related to the last messages or user prompt?</li>
+</ul>
+
+<p>Which then brings another rabbit hole, namely how to search for relevant
+summaries:</p>
+
+<ul>
+<li>using semantic search?</li>
+<li>using vector database?</li>
+<li>using graph database?</li>
+</ul>
+
+<p>More on that once I've done some progress on the pet project. Anyway.</p>
+
+<p>All in all, while I haven't found a practical use case for ChatGPT in my
+day to day developer activity, it still seems worth exploring its potential
+for generating content. The quest continues.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[ChatGPT: fluff or not? Academic Prompt Engineering]]></title>
             <link href="/2023/03/24/chat-gpt-academic-prompt-engineering.html"/>
@@ -380,7 +581,7 @@ it still seems worth exploring its potential for generating content. The quest c
             <entry>
             <title type="html"><![CDATA[Short Identifier]]></title>
             <link href="/2018/06/15/short-identifier.html"/>
-            <updated>2018-06-15T00:00:00+00:00</updated>
+            <updated>2018-06-15T00:00:00+01:00</updated>
             <id>/2018/06/15/short-identifier.html</id>
             <content type="html"><![CDATA[<p>Sometimes resources can be identified by one of their attributes
 (a name, title, slug) and sometimes they can't (no name, or confidential name).</p>
@@ -587,7 +788,7 @@ to the estimated first collision.</p>
             <entry>
             <title type="html"><![CDATA[PragmatiClean - Command Bus]]></title>
             <link href="/2017/09/20/pragmaticlean-command-bus.html"/>
-            <updated>2017-09-20T00:00:00+00:00</updated>
+            <updated>2017-09-20T00:00:00+01:00</updated>
             <id>/2017/09/20/pragmaticlean-command-bus.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Use Command Bus pattern in your controllers, but drop the bus.</p>
@@ -872,7 +1073,7 @@ for each Use Case in our application (so one pair per Controller action).</p>
             <entry>
             <title type="html"><![CDATA[PragmatiClean - introduction]]></title>
             <link href="/2017/09/13/pragmaticlean-introdution.html"/>
-            <updated>2017-09-13T00:00:00+00:00</updated>
+            <updated>2017-09-13T00:00:00+01:00</updated>
             <id>/2017/09/13/pragmaticlean-introdution.html</id>
             <content type="html"><![CDATA[<p>There are only 10 types of debates in the software world,
 <a href="https://www.amazon.co.uk/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882">Clean Code</a>
@@ -936,7 +1137,7 @@ and give them a twist:</p>
             <entry>
             <title type="html"><![CDATA[Links from 2016]]></title>
             <link href="/2017/05/24/links-from-2016.html"/>
-            <updated>2017-05-24T00:00:00+00:00</updated>
+            <updated>2017-05-24T00:00:00+01:00</updated>
             <id>/2017/05/24/links-from-2016.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Links I tweeted during 2016</p>
@@ -1166,7 +1367,7 @@ by <a href="https://medium.com/@jessitron">Jessica Kerr</a>, which was then foll
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating moving]]></title>
             <link href="/2016/10/12/mars-rover-locating-moving.html"/>
-            <updated>2016-10-12T00:00:00+00:00</updated>
+            <updated>2016-10-12T00:00:00+01:00</updated>
             <id>/2016/10/12/mars-rover-locating-moving.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -1536,7 +1737,7 @@ don't introduce regressions.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating geolocation]]></title>
             <link href="/2016/10/05/mars-rover-locating-geolocation.html"/>
-            <updated>2016-10-05T00:00:00+00:00</updated>
+            <updated>2016-10-05T00:00:00+01:00</updated>
             <id>/2016/10/05/mars-rover-locating-geolocation.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -1799,7 +2000,7 @@ and <code>location</code>, keeping them both separate.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating refactoring]]></title>
             <link href="/2016/09/28/mars-rover-locating-refactoring.html"/>
-            <updated>2016-09-28T00:00:00+00:00</updated>
+            <updated>2016-09-28T00:00:00+01:00</updated>
             <id>/2016/09/28/mars-rover-locating-refactoring.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -2122,7 +2323,7 @@ third option and create this new package in the next article.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating handler]]></title>
             <link href="/2016/09/21/mars-rover-locating-handler.html"/>
-            <updated>2016-09-21T00:00:00+00:00</updated>
+            <updated>2016-09-21T00:00:00+01:00</updated>
             <id>/2016/09/21/mars-rover-locating-handler.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -2338,7 +2539,7 @@ explicit.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating package]]></title>
             <link href="/2016/09/14/mars-rover-locating-package.html"/>
-            <updated>2016-09-14T00:00:00+00:00</updated>
+            <updated>2016-09-14T00:00:00+01:00</updated>
             <id>/2016/09/14/mars-rover-locating-package.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -2519,7 +2720,7 @@ from the "read" logic, we've created a new <code>location</code> package.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Driving event]]></title>
             <link href="/2016/09/07/mars-rover-driving-event.html"/>
-            <updated>2016-09-07T00:00:00+00:00</updated>
+            <updated>2016-09-07T00:00:00+01:00</updated>
             <id>/2016/09/07/mars-rover-driving-event.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -2823,7 +3024,7 @@ case: "Requesting the Rover's location".</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Driving instruction]]></title>
             <link href="/2016/08/17/mars-rover-driving-instruction.html"/>
-            <updated>2016-08-17T00:00:00+00:00</updated>
+            <updated>2016-08-17T00:00:00+01:00</updated>
             <id>/2016/08/17/mars-rover-driving-instruction.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -3131,7 +3332,7 @@ allowed us to write more tests to describe all the possible values.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Driving]]></title>
             <link href="/2016/08/10/mars-rover-driving.html"/>
-            <updated>2016-08-10T00:00:00+00:00</updated>
+            <updated>2016-08-10T00:00:00+01:00</updated>
             <id>/2016/08/10/mars-rover-driving.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -3368,7 +3569,7 @@ validation on the input.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Event Sourcing code]]></title>
             <link href="/2016/08/03/mars-rover-event-sourcing-code.html"/>
-            <updated>2016-08-03T00:00:00+00:00</updated>
+            <updated>2016-08-03T00:00:00+01:00</updated>
             <id>/2016/08/03/mars-rover-event-sourcing-code.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to the
 <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -3681,7 +3882,7 @@ rover.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Event Sourcing package]]></title>
             <link href="/2016/07/27/mars-rover-event-sourcing-package.html"/>
-            <updated>2016-07-27T00:00:00+00:00</updated>
+            <updated>2016-07-27T00:00:00+01:00</updated>
             <id>/2016/07/27/mars-rover-event-sourcing-package.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to the
 <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -3976,7 +4177,7 @@ navigation.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Landing event]]></title>
             <link href="/2016/07/20/mars-rover-landing-event.html"/>
-            <updated>2016-07-20T00:00:00+00:00</updated>
+            <updated>2016-07-20T00:00:00+01:00</updated>
             <id>/2016/07/20/mars-rover-landing-event.html</id>
             <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -4344,7 +4545,7 @@ package and put it in its own <code>event-sourcing</code> one.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Landing orientation]]></title>
             <link href="/2016/07/13/mars-rover-landing-orientation.html"/>
-            <updated>2016-07-13T00:00:00+00:00</updated>
+            <updated>2016-07-13T00:00:00+01:00</updated>
             <id>/2016/07/13/mars-rover-landing-orientation.html</id>
             <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -4736,7 +4937,7 @@ it also allows us to have runnable self-checking specifications:</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Landing coordinates]]></title>
             <link href="/2016/07/06/mars-rover-landing-coordinates.html"/>
-            <updated>2016-07-06T00:00:00+00:00</updated>
+            <updated>2016-07-06T00:00:00+01:00</updated>
             <id>/2016/07/06/mars-rover-landing-coordinates.html</id>
             <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -5060,7 +5261,7 @@ classes for us.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Landing]]></title>
             <link href="/2016/06/29/mars-rover-landing.html"/>
-            <updated>2016-06-29T00:00:00+00:00</updated>
+            <updated>2016-06-29T00:00:00+01:00</updated>
             <id>/2016/06/29/mars-rover-landing.html</id>
             <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -5473,7 +5674,7 @@ we'll extract <code>x</code> and <code>y</code> coordinates into their own class
             <entry>
             <title type="html"><![CDATA[Mars Rover, Initialization]]></title>
             <link href="/2016/06/22/mars-rover-initialization.html"/>
-            <updated>2016-06-22T00:00:00+00:00</updated>
+            <updated>2016-06-22T00:00:00+01:00</updated>
             <id>/2016/06/22/mars-rover-initialization.html</id>
             <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -5698,7 +5899,7 @@ allowing us to showcase an example of Event Sourcing and TDD.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Introduction]]></title>
             <link href="/2016/06/15/mars-rover-introduction.html"/>
-            <updated>2016-06-15T00:00:00+00:00</updated>
+            <updated>2016-06-15T00:00:00+01:00</updated>
             <id>/2016/06/15/mars-rover-introduction.html</id>
             <content type="html"><![CDATA[<p>Welcome to this Mars Rover series where we're going to practice the followings:</p>
 
@@ -5911,7 +6112,7 @@ its first package: <code>navigation</code>.</p>
             <entry>
             <title type="html"><![CDATA[Towards CQRS, Search Engine]]></title>
             <link href="/2016/05/18/towards-cqrs-search-engine.html"/>
-            <updated>2016-05-18T00:00:00+00:00</updated>
+            <updated>2016-05-18T00:00:00+01:00</updated>
             <id>/2016/05/18/towards-cqrs-search-engine.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: A <code>Search Engine</code> component can help you get the CQRS "Query" part right.</p>
@@ -6517,7 +6718,7 @@ this.</p>
             <entry>
             <title type="html"><![CDATA[Towards CQRS, Command Bus]]></title>
             <link href="/2016/05/11/towards-cqrs-command-bus.html"/>
-            <updated>2016-05-11T00:00:00+00:00</updated>
+            <updated>2016-05-11T00:00:00+01:00</updated>
             <id>/2016/05/11/towards-cqrs-command-bus.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: The <code>Command Bus</code> pattern can help you get the CQRS "Command" part right.</p>
@@ -6942,7 +7143,7 @@ by <a href="https://twitter.com/UdiDahan">Udi Dahan</a></li>
             <entry>
             <title type="html"><![CDATA[Event Driven Architecture]]></title>
             <link href="/2016/04/27/event-driven-architecture.html"/>
-            <updated>2016-04-27T00:00:00+00:00</updated>
+            <updated>2016-04-27T00:00:00+01:00</updated>
             <id>/2016/04/27/event-driven-architecture.html</id>
             <content type="html"><![CDATA[<p>Ever wondered how <a href="http://nginx.com/">nginx</a> outperforms <a href="https://httpd.apache.org/">Apache</a>
 or what does <a href="http://nodejs.org/">NodeJs</a> mean by "event-driven, non-blocking I/O"?</p>
@@ -7415,7 +7616,7 @@ can instead implement it with "polling events" in mind: nginx is using this
             <entry>
             <title type="html"><![CDATA[Super Speed Symfony - nginx]]></title>
             <link href="/2016/04/20/super-speed-sf-nginx.html"/>
-            <updated>2016-04-20T00:00:00+00:00</updated>
+            <updated>2016-04-20T00:00:00+01:00</updated>
             <id>/2016/04/20/super-speed-sf-nginx.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Put a reverse proxy (for HTTP cache or load balancing purpose) in
@@ -7827,7 +8028,7 @@ the client.</p>
             <entry>
             <title type="html"><![CDATA[Super Speed Symfony - ReactPHP]]></title>
             <link href="/2016/04/13/super-speed-sf-react-php.html"/>
-            <updated>2016-04-13T00:00:00+00:00</updated>
+            <updated>2016-04-13T00:00:00+01:00</updated>
             <id>/2016/04/13/super-speed-sf-react-php.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Run your application as a HTTP server to increase its performances.</p>
@@ -8347,7 +8548,7 @@ applications:</p>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - CLI Example]]></title>
             <link href="/2016/04/06/ultimate-symfony-cli-example.html"/>
-            <updated>2016-04-06T00:00:00+00:00</updated>
+            <updated>2016-04-06T00:00:00+01:00</updated>
             <id>/2016/04/06/ultimate-symfony-cli-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
@@ -8841,7 +9042,7 @@ them with third party libraries</li>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Web Example]]></title>
             <link href="/2016/03/30/ultimate-symfony-web-example.html"/>
-            <updated>2016-03-30T00:00:00+00:00</updated>
+            <updated>2016-03-30T00:00:00+01:00</updated>
             <id>/2016/03/30/ultimate-symfony-web-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
@@ -14313,7 +14514,7 @@ when to use it depends on the context (project, team, industry, etc).</p>
             <entry>
             <title type="html"><![CDATA[Decouple from Libraries]]></title>
             <link href="/2015/10/12/decouple-from-libraries.html"/>
-            <updated>2015-10-12T00:00:00+00:00</updated>
+            <updated>2015-10-12T00:00:00+01:00</updated>
             <id>/2015/10/12/decouple-from-libraries.html</id>
             <content type="html"><![CDATA[<p>Libraries are similar to frameworks: they solve infrastructure problems (e.g.
 requesting remote endpoints or querying databases). They also don't directly
@@ -14911,7 +15112,7 @@ it can be worth it to protect ourselves from external changes.</p>
             <entry>
             <title type="html"><![CDATA[Decouple from Frameworks]]></title>
             <link href="/2015/09/30/decouple-from-frameworks.html"/>
-            <updated>2015-09-30T00:00:00+00:00</updated>
+            <updated>2015-09-30T00:00:00+01:00</updated>
             <id>/2015/09/30/decouple-from-frameworks.html</id>
             <content type="html"><![CDATA[<p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
 While necessary, those concerns don't add any value to your project: the business
@@ -15505,7 +15706,7 @@ by <a href="https://twitter.com/mrkrstphr">Kristopher Wilson</a></li>
             <entry>
             <title type="html"><![CDATA[PHPUnit with phpspec]]></title>
             <link href="/2015/09/23/phpunit-with-phpspec.html"/>
-            <updated>2015-09-23T00:00:00+00:00</updated>
+            <updated>2015-09-23T00:00:00+01:00</updated>
             <id>/2015/09/23/phpunit-with-phpspec.html</id>
             <content type="html"><![CDATA[<p><a href="https://phpunit.de/">PHPUnit</a> is a port of <a href="http://junit.org/">jUnit</a>, its name
 might be deceptive: it allows you to write any type of tests (unit, but also functional,
@@ -15814,7 +16015,7 @@ class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
             <entry>
             <title type="html"><![CDATA[Tactician]]></title>
             <link href="/2015/09/09/tactician.html"/>
-            <updated>2015-09-09T00:00:00+00:00</updated>
+            <updated>2015-09-09T00:00:00+01:00</updated>
             <id>/2015/09/09/tactician.html</id>
             <content type="html"><![CDATA[<p>Just like <a href="/2015/08/04/simple-bus.html">SimpleBus</a>,
 <a href="https://tactician.thephpleague.com/">Tactician</a> is a lightweight library created by
@@ -15952,7 +16153,7 @@ the "good" way or the "pragmatic" way (if you don't choose wisely, then shame on
             <entry>
             <title type="html"><![CDATA[Command/Query Responsibility Segregation]]></title>
             <link href="/2015/08/25/cqrs.html"/>
-            <updated>2015-08-25T00:00:00+00:00</updated>
+            <updated>2015-08-25T00:00:00+01:00</updated>
             <id>/2015/08/25/cqrs.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: CQRS is about not mixing "read" and "write" logic. You can use patterns
@@ -16167,7 +16368,7 @@ even if, like every principles, it cannot be applied everywhere.</p>
             <entry>
             <title type="html"><![CDATA[Diactoros (PSR-7)]]></title>
             <link href="/2015/08/07/diactoros-psr7.html"/>
-            <updated>2015-08-07T00:00:00+00:00</updated>
+            <updated>2015-08-07T00:00:00+01:00</updated>
             <id>/2015/08/07/diactoros-psr7.html</id>
             <content type="html"><![CDATA[<p><a href="https://github.com/zendframework/zend-diactoros">Zend Diactoros</a> is a lightweight
 library providing implementations for <a href="http://www.php-fig.org/psr/psr-7/">PSR-7 interfaces</a>.</p>
@@ -16275,7 +16476,7 @@ used in <a href="http://symfony.com/blog/psr-7-support-in-symfony-is-here">Symfo
             <entry>
             <title type="html"><![CDATA[Pomm Foundation]]></title>
             <link href="/2015/08/06/pomm-foundation.html"/>
-            <updated>2015-08-06T00:00:00+00:00</updated>
+            <updated>2015-08-06T00:00:00+01:00</updated>
             <id>/2015/08/06/pomm-foundation.html</id>
             <content type="html"><![CDATA[<p><a href="http://www.pomm-project.org/">Pomm</a> is an interresting alternative to Doctrine
 (<a href="http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/introduction.html">DBAL</a>
@@ -16351,7 +16552,7 @@ so if you're using PostgresSQL and don't need an ORM, you can give it a try!</p>
             <entry>
             <title type="html"><![CDATA[phinx]]></title>
             <link href="/2015/08/05/phinx.html"/>
-            <updated>2015-08-05T00:00:00+00:00</updated>
+            <updated>2015-08-05T00:00:00+01:00</updated>
             <id>/2015/08/05/phinx.html</id>
             <content type="html"><![CDATA[<p><a href="https://phinx.org/">phinx</a> is a lightweight migration library, completly decoupled
 from any framework and libraries. In its most simple form, it allows you to write SQL
@@ -16494,7 +16695,7 @@ coupled to any framework and it doesn't require any integration.</p>
             <entry>
             <title type="html"><![CDATA[Simple Bus]]></title>
             <link href="/2015/08/04/simple-bus.html"/>
-            <updated>2015-08-04T00:00:00+00:00</updated>
+            <updated>2015-08-04T00:00:00+01:00</updated>
             <id>/2015/08/04/simple-bus.html</id>
             <content type="html"><![CDATA[<p><a href="http://simplebus.github.io/MessageBus/">Simple Bus</a> is a lightweight library
 created by <a href="https://twitter.com/matthiasnoback">Matthias Noback</a> allowing you to
@@ -16681,7 +16882,7 @@ about CQRS: <a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avo
             <entry>
             <title type="html"><![CDATA[phpspec]]></title>
             <link href="/2015/08/03/phpspec.html"/>
-            <updated>2015-08-03T00:00:00+00:00</updated>
+            <updated>2015-08-03T00:00:00+01:00</updated>
             <id>/2015/08/03/phpspec.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is kept up to date.</p>
@@ -17036,7 +17237,7 @@ it to a collaborator you have two choices:</p>
             <entry>
             <title type="html"><![CDATA[Symfony Differently - part 3: Conclusion]]></title>
             <link href="/2015/08/02/sf-differently-part-3-conclusion.html"/>
-            <updated>2015-08-02T00:00:00+00:00</updated>
+            <updated>2015-08-02T00:00:00+01:00</updated>
             <id>/2015/08/02/sf-differently-part-3-conclusion.html</id>
             <content type="html"><![CDATA[<p>This series isn't really working for me, so I've decided to conclude it prematurely.
 Have a look at the first ones:</p>
@@ -17117,7 +17318,7 @@ called.</p>
             <entry>
             <title type="html"><![CDATA[Symfony Differently - part 2: Bootstrap]]></title>
             <link href="/2015/06/10/sf-differently-part-2-bootstrap.html"/>
-            <updated>2015-06-10T00:00:00+00:00</updated>
+            <updated>2015-06-10T00:00:00+01:00</updated>
             <id>/2015/06/10/sf-differently-part-2-bootstrap.html</id>
             <content type="html"><![CDATA[<p>This is the second article of the <a href="https://symfony.com">Symfony</a> Differently series,
 Have a look at the first one: <a href="/2015/06/03/sf-differently-part-1-introduction.html">Introduction</a>.</p>
@@ -17530,7 +17731,7 @@ application in the future, we've chosen to stay consistent with the rest.</p>
             <entry>
             <title type="html"><![CDATA[Symfony Differently - part 1: Introduction]]></title>
             <link href="/2015/06/03/sf-differently-part-1-introduction.html"/>
-            <updated>2015-06-03T00:00:00+00:00</updated>
+            <updated>2015-06-03T00:00:00+01:00</updated>
             <id>/2015/06/03/sf-differently-part-1-introduction.html</id>
             <content type="html"><![CDATA[<p><a href="https://symfony.com">Symfony</a> is an amazing HTTP framework which powers
 <a href="http://labs.octivi.com/handling-1-billion-requests-a-week-with-symfony2/">high traffic websites</a>.
@@ -17672,7 +17873,7 @@ want to read <a href="http://martinfowler.com/bliki/MonolithFirst.html">the foll
             <entry>
             <title type="html"><![CDATA[SpecGen v0.3]]></title>
             <link href="/2015/05/28/spec-gen-0-3.html"/>
-            <updated>2015-05-28T00:00:00+00:00</updated>
+            <updated>2015-05-28T00:00:00+01:00</updated>
             <id>/2015/05/28/spec-gen-0-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.3 inserts a property for each constructor argument.</p>
@@ -17833,7 +18034,7 @@ probably be about using it for collaborators.</p>
             <entry>
             <title type="html"><![CDATA[SpecGen v0.2]]></title>
             <link href="/2015/05/20/spec-gen-0-2.html"/>
-            <updated>2015-05-20T00:00:00+00:00</updated>
+            <updated>2015-05-20T00:00:00+01:00</updated>
             <id>/2015/05/20/spec-gen-0-2.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.2 inserts use statements.</p>
@@ -18025,7 +18226,7 @@ of a new generator: insertion of properties when the method is a constructor.</p
             <entry>
             <title type="html"><![CDATA[Memio SpecGen v0.1]]></title>
             <link href="/2015/05/13/memio-spec-gen.html"/>
-            <updated>2015-05-13T00:00:00+00:00</updated>
+            <updated>2015-05-13T00:00:00+01:00</updated>
             <id>/2015/05/13/memio-spec-gen.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> is a <a href="http://phpspec.net">phpspec</a>
@@ -18350,7 +18551,7 @@ generation.</p>
             <entry>
             <title type="html"><![CDATA[Memio v1.0]]></title>
             <link href="/2015/05/06/memio.html"/>
-            <updated>2015-05-06T00:00:00+00:00</updated>
+            <updated>2015-05-06T00:00:00+01:00</updated>
             <id>/2015/05/06/memio.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://memio.github.io/memio">Memio</a> is a PHP code generator library,
@@ -18541,7 +18742,7 @@ code generator.</p>
             <entry>
             <title type="html"><![CDATA[Memio Pretty Printer]]></title>
             <link href="/2015/04/29/memio-pretty-printer.html"/>
-            <updated>2015-04-29T00:00:00+00:00</updated>
+            <updated>2015-04-29T00:00:00+01:00</updated>
             <id>/2015/04/29/memio-pretty-printer.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/pretty-printer">PrettyPrinter</a> converts a
@@ -18731,7 +18932,7 @@ but we can install Memio's TwigTemplateEngine package .</p>
             <entry>
             <title type="html"><![CDATA[Memio validator and linter]]></title>
             <link href="/2015/04/22/memio-validator-linter.html"/>
-            <updated>2015-04-22T00:00:00+00:00</updated>
+            <updated>2015-04-22T00:00:00+01:00</updated>
             <id>/2015/04/22/memio-validator-linter.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Write <a href="http://github.com/memio/validator">constraints</a> to check
@@ -18892,7 +19093,7 @@ are valid. Linter is a set of constraints ready to use, allowing to prevent synt
             <entry>
             <title type="html"><![CDATA[Memio models]]></title>
             <link href="/2015/04/15/memio-models.html"/>
-            <updated>2015-04-15T00:00:00+00:00</updated>
+            <updated>2015-04-15T00:00:00+01:00</updated>
             <id>/2015/04/15/memio-models.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Describe code by building <a href="http://github.com/memio/model">models</a>.</p>
@@ -19051,7 +19252,7 @@ function phpspec_generator($methodName, array $arguments) {
             <entry>
             <title type="html"><![CDATA[Introducing Memio, code generator]]></title>
             <link href="/2015/04/08/introducing-memio-code-generator.html"/>
-            <updated>2015-04-08T00:00:00+00:00</updated>
+            <updated>2015-04-08T00:00:00+01:00</updated>
             <id>/2015/04/08/introducing-memio-code-generator.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Work in Progress: Memio, a library for PHP code generation.</p>
@@ -19178,7 +19379,7 @@ by <a href="https://github.com/webmozart">webmozart</a>).</p>
             <entry>
             <title type="html"><![CDATA[Hello World, best practices - part 1.1.1]]></title>
             <link href="/2015/04/01/hello-world-best-practices.html"/>
-            <updated>2015-04-01T00:00:00+00:00</updated>
+            <updated>2015-04-01T00:00:00+01:00</updated>
             <id>/2015/04/01/hello-world-best-practices.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Happy April Fool joke!</p>
@@ -24124,7 +24325,7 @@ many advantages as it enables demonstrations and simple automated tests.</p>
             <entry>
             <title type="html"><![CDATA[PHP array manipulation]]></title>
             <link href="/2014/10/15/php-array-manipulation.html"/>
-            <updated>2014-10-15T00:00:00+00:00</updated>
+            <updated>2014-10-15T00:00:00+01:00</updated>
             <id>/2014/10/15/php-array-manipulation.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> provides a nice
@@ -24625,7 +24826,7 @@ you.</p>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - Conclusion]]></title>
             <link href="/2014/10/08/master-sf2-conclusion.html"/>
-            <updated>2014-10-08T00:00:00+00:00</updated>
+            <updated>2014-10-08T00:00:00+01:00</updated>
             <id>/2014/10/08/master-sf2-conclusion.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -24712,7 +24913,7 @@ before anything else. Here's a short selection of its available components:</p>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 6: Annotations]]></title>
             <link href="/2014/09/10/master-sf2-part-6-annotations.html"/>
-            <updated>2014-09-10T00:00:00+00:00</updated>
+            <updated>2014-09-10T00:00:00+01:00</updated>
             <id>/2014/09/10/master-sf2-part-6-annotations.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -24978,7 +25179,7 @@ git commit -m 'Used annotations'
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 5: Events]]></title>
             <link href="/2014/09/03/master-sf2-part-5-events.html"/>
-            <updated>2014-09-03T00:00:00+00:00</updated>
+            <updated>2014-09-03T00:00:00+01:00</updated>
             <id>/2014/09/03/master-sf2-part-5-events.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -25331,7 +25532,7 @@ code we cannot know that submitted JSON has been handled, we lose explicitness.<
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 4: Doctrine]]></title>
             <link href="/2014/08/27/master-sf2-part-4-doctrine.html"/>
-            <updated>2014-08-27T00:00:00+00:00</updated>
+            <updated>2014-08-27T00:00:00+01:00</updated>
             <id>/2014/08/27/master-sf2-part-4-doctrine.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -25780,7 +25981,7 @@ a standalone library allowing you to deploy database changes, it even has
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 3: Services]]></title>
             <link href="/2014/08/22/master-sf2-part-3-services.html"/>
-            <updated>2014-08-22T00:00:00+00:00</updated>
+            <updated>2014-08-22T00:00:00+01:00</updated>
             <id>/2014/08/22/master-sf2-part-3-services.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -26327,7 +26528,7 @@ that "Dependency Injection" is just a fancy term for "passing arguments".</p>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 2: Test Driven Development]]></title>
             <link href="/2014/08/13/master-sf2-part-2-tdd.html"/>
-            <updated>2014-08-13T00:00:00+00:00</updated>
+            <updated>2014-08-13T00:00:00+01:00</updated>
             <id>/2014/08/13/master-sf2-part-2-tdd.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -26581,7 +26782,7 @@ demonstrated how quick and simple it is to implement the first User Story
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 1: Bootstraping]]></title>
             <link href="/2014/08/05/master-sf2-part-1-bootstraping.html"/>
-            <updated>2014-08-05T00:00:00+00:00</updated>
+            <updated>2014-08-05T00:00:00+01:00</updated>
             <id>/2014/08/05/master-sf2-part-1-bootstraping.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -26809,7 +27010,7 @@ quickest way to bootstrap a project.</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - Conclusion]]></title>
             <link href="/2014/07/23/learn-sf2-conclusion.html"/>
-            <updated>2014-07-23T00:00:00+00:00</updated>
+            <updated>2014-07-23T00:00:00+01:00</updated>
             <id>/2014/07/23/learn-sf2-conclusion.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -27166,7 +27367,7 @@ series of articles!</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 5: Tests]]></title>
             <link href="/2014/07/20/learn-sf2-tests-part-5.html"/>
-            <updated>2014-07-20T00:00:00+00:00</updated>
+            <updated>2014-07-20T00:00:00+01:00</updated>
             <id>/2014/07/20/learn-sf2-tests-part-5.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -27540,7 +27741,7 @@ need to check the precise HTTP response's status code).</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 4: Controllers]]></title>
             <link href="/2014/07/12/learn-sf2-controllers-part-4.html"/>
-            <updated>2014-07-12T00:00:00+00:00</updated>
+            <updated>2014-07-12T00:00:00+01:00</updated>
             <id>/2014/07/12/learn-sf2-controllers-part-4.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -27885,7 +28086,7 @@ git commit -m 'Created Ni route and controller'
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 3: Bundles]]></title>
             <link href="/2014/07/02/learn-sf2-bundles-part-3.html"/>
-            <updated>2014-07-02T00:00:00+00:00</updated>
+            <updated>2014-07-02T00:00:00+01:00</updated>
             <id>/2014/07/02/learn-sf2-bundles-part-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -28145,7 +28346,7 @@ makes too much fuss to no avail (that's my humble opinion anyway).</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 2: Empty application]]></title>
             <link href="/2014/06/25/learn-sf2-empty-app-part-2.html"/>
-            <updated>2014-06-25T00:00:00+00:00</updated>
+            <updated>2014-06-25T00:00:00+01:00</updated>
             <id>/2014/06/25/learn-sf2-empty-app-part-2.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -28361,7 +28562,7 @@ to a controller which takes a HTTP request and returns a HTTP response.</p>
             <entry>
             <title type="html"><![CDATA[Learn Symfony2 - part 1: Composer]]></title>
             <link href="/2014/06/18/learn-sf2-composer-part-1.html"/>
-            <updated>2014-06-18T00:00:00+00:00</updated>
+            <updated>2014-06-18T00:00:00+01:00</updated>
             <id>/2014/06/18/learn-sf2-composer-part-1.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see
@@ -28531,7 +28732,7 @@ git commit -m 'Installed Symfony2'
             <entry>
             <title type="html"><![CDATA[PHP Tokenizer]]></title>
             <link href="/2014/06/04/php-tokenizer.html"/>
-            <updated>2014-06-04T00:00:00+00:00</updated>
+            <updated>2014-06-04T00:00:00+01:00</updated>
             <id>/2014/06/04/php-tokenizer.html</id>
             <content type="html"><![CDATA[<p>The <a href="http://www.php.net/manual/en/book.tokenizer.php">PHP Tokenizer documentation</a>
 looks a bit empty, and you have to try it out by yourself to understand how it
@@ -28679,7 +28880,7 @@ use <code>token_name($token)</code>.</p>
             <entry>
             <title type="html"><![CDATA[Redaktilo v0.7]]></title>
             <link href="/2014/05/27/redaktilo-0-7.html"/>
-            <updated>2014-05-27T00:00:00+00:00</updated>
+            <updated>2014-05-27T00:00:00+01:00</updated>
             <id>/2014/05/27/redaktilo-0-7.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -28862,7 +29063,7 @@ start a discussion here.</p>
             <entry>
             <title type="html"><![CDATA[Facade design pattern, by example]]></title>
             <link href="/2014/05/21/facade-design-pattern-by-example.html"/>
-            <updated>2014-05-21T00:00:00+00:00</updated>
+            <updated>2014-05-21T00:00:00+01:00</updated>
             <id>/2014/05/21/facade-design-pattern-by-example.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -28960,7 +29161,7 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
             <entry>
             <title type="html"><![CDATA[Open/Closed principle, by example]]></title>
             <link href="/2014/05/14/open-closed-principle-by-example.html"/>
-            <updated>2014-05-14T00:00:00+00:00</updated>
+            <updated>2014-05-14T00:00:00+01:00</updated>
             <id>/2014/05/14/open-closed-principle-by-example.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -29218,7 +29419,7 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
             <entry>
             <title type="html"><![CDATA[Redaktilo: because your code too needs an editor]]></title>
             <link href="/2014/05/09/redaktilo.html"/>
-            <updated>2014-05-09T00:00:00+00:00</updated>
+            <updated>2014-05-09T00:00:00+01:00</updated>
             <id>/2014/05/09/redaktilo.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -29470,7 +29671,7 @@ to manipulate files, through the editor metaphor:</p>
             <entry>
             <title type="html"><![CDATA[PHP generators and coroutines]]></title>
             <link href="/2014/04/30/php-generators-and-coroutines.html"/>
-            <updated>2014-04-30T00:00:00+00:00</updated>
+            <updated>2014-04-30T00:00:00+01:00</updated>
             <id>/2014/04/30/php-generators-and-coroutines.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -29593,7 +29794,7 @@ it!</p>
             <entry>
             <title type="html"><![CDATA[Symfony Sessions introduction]]></title>
             <link href="/2014/04/23/sf2-sessions-introduction.html"/>
-            <updated>2014-04-23T00:00:00+00:00</updated>
+            <updated>2014-04-23T00:00:00+01:00</updated>
             <id>/2014/04/23/sf2-sessions-introduction.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
@@ -29994,7 +30195,7 @@ questions don't be shy and drop me a line on
             <entry>
             <title type="html"><![CDATA[Pomodoro: manage your breaks, improve your focus]]></title>
             <link href="/2014/04/16/pomodoro-manage-your-breaks-improve-your-focus.html"/>
-            <updated>2014-04-16T00:00:00+00:00</updated>
+            <updated>2014-04-16T00:00:00+01:00</updated>
             <id>/2014/04/16/pomodoro-manage-your-breaks-improve-your-focus.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -30045,7 +30246,7 @@ questions, don't be shy and drop me line on
             <entry>
             <title type="html"><![CDATA[Symfony2 Console component, by example]]></title>
             <link href="/2014/04/09/sf2-console-component-by-example.html"/>
-            <updated>2014-04-09T00:00:00+00:00</updated>
+            <updated>2014-04-09T00:00:00+01:00</updated>
             <id>/2014/04/09/sf2-console-component-by-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This article has been re-written - see
@@ -30697,7 +30898,7 @@ if you have any feedbacks/questions, be sure to contact me on
             <entry>
             <title type="html"><![CDATA[Tests cheat sheet]]></title>
             <link href="/2014/04/02/tests-cheat-sheet.html"/>
-            <updated>2014-04-02T00:00:00+00:00</updated>
+            <updated>2014-04-02T00:00:00+01:00</updated>
             <id>/2014/04/02/tests-cheat-sheet.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 

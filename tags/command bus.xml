@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2023-03-24T16:36:48+00:00</updated>
+    <updated>2023-04-04T19:28:14+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -11,7 +11,7 @@
             <entry>
             <title type="html"><![CDATA[PragmatiClean - Command Bus]]></title>
             <link href="/2017/09/20/pragmaticlean-command-bus.html"/>
-            <updated>2017-09-20T00:00:00+00:00</updated>
+            <updated>2017-09-20T00:00:00+01:00</updated>
             <id>/2017/09/20/pragmaticlean-command-bus.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: Use Command Bus pattern in your controllers, but drop the bus.</p>
@@ -296,7 +296,7 @@ for each Use Case in our application (so one pair per Controller action).</p>
             <entry>
             <title type="html"><![CDATA[Towards CQRS, Command Bus]]></title>
             <link href="/2016/05/11/towards-cqrs-command-bus.html"/>
-            <updated>2016-05-11T00:00:00+00:00</updated>
+            <updated>2016-05-11T00:00:00+01:00</updated>
             <id>/2016/05/11/towards-cqrs-command-bus.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: The <code>Command Bus</code> pattern can help you get the CQRS "Command" part right.</p>
@@ -721,7 +721,7 @@ by <a href="https://twitter.com/UdiDahan">Udi Dahan</a></li>
             <entry>
             <title type="html"><![CDATA[Decouple from Frameworks]]></title>
             <link href="/2015/09/30/decouple-from-frameworks.html"/>
-            <updated>2015-09-30T00:00:00+00:00</updated>
+            <updated>2015-09-30T00:00:00+01:00</updated>
             <id>/2015/09/30/decouple-from-frameworks.html</id>
             <content type="html"><![CDATA[<p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
 While necessary, those concerns don't add any value to your project: the business
@@ -1315,7 +1315,7 @@ by <a href="https://twitter.com/mrkrstphr">Kristopher Wilson</a></li>
             <entry>
             <title type="html"><![CDATA[Tactician]]></title>
             <link href="/2015/09/09/tactician.html"/>
-            <updated>2015-09-09T00:00:00+00:00</updated>
+            <updated>2015-09-09T00:00:00+01:00</updated>
             <id>/2015/09/09/tactician.html</id>
             <content type="html"><![CDATA[<p>Just like <a href="/2015/08/04/simple-bus.html">SimpleBus</a>,
 <a href="https://tactician.thephpleague.com/">Tactician</a> is a lightweight library created by
@@ -1453,7 +1453,7 @@ the "good" way or the "pragmatic" way (if you don't choose wisely, then shame on
             <entry>
             <title type="html"><![CDATA[Simple Bus]]></title>
             <link href="/2015/08/04/simple-bus.html"/>
-            <updated>2015-08-04T00:00:00+00:00</updated>
+            <updated>2015-08-04T00:00:00+01:00</updated>
             <id>/2015/08/04/simple-bus.html</id>
             <content type="html"><![CDATA[<p><a href="http://simplebus.github.io/MessageBus/">Simple Bus</a> is a lightweight library
 created by <a href="https://twitter.com/matthiasnoback">Matthias Noback</a> allowing you to

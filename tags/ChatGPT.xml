@@ -3,11 +3,212 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2023-03-24T16:36:48+00:00</updated>
+    <updated>2023-04-04T19:28:14+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[ChatGPT: fluff or not? Goldfish Memory]]></title>
+            <link href="/2023/04/04/chat-gpt-goldfish-memory.html"/>
+            <updated>2023-04-04T00:00:00+01:00</updated>
+            <id>/2023/04/04/chat-gpt-goldfish-memory.html</id>
+            <content type="html"><![CDATA[<p>Now that a couple of months have passed since its over hyped launch,
+surely <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> has found some
+use cases where it could be of any actual use. Or is it all fluff? Let's find out.</p>
+
+<p>In my quest to find a use for ChatGPT in my day to day developer activity,
+I've stumbled upon this article:
+<a href="https://allenpike.com/2023/175b-parameter-goldfish-gpt">a 175-Billion-Parameter Goldfish</a>,
+from <a href="http://www.twitter.com/apike/">Allen Pike</a>.</p>
+
+<p>Granted, this doesn't bring me anywhere close to my goal...
+Yet, this peaked my developer interest, by opening a window on some of the
+inner workings of ChatGPT.</p>
+
+<p>Let me walk you through my findings about ChatGPT and its Goldfish Memory
+problem, so we can learn a thing or two.</p>
+
+<h2 id="the-goldfish-memory-issue">The Goldfish Memory issue</h2>
+
+<p>When using ChatGPT, have you often encountered the frustrating
+"Goldfish Memory" issue, where it forgets the early conversation's context,
+resulting in responses that appear unrelated or inappropriate?</p>
+
+<p>This problem is due to how Large Language Models (LLMs), like OpenAI's GPT,
+work.</p>
+
+<p>They fundamentally are stateless functions that accept one prompt as an input,
+and return a completion as an ouptut (I believe the output actually also
+contains the prompt).</p>
+
+<p>Consider the following first "user" prompt:</p>
+
+<pre><code>Hi, my name is Loïc
+</code></pre>
+
+<p>And its completion:</p>
+
+<pre><code>Hello Loïc, it's nice to meet you! How can I assist you today?
+</code></pre>
+
+<p>Now, if we were to send the following second user prompt:</p>
+
+<pre><code>What is my name?
+</code></pre>
+
+<p>The LLM wouldn't be able to return the expected completion <code>Your name's Loïc</code>,
+because they only accept one single prompt, and the name is missing from that
+second user prompt.</p>
+
+<h2 id="llm%2C-but-for-chats">LLM, but for chats</h2>
+
+<p>To build a chat system similar to ChatGPT, instead of sending directly the
+user prompt to the LLM, we can create an "augmented" prompt which contains all
+the previous user prompts and their completions, as well as the new user prompt,
+in a conversation format:</p>
+
+<pre><code>User: Hi, my name is Loïc
+Chatbot: Hello Loïc, it's nice to meet you! How can I assist you today?
+User: What is my name?
+Chatbot:
+</code></pre>
+
+<p>By sending this augmented prompt to the LLM, we'll now be able to get the
+expected completion <code>Your name's Loïc</code>.</p>
+
+<h2 id="prompt-size-limit">Prompt Size Limit</h2>
+
+<p>But LLMs don't support unlimited sized prompts...</p>
+
+<p>For the sake of the example, let's say the size limit is 5 lines,
+and the conversation continued as follow:</p>
+
+<pre><code>User: Hi, my name is Loïc
+Chatbot: Hello Loïc, it's nice to meet you! How can I assist you today?
+User: What is my name?
+Chatbot: Your name's Loïc
+User: I'm a Lead Developer, my tech stack is: PHP, Symfony, PostgresSQL and git
+Chatbot: Do you have any specific questions related to your tech stack?
+User: I also follow these methodologies: SCRUM, TDD and OOP
+Chatbot: Do you have any topics related to those methodologies that you'd like to discuss?
+User: What is my name?
+Chatbot:
+</code></pre>
+
+<p>Because of the 5 lines limit, the chat system needs to truncate the augmented
+prompt before sending it to the LLM. A common solution seems to only keep the
+latest messages. Which means the LLM would end up only getting the following
+prompt:</p>
+
+<pre><code>Chatbot: Do you have any specific questions related to your tech stack?
+User: I also follow these methodologies: SCRUM, TDD and OOP
+Chatbot: Do you have any topics related to those methodologies that you'd like to discuss?
+User: What is my name?
+Chatbot:
+</code></pre>
+
+<p>And this is why ChatGPT is not able to answer the expected <code>Your name's Loïc</code>.</p>
+
+<blockquote>
+  <p>Note: at the time of writing this article, ChatGPT's limit is shared between
+  the prompt and the completion:
+  * for the <code>gpt-3.5-turbo</code> model, the token limit is 4096
+  * for <code>gpt-4</code> it's 8192
+  Before being sent to the LLM, the input text is broken down into tokens:
+  <code>Hi, my name is Loïc</code> is broken down into the following dictionary
+  <code>['Hi', ',', ' my', ' name', ' is', ' Lo', 'ï', 'c']</code>, which is then converted
+  into the following tokens <code>[17250, 11, 616, 1438, 318, 6706, 26884, 66]</code>.
+  A single word might be broken down into multiple tokens, and tokenisation
+  varies between models. The rule of thumb is to consider that a token is
+  equivalent to 3/4 of a word.</p>
+</blockquote>
+
+<h2 id="how-to-enable-infinite-memory%3F">How to enable Infinite Memory?</h2>
+
+<p>So. Where do we go from here? How do we enable Infinite Memory for chatbots,
+and more broadly LLMs?</p>
+
+<p>One solution would be to periodically summarize parts of the conversation.</p>
+
+<p>The summarization task itself can be done in a separate "summarizing" prompt:</p>
+
+<pre><code>Summarize the following conversation in a short sentence, in the past tense:
+User: Hi, my name is Loïc
+Chatbot: Hello Loïc, it's nice to meet you! How can I assist you today?
+User: What is my name?
+Chatbot: Your name is Loïc
+</code></pre>
+
+<p>Which should result in a completion similar to:</p>
+
+<pre><code>The user introduced themselves as Loïc, and the chatbot confirmed their name when asked.
+</code></pre>
+
+<p>The augmented prompt would then contain the summaries of older messages,
+as well as recent ones:</p>
+
+<pre><code>Previously:
+The user introduced themselves as Loïc, and the chatbot confirmed their name when asked.
+The user discussed their tech stack (PHP, Symfony, PostgresSQL and Git) and methodologies (SCRUM, TDD and OOP) as a Lead Developer, and the chatbot asked if they have any specific questions related to them.
+User: What is my name?
+Chatbot:
+</code></pre>
+
+<p>Now the LLM should be able to give a completion equivalent to:</p>
+
+<pre><code>Your name is Loïc. Is there anything else I can help you with related to your tech stack or methodologies as a Lead Developer?
+</code></pre>
+
+<p>And that's the gist of it!</p>
+
+<h2 id="takeways">Takeways</h2>
+
+<p>Augmenting the prompt with recent messages, as well as summaries of related
+older ones, can allow LLMs to have Infinite Memory!</p>
+
+<p>And that's when the "build a pet project" part of my brain started tingling,
+sometimes I just can't resist the urge to build something to get a better
+grasp on a concept that's intriguing me...</p>
+
+<p>So I've started to code a small CLI app (with PHP and Symfony of course)
+to explore the concepts.</p>
+
+<p>There definitely are some challenges and limits to the summarization approach.</p>
+
+<p>First would be how to select the chunks of conversation to summarize...
+Do we create a new summary:</p>
+
+<ul>
+<li>every 4 messages?</li>
+<li>every hour? every day?</li>
+<li>every time the topic seems to change? How do we detect that?</li>
+</ul>
+
+<p>Next is what summary to include in the prompt:</p>
+
+<ul>
+<li>a concatenation of all summaries?</li>
+<li>a summary of all the summaries?</li>
+<li>the summaries that are somehow related to the last messages or user prompt?</li>
+</ul>
+
+<p>Which then brings another rabbit hole, namely how to search for relevant
+summaries:</p>
+
+<ul>
+<li>using semantic search?</li>
+<li>using vector database?</li>
+<li>using graph database?</li>
+</ul>
+
+<p>More on that once I've done some progress on the pet project. Anyway.</p>
+
+<p>All in all, while I haven't found a practical use case for ChatGPT in my
+day to day developer activity, it still seems worth exploring its potential
+for generating content. The quest continues.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[ChatGPT: fluff or not? Academic Prompt Engineering]]></title>
             <link href="/2023/03/24/chat-gpt-academic-prompt-engineering.html"/>

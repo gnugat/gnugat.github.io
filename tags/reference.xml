@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2023-03-24T16:36:48+00:00</updated>
+    <updated>2023-04-04T19:28:14+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -11,7 +11,7 @@
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - CLI Example]]></title>
             <link href="/2016/04/06/ultimate-symfony-cli-example.html"/>
-            <updated>2016-04-06T00:00:00+00:00</updated>
+            <updated>2016-04-06T00:00:00+01:00</updated>
             <id>/2016/04/06/ultimate-symfony-cli-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
@@ -505,7 +505,7 @@ them with third party libraries</li>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Web Example]]></title>
             <link href="/2016/03/30/ultimate-symfony-web-example.html"/>
-            <updated>2016-03-30T00:00:00+00:00</updated>
+            <updated>2016-03-30T00:00:00+01:00</updated>
             <id>/2016/03/30/ultimate-symfony-web-example.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
@@ -4647,7 +4647,7 @@ articles:</p>
             <entry>
             <title type="html"><![CDATA[phpspec]]></title>
             <link href="/2015/08/03/phpspec.html"/>
-            <updated>2015-08-03T00:00:00+00:00</updated>
+            <updated>2015-08-03T00:00:00+01:00</updated>
             <id>/2015/08/03/phpspec.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is kept up to date.</p>
@@ -5002,7 +5002,7 @@ it to a collaborator you have two choices:</p>
             <entry>
             <title type="html"><![CDATA[Symfony Sessions introduction]]></title>
             <link href="/2014/04/23/sf2-sessions-introduction.html"/>
-            <updated>2014-04-23T00:00:00+00:00</updated>
+            <updated>2014-04-23T00:00:00+01:00</updated>
             <id>/2014/04/23/sf2-sessions-introduction.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
