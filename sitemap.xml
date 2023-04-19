@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc></loc>
-    <lastmod>2023-04-04T19:28:14+01:00</lastmod>
+    <lastmod>2023-04-19T12:49:38+01:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>/about</loc>
-    <lastmod>2023-04-04T19:28:14+01:00</lastmod>
+    <lastmod>2023-04-19T12:49:38+01:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>/2023/04/19/chat-gpt-spec-bdd.html</loc>
+    <lastmod>2023-04-19T00:00:00+01:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>/2023/04/04/chat-gpt-goldfish-memory.html</loc>

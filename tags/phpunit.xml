@@ -3,11 +3,563 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2023-04-04T19:28:14+01:00</updated>
+    <updated>2023-04-19T12:49:38+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[ChatGPT: fluff or not? SpecBDD]]></title>
+            <link href="/2023/04/19/chat-gpt-spec-bdd.html"/>
+            <updated>2023-04-19T00:00:00+01:00</updated>
+            <id>/2023/04/19/chat-gpt-spec-bdd.html</id>
+            <content type="html"><![CDATA[<p>Now that a couple of months have passed since its over hyped launch,
+surely <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> has found some
+use cases where it could be of any actual use. Or is it all fluff? Let's find out.</p>
+
+<p>In my quest to find a use for ChatGPT in my day to day developer activity,
+I've finally found a helpful scenario!</p>
+
+<p>Let me walk you through my findings about ChatGPT and its "Spec Gen" capacity,
+so we can learn a thing or two.</p>
+
+<h2 id="spec-gen">Spec Gen</h2>
+
+<p>When tasked to write a feature, I first write a unit test that specifies the
+behaviour, for example:</p>
+
+<pre><code>&lt;?php
+
+namespace spec\Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+use Vendor\Project\File;
+use PhpSpec\ObjectBehavior;
+
+class TextEditorSpec extends ObjectBehavior
+{
+    private const FILENAME = '/tmp/file.txt';
+    private const FORCE_FILE_CREATION = true;
+
+    function let(Filesystem $filesystem): void
+    {
+        $this-&gt;beConstructedWith($filesystem);
+    }
+
+    function it_creates_new_files(File $file, Filesystem $filesystem): void
+    {
+        $filesystem-&gt;exists(self::FILENAME)-&gt;willReturn(false);
+        $filesystem-&gt;create(self::FILENAME)-&gt;willReturn($file);
+
+        $this-&gt;open(self::FILENAME, self::FORCE_FILE_CREATION)-&gt;shouldBe($file);
+    }
+}
+</code></pre>
+
+<p>When using <a href="https://phpspec.net/en/stable/">phpspec</a>,
+especially with the extension <a href="https://github.com/memio/spec-gen">spec-gen</a>,
+running the test will bootstrap for me the corresponding class:</p>
+
+<pre><code>&lt;?php
+
+namespace Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+
+class TextEditor
+{
+    private $filesystem;
+
+    public function __construct(Filesytem $filesystem)
+    {
+        $this-&gt;filesystem = $filesystem;
+    }
+
+    public function open(string $argument1, bool $argument2)
+    {
+    }
+}
+</code></pre>
+
+<p>That's pretty good, but it could be better: what if it was able to generate the complete code?</p>
+
+<h2 id="gpt-gen">GPT Gen</h2>
+
+<p>Let's forget about phpspec and use instead <a href="https://phpunit.de/">PHPUnit</a>,
+but still with the <a href="https://github.com/phpspec/prophecy">Prophecy</a>
+Mocking framework.</p>
+
+<p>Let's ask ChatGPT. Here's the priming prompt:</p>
+
+<blockquote>
+  <p><strong>USER</strong>:
+  Act as an expert PHP developer,
+    who's been writing high quality API code for 20 years.
+  Acknowledge with "ok".</p>
+</blockquote>
+
+<p>Because ChatGPT's Large Language Model (LLM) is able to generate a wide range
+of text (conversation, essays, movie script, poetry, etc), assigning it a role
+helps it narrow down its context, hence improving its accuracy for the task we
+want it to complete: writing PHP code, on a professional level
+(persona/role prompt engineering technique).</p>
+
+<p>We also need to consider the Goldfish Memory issue of ChatGPT: it only takes
+into account the last ~4000 tokens to generate its response, so asking it to
+give us a short reply helps us save some space.</p>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>: ok</p>
+</blockquote>
+
+<p>LLMs perform better when given some examples, and indeed before asking it to
+generate code we might want to give ChatGPT some of our code samples
+(X-Shot prompt engineering technique).</p>
+
+<p>Since coding also requires some level of logic, it is also helpful to include
+reasoning steps (Chain of Thought prompt engineering technique).</p>
+
+<p>Similarly, asking the LLM to first generate some topic related knowledge,
+and then reuse that in the further prompts will also increase our success rate
+(Generated Knowledge prompt engineering technique).</p>
+
+<p>With this in mind, here's the second prompt that provides a test class example:</p>
+
+<blockquote>
+  <p><strong>USER</strong>: Here's an example of test class from the project you're working on:</p>
+</blockquote>
+
+<pre><code>&lt;?php
+
+declare(strict_types=1);
+
+namespace tests\Ssc\Btlr\Cht\Message\Templates\Prompts;
+
+use Ssc\Btlr\App\Filesystem\ReadFile;
+use Ssc\Btlr\App\Template\Replace;
+use Ssc\Btlr\Cht\Message\Logs\Type;
+use Ssc\Btlr\Cht\Message\Logs\WriteLog;
+use Ssc\Btlr\Cht\Message\Templates\Prompts\Template;
+use tests\Ssc\Btlr\AppTest\BtlrServiceTestCase;
+
+class TemplateTest extends BtlrServiceTestCase
+{
+    /**
+     * @test
+     */
+    public function it_creates_prompt_from_template(): void
+    {
+        // Fixtures
+        $thoseParameters = [
+            'last_messages' =&gt; 'USER (1968-04-02T18:40:23+00:00): Write code for me, please',
+        ];
+        $forType = Type::AUGMENTED_PROMPT;
+        $withConfig = [
+            'chunk_memory_size' =&gt; 15,
+            'llm_engine' =&gt; 'chatgpt-gpt-3.5-turbo',
+            'logs_filename' =&gt; './var/cht/logs',
+            'prompt_templates_filename' =&gt; './templates/cht/prompts',
+        ];
+
+        $template = "LAST MESSAGES:\n%last_messages%\nBTLR:\n";
+        $prompt = "LAST MESSAGES:\n{$thoseParameters['last_messages']}\nBTLR:\n";
+        $data = [
+            'entry' =&gt; $prompt,
+        ];
+
+        // Dummies
+        $readFile = $this-&gt;prophesize(ReadFile::class);
+        $replace = $this-&gt;prophesize(Replace::class);
+        $writeLog = $this-&gt;prophesize(WriteLog::class);
+
+        // Stubs &amp; Mocks
+        $readFile-&gt;in("{$withConfig['prompt_templates_filename']}/{$forType['name']}.txt")
+            -&gt;willReturn($template);
+        $replace-&gt;in($template, $thoseParameters)
+            -&gt;willReturn($prompt);
+        $writeLog-&gt;for($data, $forType, $withConfig)
+            -&gt;shouldBeCalled();
+
+        // Assertion
+        $template = new Template(
+            $readFile-&gt;reveal(),
+            $replace-&gt;reveal(),
+            $writeLog-&gt;reveal(),
+        );
+        self::assertSame($prompt, $template-&gt;replace(
+            $thoseParameters,
+            $forType,
+            $withConfig,
+        ));
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>USER</strong>:
+  Acknowledge by describing how the use of fixtures, dummies, stubs, mocks
+  and assertions allow to make sure the tested code is behaving as expected.
+  And note the use of the special BtlrServiceTestCase parent class for <code>TemplateTest</code>.</p>
+</blockquote>
+
+<p>By the way, the code is from my Super Secret Code project
+<a href="https://github.com/gnugat/ssc-btlr">Btlr</a>.</p>
+
+<p>Here's ChatGPT's response:</p>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>:
+  In this test class, fixtures are used to provide the necessary data for
+  testing the <code>Template</code> class. The parameters and configuration are defined in
+  <code>$thoseParameters</code> and <code>$withConfig</code> respectively, and the template and prompt
+  strings are defined in <code>$template</code> and <code>$prompt</code>.</p>
+  
+  <p>Dummies are used to provide the interface of the <code>ReadFile</code>, <code>Replace</code>, and
+  <code>WriteLog</code> classes, without providing any actual implementation, since these
+  classes are not the focus of the test.</p>
+  
+  <p>Stubs are used to replace the implementation of <code>ReadFile</code> and <code>Replace</code>
+  classes, by returning a fixed value when their respective methods are called.
+  This ensures that the expected values are used for testing the <code>Template</code> class.</p>
+  
+  <p>Mocks are used to verify that the <code>WriteLog</code> class is called with the expected
+  parameters. The <code>shouldBeCalled()</code> method ensures that the <code>for()</code> method of
+  <code>WriteLog</code> class is actually called during the test.</p>
+  
+  <p>Finally, the assertion compares the result returned by the <code>replace()</code> method
+  of the <code>Template</code> class with the expected prompt string.</p>
+  
+  <p>The <code>BtlrServiceTestCase</code> class is a special parent class that sets up a test
+  environment for the Btlr service, which can include initializing dependencies,
+  connecting to databases, and setting up configurations. This helps to ensure
+  that tests are run in a consistent and isolated environment, and makes it easier
+  to write tests for the Btlr service.</p>
+</blockquote>
+
+<p>ChatGPT doesn't have access to the project and its code, it only knows what we've
+provided in the conversation so far.</p>
+
+<p>So for example it took a wild guess at what <code>BtlrServiceTestCase</code> does and got
+it wrong, but for our purpose this is good enough.</p>
+
+<p>The third prompt is an example of the corresponding class:</p>
+
+<blockquote>
+  <p><strong>USER</strong>:
+  When tasked with generating the corresponding <code>Template</code> class, from the above
+  <code>TemplateTest</code> test class, here's the code you wrote:</p>
+</blockquote>
+
+<pre><code>&lt;?php
+
+declare(strict_types=1);
+
+namespace Ssc\Btlr\Cht\Message\Templates\Prompts;
+
+use Ssc\Btlr\App\Filesystem\ReadFile;
+use Ssc\Btlr\App\Template\Replace;
+use Ssc\Btlr\Cht\Message\Logs\WriteLog;
+
+class Template
+{
+    public function __construct(
+        private ReadFile $readFile,
+        private Replace $replace,
+        private WriteLog $writeLog,
+    ) {
+    }
+
+    public function replace(
+        array $thoseParameters,
+        array $forType,
+        array $withConfig,
+    ): string {
+        $template = $this-&gt;readFile-&gt;in(
+            "{$withConfig['prompt_templates_filename']}/{$forType['name']}.txt",
+        );
+        $prompt = $this-&gt;replace-&gt;in($template, $thoseParameters);
+        $this-&gt;writeLog-&gt;for([
+            'entry' =&gt; $prompt,
+        ], $forType, $withConfig);
+
+        return $prompt;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>USER</strong>: Acknowledge by describing how the test class got translated into its
+  corresponding class.</p>
+</blockquote>
+
+<p>To which ChatGPT replies:</p>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>:
+  The <code>TemplateTest</code> test class served as a guide for implementing the
+  <code>Template</code> class.</p>
+  
+  <p>First, the constructor of <code>Template</code> class takes three dependencies, which
+  are also injected in the <code>TemplateTest</code> class as dummies or mocks.</p>
+  
+  <p>Next, the <code>replace()</code> method of <code>Template</code> class has the same signature as
+  the test method <code>it_creates_prompt_from_template()</code>, with the addition of a
+  return type declaration for the prompt string.</p>
+  
+  <p>The implementation of <code>replace()</code> method in <code>Template</code> class uses the
+  injected <code>ReadFile</code> instance to read the template string from the filesystem,
+  using the <code>$forType['name']</code> parameter to construct the file path.
+  It then uses the injected <code>Replace</code> instance to replace placeholders in the
+  template with values provided in the <code>$thoseParameters</code> array, resulting in
+  a <code>$prompt</code> string.</p>
+  
+  <p>Finally, the method calls the injected <code>WriteLog</code> instance with the <code>$prompt</code>,
+  <code>$forType</code>, and <code>$withConfig</code> parameters, which logs the prompt for the given
+  type and configuration.</p>
+  
+  <p>Overall, the implementation of the <code>Template</code> class closely follows the
+  structure of the <code>TemplateTest</code> class, and the use of dependency injection
+  ensures that the class can be easily tested in isolation from its
+  dependencies.</p>
+</blockquote>
+
+<p>With ChatGPT noting that the corresponding class closely follows the structure
+of its test, it should be now ready.</p>
+
+<p>Let's give it a new test class, and ask it to generate the corresponding code:</p>
+
+<blockquote>
+  <p><strong>USER</strong>: Brilliant. Now, in the same coding style as <code>TemplateTest</code> and
+  <code>Template</code>, you are tasked to write a the corresponding code for the
+  following <code>ReplyTest</code> test class:</p>
+</blockquote>
+
+<pre><code>&lt;?php
+
+declare(strict_types=1);
+
+namespace tests\Ssc\Btlr\Cht\Message;
+
+use Ssc\Btlr\Cht\Message\Logs\Type;
+use Ssc\Btlr\Cht\Message\Logs\WriteLog;
+use Ssc\Btlr\Cht\Message\Memory\Consolidate;
+use Ssc\Btlr\Cht\Message\Reply;
+use Ssc\Btlr\Cht\Message\Reply\Augment;
+use Ssc\Btlr\Cht\Message\Reply\UsingLlm;
+use tests\Ssc\Btlr\AppTest\BtlrServiceTestCase;
+
+class ReplyTest extends BtlrServiceTestCase
+{
+    /**
+     * @test
+     */
+    public function it_replies_to_user_prompt_using_llm(): void
+    {
+        // Fixtures
+        $userPrompt = 'Write code for me, please';
+        $withConfig = [
+            'chunk_memory_size' =&gt; 15,
+            'llm_engine' =&gt; 'chatgpt-gpt-3.5-turbo',
+            'logs_filename' =&gt; './var/cht/logs',
+            'prompt_templates_filename' =&gt; './templates/cht/prompts',
+        ];
+
+        $userPromptData = [
+            'entry' =&gt; $userPrompt,
+        ];
+        $augmentedPrompt = "USER: {$userPrompt}\nBLTR:";
+        $modelCompletion = "I'm sorry, dev. I'm afraid I can't do that.";
+        $modelCompletionData = [
+            'entry' =&gt; $modelCompletion,
+            'llm_engine' =&gt; $withConfig['llm_engine'],
+        ];
+
+        // Dummies
+        $augment = $this-&gt;prophesize(Augment::class);
+        $consolidate = $this-&gt;prophesize(Consolidate::class);
+        $usingLlm = $this-&gt;prophesize(UsingLlm::class);
+        $writeLog = $this-&gt;prophesize(WriteLog::class);
+
+        // Stubs &amp; Mocks
+        $writeLog-&gt;for($userPromptData, Type::USER_PROMPT, $withConfig)
+            -&gt;shouldBeCalled();
+        $augment-&gt;the($userPrompt, $withConfig)
+            -&gt;willReturn($augmentedPrompt);
+        $usingLlm-&gt;complete($augmentedPrompt)
+            -&gt;willReturn($modelCompletion);
+        $writeLog-&gt;for($modelCompletionData, Type::MODEL_COMPLETION, $withConfig)
+            -&gt;shouldBeCalled();
+        $consolidate-&gt;memories($withConfig)
+            -&gt;shouldBeCalled();
+
+        // Assertion
+        $reply = new Reply(
+            $augment-&gt;reveal(),
+            $consolidate-&gt;reveal(),
+            $usingLlm-&gt;reveal(),
+            $writeLog-&gt;reveal(),
+        );
+        self::assertSame($modelCompletion, $reply-&gt;to(
+            $userPrompt,
+            $withConfig,
+        ));
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>USER</strong>: Acknowledge by generating the code for the <code>Reply</code> class.</p>
+</blockquote>
+
+<p>And here's what ChatGPT came up with:</p>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>: Sure thing! Here's the code for the <code>Reply</code> class based on the
+  <code>ReplyTest</code> test class:</p>
+</blockquote>
+
+<pre><code>&lt;?php
+
+declare(strict_types=1);
+
+namespace Ssc\Btlr\Cht\Message;
+
+use Ssc\Btlr\Cht\Message\Logs\Type;
+use Ssc\Btlr\Cht\Message\Logs\WriteLog;
+use Ssc\Btlr\Cht\Message\Memory\Consolidate;
+use Ssc\Btlr\Cht\Message\Reply\Augment;
+use Ssc\Btlr\Cht\Message\Reply\UsingLlm;
+
+class Reply
+{
+    public function __construct(
+        private Augment $augment,
+        private Consolidate $consolidate,
+        private UsingLlm $usingLlm,
+        private WriteLog $writeLog,
+    ) {
+    }
+
+    public function to(string $userPrompt, array $withConfig): string
+    {
+        $userPromptData = [
+            'entry' =&gt; $userPrompt,
+        ];
+
+        // Augment the user prompt
+        $augmentedPrompt = $this-&gt;augment-&gt;the($userPrompt, $withConfig);
+
+        // Use LLM to generate a model completion
+        $modelCompletion = $this-&gt;usingLlm-&gt;complete($augmentedPrompt);
+
+        // Log the user prompt and model completion
+        $this-&gt;writeLog-&gt;for($userPromptData, Type::USER_PROMPT, $withConfig);
+        $modelCompletionData = [
+            'entry' =&gt; $modelCompletion,
+            'llm_engine' =&gt; $withConfig['llm_engine'],
+        ];
+        $this-&gt;writeLog-&gt;for($modelCompletionData, Type::MODEL_COMPLETION, $withConfig);
+
+        // Consolidate the memories
+        $this-&gt;consolidate-&gt;memories($withConfig);
+
+        return $modelCompletion;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>: This <code>Reply</code> class has a <code>to</code> method that takes a user prompt
+  and a configuration array as input, and returns the model completion
+  generated by LLM.
+  The <code>Reply</code> class constructor takes in four dependencies: <code>Augment</code>,
+  <code>Consolidate</code>, <code>UsingLlm</code>, and <code>WriteLog</code>, and stores them as private
+  properties.
+  The <code>to</code> method then uses these dependencies to augment the user prompt,
+  generate the model completion, log both the user prompt and the model
+  completion, and consolidate the memories.</p>
+</blockquote>
+
+<p>Which is pretty much spot on.</p>
+
+<p>I'd personnally have written something slightly different (no comments, have
+ <code>writeLog</code> for the user prompt at the begining of the method, and possibly
+not have any intermediate variables).</p>
+
+<p>But I can easily apply those changes!</p>
+
+<h2 id="takeways">Takeways</h2>
+
+<p>Thanks to Prompt Engineering (with techniques such as Role / Persona priming
+prompt, X-Shot, Chain of Thought and Generated Knowledge), it is possible
+to ask ChatGPT to generate code.</p>
+
+<p>I'm personally using the following prompts to generate the corresponding code
+for a given Test Class.</p>
+
+<p>Priming Prompt:</p>
+
+<blockquote>
+  <p>Act as an expert PHP developer, who's been writing high quality API code for 20 years.
+  Acknowledge with "ok".</p>
+</blockquote>
+
+<p>Test Class example prompt:</p>
+
+<blockquote>
+  <p>Here's an example of test class from the project you're working on:</p>
+  
+  <p><code>%example_test_class_code%</code></p>
+  
+  <p>Acknowledge by describing how the use of fixtures, dummies, stubs, mocks
+  and assertions allow to make sure the tested code is behaving as expected.
+  And note the use of the special BtlrServiceTestCase parent class for
+  <code>%example_test_class_name%</code>.</p>
+</blockquote>
+
+<p>Corresponding class example prompt:</p>
+
+<blockquote>
+  <p>When tasked with generating the corresponding <code>%example_class_name%</code> class,
+  from the above <code>%%example_test_class_name</code> test class, here's the code you wrote:</p>
+  
+  <p><code>%example_class_code%</code></p>
+  
+  <p>Acknowledge by describing how the test class got translated into its
+  corresponding class.</p>
+</blockquote>
+
+<p>Code generation request from Test Class prompt:</p>
+
+<blockquote>
+  <p>Brilliant. Now, in the same coding style as <code>%example_test_class_name%</code> and
+  <code>%example_class_name%</code>, you are tasked to write a the corresponding code for
+  the following <code>%test_class_name%</code> test class:</p>
+  
+  <p><code>%test_class_code%</code></p>
+  
+  <p>Acknowledge by generating the code for the <code>%class_name%</code> class.</p>
+</blockquote>
+
+<p>Now, what if you're not practicing Test Driven Development?</p>
+
+<p>I suppose you can tweek it to get ChatGPT to generate tests for you:</p>
+
+<ul>
+<li>Use the same priming prompt</li>
+<li>Then use the class example prompt</li>
+<li>Next use the "corresponding" test example prompt</li>
+<li>Finally provide a class and ask ChatGPT to generate its corresponding test</li>
+</ul>
+
+<p>All in all, the exploration of ChatGPT's text generation potential turned out
+to be quite worthwhile, as I ended up finding a practical use case for it in my
+day to day developer activity.</p>
+
+<p>Yet I suspect there's plenty more scenarions where ChatGPT can help, so I guess
+the quest continues.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Decouple from Libraries]]></title>
             <link href="/2015/10/12/decouple-from-libraries.html"/>
