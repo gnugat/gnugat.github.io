@@ -3,11 +3,262 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2023-04-19T12:49:38+01:00</updated>
+    <updated>2024-07-03T07:53:53+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[PHPUnit setUp() is a lie]]></title>
+            <link href="/2024/07/03/phpunit-setup-is-a-lie.html"/>
+            <updated>2024-07-03T00:00:00+01:00</updated>
+            <id>/2024/07/03/phpunit-setup-is-a-lie.html</id>
+            <content type="html"><![CDATA[<p><a href="https://phpunit.de/index.html">PHPUnit</a> creates as many instances a Test Class, as it has test methods.</p>
+
+<h2 id="proof-and-it-gets-worse">Proof (and it gets worse)</h2>
+
+<p>Let's set up a project to verify our claim:</p>
+
+<pre><code>mkdir /tmp/phpunit-is-a-cake &amp;&amp; cd "$_"
+composer init --no-interaction --name 'follow/the-white-rabbit' --type project --autoload '.'
+composer require -o --dev phpunit/phpunit:^9.6
+</code></pre>
+
+<p>Next we write a catchy test:</p>
+
+<pre><code>&lt;?php declare(strict_types=1);
+use PHPUnit\Framework\TestCase;
+
+class CatchyTest extends TestCase
+{
+    private string $letMeCountThemForYou = '';
+
+    public function __construct($name = null, array $data = [], $dataName = '')
+    {
+        parent::__construct($name, $data, $dataName);
+
+        echo "How many times have I, how many times have I, how many times have I been instanciated?\n";
+    }
+
+    public function __destruct()
+    {
+        echo "Till the morning light\n";
+    }
+
+    public function testOne(): void
+    {
+        $this-&gt;letMeCountThemForYou .= 'One';
+
+        echo "{$this-&gt;letMeCountThemForYou}\n";
+    }
+
+    public function testTwo(): void
+    {
+        $this-&gt;letMeCountThemForYou .= 'Two';
+
+        echo "{$this-&gt;letMeCountThemForYou}\n";
+    }
+
+    /**
+     * @dataProvider provider
+     */
+    public function testMore($times): void
+    {
+        $this-&gt;letMeCountThemForYou .= $times;
+
+        echo "{$this-&gt;letMeCountThemForYou}\n";
+    }
+
+    public function provider(): array
+    {
+        return [['Three'], ['Four'], ['Five'], ['Six'], ['Seven'], ['Eight']];
+    }
+}
+</code></pre>
+
+<p>Finally we run the tests to see the output:</p>
+
+<pre><code>&gt; phpunit ./CatchyTest.php
+How many times have I, how many times have I, how many times have I been instanciated?
+How many times have I, how many times have I, how many times have I been instanciated?
+How many times have I, how many times have I, how many times have I been instanciated?
+Till the morning light
+How many times have I, how many times have I, how many times have I been instanciated?
+How many times have I, how many times have I, how many times have I been instanciated?
+How many times have I, how many times have I, how many times have I been instanciated?
+How many times have I, how many times have I, how many times have I been instanciated?
+How many times have I, how many times have I, how many times have I been instanciated?
+How many times have I, how many times have I, how many times have I been instanciated?
+PHPUnit 9.6.19 by Sebastian Bergmann and contributors.
+
+ROne
+RTwo
+RThree
+RFour
+RFive
+RSix
+RSeven
+R                                                            8 / 8 (100%)Eight
+// [...]
+Till the morning light
+Till the morning light
+Till the morning light
+Till the morning light
+Till the morning light
+Till the morning light
+Till the morning light
+Till the morning light
+</code></pre>
+
+<p>And Bob's your uncle! Hang on, what?</p>
+
+<p>The constructor has been called 3 (test methods) + 6 (items in data provider) = 9 times
+and we can observe that the class attribute's value isn't shared between the test methods
+but gets reset every time.</p>
+
+<p>And those instances stay alive until the vey end of the run,
+meaning a concerningly increasing memory usage througout the test suite,
+which also slows it down!</p>
+
+<h2 id="%22solution%22">"Solution"</h2>
+
+<p>There's <a href="https://kriswallsmith.net/post/18029585104/faster-phpunit">a hack that's been around for decades</a>
+to free the memory and speed up the test suites:</p>
+
+<pre><code>&lt;?php declare(strict_types=1);
+use PHPUnit\Framework\TestCase;
+
+abstract class BaseTestCase extends TestCase
+{
+    protected function tearDown()
+    {
+        $refl = new ReflectionObject($this);
+        foreach ($refl-&gt;getProperties() as $prop) {
+            if (!$prop-&gt;isStatic() &amp;&amp; 0 !== strpos($prop-&gt;getDeclaringClass()-&gt;getName(), 'PHPUnit\\')) {
+                $prop-&gt;setAccessible(true);
+                $prop-&gt;setValue($this, null);
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>The <code>tearDown</code> method is called after each test method, so it's a good place to unset class attributes.</p>
+
+<p>To avoid having to think about it, a catch all solution using relfection can be put inside a custom <code>BaseTestCase</code>
+that'll be extended by all our test classes.</p>
+
+<p>And indeed most of the code bases don't directly extend PHPUnit's TestCase,
+for example <a href="https://symfony.com/doc/current/testing.html">Symfony's documentation suggest to use FrameworkBundle's KernelTestCase</a>.</p>
+
+<p>But what does it do exactly?</p>
+
+<h2 id="showing-the-bad-example">Showing the bad example</h2>
+
+<p>Here's a highly opinionated summary of its code:</p>
+
+<pre><code>&lt;?php
+
+namespace Symfony\Bundle\FrameworkBundle\Test;
+
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpKernel\KernelInterface;
+
+abstract class KernelTestCase extends TestCase
+{
+    protected static ?KernelInterface $kernel = null;
+
+    protected static function bootKernel(): KernelInterface
+    {
+        static::$kernel = new \AppKernel('test', true);
+        $kernel-&gt;boot();
+
+        return static::$kernel;
+    }
+
+    protected function tearDown(): void
+    {
+        if (null !== static::$kernel) {
+            static::$kernel-&gt;shutdown();
+            static::$kernel = null;
+        }
+    }
+}
+</code></pre>
+
+<p>Symfony's HttpKernel is stateless, so being able to boot it (which is slow) only once
+and store it in a static attribute of a TestCase that all our functional test implement is great!</p>
+
+<p>However calling <code>bootKernel</code> will always return a new instance of the application kernel and will always boot it,
+while the <code>tearDown</code> method also makes sure to nuke it after each test method...</p>
+
+<p>Now I can't pretend to know the reason behind this (maybe assuming that applications are stateful?),
+nor am I familiar with all the different applications out there and their specific use cases,
+but that seems very unfortunate to me.</p>
+
+<p>To fix it, we can rewrite it as follow:</p>
+
+<pre><code>&lt;?php declare(strict_types=1);
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpKernel\KernelInterface;
+
+abstract class MyTestCase extends TestCase
+{
+    protected static ?KernelInterface $kernel = null;
+
+    protected static function getKernel(): KernelInterface
+    {
+        if (null === static::$kernel) {
+            static::$kernel = new \AppKernel('test', true);
+            $kernel-&gt;boot();
+        }
+
+        return static::$kernel;
+    }
+}
+</code></pre>
+
+<p>We got rid of the kernel shutdown shenanigans (can be called manually if needed),
+and made sure the Kernel is instanciated (and booted) only once.</p>
+
+<p>But why have this as part of the TestCase? This should be extracted into its own class:</p>
+
+<pre><code>&lt;?php declare(strict_types=1);
+use Symfony\Component\HttpKernel\KernelInterface;
+
+class KernelSingleton
+{
+    protected static ?KernelInterface $kernel = null;
+
+    protected static function get(): KernelInterface
+    {
+        if (null === static::$kernel) {
+            static::$kernel = new \AppKernel('test', true);
+            $kernel-&gt;boot();
+        }
+
+        return static::$kernel;
+    }
+}
+</code></pre>
+
+<p>I know, I know. The Singleton desing pattern has been receiving a lot of bad rap over the years.
+But here, it's a legitimate use case!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>What have we learned?</p>
+
+<p>That each PHPUnit test method is run in isolation inside its own Test Class instance,
+so class attribute values will rapidly consume more and more memory (and slow down the test suite),
+and they cannot be shared between two test methods unless you make them static.</p>
+
+<p>And perhaps consider using Singletons instead of relying on "FrameworkTestCase".</p>
+
+<p>As for PHPUnit's setUp method, in your opinion, is it best described as "executed before each test method",
+or as "executed everytime the test class is instanciated"?</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[ChatGPT: fluff or not? SpecBDD]]></title>
             <link href="/2023/04/19/chat-gpt-spec-bdd.html"/>
