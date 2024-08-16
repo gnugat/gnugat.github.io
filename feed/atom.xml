@@ -3,11 +3,519 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2024-07-03T07:53:53+01:00</updated>
+    <updated>2024-08-16T09:00:42+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Strategy Pattern, Symfony and autowiring]]></title>
+            <link href="/2024/08/16/strategy-pattern-symfony-autowiring.html"/>
+            <updated>2024-08-16T00:00:00+01:00</updated>
+            <id>/2024/08/16/strategy-pattern-symfony-autowiring.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: Since Symfony 5.3</p>
+  
+  <p>Tag the "Strategy" Interface with the attribute <code>[#AutoconfigureTag]</code>:</p>
+
+<pre><code class="php"><br />use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
+
+#[AutoconfigureTag]
+interface Strategy
+{&gt;
+    // Add your Strategy methods below, for example
+    // (please use a more descriptive name than "algorithm"...):
+    public function algorithm();
+
+    // *IF* your Strategies need to be executed in a specific order,
+    // then add a method that returns the priority (highest priority first, lowest priority last)
+    // Note: it MUST be static
+    public static function getDefaultPriority(): int;
+
+    // *IF* your Strategies are executed conditionally,
+    // then add a "predicate" method (eg named `supports()`):
+    public function predicate($input): bool
+}
+</code></pre>
+  
+  <p>Inject the <code>iterable</code> that contains all tagged "Strategy" implementations
+  in the "Context"'s constructor with the attribute <code>#[TaggedIterator(&lt;tag&gt;)]</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+class Context
+{
+    public function __construct(
+        // *IF* your Strategies need to be executed in a specific order,
+        // then use the `defaultPriorityMethod` parameter and set it with the Strategy's static method name
+        #[TaggedIterator(Strategy::class, defaultPriorityMethod: 'getDefaultPriority')]
+        private iterable $strategies,
+    ) {
+    }
+
+    public function operation($input)
+    {
+        foreach ($this-&gt;strategies() as $strategy) {
+            // *IF* your Strategies need to be executed conditionally,
+            // then add a if statement that verifies the Strategy's predicate method
+            if ($strategy-&gt;predicate($input)) {
+                $strategy-&gt;algorithm();
+
+                // *IF* you only want the first matching Strategy to be executed,
+                // then break the loop here
+                break;
+            }
+        }
+    }
+}
+</code></pre>
+  
+  <p>Set <code>autowire</code> and <code>autoconfigure</code> parameters to be <code>true</code> in the DIC configuration:</p>
+
+<pre><code class="yaml">services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+</code></pre>
+</blockquote>
+
+<p>The Strategy Pattern can be really useful when you want to avoid multiple
+conditionals, and/or when you want to add new repetitive chuncks of logic
+in a maintainable way.</p>
+
+<p>Let's see how to use it in a Symfony application, and how autowiring can help
+us configure it.</p>
+
+<p>Note that the code snippets below will NOT be truncated, they'll always contain
+the full code (so no things like <code>// rest of the class below</code> comments).</p>
+
+<h2 id="use-case-example">Use Case Example</h2>
+
+<p>Some classes are just bound to contain repeated chunks of similar logic:</p>
+
+<pre><code class="php">&lt;?php
+
+class EmailDailyReports
+{
+    public function __construct(
+        private BuildSpreadsheet $buildSpreadsheet,
+        private Mailer $mailer,
+        private WriteSpreadsheet $writeSpreadsheet,
+        private RetrieveDataForReportOne $retrieveDataForReportOne,
+        private RetrieveDataForReportTwo $retrieveDataForReportTwo,
+    ) {
+    }
+
+    public function send(\DateTime $startDate, \DateTime $endDate): void
+    {
+        $reportOneData = $this-&gt;retrieveDataForReportOne-&gt;fromDatabase($startDate, $endDate);
+        $reportOneName = 'Report One';
+        $reportOneSpreadsheet = $this-&gt;buildSpreadsheet-&gt;using($reportOneData, $reportOneName);
+        $reportOneFilename = $this-&gt;writeSpreadsheet-&gt;save($reportOneSpreadsheet);
+
+        $reportTwoData = $this-&gt;retrieveDataForReportTwo-&gt;fromDatabase($startDate, $endDate);
+        $reportTwoName = 'Report Two';
+        $reportTwoSpreadsheet = $this-&gt;buildSpreadsheet-&gt;using($reportTwoData, $reportTwoName);
+        $reportTwoFilename = $this-&gt;writeSpreadsheet-&gt;save($reportTwoSpreadsheet);
+
+        $email = (new Email())
+            -&gt;from('sender@example.com')
+            -&gt;to('recipient@example.com')
+            -&gt;attachFromPath($reportOneFilename, $reportOneName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            -&gt;attachFromPath($reportTwoFilename, $reportTwoName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            -&gt;subject('Daily Reports')
+            -&gt;text('Find reports in attached files');
+        $this-&gt;mailer-&gt;send($email);
+    }
+}
+</code></pre>
+
+<p>This <code>EmailDailyReports</code> class builds spreadsheets and sends emails for reports.</p>
+
+<p>The retrieval of the data for each report is delegated to a dedicated service.</p>
+
+<p>This is fine as is, with currently only 2 reports to manage...
+But what if we need to add 1 more report? 2 more reports? 30 more reports?</p>
+
+<h2 id="strategy-patterm">Strategy Patterm</h2>
+
+<p>This use case is the perfect candidate for the Strategy Pattern.</p>
+
+<p><code>EmailDailyReports</code> would be considered the "Context" class,
+and the services that retrieve the report data would be the "Strategies".</p>
+
+<p>Let's refactor <code>EmailDailyReports</code> to implement this design pattern.</p>
+
+<p>First we create a Strategy interface:</p>
+
+<pre><code class="php">&lt;?php
+
+interface RetrieveDataForReport
+{
+    public function fromDatabase(\DateTime $startDate, \DateTime $endDate): array;
+    public function getName(): string;
+}
+</code></pre>
+
+<p>Then we make sure the Strategy implementations both implement it
+(<code>RetrieveDataForReportOne</code> and <code>RetrieveDataForReportTwo</code>).</p>
+
+<p>Finally we refactor the Context class to be injected with a collection of
+Strategies, and iterate through them:</p>
+
+<pre><code class="php">&lt;?php
+
+class EmailDailyReports
+{
+    public function __construct(
+        private BuildSpreadsheet $buildSpreadsheet,
+        private Mailer $mailer,
+        private WriteSpreadsheet $writeSpreadsheet,
+    ) {
+    }
+
+    public function send(\DateTime $startDate, \DateTime $endDate): void
+    {
+        $email = (new Email())
+            -&gt;from('sender@example.com')
+            -&gt;to('recipient@example.com')
+            -&gt;subject('Daily Reports')
+            -&gt;text('Find reports in attached files');
+
+        foreach ($this-&gt;retrieveDataForReports as $retrieveDataForReport) {
+            $reportData = $retrieveDataForReport-&gt;fromDatabase($startDate, $endDate);
+            $reportName = $retrieveDataForReport-&gt;getReportName();
+            $reportSpreadsheet = $this-&gt;buildSpreadsheet-&gt;using($reportData, $reportName);
+            $reportFilename = $this-&gt;writeSpreadsheet-&gt;save($reportSpreadsheet);
+
+            $email-&gt;attachFromPath($reportFilename, $reportName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        }
+
+        $this-&gt;mailer-&gt;send($email);
+    }
+
+    private array $retrieveDataForReports = [];
+
+    public function register(RetrieveDataForReport $retrieveDataForReport): void
+    {
+        $this-&gt;retrieveDataForReports[] = $retrieveDataForReport;
+    }
+}
+</code></pre>
+
+<p>If the order in which the reports are built is important,
+then we need to add a bit of extra logic:</p>
+
+<pre><code class="php">&lt;?php
+
+class EmailDailyReports
+{
+    public function __construct(
+        private BuildSpreadsheet $buildSpreadsheet,
+        private Mailer $mailer,
+        private WriteSpreadsheet $writeSpreadsheet,
+    ) {
+    }
+
+    public function send(\DateTime $startDate, \DateTime $endDate): void
+    {
+        $email = (new Email())
+            -&gt;from('sender@example.com')
+            -&gt;to('recipient@example.com')
+            -&gt;subject('Daily Reports')
+            -&gt;text('Find reports in attached files');
+
+        foreach ($this-&gt;getSortedRetrieveDataForReports() as $retrieveDataForReport) {
+            $reportData = $retrieveDataForReport-&gt;fromDatabase($startDate, $endDate);
+            $reportName = $retrieveDataForReport-&gt;getReportName();
+            $reportSpreadsheet = $this-&gt;buildSpreadsheet-&gt;using($reportData, $reportName);
+            $reportFilename = $this-&gt;writeSpreadsheet-&gt;save($reportSpreadsheet);
+
+            $email-&gt;attachFromPath($reportFilename, $reportName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        }
+
+        $this-&gt;mailer-&gt;send($email);
+    }
+
+    private const int DEFAULT_PRIORITY = 100;
+    private const array NOT_SORTED = [];
+
+    private array $unsortedRetrieveDataForReports = [];
+    private array $sortedRetrieveDataForReports = self::NOT_SORTED;
+
+    public function register(
+        RetrieveDataForReport $retrieveDataForReport,
+        int $priority = self::DEFAULT_PRIORITY,
+    ): void {
+        $this-&gt;unsortedRetrieveDataForReports[$priority][] = $retrieveDataForReport;
+        $this-&gt;sortedRetrieveDataForReports = self::NOT_SORTED;
+    }
+
+    private function getSortedRetrieveDataForReports(): void
+    {
+        if (self::NOT_SORTED === $this-&gt;sortedRetrieveDataForReports)) {
+            // Strategies with higher priority need to be executed before the ones with lower priority
+            krsort($this-&gt;unsortedRetrieveDataForReports);
+
+            // Flattens strategies by removing the "priority" dimension from the array
+            $this-&gt;sortedRetrieveDataForReports = array_merge(...$this-&gt;unsortedRetrieveDataForReports);
+        }
+
+        return $this-&gt;sortedRetrieveDataForReports;
+    }
+}
+</code></pre>
+
+<p>Have you heard of the Symfony component EventDispatcher?
+While it is a well known implementation of the Observer design pattern,
+the way the EvenListeners (strategies) are registered and executed in the
+EventDispatcher (context) is very similar to this.</p>
+
+<h2 id="configuring-di-in-symfony---yaml">Configuring DI in Symfony - YAML</h2>
+
+<p>Speaking of Symfony, how would we configure the Dependency Injection Container
+for this service? First, let's write the YAML configuration:</p>
+
+<pre><code class="yaml">services:
+    'EmailDailyReports':
+        arguments:
+            - '@BuildSpreadsheet'
+            - '@Mailer'
+            - '@WriteSpreadsheet'
+        calls:
+            - register:
+                - '@RetrieveDataForReportOne'
+                - 200
+            - register:
+                - '@RetrieveDataForReportTwo'
+                - 100
+
+    'BuildSpreadsheet': ~
+    'Mailer': ~
+    'WriteSpreadsheet': ~
+    'RetrieveDataForReportOne': ~
+    'RetrieveDataForReportTwo': ~
+</code></pre>
+
+<p>Note that we need to write the priorities here in the <code>EmailDailyReports</code>
+service definition. The <code>calls</code> section is fine for now, as we only have two
+Strategies.</p>
+
+<p>But what if we need to add 1 more report? 2 more reports? 30 more reports?</p>
+
+<h2 id="configuring-di-in-symfony---compiler-passes">Configuring DI in Symfony - Compiler Passes</h2>
+
+<p>The entire <code>calls</code> section can be removed from the configuration,
+by creating a CompilerPass:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
+
+class RegisterRetrieveDataForReportsCompilerPass implements CompilerPassInterface
+{ 
+    public function process(ContainerBuilder $container): void
+    {
+        // Get Context service definition
+        $emailDailyReports = $container-&gt;findDefinition(EmailDailyReports::class);
+
+        // Get iterable of all the Strategy service definitions (they'll be tagged with the Strategy interface FQCN)
+        $retrieveDataForReports = $container-&gt;findTaggedServiceIds(RetrieveDataForReport::class);
+
+        foreach ($retrieveDataForReports as $id =&gt; $tags) {
+            // In theory you can tag a service many times with the same tag,
+            // but in our case here, there'll only be one tag
+            foreach ($tags as $retrieveDataForReport) {
+                // call the Setter Injection on the Context service definition
+                $emailDailyReports-&gt;addMethodCall('register', [
+                    new Reference($id),             
+                    $retrieveDataForReport['priority'] ?? EmailDailyReports::DEFAULT_PRIORITY,
+                ]);            
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>Also, make sure to register the CompilerPass in the Bundle:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+
+class MyBundle extends Bundle
+{ 
+    public function build(ContainerBuilder $container): void
+    {
+        parent::build($container);      
+
+        $container-&gt;addCompilerPass(new RegisterRetrieveDataForReportsCompilerPass());
+    }
+}
+</code></pre>
+
+<p>Note that now the priorities need to be defined in the tags of the
+RetrieveDataForReport service definitions:</p>
+
+<pre><code class="yaml">services:
+    'EmailDailyReports':
+        arguments:
+            - '@BuildSpreadsheet'
+            - '@Mailer'
+            - '@WriteSpreadsheet'
+
+    'BuildSpreadsheet': ~
+    'Mailer': ~
+    'WriteSpreadsheet': ~
+    'RetrieveDataForReportOne':
+        tags:
+            - { name: 'RetrieveDataForReport', priority: 200 }
+    'RetrieveDataForReportTwo':
+        tags:
+            - { name: 'RetrieveDataForReport', priority: 100 }
+</code></pre>
+
+<p>Defining manually the service definition for every classes in our project is
+all fun and games, and having to set tags is fine for now, as we only have two
+Strategies.</p>
+
+<p>But what if we need to add 1 more report? 2 more reports? 30 more reports?</p>
+
+<h2 id="configuring-di-in-symfony-5.3---taggediterator">Configuring DI in Symfony (5.3) - TaggedIterator</h2>
+
+<p>Since <a href="https://github.com/symfony/symfony/pull/22295">Symfony 3.3</a>,
+the Dependency Injection's autowiring will inject dependencies named after the
+type of the service arguments.</p>
+
+<p>This works great for the constructor of <code>EmailDailyReports</code> (note the
+conspicuously missing <code>EmailDailyReports</code>, <code>BuildSpreadsheet</code>, <code>Mailer</code> and
+<code>WriteSpreadsheet</code>):</p>
+
+<pre><code class="yaml">services:
+    _defaults:
+        autowire: true
+
+    'RetrieveDataForReportOne':
+        tags:
+            - { name: 'RetrieveDataForReport', priority: 200 }
+    'RetrieveDataForReportTwo':
+        tags:
+            - { name: 'RetrieveDataForReport', priority: 100 }
+</code></pre>
+
+<p>By adding <code>_defaults.autowire: true</code>, we were able to remove 8 lines of configuration!</p>
+
+<p>Then, since <a href="https://github.com/symfony/symfony/pull/39804">Symfony 5.3</a>,
+it is possible to automatically tag all the implementations,
+by using the <code>#[AutoconfigureTag]</code> attribute on the interface:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
+
+#[AutoconfigureTag]
+interface RetrieveDataForReport
+{
+    public function fromDatabase(\DateTime $startDate, \DateTime $endDate): array;
+    public function getName(): string;
+    public static function getDefaultPriority(): int;
+}
+</code></pre>
+
+<p>This only works if <code>_defaults.autoconfigure</code> is set to <code>true</code> in the config
+(note the conspicuously missing <code>RetrieveDataForReportOne</code> and <code>RetrieveDataForReportTwo</code>):</p>
+
+<pre><code class="yaml">services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+</code></pre>
+
+<p>You might have noticed that we've added a <code>public static function getDefaultPriority(): int</code>
+method to our interface. Since the priorities configuration is gone from YAML,
+the have to be returned by the implementations:</p>
+
+<ul>
+<li><code>RetrieveDataForReportOne::getDefaultPriority()</code> needs to return <code>200</code></li>
+<li><code>RetrieveDataForReportTwo::getDefaultPriority()</code> needs to return <code>100</code></li>
+</ul>
+
+<p>Finally, since <a href="https://github.com/symfony/symfony/pull/40406">Symfony 5.3</a>,
+it is also possible to inject an <code>iterator</code> containg all services that have a specific tag,
+by using the <code>#[TaggedIterator]</code> attribute. Let's use it in the "Context" class:</p>
+
+<pre><code class="php">&lt;?php
+
+class EmailDailyReports
+{
+    public function __construct(
+        private BuildSpreadsheet $buildSpreadsheet,
+        private Mailer $mailer,
+        private WriteSpreadsheet $writeSpreadsheet,
+        #[TaggedIterator(RetrieveDataForReport::class, defaultPriorityMethod: 'getDefaultPriority')]
+        private iterable $retrieveDataForReports,
+    ) {
+    }
+
+    public function send(\DateTime $startDate, \DateTime $endDate): void
+    {
+        $email = (new Email())
+            -&gt;from('sender@example.com')
+            -&gt;to('recipient@example.com')
+            -&gt;subject('Daily Reports')
+            -&gt;text('Find reports in attached files');
+
+        foreach ($this-&gt;retrieveDataForReports as $retrieveDataForReport) {
+            $reportData = $retrieveDataForReport-&gt;fromDatabase($startDate, $endDate);
+            $reportName = $retrieveDataForReport-&gt;getReportName();
+            $reportSpreadsheet = $this-&gt;buildSpreadsheet-&gt;using($reportData, $reportName);
+            $reportFilename = $this-&gt;writeSpreadsheet-&gt;save($reportSpreadsheet);
+
+            $email-&gt;attachFromPath($reportFilename, $reportName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        }
+
+        $this-&gt;mailer-&gt;send($email);
+    }
+}
+</code></pre>
+
+<p>This means we can remove the <code>CompilerPass</code> (and unregister it from the Bundle).</p>
+
+<p>You'll also note that we've removed from <code>EmailDailyReports</code> the following methods:</p>
+
+<ul>
+<li><code>register()</code>: the "Strategies" are no longer injected one by one</li>
+<li><code>getSortedRetrieveDataForReports()</code>: TaggedIterator supports sorting by priorities,
+but it requires the "Strategies" to have a <strong>static</strong> method that returns the priority</li>
+</ul>
+
+<h2 id="conlusion">Conlusion</h2>
+
+<p>To sum up:</p>
+
+<ul>
+<li>Tag the "Strategy" Interface with the attribute <code>[#AutoconfigureTag]</code></li>
+<li>Inject the <code>iterable</code> that contains all tagged "Strategy" implementations
+in the "Context"'s constructor with the attribute <code>#[TaggedIterator(&lt;tag&gt;)]</code></li>
+<li>Set <code>autowire</code> and <code>autoconfigure</code> parameters to be <code>true</code> in the DIC configuration</li>
+</ul>
+
+<p>The use case doesn't demonstrate how to avoid multiple use statements,
+but this can be done by adding a "predicate" method to the "Strategy":
+this will allow the "Context" to only execute a sub set of the strategies.</p>
+
+<p>It's even possible to only execute the first strategy,
+by adding a <code>break</code> in the loop.</p>
+
+<p>I've tried to synthesise as much information as possible at the top of this article,
+in the ironically (yet aptly) named "TL;DR" section.</p>
+
+<p>I hope this'll prove useful to you (it'll definitely be for me!).</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[PHPUnit setUp() is a lie]]></title>
             <link href="/2024/07/03/phpunit-setup-is-a-lie.html"/>
