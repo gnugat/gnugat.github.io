@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2024-08-16T09:00:42+01:00</updated>
+    <updated>2024-08-16T17:07:37+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -18,11 +18,13 @@
   
   <p>Tag the "Strategy" Interface with the attribute <code>[#AutoconfigureTag]</code>:</p>
 
-<pre><code class="php"><br />use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 #[AutoconfigureTag]
 interface Strategy
-{&gt;
+{
     // Add your Strategy methods below, for example
     // (please use a more descriptive name than "algorithm"...):
     public function algorithm();
@@ -80,7 +82,7 @@ class Context
 </blockquote>
 
 <p>The Strategy Pattern can be really useful when you want to avoid multiple
-conditionals, and/or when you want to add new repetitive chuncks of logic
+conditionals, and/or when you want to add new repetitive chunks of logic
 in a maintainable way.</p>
 
 <p>Let's see how to use it in a Symfony application, and how autowiring can help
@@ -137,7 +139,7 @@ class EmailDailyReports
 <p>This is fine as is, with currently only 2 reports to manage...
 But what if we need to add 1 more report? 2 more reports? 30 more reports?</p>
 
-<h2 id="strategy-patterm">Strategy Patterm</h2>
+<h2 id="strategy-pattern">Strategy Pattern</h2>
 
 <p>This use case is the perfect candidate for the Strategy Pattern.</p>
 
@@ -268,7 +270,7 @@ class EmailDailyReports
 
 <p>Have you heard of the Symfony component EventDispatcher?
 While it is a well known implementation of the Observer design pattern,
-the way the EvenListeners (strategies) are registered and executed in the
+the way the EventListeners (strategies) are registered and executed in the
 EventDispatcher (context) is very similar to this.</p>
 
 <h2 id="configuring-di-in-symfony---yaml">Configuring DI in Symfony - YAML</h2>
@@ -444,7 +446,7 @@ the have to be returned by the implementations:</p>
 </ul>
 
 <p>Finally, since <a href="https://github.com/symfony/symfony/pull/40406">Symfony 5.3</a>,
-it is also possible to inject an <code>iterator</code> containg all services that have a specific tag,
+it is also possible to inject an <code>iterator</code> containing all services that have a specific tag,
 by using the <code>#[TaggedIterator]</code> attribute. Let's use it in the "Context" class:</p>
 
 <pre><code class="php">&lt;?php
@@ -492,7 +494,7 @@ class EmailDailyReports
 but it requires the "Strategies" to have a <strong>static</strong> method that returns the priority</li>
 </ul>
 
-<h2 id="conlusion">Conlusion</h2>
+<h2 id="conclusion">Conclusion</h2>
 
 <p>To sum up:</p>
 
@@ -510,7 +512,7 @@ this will allow the "Context" to only execute a sub set of the strategies.</p>
 <p>It's even possible to only execute the first strategy,
 by adding a <code>break</code> in the loop.</p>
 
-<p>I've tried to synthesise as much information as possible at the top of this article,
+<p>I've tried to synthesize as much information as possible at the top of this article,
 in the ironically (yet aptly) named "TL;DR" section.</p>
 
 <p>I hope this'll prove useful to you (it'll definitely be for me!).</p>
