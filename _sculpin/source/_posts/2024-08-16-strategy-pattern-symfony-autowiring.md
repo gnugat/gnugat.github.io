@@ -11,12 +11,13 @@ tags:
 > Tag the "Strategy" Interface with the attribute `[#AutoconfigureTag]`:
 >
 > ```php
+> <?php
 >
 > use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 > 
 > #[AutoconfigureTag]
 > interface Strategy
-> {>
+> {
 >     // Add your Strategy methods below, for example
 >     // (please use a more descriptive name than "algorithm"...):
 >     public function algorithm();
@@ -75,7 +76,7 @@ tags:
 > ```
 
 The Strategy Pattern can be really useful when you want to avoid multiple
-conditionals, and/or when you want to add new repetitive chuncks of logic
+conditionals, and/or when you want to add new repetitive chunks of logic
 in a maintainable way.
 
 Let's see how to use it in a Symfony application, and how autowiring can help
@@ -133,7 +134,7 @@ The retrieval of the data for each report is delegated to a dedicated service.
 This is fine as is, with currently only 2 reports to manage...
 But what if we need to add 1 more report? 2 more reports? 30 more reports?
 
-## Strategy Patterm
+## Strategy Pattern
 
 This use case is the perfect candidate for the Strategy Pattern.
 
@@ -267,7 +268,7 @@ class EmailDailyReports
 
 Have you heard of the Symfony component EventDispatcher?
 While it is a well known implementation of the Observer design pattern,
-the way the EvenListeners (strategies) are registered and executed in the
+the way the EventListeners (strategies) are registered and executed in the
 EventDispatcher (context) is very similar to this.
 
 ## Configuring DI in Symfony - YAML
@@ -448,7 +449,7 @@ the have to be returned by the implementations:
 - `RetrieveDataForReportTwo::getDefaultPriority()` needs to return `100`
 
 Finally, since [Symfony 5.3](https://github.com/symfony/symfony/pull/40406),
-it is also possible to inject an `iterator` containg all services that have a specific tag,
+it is also possible to inject an `iterator` containing all services that have a specific tag,
 by using the `#[TaggedIterator]` attribute. Let's use it in the "Context" class:
 
 ```php
@@ -495,7 +496,7 @@ You'll also note that we've removed from `EmailDailyReports` the following metho
 - `getSortedRetrieveDataForReports()`: TaggedIterator supports sorting by priorities,
   but it requires the "Strategies" to have a **static** method that returns the priority
 
-## Conlusion
+## Conclusion
 
 To sum up:
 
@@ -511,7 +512,7 @@ this will allow the "Context" to only execute a sub set of the strategies.
 It's even possible to only execute the first strategy,
 by adding a `break` in the loop.
 
-I've tried to synthesise as much information as possible at the top of this article,
+I've tried to synthesize as much information as possible at the top of this article,
 in the ironically (yet aptly) named "TL;DR" section.
 
 I hope this'll prove useful to you (it'll definitely be for me!).
