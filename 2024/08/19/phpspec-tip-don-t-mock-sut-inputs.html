@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>phpspec tip: don&#039;t mock SUT inputs &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2024/08/19/phpspec-tip-don-t-mock-sut-inputs.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+            
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    phpspec tip: don&#039;t mock SUT inputs
+    <span class="sub-title">19/08/2024</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="/tags/phpspec">phpspec</a>
+                                                            <a class="button " href="/tags/tdd">tdd</a>
+                    </nav>
+                </header>
+
+                <p>Looking at some old code of mine, I've found the following test:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\Memio\SpecGen\GenerateMethod;
+
+use Memio\Model\File;
+use Memio\Model\Method;
+use Memio\Model\Objekt;
+use Memio\SpecGen\GenerateMethod\GeneratedMethod;
+use PhpSpec\Console\ConsoleIO;
+use PhpSpec\ObjectBehavior;
+
+class LogGeneratedMethodListenerSpec extends ObjectBehavior
+{   
+    function let(ConsoleIO $io)
+    {
+        $this-&gt;beConstructedWith($io);
+    }
+
+    function it_logs_the_generated_method(ConsoleIO $io, File $file, Method $method, Objekt $object)
+    {
+        $className = 'Vendor\Project\MyClass';
+        $methodName = 'myMethod';
+        $generatedMethod = new GeneratedMethod($file-&gt;getWrappedObject());
+        $file-&gt;getStructure()-&gt;willReturn($object);
+        $object-&gt;getName()-&gt;willReturn($className);
+        $object-&gt;allMethods()-&gt;willReturn([$method]);
+        $method-&gt;getName()-&gt;willReturn($methodName);
+
+        $io-&gt;write(&lt;&lt;&lt;OUTPUT
+
+  &lt;info&gt;Generated &lt;value&gt;{$className}#{$methodName}&lt;/value&gt;&lt;/info&gt;
+
+ OUTPUT
+        )-&gt;shouldBeCalled();
+
+        $this-&gt;onGeneratedMethod($generatedMethod);
+    }
+}
+</code></pre>
+
+<p>And while reading it, one of the things that caught my attention was
+<strong>the setting up of mocks for SUT inputs</strong>
+(SUT means System Under Test, the class we're testing).</p>
+
+<p>The purpose of this test is to specify how <code>LogGeneratedMethodListener</code> should
+behave, through its interactions with the <code>ConsoleIO</code> collaborator.</p>
+
+<p>But here, it's also specifying how <code>LogGeneratedMethodListener</code> interacts
+with the input parameter <code>GeneratedMethod</code>.</p>
+
+<p><code>GeneratedMethod</code> encapsulates data relevant to the process of generating the
+code for a Method. It doesn't have any critical behaviour:
+we just call getters on it.</p>
+
+<p>So my advice to you (me, from the past), would be to not bother creating Mocks
+for it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\Memio\SpecGen\GenerateMethod;
+
+use Memio\Model\File;
+use Memio\Model\Method;
+use Memio\Model\Objekt;
+use Memio\SpecGen\GenerateMethod\GeneratedMethod;
+use PhpSpec\Console\ConsoleIO;
+use PhpSpec\ObjectBehavior;
+
+class LogGeneratedMethodListenerSpec extends ObjectBehavior
+{   
+    function let(ConsoleIO $io)
+    {
+        $this-&gt;beConstructedWith($io);
+    }
+
+    function it_logs_the_generated_method(ConsoleIO $io)
+    {
+        $className = 'Vendor\Project\MyClass';
+        $methodName = 'myMethod';
+        $generatedMethod = new GeneratedMethod((new File('src/MyClass.php'))
+            -&gt;setStructure((new Objekt($className))
+                -&gt;addMethod(new Method($methodName))
+            )
+        );
+
+        $io-&gt;write(&lt;&lt;&lt;OUTPUT
+
+  &lt;info&gt;Generated &lt;value&gt;{$className}#{$methodName}&lt;/value&gt;&lt;/info&gt;
+
+ OUTPUT
+        )-&gt;shouldBeCalled();
+
+        $this-&gt;onGeneratedMethod($generatedMethod);
+    }
+}
+</code></pre>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2024/08/16/strategy-pattern-symfony-autowiring.html" title="Strategy Pattern, Symfony and autowiring">Previous &lt; Strategy Pattern, Symfony and autowiring</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/master/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>

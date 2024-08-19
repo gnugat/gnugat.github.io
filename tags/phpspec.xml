@@ -3,11 +3,116 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2024-08-16T17:07:37+01:00</updated>
+    <updated>2024-08-19T17:47:21+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[phpspec tip: don&#039;t mock SUT inputs]]></title>
+            <link href="/2024/08/19/phpspec-tip-don-t-mock-sut-inputs.html"/>
+            <updated>2024-08-19T00:00:00+01:00</updated>
+            <id>/2024/08/19/phpspec-tip-don-t-mock-sut-inputs.html</id>
+            <content type="html"><![CDATA[<p>Looking at some old code of mine, I've found the following test:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\Memio\SpecGen\GenerateMethod;
+
+use Memio\Model\File;
+use Memio\Model\Method;
+use Memio\Model\Objekt;
+use Memio\SpecGen\GenerateMethod\GeneratedMethod;
+use PhpSpec\Console\ConsoleIO;
+use PhpSpec\ObjectBehavior;
+
+class LogGeneratedMethodListenerSpec extends ObjectBehavior
+{   
+    function let(ConsoleIO $io)
+    {
+        $this-&gt;beConstructedWith($io);
+    }
+
+    function it_logs_the_generated_method(ConsoleIO $io, File $file, Method $method, Objekt $object)
+    {
+        $className = 'Vendor\Project\MyClass';
+        $methodName = 'myMethod';
+        $generatedMethod = new GeneratedMethod($file-&gt;getWrappedObject());
+        $file-&gt;getStructure()-&gt;willReturn($object);
+        $object-&gt;getName()-&gt;willReturn($className);
+        $object-&gt;allMethods()-&gt;willReturn([$method]);
+        $method-&gt;getName()-&gt;willReturn($methodName);
+
+        $io-&gt;write(&lt;&lt;&lt;OUTPUT
+
+  &lt;info&gt;Generated &lt;value&gt;{$className}#{$methodName}&lt;/value&gt;&lt;/info&gt;
+
+ OUTPUT
+        )-&gt;shouldBeCalled();
+
+        $this-&gt;onGeneratedMethod($generatedMethod);
+    }
+}
+</code></pre>
+
+<p>And while reading it, one of the things that caught my attention was
+<strong>the setting up of mocks for SUT inputs</strong>
+(SUT means System Under Test, the class we're testing).</p>
+
+<p>The purpose of this test is to specify how <code>LogGeneratedMethodListener</code> should
+behave, through its interactions with the <code>ConsoleIO</code> collaborator.</p>
+
+<p>But here, it's also specifying how <code>LogGeneratedMethodListener</code> interacts
+with the input parameter <code>GeneratedMethod</code>.</p>
+
+<p><code>GeneratedMethod</code> encapsulates data relevant to the process of generating the
+code for a Method. It doesn't have any critical behaviour:
+we just call getters on it.</p>
+
+<p>So my advice to you (me, from the past), would be to not bother creating Mocks
+for it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\Memio\SpecGen\GenerateMethod;
+
+use Memio\Model\File;
+use Memio\Model\Method;
+use Memio\Model\Objekt;
+use Memio\SpecGen\GenerateMethod\GeneratedMethod;
+use PhpSpec\Console\ConsoleIO;
+use PhpSpec\ObjectBehavior;
+
+class LogGeneratedMethodListenerSpec extends ObjectBehavior
+{   
+    function let(ConsoleIO $io)
+    {
+        $this-&gt;beConstructedWith($io);
+    }
+
+    function it_logs_the_generated_method(ConsoleIO $io)
+    {
+        $className = 'Vendor\Project\MyClass';
+        $methodName = 'myMethod';
+        $generatedMethod = new GeneratedMethod((new File('src/MyClass.php'))
+            -&gt;setStructure((new Objekt($className))
+                -&gt;addMethod(new Method($methodName))
+            )
+        );
+
+        $io-&gt;write(&lt;&lt;&lt;OUTPUT
+
+  &lt;info&gt;Generated &lt;value&gt;{$className}#{$methodName}&lt;/value&gt;&lt;/info&gt;
+
+ OUTPUT
+        )-&gt;shouldBeCalled();
+
+        $this-&gt;onGeneratedMethod($generatedMethod);
+    }
+}
+</code></pre>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[ChatGPT: fluff or not? SpecBDD]]></title>
             <link href="/2023/04/19/chat-gpt-spec-bdd.html"/>
