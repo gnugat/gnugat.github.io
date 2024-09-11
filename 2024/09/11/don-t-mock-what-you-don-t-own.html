@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Don&#039;t mock what you don&#039;t own -- phpspec isn&#039;t a test framework &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2024/09/11/don-t-mock-what-you-don-t-own.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/highlight_9_0_0_monokai_sublime.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+            
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/main/_sculpin">Sources</a>
+            </nav>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    Don&#039;t mock what you don&#039;t own -- phpspec isn&#039;t a test framework
+    <span class="sub-title">11/09/2024</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="/tags/phpspec">phpspec</a>
+                                                            <a class="button " href="/tags/tdd">tdd</a>
+                    </nav>
+                </header>
+
+                <blockquote>
+  <p>TL;DR: phpspec isn't a test framework. It's a code designing/modeling tool.</p>
+</blockquote>
+
+<h2 id="something-feels-wrong">Something feels wrong</h2>
+
+<p>Looking at some 2014 code of mine, I found the following test:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\Memio\SpecGen\CodeEditor;
+
+use Gnugat\Redaktilo;
+use Memio\Model;
+use Memio\PrettyPrinter\PrettyPrinter;
+use Memio\SpecGen\CodeEditor\InsertConstructor;
+use Memio\SpecGen\CodeEditor\InsertConstructorHandler;
+use Memio\SpecGen\CommandBus\CommandHandler;
+use PhpSpec\ObjectBehavior;
+
+class InsertConstructorHandlerSpec extends ObjectBehavior
+{
+    function let(
+        Redaktilo\Editor $redaktiloEditor,
+        PrettyPrinter $prettyPrinter,
+    ) {
+        $this-&gt;beConstructedWith($redaktiloEditor, $prettyPrinter);
+    }
+
+    function it_inserts_constructor_in_class_that_has_constants_and_methods(
+        Redaktilo\Editor $redaktiloEditor,
+        Redaktilo\File $redaktiloFile,
+        Model\Method $modelMethod,
+        PrettyPrinter $prettyPrinter,
+    ) {
+        $insertConstructor = new InsertConstructor($redaktiloFile-&gt;getWrappedObject(), $modelMethod-&gt;getWrappedObject());
+
+        $generatedCode =&lt;&lt;&lt;'GENERATED_CODE'
+                public function __construct(Dependency $dependency, string $redaktiloFilename)
+                {
+                    $this-&gt;dependency = $dependency;
+                    $this-&gt;filename = $redaktiloFilename;    
+                }
+            GENERATED_CODE
+        ;
+
+        $redaktiloEditor-&gt;hasBelow($redaktiloFile, InsertConstructorHandler::CONSTRUCTOR, 0)-&gt;willReturn(false);
+        $redaktiloEditor-&gt;hasBelow($redaktiloFile, InsertConstructorHandler::METHOD, 0)-&gt;willReturn(true);
+        $redaktiloEditor-&gt;jumpBelow($redaktiloFile, InsertConstructorHandler::METHOD, 0)-&gt;shouldBeCalled();
+        $redaktiloEditor-&gt;insertAbove($redaktiloFile, '')-&gt;shouldBeCalled();
+        $prettyPrinter-&gt;generateCode($modelMethod)-&gt;willReturn($generatedCode);
+        $redaktiloEditor-&gt;insertAbove($redaktiloFile, $generatedCode)-&gt;shouldBeCalled();
+        $redaktiloFile-&gt;decrementCurrentLineNumber(1)-&gt;shouldBeCalled();
+        $redaktiloFile-&gt;getLine()-&gt;willReturn('    const CONSTANT = 42;');
+        $redaktiloEditor-&gt;insertBelow($redaktiloFile, '')-&gt;shouldBeCalled();
+
+        $this-&gt;handle($insertConstructor);
+    }
+}
+</code></pre>
+
+<p>There are some things that feel wrong there, like the calls to
+<code>getWrappedObject()</code>, and when something feels wrong with phpspec, it usually
+means that this thing is wrong.</p>
+
+<h2 id="don%27t-mock-sut-inputs">Don't mock SUT inputs</h2>
+
+<p>As per the previous advice, <a href="https://gnugat.github.io/2024/08/19/phpspec-tip-don-t-mock-sut-inputs.html">don't mock SUT inputs</a>,
+I've removed the inputs mock and their awkward <code>getWrappedObject()</code> calls
+and instead set up the inputs:</p>
+
+<pre><code class="php">    function it_inserts_constructor_in_class_that_has_constants_and_methods(
+        Redaktilo\Editor $redaktiloEditor,
+        PrettyPrinter $prettyPrinter,
+    ) {
+        $redaktiloFile = Redaktilo\File::fromString(&lt;&lt;&lt;'FILE'
+            &lt;?php 
+
+            namespace Vendor\Project;
+
+            class MyClass
+            { 
+                const CONSTANT = 42;
+
+                public function existingMethod()
+                {
+                }
+            } 
+            FILE
+        );
+        $modelMethod = (new Model\Method('__construct'))
+            -&gt;addArgument(new Model\Argument('Vendor\Project\Dependency', 'dependency'))
+            -&gt;addArgument(new Model\Argument('string', 'filename'))
+        ;                      
+        $insertConstructor = new InsertConstructor($redaktiloFile, $modelMethod);
+
+        $generatedCode =&lt;&lt;&lt;'GENERATED_CODE'
+                public function __construct(Dependency $dependency, string $redaktiloFilename)
+                {
+                    $this-&gt;dependency = $dependency;
+                    $this-&gt;filename = $redaktiloFilename;    
+                }
+            GENERATED_CODE
+        ;
+
+        $redaktiloEditor-&gt;hasBelow($redaktiloFile, InsertConstructorHandler::CONSTRUCTOR, 0)-&gt;willReturn(false);
+        $redaktiloEditor-&gt;hasBelow($redaktiloFile, InsertConstructorHandler::METHOD, 0)-&gt;willReturn(true);
+        $redaktiloEditor-&gt;jumpBelow($redaktiloFile, InsertConstructorHandler::METHOD, 0)-&gt;shouldBeCalled();
+        $redaktiloEditor-&gt;insertAbove($redaktiloFile, '')-&gt;shouldBeCalled();
+        $prettyPrinter-&gt;generateCode($modelMethod)-&gt;willReturn($generatedCode);
+        $redaktiloEditor-&gt;insertAbove($redaktiloFile, $generatedCode)-&gt;shouldBeCalled();
+        $redaktiloEditor-&gt;insertBelow($redaktiloFile, '')-&gt;shouldBeCalled();
+
+        $this-&gt;handle($insertConstructor);
+    }
+</code></pre>
+
+<h2 id="something-still-feels-wrong">Something still feels wrong</h2>
+
+<p>Now pay attention to the two following lines we've removed:</p>
+
+<pre><code class="php">        $redaktiloFile-&gt;decrementCurrentLineNumber(1)-&gt;shouldBeCalled();
+        $redaktiloFile-&gt;getLine()-&gt;willReturn('    const CONSTANT = 42;');
+</code></pre>
+
+<p>After running the tests, I get an error:</p>
+
+<blockquote>
+  <p>Exception <code>Gnugat\Redaktilo\Exception\InvalidLineNumberException("The line number should be positive")</code> has been thrown.</p>
+</blockquote>
+
+<p>When the Redaktilo File is first instantiated in our test method, it is
+initialised with a "current line number" set to <code>0</code>. Since Redaktilo's Editor
+is mocked, it doesn't update the file's "current line number" as it would in
+a real situation. Our SUT, <code>InsertConstructorHandler</code>, however calls directly
+<code>decrementCurrentLineNumber</code> on the file, which ends up trying to set
+"current line number" to <code>-1</code>, hence the exception.</p>
+
+<p>To make the test pass, we could add a call to Redaktilo's File
+<code>setCurrentLineNumber()</code>, for example:</p>
+
+<pre><code class="php">        $redaktiloEditor-&gt;hasBelow($redaktiloFile, InsertConstructorHandler::CONSTRUCTOR, 0)-&gt;willReturn(false);
+        $redaktiloEditor-&gt;hasBelow($redaktiloFile, InsertConstructorHandler::METHOD, 0)-&gt;willReturn(true);
+        $redaktiloEditor-&gt;jumpBelow($redaktiloFile, InsertConstructorHandler::METHOD, 0)-&gt;shouldBeCalled();
+        $redaktiloFile-&gt;setCurrentLineNumber(11);
+        $redaktiloEditor-&gt;insertAbove($redaktiloFile, '')-&gt;shouldBeCalled();
+        $prettyPrinter-&gt;generateCode($modelMethod)-&gt;willReturn($generatedCode);
+        $redaktiloEditor-&gt;insertAbove($redaktiloFile, $generatedCode)-&gt;shouldBeCalled();
+        $redaktiloEditor-&gt;insertBelow($redaktiloFile, '')-&gt;shouldBeCalled();
+</code></pre>
+
+<p>But this feels wrong, and when something feels wrong with phpspec, it usually
+means that this thing is wrong. But what?</p>
+
+<h2 id="don%27t-mock-what-you-don%27t-own">Don't mock what you don't own</h2>
+
+<p>Let's take a step back and look at the test again.
+What are we trying to achieve here?</p>
+
+<p>It is a test method, written with phpspec, that checks assertions on the
+implementation details of the class under test <code>InsertConstructorHandler</code>,
+by setting up mocks for the Redaktilo library.</p>
+
+<p>2014 me would think that's perfectly reasonable, and would probably struggle
+to identify the issue. But 2024 me can tell straight away from the above
+paragraph what the issue is.</p>
+
+<p>I've actually always had some issue understanding the advice
+"don't mock what you don't own".
+How do we really define what we own, and what we don't?</p>
+
+<ul>
+<li>do I own a third party library I've installed in my application (eg Guzzle as a HTTP client to do curl requests)?</li>
+<li>do I own a "third party" library, that I've actually developed and then installed in my application (eg Redaktilo)?</li>
+<li>do I own abstractions I've built on top of these libraries?</li>
+<li>do I own the framework I've installed (eg Symfony, and its components like Form)?</li>
+<li>do I own the RAD controllers (ie are they part of my application, or of the framework)?</li>
+<li>do I own my own implementations of extension points (eg custom EventListeners)?</li>
+<li>do I own business code in the application that was initially designed for other part of the system (ie from another Bounded Context)?</li>
+<li>do I own code in the application that I haven't written?</li>
+</ul>
+
+<p>The answer to these questions probably depends on the context, but here in
+<code>InsertConstructorHandler</code>, it certainly feels like Redaktilo, a third party
+library (which I've developed), is "something that I don't own" and therefore
+shouldn't be mocked.</p>
+
+<p>Now that we have identified the problem, how do we fix it?</p>
+
+<h2 id="behaviour-driven-development%2C-it%27s-all-words">Behaviour Driven Development, it's all words</h2>
+
+<p>Let's re-read the first paragraph of the previous section, and more specifically:</p>
+
+<blockquote>
+  <p>It is a test method, <strong>written with phpspec</strong>, that checks assertions on the
+  implementation details of the class under test <code>InsertConstructorHandler</code>,
+  by setting up mocks for the Redaktilo library.</p>
+</blockquote>
+
+<p>And when reading the test method, we get a lot of "has below" and "jump below"
+and "insert above". This is all implementation detail. And this is all
+Redaktilo's (clunky) language.</p>
+
+<p><strong><em>Our test method is a one to one translation of the</em> implementation details</strong>.</p>
+
+<p>phpspec is a specBDD framework. One of the core of Behaviour Driven Development
+is to drop the "unit testing" terminology and use a slightly different
+vocabulary instead:</p>
+
+<ul>
+<li>instead of the verb "to test", use "to specify"</li>
+<li>instead of "unit", use "behaviour"</li>
+<li>instead of "test method", use "example"</li>
+<li>instead of "assertion", use "expectation"</li>
+<li>instead of "mock", use "collaborator"</li>
+<li>and why not switch the words "class under test" for "use case"</li>
+</ul>
+
+<blockquote>
+  <p>See Liz Keogh. 2009. <a href="https://lizkeogh.com/2009/11/06/translating-tdd-to-bdd/">Translating TDD to BDD</a></p>
+</blockquote>
+
+<p>This might not seem like much, or very useful,
+but in reality the language used is key to changing our perspective.</p>
+
+<p>To be able to have an example that checks expectations on a specific use case,
+we first need to define the behaviour we want to describe in plain English:</p>
+
+<blockquote>
+  <p>If the class doesn't already have a constructor
+  But it has an existing method,
+  As well as potentially a constant, or property definition
+  Then the generated code for the new constructor
+  Should be inserted above the existing method, separated by an empty line
+  And it should also be under the constant and property definitions, also separated by an empty line</p>
+</blockquote>
+
+<p>We then try our best to translate that into code. To use the exact same vocabulary.
+This cannot be done by mocking Redaktilo, which has its own vocabulary.</p>
+
+<p>So we have to extract the Redaktilo implementation details and hide them in
+classes that have descriptive names which are relevant to our use case.</p>
+
+<p>Creating a new abstraction layer, essentially.</p>
+
+<p>Here's our new and improved "example":</p>
+
+<pre><code class="php">    function it_inserts_constructor_above_methods_but_under_constants_and_properties(
+        DoesClassAlreadyHaveConstructor $doesClassAlreadyHaveConstructor,
+        DoesClassAlreadyHaveMethods $doesClassAlreadyHaveMethod,
+        PrettyPrinter $prettyPrinter,
+        InsertGeneratedConstructorAboveExistingMethods $insertGeneratedConstructorAboveExistingMethods,
+    ) {
+        $inFile = Redaktilo\File::fromString(&lt;&lt;&lt;'FILE'
+            &lt;?php 
+
+            namespace Vendor\Project;
+
+            class MyClass
+            { 
+                const CONSTANT = 42;
+
+                public function existingMethod()
+                {
+                }
+            } 
+            FILE
+        );
+        $modelConstructor = (new Model\Method('__construct'))
+            -&gt;addArgument(new Model\Argument('Vendor\Project\Dependency', 'dependency'))
+            -&gt;addArgument(new Model\Argument('string', 'filename'))
+        ;                      
+        $insertConstructor = new InsertConstructor($inFile, $modelConstructor);
+
+        $generatedConstructor =&lt;&lt;&lt;'GENERATED_CODE'
+                public function __construct(Dependency $dependency, string $redaktiloFilename)
+                {
+                    $this-&gt;dependency = $dependency;
+                    $this-&gt;filename = $redaktiloFilename;    
+                }
+            GENERATED_CODE
+        ;
+
+        $doesClassAlreadyHaveConstructor-&gt;check($inFile)-&gt;withReturn(false);
+
+        $doesClassAlreadyHaveMethod-&gt;check($inFile)-&gt;withReturn(true);
+        $prettyPrinter-&gt;generateCode($modelMethod)-&gt;willReturn($generatedConstructor);
+        $insertGeneratedConstructorAboveExistingMethods-&gt;insert($generatedConstructor, $inFile)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($insertConstructor);
+    }
+</code></pre>
+
+<p>It no longer has <code>Redaktilo\Editor</code>.</p>
+
+<p>It now has:</p>
+
+<ul>
+<li><code>DoesClassAlreadyHaveConstructor-&gt;check(Redaktilo\File $inFile): bool</code>
+
+<ul>
+<li>it will call <code>$this-&gt;redaktiloEditor-&gt;hasBelow($inFile, InsertConstructorHandler::CONSTRUCTOR, 0)</code>;</li>
+</ul></li>
+<li><code>DoesClassAlreadyHaveMethods-&gt;check(Redaktilo\File $inFile): bool</code>
+
+<ul>
+<li>it will call <code>$this-&gt;redaktiloEditor-&gt;hasBelow($inFile, InsertConstructorHandler::METHOD, 0);</code></li>
+</ul></li>
+<li><code>InsertGeneratedConstructorAboveExistingMethods-&gt;insert(string $generatedConstructor, Redaktilo\File $inFile): void</code>
+
+<ul>
+<li>it will call:</li>
+<li><code>$this-&gt;redaktiloEditor-&gt;jumpBelow($inFile, InsertConstructorHandler::METHOD, 0);</code></li>
+<li><code>$this-&gt;redaktiloEditor-&gt;insertAbove($inFile, '');</code></li>
+<li><code>$this-&gt;redaktiloEditor-&gt;insertAbove($inFile, $generatedCode);</code></li>
+<li><code>$this-&gt;redaktiloEditor-&gt;insertBelow($inFile, '');</code></li>
+</ul></li>
+</ul>
+
+<p>And it still has:</p>
+
+<ul>
+<li><code>Model\Method</code>, this is one of the inputs of our use case, it seems fine as is</li>
+<li><code>Redaktilo\File</code>, though the variable has been renamed to <code>$inFile</code></li>
+<li><code>PrettyPrinter</code>, as far as I can tell, this collaborator still describes the behaviour we want</li>
+</ul>
+
+<h2 id="it%27s-all-about-trade-offs">It's all about trade offs</h2>
+
+<p>I've also taken the liberty to rename a couple of things, to make the intent
+more explicit:</p>
+
+<ul>
+<li><code>$redaktiloFile</code> becomes <code>$inFile</code>, I've taken a liking to having code read
+like sentences (insert generated code in file)</li>
+<li><code>it_inserts_constructor_in_class_that_has_constants_and_methods</code> becomes
+<code>it_inserts_constructor_above_methods_but_under_constants_and_properties</code>,
+as I think that describes the use case a bit better (though in the
+implementation, we end up not caring about constants and properties, as
+we generate the constructor above methods, which we expect to be below
+constants and properties)</li>
+</ul>
+
+<p>But there are more changes that have been introduced as a result of this new
+abstraction layer. On the positive side, we got:</p>
+
+<ul>
+<li>more readable code -- and by that I mean more explicit intent</li>
+<li>decoupling our "business logic" from "code we don't own"
+(ie third party library, or "implementation details")</li>
+</ul>
+
+<p>On the negative side:</p>
+
+<ul>
+<li>we have introduced an abstraction layer</li>
+<li>we'll have to introduce new classes to specify the other scenarios
+(<code>InsertGeneratedConstructorAtTheEndOfTheClass</code>
+when there are no methods in the class)</li>
+</ul>
+
+<p>While there is value in the code at the beginning of this article, as it worked
+just fine as it was, I personally value the new version more, even with the
+drawbacks they bring.</p>
+
+<p>Having an executable specification that results in a code that explicitly
+describes its intent is, in my humble opinion, quite a worthy improvement
+indeed.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: also, while the initial version of the code "worked", it did come
+  with its own drawbacks. It takes some time to understand what the code does
+  (the "jump above and below" mumbo jumbo isn't very helpful), and it was
+  coupled to a third party library, meaning tying us to its upgrade policy
+  and making us subject to its backward incompatible changes.</p>
+</blockquote>
+
+<h2 id="phpspec-isn%27t-a-test-framework">phpspec isn't a test framework</h2>
+
+<p>phpspec is highly opinionated, has very intentional "limitations", and has this
+knack of making you feel like something is wrong -- when you're indeed doing
+something you shouldn't be doing.</p>
+
+<p>It's not a testing framework, no, it's a designing / modeling tool.</p>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2024/08/19/phpspec-tip-don-t-mock-sut-inputs.html" title="phpspec tip: don&#039;t mock SUT inputs">Previous &lt; phpspec tip: don&#039;t mock SUT inputs</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/main/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight_9_0_0.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-47822314-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</body>
+</html>
