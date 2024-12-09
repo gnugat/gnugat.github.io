@@ -2,49 +2,55 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc></loc>
-    <lastmod>2024-09-12T16:04:20+01:00</lastmod>
+    <lastmod>2024-12-09T20:08:58+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>/about</loc>
-    <lastmod>2024-09-12T16:04:20+01:00</lastmod>
+    <lastmod>2024-12-09T20:08:58+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
     <url>
+    <loc>/2024/12/09/my-role-as-a-lead-php-engineer.html</loc>
+    <lastmod>2024-12-09T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+    <url>
     <loc>/2024/09/11/don-t-mock-what-you-don-t-own.html</loc>
-    <lastmod>2024-09-11T00:00:00+01:00</lastmod>
+    <lastmod>2024-09-11T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2024/08/19/phpspec-tip-don-t-mock-sut-inputs.html</loc>
-    <lastmod>2024-08-19T00:00:00+01:00</lastmod>
+    <lastmod>2024-08-19T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2024/08/16/strategy-pattern-symfony-autowiring.html</loc>
-    <lastmod>2024-08-16T00:00:00+01:00</lastmod>
+    <lastmod>2024-08-16T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2024/07/03/phpunit-setup-is-a-lie.html</loc>
-    <lastmod>2024-07-03T00:00:00+01:00</lastmod>
+    <lastmod>2024-07-03T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2023/04/19/chat-gpt-spec-bdd.html</loc>
-    <lastmod>2023-04-19T00:00:00+01:00</lastmod>
+    <lastmod>2023-04-19T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2023/04/04/chat-gpt-goldfish-memory.html</loc>
-    <lastmod>2023-04-04T00:00:00+01:00</lastmod>
+    <lastmod>2023-04-04T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -62,163 +68,163 @@
   </url>
     <url>
     <loc>/2018/06/15/short-identifier.html</loc>
-    <lastmod>2018-06-15T00:00:00+01:00</lastmod>
+    <lastmod>2018-06-15T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2017/09/20/pragmaticlean-command-bus.html</loc>
-    <lastmod>2017-09-20T00:00:00+01:00</lastmod>
+    <lastmod>2017-09-20T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2017/09/13/pragmaticlean-introdution.html</loc>
-    <lastmod>2017-09-13T00:00:00+01:00</lastmod>
+    <lastmod>2017-09-13T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2017/05/24/links-from-2016.html</loc>
-    <lastmod>2017-05-24T00:00:00+01:00</lastmod>
+    <lastmod>2017-05-24T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/10/12/mars-rover-locating-moving.html</loc>
-    <lastmod>2016-10-12T00:00:00+01:00</lastmod>
+    <lastmod>2016-10-12T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/10/05/mars-rover-locating-geolocation.html</loc>
-    <lastmod>2016-10-05T00:00:00+01:00</lastmod>
+    <lastmod>2016-10-05T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/09/28/mars-rover-locating-refactoring.html</loc>
-    <lastmod>2016-09-28T00:00:00+01:00</lastmod>
+    <lastmod>2016-09-28T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/09/21/mars-rover-locating-handler.html</loc>
-    <lastmod>2016-09-21T00:00:00+01:00</lastmod>
+    <lastmod>2016-09-21T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/09/14/mars-rover-locating-package.html</loc>
-    <lastmod>2016-09-14T00:00:00+01:00</lastmod>
+    <lastmod>2016-09-14T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/09/07/mars-rover-driving-event.html</loc>
-    <lastmod>2016-09-07T00:00:00+01:00</lastmod>
+    <lastmod>2016-09-07T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/08/17/mars-rover-driving-instruction.html</loc>
-    <lastmod>2016-08-17T00:00:00+01:00</lastmod>
+    <lastmod>2016-08-17T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/08/10/mars-rover-driving.html</loc>
-    <lastmod>2016-08-10T00:00:00+01:00</lastmod>
+    <lastmod>2016-08-10T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/08/03/mars-rover-event-sourcing-code.html</loc>
-    <lastmod>2016-08-03T00:00:00+01:00</lastmod>
+    <lastmod>2016-08-03T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/07/27/mars-rover-event-sourcing-package.html</loc>
-    <lastmod>2016-07-27T00:00:00+01:00</lastmod>
+    <lastmod>2016-07-27T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/07/20/mars-rover-landing-event.html</loc>
-    <lastmod>2016-07-20T00:00:00+01:00</lastmod>
+    <lastmod>2016-07-20T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/07/13/mars-rover-landing-orientation.html</loc>
-    <lastmod>2016-07-13T00:00:00+01:00</lastmod>
+    <lastmod>2016-07-13T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/07/06/mars-rover-landing-coordinates.html</loc>
-    <lastmod>2016-07-06T00:00:00+01:00</lastmod>
+    <lastmod>2016-07-06T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/06/29/mars-rover-landing.html</loc>
-    <lastmod>2016-06-29T00:00:00+01:00</lastmod>
+    <lastmod>2016-06-29T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/06/22/mars-rover-initialization.html</loc>
-    <lastmod>2016-06-22T00:00:00+01:00</lastmod>
+    <lastmod>2016-06-22T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/06/15/mars-rover-introduction.html</loc>
-    <lastmod>2016-06-15T00:00:00+01:00</lastmod>
+    <lastmod>2016-06-15T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/05/18/towards-cqrs-search-engine.html</loc>
-    <lastmod>2016-05-18T00:00:00+01:00</lastmod>
+    <lastmod>2016-05-18T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/05/11/towards-cqrs-command-bus.html</loc>
-    <lastmod>2016-05-11T00:00:00+01:00</lastmod>
+    <lastmod>2016-05-11T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/04/27/event-driven-architecture.html</loc>
-    <lastmod>2016-04-27T00:00:00+01:00</lastmod>
+    <lastmod>2016-04-27T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/04/20/super-speed-sf-nginx.html</loc>
-    <lastmod>2016-04-20T00:00:00+01:00</lastmod>
+    <lastmod>2016-04-20T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/04/13/super-speed-sf-react-php.html</loc>
-    <lastmod>2016-04-13T00:00:00+01:00</lastmod>
+    <lastmod>2016-04-13T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/04/06/ultimate-symfony-cli-example.html</loc>
-    <lastmod>2016-04-06T00:00:00+01:00</lastmod>
+    <lastmod>2016-04-06T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2016/03/30/ultimate-symfony-web-example.html</loc>
-    <lastmod>2016-03-30T00:00:00+01:00</lastmod>
+    <lastmod>2016-03-30T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -320,133 +326,133 @@
   </url>
     <url>
     <loc>/2015/10/12/decouple-from-libraries.html</loc>
-    <lastmod>2015-10-12T00:00:00+01:00</lastmod>
+    <lastmod>2015-10-12T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/09/30/decouple-from-frameworks.html</loc>
-    <lastmod>2015-09-30T00:00:00+01:00</lastmod>
+    <lastmod>2015-09-30T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/09/23/phpunit-with-phpspec.html</loc>
-    <lastmod>2015-09-23T00:00:00+01:00</lastmod>
+    <lastmod>2015-09-23T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/09/09/tactician.html</loc>
-    <lastmod>2015-09-09T00:00:00+01:00</lastmod>
+    <lastmod>2015-09-09T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/08/25/cqrs.html</loc>
-    <lastmod>2015-08-25T00:00:00+01:00</lastmod>
+    <lastmod>2015-08-25T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/08/07/diactoros-psr7.html</loc>
-    <lastmod>2015-08-07T00:00:00+01:00</lastmod>
+    <lastmod>2015-08-07T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/08/06/pomm-foundation.html</loc>
-    <lastmod>2015-08-06T00:00:00+01:00</lastmod>
+    <lastmod>2015-08-06T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/08/05/phinx.html</loc>
-    <lastmod>2015-08-05T00:00:00+01:00</lastmod>
+    <lastmod>2015-08-05T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/08/04/simple-bus.html</loc>
-    <lastmod>2015-08-04T00:00:00+01:00</lastmod>
+    <lastmod>2015-08-04T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/08/03/phpspec.html</loc>
-    <lastmod>2015-08-03T00:00:00+01:00</lastmod>
+    <lastmod>2015-08-03T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/08/02/sf-differently-part-3-conclusion.html</loc>
-    <lastmod>2015-08-02T00:00:00+01:00</lastmod>
+    <lastmod>2015-08-02T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/06/10/sf-differently-part-2-bootstrap.html</loc>
-    <lastmod>2015-06-10T00:00:00+01:00</lastmod>
+    <lastmod>2015-06-10T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/06/03/sf-differently-part-1-introduction.html</loc>
-    <lastmod>2015-06-03T00:00:00+01:00</lastmod>
+    <lastmod>2015-06-03T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/05/28/spec-gen-0-3.html</loc>
-    <lastmod>2015-05-28T00:00:00+01:00</lastmod>
+    <lastmod>2015-05-28T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/05/20/spec-gen-0-2.html</loc>
-    <lastmod>2015-05-20T00:00:00+01:00</lastmod>
+    <lastmod>2015-05-20T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/05/13/memio-spec-gen.html</loc>
-    <lastmod>2015-05-13T00:00:00+01:00</lastmod>
+    <lastmod>2015-05-13T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/05/06/memio.html</loc>
-    <lastmod>2015-05-06T00:00:00+01:00</lastmod>
+    <lastmod>2015-05-06T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/04/29/memio-pretty-printer.html</loc>
-    <lastmod>2015-04-29T00:00:00+01:00</lastmod>
+    <lastmod>2015-04-29T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/04/22/memio-validator-linter.html</loc>
-    <lastmod>2015-04-22T00:00:00+01:00</lastmod>
+    <lastmod>2015-04-22T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/04/15/memio-models.html</loc>
-    <lastmod>2015-04-15T00:00:00+01:00</lastmod>
+    <lastmod>2015-04-15T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/04/08/introducing-memio-code-generator.html</loc>
-    <lastmod>2015-04-08T00:00:00+01:00</lastmod>
+    <lastmod>2015-04-08T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2015/04/01/hello-world-best-practices.html</loc>
-    <lastmod>2015-04-01T00:00:00+01:00</lastmod>
+    <lastmod>2015-04-01T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -548,145 +554,145 @@
   </url>
     <url>
     <loc>/2014/10/15/php-array-manipulation.html</loc>
-    <lastmod>2014-10-15T00:00:00+01:00</lastmod>
+    <lastmod>2014-10-15T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/10/08/master-sf2-conclusion.html</loc>
-    <lastmod>2014-10-08T00:00:00+01:00</lastmod>
+    <lastmod>2014-10-08T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/09/10/master-sf2-part-6-annotations.html</loc>
-    <lastmod>2014-09-10T00:00:00+01:00</lastmod>
+    <lastmod>2014-09-10T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/09/03/master-sf2-part-5-events.html</loc>
-    <lastmod>2014-09-03T00:00:00+01:00</lastmod>
+    <lastmod>2014-09-03T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/08/27/master-sf2-part-4-doctrine.html</loc>
-    <lastmod>2014-08-27T00:00:00+01:00</lastmod>
+    <lastmod>2014-08-27T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/08/22/master-sf2-part-3-services.html</loc>
-    <lastmod>2014-08-22T00:00:00+01:00</lastmod>
+    <lastmod>2014-08-22T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/08/13/master-sf2-part-2-tdd.html</loc>
-    <lastmod>2014-08-13T00:00:00+01:00</lastmod>
+    <lastmod>2014-08-13T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/08/05/master-sf2-part-1-bootstraping.html</loc>
-    <lastmod>2014-08-05T00:00:00+01:00</lastmod>
+    <lastmod>2014-08-05T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/07/23/learn-sf2-conclusion.html</loc>
-    <lastmod>2014-07-23T00:00:00+01:00</lastmod>
+    <lastmod>2014-07-23T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/07/20/learn-sf2-tests-part-5.html</loc>
-    <lastmod>2014-07-20T00:00:00+01:00</lastmod>
+    <lastmod>2014-07-20T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/07/12/learn-sf2-controllers-part-4.html</loc>
-    <lastmod>2014-07-12T00:00:00+01:00</lastmod>
+    <lastmod>2014-07-12T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/07/02/learn-sf2-bundles-part-3.html</loc>
-    <lastmod>2014-07-02T00:00:00+01:00</lastmod>
+    <lastmod>2014-07-02T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/06/25/learn-sf2-empty-app-part-2.html</loc>
-    <lastmod>2014-06-25T00:00:00+01:00</lastmod>
+    <lastmod>2014-06-25T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/06/18/learn-sf2-composer-part-1.html</loc>
-    <lastmod>2014-06-18T00:00:00+01:00</lastmod>
+    <lastmod>2014-06-18T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/06/04/php-tokenizer.html</loc>
-    <lastmod>2014-06-04T00:00:00+01:00</lastmod>
+    <lastmod>2014-06-04T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/05/27/redaktilo-0-7.html</loc>
-    <lastmod>2014-05-27T00:00:00+01:00</lastmod>
+    <lastmod>2014-05-27T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/05/21/facade-design-pattern-by-example.html</loc>
-    <lastmod>2014-05-21T00:00:00+01:00</lastmod>
+    <lastmod>2014-05-21T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/05/14/open-closed-principle-by-example.html</loc>
-    <lastmod>2014-05-14T00:00:00+01:00</lastmod>
+    <lastmod>2014-05-14T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/05/09/redaktilo.html</loc>
-    <lastmod>2014-05-09T00:00:00+01:00</lastmod>
+    <lastmod>2014-05-09T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/04/30/php-generators-and-coroutines.html</loc>
-    <lastmod>2014-04-30T00:00:00+01:00</lastmod>
+    <lastmod>2014-04-30T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/04/23/sf2-sessions-introduction.html</loc>
-    <lastmod>2014-04-23T00:00:00+01:00</lastmod>
+    <lastmod>2014-04-23T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/04/16/pomodoro-manage-your-breaks-improve-your-focus.html</loc>
-    <lastmod>2014-04-16T00:00:00+01:00</lastmod>
+    <lastmod>2014-04-16T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/04/09/sf2-console-component-by-example.html</loc>
-    <lastmod>2014-04-09T00:00:00+01:00</lastmod>
+    <lastmod>2014-04-09T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
     <url>
     <loc>/2014/04/02/tests-cheat-sheet.html</loc>
-    <lastmod>2014-04-02T00:00:00+01:00</lastmod>
+    <lastmod>2014-04-02T00:00:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>

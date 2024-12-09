@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2024-09-12T16:04:20+01:00</updated>
+    <updated>2024-12-09T20:08:58+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -11,7 +11,7 @@
             <entry>
             <title type="html"><![CDATA[Don&#039;t mock what you don&#039;t own -- phpspec isn&#039;t a test framework]]></title>
             <link href="/2024/09/11/don-t-mock-what-you-don-t-own.html"/>
-            <updated>2024-09-11T00:00:00+01:00</updated>
+            <updated>2024-09-11T00:00:00+00:00</updated>
             <id>/2024/09/11/don-t-mock-what-you-don-t-own.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p>TL;DR: phpspec isn't a test framework. It's a code designing/modeling tool.</p>
@@ -402,7 +402,7 @@ something you shouldn't be doing.</p>
             <entry>
             <title type="html"><![CDATA[phpspec tip: don&#039;t mock SUT inputs]]></title>
             <link href="/2024/08/19/phpspec-tip-don-t-mock-sut-inputs.html"/>
-            <updated>2024-08-19T00:00:00+01:00</updated>
+            <updated>2024-08-19T00:00:00+00:00</updated>
             <id>/2024/08/19/phpspec-tip-don-t-mock-sut-inputs.html</id>
             <content type="html"><![CDATA[<p>Looking at some old code of mine, I've found the following test:</p>
 
@@ -507,7 +507,7 @@ class LogGeneratedMethodListenerSpec extends ObjectBehavior
             <entry>
             <title type="html"><![CDATA[Mars Rover, Introduction]]></title>
             <link href="/2016/06/15/mars-rover-introduction.html"/>
-            <updated>2016-06-15T00:00:00+01:00</updated>
+            <updated>2016-06-15T00:00:00+00:00</updated>
             <id>/2016/06/15/mars-rover-introduction.html</id>
             <content type="html"><![CDATA[<p>Welcome to this Mars Rover series where we're going to practice the followings:</p>
 
@@ -720,7 +720,7 @@ its first package: <code>navigation</code>.</p>
             <entry>
             <title type="html"><![CDATA[PHPUnit with phpspec]]></title>
             <link href="/2015/09/23/phpunit-with-phpspec.html"/>
-            <updated>2015-09-23T00:00:00+01:00</updated>
+            <updated>2015-09-23T00:00:00+00:00</updated>
             <id>/2015/09/23/phpunit-with-phpspec.html</id>
             <content type="html"><![CDATA[<p><a href="https://phpunit.de/">PHPUnit</a> is a port of <a href="http://junit.org/">jUnit</a>, its name
 might be deceptive: it allows you to write any type of tests (unit, but also functional,
@@ -1029,7 +1029,7 @@ class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 2: Test Driven Development]]></title>
             <link href="/2014/08/13/master-sf2-part-2-tdd.html"/>
-            <updated>2014-08-13T00:00:00+01:00</updated>
+            <updated>2014-08-13T00:00:00+00:00</updated>
             <id>/2014/08/13/master-sf2-part-2-tdd.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>Deprecated</strong>: This series has been re-written - see

@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2024-09-12T16:04:20+01:00</updated>
+    <updated>2024-12-09T20:08:58+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -244,7 +244,7 @@ maturity point.</p>
             <entry>
             <title type="html"><![CDATA[PHP array manipulation]]></title>
             <link href="/2014/10/15/php-array-manipulation.html"/>
-            <updated>2014-10-15T00:00:00+01:00</updated>
+            <updated>2014-10-15T00:00:00+00:00</updated>
             <id>/2014/10/15/php-array-manipulation.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> provides a nice
@@ -745,7 +745,7 @@ you.</p>
             <entry>
             <title type="html"><![CDATA[Redaktilo v0.7]]></title>
             <link href="/2014/05/27/redaktilo-0-7.html"/>
-            <updated>2014-05-27T00:00:00+01:00</updated>
+            <updated>2014-05-27T00:00:00+00:00</updated>
             <id>/2014/05/27/redaktilo-0-7.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -928,7 +928,7 @@ start a discussion here.</p>
             <entry>
             <title type="html"><![CDATA[Facade design pattern, by example]]></title>
             <link href="/2014/05/21/facade-design-pattern-by-example.html"/>
-            <updated>2014-05-21T00:00:00+01:00</updated>
+            <updated>2014-05-21T00:00:00+00:00</updated>
             <id>/2014/05/21/facade-design-pattern-by-example.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -1026,7 +1026,7 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
             <entry>
             <title type="html"><![CDATA[Open/Closed principle, by example]]></title>
             <link href="/2014/05/14/open-closed-principle-by-example.html"/>
-            <updated>2014-05-14T00:00:00+01:00</updated>
+            <updated>2014-05-14T00:00:00+00:00</updated>
             <id>/2014/05/14/open-closed-principle-by-example.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
@@ -1284,7 +1284,7 @@ feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twit
             <entry>
             <title type="html"><![CDATA[Redaktilo: because your code too needs an editor]]></title>
             <link href="/2014/05/09/redaktilo.html"/>
-            <updated>2014-05-09T00:00:00+01:00</updated>
+            <updated>2014-05-09T00:00:00+00:00</updated>
             <id>/2014/05/09/redaktilo.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
