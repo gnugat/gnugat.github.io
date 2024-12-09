@@ -36,7 +36,7 @@ This last one is my favourite as it allows the creation of decoupled code
 > I wrote a tutorial to learn Symfony:
 > [The Ultimate Developer Guide To Symfony](/tags/ultimate%20symfony%20series).
 
-I'm currently a Lead Developer at [Constant Commerce](http://constant.co/),
+I'm currently a Lead Developer at [Constant.Co](http://constant.co/),
 a start up based in London.
 
 > Our customers are mainly brands (e.g. Unilever) and media websites
@@ -45,6 +45,9 @@ a start up based in London.
 > (items, recipes, articles, videos, etc) shoppable in one click via your
 > favourite retailer like Sainsbury (UK), Woolworth (Australia),
 > Stop & Shop (US), etc.
+
+You can read more about my role there here:
+[My role as a Lead PHP Engineer](/2024/12/09/my-role-as-a-php-lead-engineer.html).
 
 On my free time, I spend between 10 to 15 hours a week on pet projects in order
 to learn new things.
