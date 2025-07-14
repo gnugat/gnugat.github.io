@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2016-02-17T07:54:01+00:00</updated>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-07-14T16:12:21+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - Conclusion]]></title>
-            <link href="https://gnugat.github.io/2014/10/08/master-sf2-conclusion.html"/>
+            <link href="/2014/10/08/master-sf2-conclusion.html"/>
             <updated>2014-10-08T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/10/08/master-sf2-conclusion.html</id>
-            <content type="html"><![CDATA[<p>This is the conclusion of the series on mastering the
+            <id>/2014/10/08/master-sf2-conclusion.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>This is the conclusion of the series on mastering the
 <a href="http://symfony.com/">Symfony2</a> framework. Have a look at the five articles:</p>
 
 <ul>
@@ -92,10 +97,15 @@ before anything else. Here's a short selection of its available components:</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 6: Annotations]]></title>
-            <link href="https://gnugat.github.io/2014/09/10/master-sf2-part-6-annotations.html"/>
+            <link href="/2014/09/10/master-sf2-part-6-annotations.html"/>
             <updated>2014-09-10T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/09/10/master-sf2-part-6-annotations.html</id>
-            <content type="html"><![CDATA[<p>This is the sixth article of the series on mastering the
+            <id>/2014/09/10/master-sf2-part-6-annotations.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>This is the sixth article of the series on mastering the
 <a href="http://symfony.com/">Symfony2</a> framework. Have a look at the four first ones:</p>
 
 <ul>
@@ -353,10 +363,15 @@ git commit -m 'Used annotations'
         </entry>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 5: Events]]></title>
-            <link href="https://gnugat.github.io/2014/09/03/master-sf2-part-5-events.html"/>
+            <link href="/2014/09/03/master-sf2-part-5-events.html"/>
             <updated>2014-09-03T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/09/03/master-sf2-part-5-events.html</id>
-            <content type="html"><![CDATA[<p>This is the fifth article of the series on mastering the
+            <id>/2014/09/03/master-sf2-part-5-events.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>This is the fifth article of the series on mastering the
 <a href="http://symfony.com/">Symfony2</a> framework. Have a look at the four first ones:</p>
 
 <ul>
@@ -701,10 +716,15 @@ code we cannot know that submitted JSON has been handled, we lose explicitness.<
         </entry>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 4: Doctrine]]></title>
-            <link href="https://gnugat.github.io/2014/08/27/master-sf2-part-4-doctrine.html"/>
+            <link href="/2014/08/27/master-sf2-part-4-doctrine.html"/>
             <updated>2014-08-27T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/08/27/master-sf2-part-4-doctrine.html</id>
-            <content type="html"><![CDATA[<p>This is the fourth article of the series on mastering the
+            <id>/2014/08/27/master-sf2-part-4-doctrine.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>This is the fourth article of the series on mastering the
 <a href="http://symfony.com/">Symfony2</a> framework. Have a look at the three first ones:</p>
 
 <ul>
@@ -1145,10 +1165,15 @@ a standalone library allowing you to deploy database changes, it even has
         </entry>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 3: Services]]></title>
-            <link href="https://gnugat.github.io/2014/08/22/master-sf2-part-3-services.html"/>
+            <link href="/2014/08/22/master-sf2-part-3-services.html"/>
             <updated>2014-08-22T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/08/22/master-sf2-part-3-services.html</id>
-            <content type="html"><![CDATA[<p>This is the third article of the series on mastering the
+            <id>/2014/08/22/master-sf2-part-3-services.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>This is the third article of the series on mastering the
 <a href="http://symfony.com/">Symfony2</a> framework. Have a look at the two first ones:</p>
 
 <ul>
@@ -1687,10 +1712,15 @@ that "Dependency Injection" is just a fancy term for "passing arguments".</p>
         </entry>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 2: Test Driven Development]]></title>
-            <link href="https://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html"/>
+            <link href="/2014/08/13/master-sf2-part-2-tdd.html"/>
             <updated>2014-08-13T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/08/13/master-sf2-part-2-tdd.html</id>
-            <content type="html"><![CDATA[<p>This is the second article of the series on mastering the
+            <id>/2014/08/13/master-sf2-part-2-tdd.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>This is the second article of the series on mastering the
 <a href="http://symfony.com/">Symfony2</a> framework. Have a look at the first one:
 <a href="/2014/08/05/master-sf2-part-1-bootstraping.html">Bootstraping</a>.</p>
 
@@ -1936,10 +1966,15 @@ demonstrated how quick and simple it is to implement the first User Story
         </entry>
             <entry>
             <title type="html"><![CDATA[Master Symfony2 - part 1: Bootstraping]]></title>
-            <link href="https://gnugat.github.io/2014/08/05/master-sf2-part-1-bootstraping.html"/>
+            <link href="/2014/08/05/master-sf2-part-1-bootstraping.html"/>
             <updated>2014-08-05T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/08/05/master-sf2-part-1-bootstraping.html</id>
-            <content type="html"><![CDATA[<p>You know the basics of the <a href="http://symfony.com/">Symfony2</a> framework
+            <id>/2014/08/05/master-sf2-part-1-bootstraping.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This series has been re-written - see
+  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+</blockquote>
+
+<p>You know the basics of the <a href="http://symfony.com/">Symfony2</a> framework
 (<a href="https://getcomposer.org/">Composer</a>, empty application, bundle, controller and
 functional test with <a href="http://phpunit.de/">PHPUnit</a>) and you want to learn more
 about how to extend it (and understanding what you're doing)?</p>

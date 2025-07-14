@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-01-06T12:22:55+00:00</updated>
+    <updated>2025-07-14T16:12:21+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -183,7 +183,7 @@ that would allow to compose all those middlewares?</p>
             <entry>
             <title type="html"><![CDATA[Diactoros (PSR-7)]]></title>
             <link href="/2015/08/07/diactoros-psr7.html"/>
-            <updated>2015-08-07T00:00:00+00:00</updated>
+            <updated>2015-08-07T00:00:00+01:00</updated>
             <id>/2015/08/07/diactoros-psr7.html</id>
             <content type="html"><![CDATA[<p><a href="https://github.com/zendframework/zend-diactoros">Zend Diactoros</a> is a lightweight
 library providing implementations for <a href="http://www.php-fig.org/psr/psr-7/">PSR-7 interfaces</a>.</p>

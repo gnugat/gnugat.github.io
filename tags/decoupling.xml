@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-01-06T12:22:55+00:00</updated>
+    <updated>2025-07-14T16:12:21+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -79,7 +79,7 @@ when to use it depends on the context (project, team, industry, etc).</p>
             <entry>
             <title type="html"><![CDATA[Decouple from Libraries]]></title>
             <link href="/2015/10/12/decouple-from-libraries.html"/>
-            <updated>2015-10-12T00:00:00+00:00</updated>
+            <updated>2015-10-12T00:00:00+01:00</updated>
             <id>/2015/10/12/decouple-from-libraries.html</id>
             <content type="html"><![CDATA[<p>Libraries are similar to frameworks: they solve infrastructure problems (e.g.
 requesting remote endpoints or querying databases). They also don't directly
@@ -677,7 +677,7 @@ it can be worth it to protect ourselves from external changes.</p>
             <entry>
             <title type="html"><![CDATA[Decouple from Frameworks]]></title>
             <link href="/2015/09/30/decouple-from-frameworks.html"/>
-            <updated>2015-09-30T00:00:00+00:00</updated>
+            <updated>2015-09-30T00:00:00+01:00</updated>
             <id>/2015/09/30/decouple-from-frameworks.html</id>
             <content type="html"><![CDATA[<p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
 While necessary, those concerns don't add any value to your project: the business

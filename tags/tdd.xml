@@ -3,513 +3,571 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-01-06T12:22:55+00:00</updated>
+    <updated>2025-07-14T16:12:21+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
-            <title type="html"><![CDATA[Don&#039;t mock what you don&#039;t own -- phpspec isn&#039;t a test framework]]></title>
-            <link href="/2024/09/11/don-t-mock-what-you-don-t-own.html"/>
-            <updated>2024-09-11T00:00:00+00:00</updated>
-            <id>/2024/09/11/don-t-mock-what-you-don-t-own.html</id>
-            <content type="html"><![CDATA[<blockquote>
-  <p>TL;DR: phpspec isn't a test framework. It's a code designing/modeling tool.</p>
-</blockquote>
+            <title type="html"><![CDATA[ChatGPT: fluff or not? SpecBDD]]></title>
+            <link href="/2023/04/19/chat-gpt-spec-bdd.html"/>
+            <updated>2023-04-19T00:00:00+01:00</updated>
+            <id>/2023/04/19/chat-gpt-spec-bdd.html</id>
+            <content type="html"><![CDATA[<p>Now that a couple of months have passed since its over hyped launch,
+surely <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> has found some
+use cases where it could be of any actual use. Or is it all fluff? Let's find out.</p>
 
-<h2 id="something-feels-wrong">Something feels wrong</h2>
+<p>In my quest to find a use for ChatGPT in my day to day developer activity,
+I've finally found a helpful scenario!</p>
 
-<p>Looking at some 2014 code of mine, I found the following test:</p>
+<p>Let me walk you through my findings about ChatGPT and its "Spec Gen" capacity,
+so we can learn a thing or two.</p>
 
-<pre><code class="php">&lt;?php
+<h2 id="spec-gen">Spec Gen</h2>
 
-namespace spec\Memio\SpecGen\CodeEditor;
+<p>When tasked to write a feature, I first write a unit test that specifies the
+behaviour, for example:</p>
 
-use Gnugat\Redaktilo;
-use Memio\Model;
-use Memio\PrettyPrinter\PrettyPrinter;
-use Memio\SpecGen\CodeEditor\InsertConstructor;
-use Memio\SpecGen\CodeEditor\InsertConstructorHandler;
-use Memio\SpecGen\CommandBus\CommandHandler;
+<pre><code>&lt;?php
+
+namespace spec\Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+use Vendor\Project\File;
 use PhpSpec\ObjectBehavior;
 
-class InsertConstructorHandlerSpec extends ObjectBehavior
+class TextEditorSpec extends ObjectBehavior
 {
-    function let(
-        Redaktilo\Editor $redaktiloEditor,
-        PrettyPrinter $prettyPrinter,
-    ) {
-        $this-&gt;beConstructedWith($redaktiloEditor, $prettyPrinter);
+    private const FILENAME = '/tmp/file.txt';
+    private const FORCE_FILE_CREATION = true;
+
+    function let(Filesystem $filesystem): void
+    {
+        $this-&gt;beConstructedWith($filesystem);
     }
 
-    function it_inserts_constructor_in_class_that_has_constants_and_methods(
-        Redaktilo\Editor $redaktiloEditor,
-        Redaktilo\File $redaktiloFile,
-        Model\Method $modelMethod,
-        PrettyPrinter $prettyPrinter,
-    ) {
-        $insertConstructor = new InsertConstructor($redaktiloFile-&gt;getWrappedObject(), $modelMethod-&gt;getWrappedObject());
+    function it_creates_new_files(File $file, Filesystem $filesystem): void
+    {
+        $filesystem-&gt;exists(self::FILENAME)-&gt;willReturn(false);
+        $filesystem-&gt;create(self::FILENAME)-&gt;willReturn($file);
 
-        $generatedCode =&lt;&lt;&lt;'GENERATED_CODE'
-                public function __construct(Dependency $dependency, string $redaktiloFilename)
-                {
-                    $this-&gt;dependency = $dependency;
-                    $this-&gt;filename = $redaktiloFilename;    
-                }
-            GENERATED_CODE
-        ;
-
-        $redaktiloEditor-&gt;hasBelow($redaktiloFile, InsertConstructorHandler::CONSTRUCTOR, 0)-&gt;willReturn(false);
-        $redaktiloEditor-&gt;hasBelow($redaktiloFile, InsertConstructorHandler::METHOD, 0)-&gt;willReturn(true);
-        $redaktiloEditor-&gt;jumpBelow($redaktiloFile, InsertConstructorHandler::METHOD, 0)-&gt;shouldBeCalled();
-        $redaktiloEditor-&gt;insertAbove($redaktiloFile, '')-&gt;shouldBeCalled();
-        $prettyPrinter-&gt;generateCode($modelMethod)-&gt;willReturn($generatedCode);
-        $redaktiloEditor-&gt;insertAbove($redaktiloFile, $generatedCode)-&gt;shouldBeCalled();
-        $redaktiloFile-&gt;decrementCurrentLineNumber(1)-&gt;shouldBeCalled();
-        $redaktiloFile-&gt;getLine()-&gt;willReturn('    const CONSTANT = 42;');
-        $redaktiloEditor-&gt;insertBelow($redaktiloFile, '')-&gt;shouldBeCalled();
-
-        $this-&gt;handle($insertConstructor);
+        $this-&gt;open(self::FILENAME, self::FORCE_FILE_CREATION)-&gt;shouldBe($file);
     }
 }
 </code></pre>
 
-<p>There are some things that feel wrong there, like the calls to
-<code>getWrappedObject()</code>, and when something feels wrong with phpspec, it usually
-means that this thing is wrong.</p>
+<p>When using <a href="https://phpspec.net/en/stable/">phpspec</a>,
+especially with the extension <a href="https://github.com/memio/spec-gen">spec-gen</a>,
+running the test will bootstrap for me the corresponding class:</p>
 
-<h2 id="don%27t-mock-sut-inputs">Don't mock SUT inputs</h2>
+<pre><code>&lt;?php
 
-<p>As per the previous advice, <a href="https://gnugat.github.io/2024/08/19/phpspec-tip-don-t-mock-sut-inputs.html">don't mock SUT inputs</a>,
-I've removed the inputs mock and their awkward <code>getWrappedObject()</code> calls
-and instead set up the inputs:</p>
+namespace Vendor\Project;
 
-<pre><code class="php">    function it_inserts_constructor_in_class_that_has_constants_and_methods(
-        Redaktilo\Editor $redaktiloEditor,
-        PrettyPrinter $prettyPrinter,
-    ) {
-        $redaktiloFile = Redaktilo\File::fromString(&lt;&lt;&lt;'FILE'
-            &lt;?php 
+use Vendor\Project\Service\Filesystem;
 
-            namespace Vendor\Project;
+class TextEditor
+{
+    private $filesystem;
 
-            class MyClass
-            { 
-                const CONSTANT = 42;
-
-                public function existingMethod()
-                {
-                }
-            } 
-            FILE
-        );
-        $modelMethod = (new Model\Method('__construct'))
-            -&gt;addArgument(new Model\Argument('Vendor\Project\Dependency', 'dependency'))
-            -&gt;addArgument(new Model\Argument('string', 'filename'))
-        ;                      
-        $insertConstructor = new InsertConstructor($redaktiloFile, $modelMethod);
-
-        $generatedCode =&lt;&lt;&lt;'GENERATED_CODE'
-                public function __construct(Dependency $dependency, string $redaktiloFilename)
-                {
-                    $this-&gt;dependency = $dependency;
-                    $this-&gt;filename = $redaktiloFilename;    
-                }
-            GENERATED_CODE
-        ;
-
-        $redaktiloEditor-&gt;hasBelow($redaktiloFile, InsertConstructorHandler::CONSTRUCTOR, 0)-&gt;willReturn(false);
-        $redaktiloEditor-&gt;hasBelow($redaktiloFile, InsertConstructorHandler::METHOD, 0)-&gt;willReturn(true);
-        $redaktiloEditor-&gt;jumpBelow($redaktiloFile, InsertConstructorHandler::METHOD, 0)-&gt;shouldBeCalled();
-        $redaktiloEditor-&gt;insertAbove($redaktiloFile, '')-&gt;shouldBeCalled();
-        $prettyPrinter-&gt;generateCode($modelMethod)-&gt;willReturn($generatedCode);
-        $redaktiloEditor-&gt;insertAbove($redaktiloFile, $generatedCode)-&gt;shouldBeCalled();
-        $redaktiloEditor-&gt;insertBelow($redaktiloFile, '')-&gt;shouldBeCalled();
-
-        $this-&gt;handle($insertConstructor);
+    public function __construct(Filesytem $filesystem)
+    {
+        $this-&gt;filesystem = $filesystem;
     }
-</code></pre>
 
-<h2 id="something-still-feels-wrong">Something still feels wrong</h2>
-
-<p>Now pay attention to the two following lines we've removed:</p>
-
-<pre><code class="php">        $redaktiloFile-&gt;decrementCurrentLineNumber(1)-&gt;shouldBeCalled();
-        $redaktiloFile-&gt;getLine()-&gt;willReturn('    const CONSTANT = 42;');
-</code></pre>
-
-<p>After running the tests, I get an error:</p>
-
-<blockquote>
-  <p>Exception <code>Gnugat\Redaktilo\Exception\InvalidLineNumberException("The line number should be positive")</code> has been thrown.</p>
-</blockquote>
-
-<p>When the Redaktilo File is first instantiated in our test method, it is
-initialised with a "current line number" set to <code>0</code>. Since Redaktilo's Editor
-is mocked, it doesn't update the file's "current line number" as it would in
-a real situation. Our SUT, <code>InsertConstructorHandler</code>, however calls directly
-<code>decrementCurrentLineNumber</code> on the file, which ends up trying to set
-"current line number" to <code>-1</code>, hence the exception.</p>
-
-<p>To make the test pass, we could add a call to Redaktilo's File
-<code>setCurrentLineNumber()</code>, for example:</p>
-
-<pre><code class="php">        $redaktiloEditor-&gt;hasBelow($redaktiloFile, InsertConstructorHandler::CONSTRUCTOR, 0)-&gt;willReturn(false);
-        $redaktiloEditor-&gt;hasBelow($redaktiloFile, InsertConstructorHandler::METHOD, 0)-&gt;willReturn(true);
-        $redaktiloEditor-&gt;jumpBelow($redaktiloFile, InsertConstructorHandler::METHOD, 0)-&gt;shouldBeCalled();
-        $redaktiloFile-&gt;setCurrentLineNumber(11);
-        $redaktiloEditor-&gt;insertAbove($redaktiloFile, '')-&gt;shouldBeCalled();
-        $prettyPrinter-&gt;generateCode($modelMethod)-&gt;willReturn($generatedCode);
-        $redaktiloEditor-&gt;insertAbove($redaktiloFile, $generatedCode)-&gt;shouldBeCalled();
-        $redaktiloEditor-&gt;insertBelow($redaktiloFile, '')-&gt;shouldBeCalled();
-</code></pre>
-
-<p>But this feels wrong, and when something feels wrong with phpspec, it usually
-means that this thing is wrong. But what?</p>
-
-<h2 id="don%27t-mock-what-you-don%27t-own">Don't mock what you don't own</h2>
-
-<p>Let's take a step back and look at the test again.
-What are we trying to achieve here?</p>
-
-<p>It is a test method, written with phpspec, that checks assertions on the
-implementation details of the class under test <code>InsertConstructorHandler</code>,
-by setting up mocks for the Redaktilo library.</p>
-
-<p>2014 me would think that's perfectly reasonable, and would probably struggle
-to identify the issue. But 2024 me can tell straight away from the above
-paragraph what the issue is.</p>
-
-<p>I've actually always had some issue understanding the advice
-"don't mock what you don't own".
-How do we really define what we own, and what we don't?</p>
-
-<ul>
-<li>do I own a third party library I've installed in my application (eg Guzzle as a HTTP client to do curl requests)?</li>
-<li>do I own a "third party" library, that I've actually developed and then installed in my application (eg Redaktilo)?</li>
-<li>do I own abstractions I've built on top of these libraries?</li>
-<li>do I own the framework I've installed (eg Symfony, and its components like Form)?</li>
-<li>do I own the RAD controllers (ie are they part of my application, or of the framework)?</li>
-<li>do I own my own implementations of extension points (eg custom EventListeners)?</li>
-<li>do I own business code in the application that was initially designed for other part of the system (ie from another Bounded Context)?</li>
-<li>do I own code in the application that I haven't written?</li>
-</ul>
-
-<p>The answer to these questions probably depends on the context, but here in
-<code>InsertConstructorHandler</code>, it certainly feels like Redaktilo, a third party
-library (which I've developed), is "something that I don't own" and therefore
-shouldn't be mocked.</p>
-
-<p>Now that we have identified the problem, how do we fix it?</p>
-
-<h2 id="behaviour-driven-development%2C-it%27s-all-words">Behaviour Driven Development, it's all words</h2>
-
-<p>Let's re-read the first paragraph of the previous section, and more specifically:</p>
-
-<blockquote>
-  <p>It is a test method, <strong>written with phpspec</strong>, that checks assertions on the
-  implementation details of the class under test <code>InsertConstructorHandler</code>,
-  by setting up mocks for the Redaktilo library.</p>
-</blockquote>
-
-<p>And when reading the test method, we get a lot of "has below" and "jump below"
-and "insert above". This is all implementation detail. And this is all
-Redaktilo's (clunky) language.</p>
-
-<p><strong><em>Our test method is a one to one translation of the</em> implementation details</strong>.</p>
-
-<p>phpspec is a specBDD framework. One of the core of Behaviour Driven Development
-is to drop the "unit testing" terminology and use a slightly different
-vocabulary instead:</p>
-
-<ul>
-<li>instead of the verb "to test", use "to specify"</li>
-<li>instead of "unit", use "behaviour"</li>
-<li>instead of "test method", use "example"</li>
-<li>instead of "assertion", use "expectation"</li>
-<li>instead of "mock", use "collaborator"</li>
-<li>and why not switch the words "class under test" for "use case"</li>
-</ul>
-
-<blockquote>
-  <p>See Liz Keogh. 2009. <a href="https://lizkeogh.com/2009/11/06/translating-tdd-to-bdd/">Translating TDD to BDD</a></p>
-</blockquote>
-
-<p>This might not seem like much, or very useful,
-but in reality the language used is key to changing our perspective.</p>
-
-<p>To be able to have an example that checks expectations on a specific use case,
-we first need to define the behaviour we want to describe in plain English:</p>
-
-<blockquote>
-  <p>If the class doesn't already have a constructor
-  But it has an existing method,
-  As well as potentially a constant, or property definition
-  Then the generated code for the new constructor
-  Should be inserted above the existing method, separated by an empty line
-  And it should also be under the constant and property definitions, also separated by an empty line</p>
-</blockquote>
-
-<p>We then try our best to translate that into code. To use the exact same vocabulary.
-This cannot be done by mocking Redaktilo, which has its own vocabulary.</p>
-
-<p>So we have to extract the Redaktilo implementation details and hide them in
-classes that have descriptive names which are relevant to our use case.</p>
-
-<p>Creating a new abstraction layer, essentially.</p>
-
-<p>Here's our new and improved "example":</p>
-
-<pre><code class="php">    function it_inserts_constructor_above_methods_but_under_constants_and_properties(
-        DoesClassAlreadyHaveConstructor $doesClassAlreadyHaveConstructor,
-        DoesClassAlreadyHaveMethods $doesClassAlreadyHaveMethod,
-        PrettyPrinter $prettyPrinter,
-        InsertGeneratedConstructorAboveExistingMethods $insertGeneratedConstructorAboveExistingMethods,
-    ) {
-        $inFile = Redaktilo\File::fromString(&lt;&lt;&lt;'FILE'
-            &lt;?php 
-
-            namespace Vendor\Project;
-
-            class MyClass
-            { 
-                const CONSTANT = 42;
-
-                public function existingMethod()
-                {
-                }
-            } 
-            FILE
-        );
-        $modelConstructor = (new Model\Method('__construct'))
-            -&gt;addArgument(new Model\Argument('Vendor\Project\Dependency', 'dependency'))
-            -&gt;addArgument(new Model\Argument('string', 'filename'))
-        ;                      
-        $insertConstructor = new InsertConstructor($inFile, $modelConstructor);
-
-        $generatedConstructor =&lt;&lt;&lt;'GENERATED_CODE'
-                public function __construct(Dependency $dependency, string $redaktiloFilename)
-                {
-                    $this-&gt;dependency = $dependency;
-                    $this-&gt;filename = $redaktiloFilename;    
-                }
-            GENERATED_CODE
-        ;
-
-        $doesClassAlreadyHaveConstructor-&gt;check($inFile)-&gt;withReturn(false);
-
-        $doesClassAlreadyHaveMethod-&gt;check($inFile)-&gt;withReturn(true);
-        $prettyPrinter-&gt;generateCode($modelMethod)-&gt;willReturn($generatedConstructor);
-        $insertGeneratedConstructorAboveExistingMethods-&gt;insert($generatedConstructor, $inFile)-&gt;shouldBeCalled();
-
-        $this-&gt;handle($insertConstructor);
+    public function open(string $argument1, bool $argument2)
+    {
     }
+}
 </code></pre>
 
-<p>It no longer has <code>Redaktilo\Editor</code>.</p>
+<p>That's pretty good, but it could be better: what if it was able to generate the complete code?</p>
 
-<p>It now has:</p>
+<h2 id="gpt-gen">GPT Gen</h2>
 
-<ul>
-<li><code>DoesClassAlreadyHaveConstructor-&gt;check(Redaktilo\File $inFile): bool</code>
+<p>Let's forget about phpspec and use instead <a href="https://phpunit.de/">PHPUnit</a>,
+but still with the <a href="https://github.com/phpspec/prophecy">Prophecy</a>
+Mocking framework.</p>
 
-<ul>
-<li>it will call <code>$this-&gt;redaktiloEditor-&gt;hasBelow($inFile, InsertConstructorHandler::CONSTRUCTOR, 0)</code>;</li>
-</ul></li>
-<li><code>DoesClassAlreadyHaveMethods-&gt;check(Redaktilo\File $inFile): bool</code>
-
-<ul>
-<li>it will call <code>$this-&gt;redaktiloEditor-&gt;hasBelow($inFile, InsertConstructorHandler::METHOD, 0);</code></li>
-</ul></li>
-<li><code>InsertGeneratedConstructorAboveExistingMethods-&gt;insert(string $generatedConstructor, Redaktilo\File $inFile): void</code>
-
-<ul>
-<li>it will call:</li>
-<li><code>$this-&gt;redaktiloEditor-&gt;jumpBelow($inFile, InsertConstructorHandler::METHOD, 0);</code></li>
-<li><code>$this-&gt;redaktiloEditor-&gt;insertAbove($inFile, '');</code></li>
-<li><code>$this-&gt;redaktiloEditor-&gt;insertAbove($inFile, $generatedCode);</code></li>
-<li><code>$this-&gt;redaktiloEditor-&gt;insertBelow($inFile, '');</code></li>
-</ul></li>
-</ul>
-
-<p>And it still has:</p>
-
-<ul>
-<li><code>Model\Method</code>, this is one of the inputs of our use case, it seems fine as is</li>
-<li><code>Redaktilo\File</code>, though the variable has been renamed to <code>$inFile</code></li>
-<li><code>PrettyPrinter</code>, as far as I can tell, this collaborator still describes the behaviour we want</li>
-</ul>
-
-<h2 id="it%27s-all-about-trade-offs">It's all about trade offs</h2>
-
-<p>I've also taken the liberty to rename a couple of things, to make the intent
-more explicit:</p>
-
-<ul>
-<li><code>$redaktiloFile</code> becomes <code>$inFile</code>, I've taken a liking to having code read
-like sentences (insert generated code in file)</li>
-<li><code>it_inserts_constructor_in_class_that_has_constants_and_methods</code> becomes
-<code>it_inserts_constructor_above_methods_but_under_constants_and_properties</code>,
-as I think that describes the use case a bit better (though in the
-implementation, we end up not caring about constants and properties, as
-we generate the constructor above methods, which we expect to be below
-constants and properties)</li>
-</ul>
-
-<p>But there are more changes that have been introduced as a result of this new
-abstraction layer. On the positive side, we got:</p>
-
-<ul>
-<li>more readable code -- and by that I mean more explicit intent</li>
-<li>decoupling our "business logic" from "code we don't own"
-(ie third party library, or "implementation details")</li>
-</ul>
-
-<p>On the negative side:</p>
-
-<ul>
-<li>we have introduced an abstraction layer</li>
-<li>we'll have to introduce new classes to specify the other scenarios
-(<code>InsertGeneratedConstructorAtTheEndOfTheClass</code>
-when there are no methods in the class)</li>
-</ul>
-
-<p>While there is value in the code at the beginning of this article, as it worked
-just fine as it was, I personally value the new version more, even with the
-drawbacks they bring.</p>
-
-<p>Having an executable specification that results in a code that explicitly
-describes its intent is, in my humble opinion, quite a worthy improvement
-indeed.</p>
+<p>Let's ask ChatGPT. Here's the priming prompt:</p>
 
 <blockquote>
-  <p><strong>Note</strong>: also, while the initial version of the code "worked", it did come
-  with its own drawbacks. It takes some time to understand what the code does
-  (the "jump above and below" mumbo jumbo isn't very helpful), and it was
-  coupled to a third party library, meaning tying us to its upgrade policy
-  and making us subject to its backward incompatible changes.</p>
+  <p><strong>USER</strong>:
+  Act as an expert PHP developer,
+    who's been writing high quality API code for 20 years.
+  Acknowledge with "ok".</p>
 </blockquote>
 
-<h2 id="phpspec-isn%27t-a-test-framework">phpspec isn't a test framework</h2>
+<p>Because ChatGPT's Large Language Model (LLM) is able to generate a wide range
+of text (conversation, essays, movie script, poetry, etc), assigning it a role
+helps it narrow down its context, hence improving its accuracy for the task we
+want it to complete: writing PHP code, on a professional level
+(persona/role prompt engineering technique).</p>
 
-<p>phpspec is highly opinionated, has very intentional "limitations", and has this
-knack of making you feel like something is wrong -- when you're indeed doing
-something you shouldn't be doing.</p>
+<p>We also need to consider the Goldfish Memory issue of ChatGPT: it only takes
+into account the last ~4000 tokens to generate its response, so asking it to
+give us a short reply helps us save some space.</p>
 
-<p>It's not a testing framework, no, it's a designing / modeling tool.</p>
+<blockquote>
+  <p><strong>ChatGPT</strong>: ok</p>
+</blockquote>
+
+<p>LLMs perform better when given some examples, and indeed before asking it to
+generate code we might want to give ChatGPT some of our code samples
+(X-Shot prompt engineering technique).</p>
+
+<p>Since coding also requires some level of logic, it is also helpful to include
+reasoning steps (Chain of Thought prompt engineering technique).</p>
+
+<p>Similarly, asking the LLM to first generate some topic related knowledge,
+and then reuse that in the further prompts will also increase our success rate
+(Generated Knowledge prompt engineering technique).</p>
+
+<p>With this in mind, here's the second prompt that provides a test class example:</p>
+
+<blockquote>
+  <p><strong>USER</strong>: Here's an example of test class from the project you're working on:</p>
+</blockquote>
+
+<pre><code>&lt;?php
+
+declare(strict_types=1);
+
+namespace tests\Ssc\Btlr\Cht\Message\Templates\Prompts;
+
+use Ssc\Btlr\App\Filesystem\ReadFile;
+use Ssc\Btlr\App\Template\Replace;
+use Ssc\Btlr\Cht\Message\Logs\Type;
+use Ssc\Btlr\Cht\Message\Logs\WriteLog;
+use Ssc\Btlr\Cht\Message\Templates\Prompts\Template;
+use tests\Ssc\Btlr\AppTest\BtlrServiceTestCase;
+
+class TemplateTest extends BtlrServiceTestCase
+{
+    /**
+     * @test
+     */
+    public function it_creates_prompt_from_template(): void
+    {
+        // Fixtures
+        $thoseParameters = [
+            'last_messages' =&gt; 'USER (1968-04-02T18:40:23+00:00): Write code for me, please',
+        ];
+        $forType = Type::AUGMENTED_PROMPT;
+        $withConfig = [
+            'chunk_memory_size' =&gt; 15,
+            'llm_engine' =&gt; 'chatgpt-gpt-3.5-turbo',
+            'logs_filename' =&gt; './var/cht/logs',
+            'prompt_templates_filename' =&gt; './templates/cht/prompts',
+        ];
+
+        $template = "LAST MESSAGES:\n%last_messages%\nBTLR:\n";
+        $prompt = "LAST MESSAGES:\n{$thoseParameters['last_messages']}\nBTLR:\n";
+        $data = [
+            'entry' =&gt; $prompt,
+        ];
+
+        // Dummies
+        $readFile = $this-&gt;prophesize(ReadFile::class);
+        $replace = $this-&gt;prophesize(Replace::class);
+        $writeLog = $this-&gt;prophesize(WriteLog::class);
+
+        // Stubs &amp; Mocks
+        $readFile-&gt;in("{$withConfig['prompt_templates_filename']}/{$forType['name']}.txt")
+            -&gt;willReturn($template);
+        $replace-&gt;in($template, $thoseParameters)
+            -&gt;willReturn($prompt);
+        $writeLog-&gt;for($data, $forType, $withConfig)
+            -&gt;shouldBeCalled();
+
+        // Assertion
+        $template = new Template(
+            $readFile-&gt;reveal(),
+            $replace-&gt;reveal(),
+            $writeLog-&gt;reveal(),
+        );
+        self::assertSame($prompt, $template-&gt;replace(
+            $thoseParameters,
+            $forType,
+            $withConfig,
+        ));
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>USER</strong>:
+  Acknowledge by describing how the use of fixtures, dummies, stubs, mocks
+  and assertions allow to make sure the tested code is behaving as expected.
+  And note the use of the special BtlrServiceTestCase parent class for <code>TemplateTest</code>.</p>
+</blockquote>
+
+<p>By the way, the code is from my Super Secret Code project
+<a href="https://github.com/gnugat/ssc-btlr">Btlr</a>.</p>
+
+<p>Here's ChatGPT's response:</p>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>:
+  In this test class, fixtures are used to provide the necessary data for
+  testing the <code>Template</code> class. The parameters and configuration are defined in
+  <code>$thoseParameters</code> and <code>$withConfig</code> respectively, and the template and prompt
+  strings are defined in <code>$template</code> and <code>$prompt</code>.</p>
+  
+  <p>Dummies are used to provide the interface of the <code>ReadFile</code>, <code>Replace</code>, and
+  <code>WriteLog</code> classes, without providing any actual implementation, since these
+  classes are not the focus of the test.</p>
+  
+  <p>Stubs are used to replace the implementation of <code>ReadFile</code> and <code>Replace</code>
+  classes, by returning a fixed value when their respective methods are called.
+  This ensures that the expected values are used for testing the <code>Template</code> class.</p>
+  
+  <p>Mocks are used to verify that the <code>WriteLog</code> class is called with the expected
+  parameters. The <code>shouldBeCalled()</code> method ensures that the <code>for()</code> method of
+  <code>WriteLog</code> class is actually called during the test.</p>
+  
+  <p>Finally, the assertion compares the result returned by the <code>replace()</code> method
+  of the <code>Template</code> class with the expected prompt string.</p>
+  
+  <p>The <code>BtlrServiceTestCase</code> class is a special parent class that sets up a test
+  environment for the Btlr service, which can include initializing dependencies,
+  connecting to databases, and setting up configurations. This helps to ensure
+  that tests are run in a consistent and isolated environment, and makes it easier
+  to write tests for the Btlr service.</p>
+</blockquote>
+
+<p>ChatGPT doesn't have access to the project and its code, it only knows what we've
+provided in the conversation so far.</p>
+
+<p>So for example it took a wild guess at what <code>BtlrServiceTestCase</code> does and got
+it wrong, but for our purpose this is good enough.</p>
+
+<p>The third prompt is an example of the corresponding class:</p>
+
+<blockquote>
+  <p><strong>USER</strong>:
+  When tasked with generating the corresponding <code>Template</code> class, from the above
+  <code>TemplateTest</code> test class, here's the code you wrote:</p>
+</blockquote>
+
+<pre><code>&lt;?php
+
+declare(strict_types=1);
+
+namespace Ssc\Btlr\Cht\Message\Templates\Prompts;
+
+use Ssc\Btlr\App\Filesystem\ReadFile;
+use Ssc\Btlr\App\Template\Replace;
+use Ssc\Btlr\Cht\Message\Logs\WriteLog;
+
+class Template
+{
+    public function __construct(
+        private ReadFile $readFile,
+        private Replace $replace,
+        private WriteLog $writeLog,
+    ) {
+    }
+
+    public function replace(
+        array $thoseParameters,
+        array $forType,
+        array $withConfig,
+    ): string {
+        $template = $this-&gt;readFile-&gt;in(
+            "{$withConfig['prompt_templates_filename']}/{$forType['name']}.txt",
+        );
+        $prompt = $this-&gt;replace-&gt;in($template, $thoseParameters);
+        $this-&gt;writeLog-&gt;for([
+            'entry' =&gt; $prompt,
+        ], $forType, $withConfig);
+
+        return $prompt;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>USER</strong>: Acknowledge by describing how the test class got translated into its
+  corresponding class.</p>
+</blockquote>
+
+<p>To which ChatGPT replies:</p>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>:
+  The <code>TemplateTest</code> test class served as a guide for implementing the
+  <code>Template</code> class.</p>
+  
+  <p>First, the constructor of <code>Template</code> class takes three dependencies, which
+  are also injected in the <code>TemplateTest</code> class as dummies or mocks.</p>
+  
+  <p>Next, the <code>replace()</code> method of <code>Template</code> class has the same signature as
+  the test method <code>it_creates_prompt_from_template()</code>, with the addition of a
+  return type declaration for the prompt string.</p>
+  
+  <p>The implementation of <code>replace()</code> method in <code>Template</code> class uses the
+  injected <code>ReadFile</code> instance to read the template string from the filesystem,
+  using the <code>$forType['name']</code> parameter to construct the file path.
+  It then uses the injected <code>Replace</code> instance to replace placeholders in the
+  template with values provided in the <code>$thoseParameters</code> array, resulting in
+  a <code>$prompt</code> string.</p>
+  
+  <p>Finally, the method calls the injected <code>WriteLog</code> instance with the <code>$prompt</code>,
+  <code>$forType</code>, and <code>$withConfig</code> parameters, which logs the prompt for the given
+  type and configuration.</p>
+  
+  <p>Overall, the implementation of the <code>Template</code> class closely follows the
+  structure of the <code>TemplateTest</code> class, and the use of dependency injection
+  ensures that the class can be easily tested in isolation from its
+  dependencies.</p>
+</blockquote>
+
+<p>With ChatGPT noting that the corresponding class closely follows the structure
+of its test, it should be now ready.</p>
+
+<p>Let's give it a new test class, and ask it to generate the corresponding code:</p>
+
+<blockquote>
+  <p><strong>USER</strong>: Brilliant. Now, in the same coding style as <code>TemplateTest</code> and
+  <code>Template</code>, you are tasked to write a the corresponding code for the
+  following <code>ReplyTest</code> test class:</p>
+</blockquote>
+
+<pre><code>&lt;?php
+
+declare(strict_types=1);
+
+namespace tests\Ssc\Btlr\Cht\Message;
+
+use Ssc\Btlr\Cht\Message\Logs\Type;
+use Ssc\Btlr\Cht\Message\Logs\WriteLog;
+use Ssc\Btlr\Cht\Message\Memory\Consolidate;
+use Ssc\Btlr\Cht\Message\Reply;
+use Ssc\Btlr\Cht\Message\Reply\Augment;
+use Ssc\Btlr\Cht\Message\Reply\UsingLlm;
+use tests\Ssc\Btlr\AppTest\BtlrServiceTestCase;
+
+class ReplyTest extends BtlrServiceTestCase
+{
+    /**
+     * @test
+     */
+    public function it_replies_to_user_prompt_using_llm(): void
+    {
+        // Fixtures
+        $userPrompt = 'Write code for me, please';
+        $withConfig = [
+            'chunk_memory_size' =&gt; 15,
+            'llm_engine' =&gt; 'chatgpt-gpt-3.5-turbo',
+            'logs_filename' =&gt; './var/cht/logs',
+            'prompt_templates_filename' =&gt; './templates/cht/prompts',
+        ];
+
+        $userPromptData = [
+            'entry' =&gt; $userPrompt,
+        ];
+        $augmentedPrompt = "USER: {$userPrompt}\nBLTR:";
+        $modelCompletion = "I'm sorry, dev. I'm afraid I can't do that.";
+        $modelCompletionData = [
+            'entry' =&gt; $modelCompletion,
+            'llm_engine' =&gt; $withConfig['llm_engine'],
+        ];
+
+        // Dummies
+        $augment = $this-&gt;prophesize(Augment::class);
+        $consolidate = $this-&gt;prophesize(Consolidate::class);
+        $usingLlm = $this-&gt;prophesize(UsingLlm::class);
+        $writeLog = $this-&gt;prophesize(WriteLog::class);
+
+        // Stubs &amp; Mocks
+        $writeLog-&gt;for($userPromptData, Type::USER_PROMPT, $withConfig)
+            -&gt;shouldBeCalled();
+        $augment-&gt;the($userPrompt, $withConfig)
+            -&gt;willReturn($augmentedPrompt);
+        $usingLlm-&gt;complete($augmentedPrompt)
+            -&gt;willReturn($modelCompletion);
+        $writeLog-&gt;for($modelCompletionData, Type::MODEL_COMPLETION, $withConfig)
+            -&gt;shouldBeCalled();
+        $consolidate-&gt;memories($withConfig)
+            -&gt;shouldBeCalled();
+
+        // Assertion
+        $reply = new Reply(
+            $augment-&gt;reveal(),
+            $consolidate-&gt;reveal(),
+            $usingLlm-&gt;reveal(),
+            $writeLog-&gt;reveal(),
+        );
+        self::assertSame($modelCompletion, $reply-&gt;to(
+            $userPrompt,
+            $withConfig,
+        ));
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>USER</strong>: Acknowledge by generating the code for the <code>Reply</code> class.</p>
+</blockquote>
+
+<p>And here's what ChatGPT came up with:</p>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>: Sure thing! Here's the code for the <code>Reply</code> class based on the
+  <code>ReplyTest</code> test class:</p>
+</blockquote>
+
+<pre><code>&lt;?php
+
+declare(strict_types=1);
+
+namespace Ssc\Btlr\Cht\Message;
+
+use Ssc\Btlr\Cht\Message\Logs\Type;
+use Ssc\Btlr\Cht\Message\Logs\WriteLog;
+use Ssc\Btlr\Cht\Message\Memory\Consolidate;
+use Ssc\Btlr\Cht\Message\Reply\Augment;
+use Ssc\Btlr\Cht\Message\Reply\UsingLlm;
+
+class Reply
+{
+    public function __construct(
+        private Augment $augment,
+        private Consolidate $consolidate,
+        private UsingLlm $usingLlm,
+        private WriteLog $writeLog,
+    ) {
+    }
+
+    public function to(string $userPrompt, array $withConfig): string
+    {
+        $userPromptData = [
+            'entry' =&gt; $userPrompt,
+        ];
+
+        // Augment the user prompt
+        $augmentedPrompt = $this-&gt;augment-&gt;the($userPrompt, $withConfig);
+
+        // Use LLM to generate a model completion
+        $modelCompletion = $this-&gt;usingLlm-&gt;complete($augmentedPrompt);
+
+        // Log the user prompt and model completion
+        $this-&gt;writeLog-&gt;for($userPromptData, Type::USER_PROMPT, $withConfig);
+        $modelCompletionData = [
+            'entry' =&gt; $modelCompletion,
+            'llm_engine' =&gt; $withConfig['llm_engine'],
+        ];
+        $this-&gt;writeLog-&gt;for($modelCompletionData, Type::MODEL_COMPLETION, $withConfig);
+
+        // Consolidate the memories
+        $this-&gt;consolidate-&gt;memories($withConfig);
+
+        return $modelCompletion;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>: This <code>Reply</code> class has a <code>to</code> method that takes a user prompt
+  and a configuration array as input, and returns the model completion
+  generated by LLM.
+  The <code>Reply</code> class constructor takes in four dependencies: <code>Augment</code>,
+  <code>Consolidate</code>, <code>UsingLlm</code>, and <code>WriteLog</code>, and stores them as private
+  properties.
+  The <code>to</code> method then uses these dependencies to augment the user prompt,
+  generate the model completion, log both the user prompt and the model
+  completion, and consolidate the memories.</p>
+</blockquote>
+
+<p>Which is pretty much spot on.</p>
+
+<p>I'd personnally have written something slightly different (no comments, have
+ <code>writeLog</code> for the user prompt at the begining of the method, and possibly
+not have any intermediate variables).</p>
+
+<p>But I can easily apply those changes!</p>
+
+<h2 id="takeways">Takeways</h2>
+
+<p>Thanks to Prompt Engineering (with techniques such as Role / Persona priming
+prompt, X-Shot, Chain of Thought and Generated Knowledge), it is possible
+to ask ChatGPT to generate code.</p>
+
+<p>I'm personally using the following prompts to generate the corresponding code
+for a given Test Class.</p>
+
+<p>Priming Prompt:</p>
+
+<blockquote>
+  <p>Act as an expert PHP developer, who's been writing high quality API code for 20 years.
+  Acknowledge with "ok".</p>
+</blockquote>
+
+<p>Test Class example prompt:</p>
+
+<blockquote>
+  <p>Here's an example of test class from the project you're working on:</p>
+  
+  <p><code>%example_test_class_code%</code></p>
+  
+  <p>Acknowledge by describing how the use of fixtures, dummies, stubs, mocks
+  and assertions allow to make sure the tested code is behaving as expected.
+  And note the use of the special BtlrServiceTestCase parent class for
+  <code>%example_test_class_name%</code>.</p>
+</blockquote>
+
+<p>Corresponding class example prompt:</p>
+
+<blockquote>
+  <p>When tasked with generating the corresponding <code>%example_class_name%</code> class,
+  from the above <code>%%example_test_class_name</code> test class, here's the code you wrote:</p>
+  
+  <p><code>%example_class_code%</code></p>
+  
+  <p>Acknowledge by describing how the test class got translated into its
+  corresponding class.</p>
+</blockquote>
+
+<p>Code generation request from Test Class prompt:</p>
+
+<blockquote>
+  <p>Brilliant. Now, in the same coding style as <code>%example_test_class_name%</code> and
+  <code>%example_class_name%</code>, you are tasked to write a the corresponding code for
+  the following <code>%test_class_name%</code> test class:</p>
+  
+  <p><code>%test_class_code%</code></p>
+  
+  <p>Acknowledge by generating the code for the <code>%class_name%</code> class.</p>
+</blockquote>
+
+<p>Now, what if you're not practicing Test Driven Development?</p>
+
+<p>I suppose you can tweek it to get ChatGPT to generate tests for you:</p>
+
+<ul>
+<li>Use the same priming prompt</li>
+<li>Then use the class example prompt</li>
+<li>Next use the "corresponding" test example prompt</li>
+<li>Finally provide a class and ask ChatGPT to generate its corresponding test</li>
+</ul>
+
+<p>All in all, the exploration of ChatGPT's text generation potential turned out
+to be quite worthwhile, as I ended up finding a practical use case for it in my
+day to day developer activity.</p>
+
+<p>Yet I suspect there's plenty more scenarions where ChatGPT can help, so I guess
+the quest continues.</p>
 ]]></content>
         </entry>
             <entry>
-            <title type="html"><![CDATA[phpspec tip: don&#039;t mock SUT inputs]]></title>
-            <link href="/2024/08/19/phpspec-tip-don-t-mock-sut-inputs.html"/>
-            <updated>2024-08-19T00:00:00+00:00</updated>
-            <id>/2024/08/19/phpspec-tip-don-t-mock-sut-inputs.html</id>
-            <content type="html"><![CDATA[<p>Looking at some old code of mine, I've found the following test:</p>
-
-<pre><code class="php">&lt;?php
-
-namespace spec\Memio\SpecGen\GenerateMethod;
-
-use Memio\Model\File;
-use Memio\Model\Method;
-use Memio\Model\Objekt;
-use Memio\SpecGen\GenerateMethod\GeneratedMethod;
-use PhpSpec\Console\ConsoleIO;
-use PhpSpec\ObjectBehavior;
-
-class LogGeneratedMethodListenerSpec extends ObjectBehavior
-{   
-    function let(ConsoleIO $io)
-    {
-        $this-&gt;beConstructedWith($io);
-    }
-
-    function it_logs_the_generated_method(ConsoleIO $io, File $file, Method $method, Objekt $object)
-    {
-        $className = 'Vendor\Project\MyClass';
-        $methodName = 'myMethod';
-        $generatedMethod = new GeneratedMethod($file-&gt;getWrappedObject());
-        $file-&gt;getStructure()-&gt;willReturn($object);
-        $object-&gt;getName()-&gt;willReturn($className);
-        $object-&gt;allMethods()-&gt;willReturn([$method]);
-        $method-&gt;getName()-&gt;willReturn($methodName);
-
-        $io-&gt;write(&lt;&lt;&lt;OUTPUT
-
-  &lt;info&gt;Generated &lt;value&gt;{$className}#{$methodName}&lt;/value&gt;&lt;/info&gt;
-
- OUTPUT
-        )-&gt;shouldBeCalled();
-
-        $this-&gt;onGeneratedMethod($generatedMethod);
-    }
-}
-</code></pre>
-
-<p>And while reading it, one of the things that caught my attention was
-<strong>the setting up of mocks for SUT inputs</strong>
-(SUT means System Under Test, the class we're testing).</p>
-
-<p>The purpose of this test is to specify how <code>LogGeneratedMethodListener</code> should
-behave, through its interactions with the <code>ConsoleIO</code> collaborator.</p>
-
-<p>But here, it's also specifying how <code>LogGeneratedMethodListener</code> interacts
-with the input parameter <code>GeneratedMethod</code>.</p>
-
-<p><code>GeneratedMethod</code> encapsulates data relevant to the process of generating the
-code for a Method. It doesn't have any critical behaviour:
-we just call getters on it.</p>
-
-<p>So my advice to you (me, from the past), would be to not bother creating Mocks
-for it:</p>
-
-<pre><code class="php">&lt;?php
-
-namespace spec\Memio\SpecGen\GenerateMethod;
-
-use Memio\Model\File;
-use Memio\Model\Method;
-use Memio\Model\Objekt;
-use Memio\SpecGen\GenerateMethod\GeneratedMethod;
-use PhpSpec\Console\ConsoleIO;
-use PhpSpec\ObjectBehavior;
-
-class LogGeneratedMethodListenerSpec extends ObjectBehavior
-{   
-    function let(ConsoleIO $io)
-    {
-        $this-&gt;beConstructedWith($io);
-    }
-
-    function it_logs_the_generated_method(ConsoleIO $io)
-    {
-        $className = 'Vendor\Project\MyClass';
-        $methodName = 'myMethod';
-        $generatedMethod = new GeneratedMethod((new File('src/MyClass.php'))
-            -&gt;setStructure((new Objekt($className))
-                -&gt;addMethod(new Method($methodName))
-            )
-        );
-
-        $io-&gt;write(&lt;&lt;&lt;OUTPUT
-
-  &lt;info&gt;Generated &lt;value&gt;{$className}#{$methodName}&lt;/value&gt;&lt;/info&gt;
-
- OUTPUT
-        )-&gt;shouldBeCalled();
-
-        $this-&gt;onGeneratedMethod($generatedMethod);
-    }
-}
-</code></pre>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Mars Rover, Introduction]]></title>
-            <link href="/2016/06/15/mars-rover-introduction.html"/>
-            <updated>2016-06-15T00:00:00+00:00</updated>
-            <id>/2016/06/15/mars-rover-introduction.html</id>
-            <content type="html"><![CDATA[<p>Welcome to this Mars Rover series where we're going to practice the followings:</p>
+            <title type="html"><![CDATA[Mars Rover, Locating moving]]></title>
+            <link href="/2016/10/12/mars-rover-locating-moving.html"/>
+            <updated>2016-10-12T00:00:00+01:00</updated>
+            <id>/2016/10/12/mars-rover-locating-moving.html</id>
+            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It allows us to practice the followings:</p>
 
 <ul>
 <li>Monolithic Repositories (MonoRepo)</li>
@@ -518,766 +576,3851 @@ class LogGeneratedMethodListenerSpec extends ObjectBehavior
 <li>Test Driven Development (TDD)</li>
 </ul>
 
-<p>In this introductory article, we're simply going to describe our Mars Rover
-specifications.</p>
+<p>We've already developed the first use case about landing the rover on mars,
+and the second one about driving it. We're now developing the last one,
+requesting its location:</p>
 
 <blockquote>
-  <p><strong>Note</strong>: This programming exercise originally comes from
-  <a href="http://dallashackclub.com/rover">Dallas Hack Club</a>, which is now
-  unfortunately down.</p>
-  
-  <p>This Mars Rover <a href="https://en.wikipedia.org/wiki/Kata_(programming)">kata</a>
-  has been adapted for the needs of this series.</p>
+  <p>Mars rover will be requested to give its current location (<code>x</code> and <code>y</code>
+  coordinates and the orientation).</p>
 </blockquote>
 
-<p>But first, let's have a quick reminder on what the practices mentioned above
-are.</p>
+<p>In this article we're going to move geolocation value objects (<code>Location</code>,
+<code>Coordinates</code> and <code>Orientation</code>) into their new package (<code>geolocation</code>):</p>
 
-<h2 id="monolithic-repositories">Monolithic Repositories</h2>
+<pre><code>git checkout 5-location
+cd packages/geolocation
+</code></pre>
 
-<p>A MonoRepo is a single versioning repository containing many packages that
-would otherwise be versioned in their own repositories.</p>
+<h2 id="geolocation">Geolocation</h2>
 
-<p>With it, everything can be found in one place, which makes it easy to:</p>
+<p>Let's move our value objects to their new package:</p>
 
-<ul>
-<li>navigate</li>
-<li>manage dependencies</li>
-<li>set up</li>
-<li>run tests</li>
-</ul>
+<pre><code>mkdir -p src/MarsRover/Geolocation spec/MarsRover/Geolocation
+mv ../navigation/src/MarsRover/Navigation/{Coordinates,Location,Orientation}.php ./src/MarsRover/Geolocation/
+mv ../navigation/spec/MarsRover/Navigation/{Coordinates,Location,Orientation}Spec.php ./spec/MarsRover/Geolocation/
+</code></pre>
 
-<p>However it also brings the following disadvantages:</p>
+<p>We then need to fix the namespace:</p>
 
-<ul>
-<li>no hard separation between packages (thigh coupling is possible)</li>
-<li>limited regarding scaling (disk space, bandwidth)</li>
-<li>no finely grain permission management (a user has access to everything
-or nothing)</li>
-</ul>
+<pre><code>sed -i 's/Navigation/Geolocation/' */MarsRover/Geolocation/*.php
+</code></pre>
 
-<p>MonoRepos make sense for projects that would be packaged / released together
-(although it makes it possible to package / release them independently).</p>
+<p>This should allow us to run successfully our tests for this package:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All Green!</p>
+
+<h2 id="navigation">Navigation</h2>
+
+<p>Now let's update the <code>navigation</code> package:</p>
+
+<pre><code>cd ../navigation
+</code></pre>
+
+<p>In order to find where our <code>Location</code> class is used, we can use the following:</p>
+
+<pre><code>grep -R Location src spec/
+</code></pre>
+
+<p>We need to fix the use statement in <code>spec/MarsRover/Navigation/LandRoverSpec.php</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Geolocation\Location;
+use MarsRover\Geolocation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LandRoverSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    function it_has_location()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $location = $this-&gt;getLocation();
+        $location-&gt;shouldHaveType(Location::class);
+        $coordinates = $location-&gt;getCoordinates();
+        $coordinates-&gt;getX()-&gt;shouldBe(self::X);
+        $coordinates-&gt;getY()-&gt;shouldBe(self::Y);
+        $location-&gt;getOrientation()-&gt;get()-&gt;shouldBe(self::ORIENTATION);
+    }
+}
+</code></pre>
+
+<p>We can see that we also use <code>Orientation</code>, so we fix it here and we'lldo a search later.</p>
+
+<p>Then we need to add use statements in <code>src/MarsRover/Navigation/LandRover.php</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+use MarsRover\Geolocation\{
+    Coordinates,
+    Location,
+    Orientation
+};
+
+class LandRover
+{
+    private $location;
+
+    public function __construct($x, $y, $orientation)
+    {
+        $this-&gt;location = new Location(
+            new Coordinates($x, $y),
+            new Orientation($orientation)
+        );
+    }
+
+    public function getLocation() : Location
+    {
+        return $this-&gt;location;
+    }
+}
+</code></pre>
+
+<p>We also spot a use of <code>Coordinates</code>, so we fix it here now and we'll do a search later.</p>
+
+<p>All done. Let's search for <code>Coordinates</code>:</p>
+
+<pre><code>grep -R Coordinates src spec
+</code></pre>
+
+<p>There's nothing we haven't fixed yet, so let's search for <code>Orientation</code>:</p>
+
+<pre><code>grep -R Orientation src spec
+</code></pre>
+
+<p>It looks like <code>spec/MarsRover/Navigation/LandRoverHandlerSpec.php</code> uses it, so let's fix it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\EventSourcing\AnEventHappened;
+use MarsRover\EventSourcing\Event;
+use MarsRover\Navigation\Events;
+use MarsRover\EventSourcing\EventStore;
+use MarsRover\Navigation\LandRover;
+use MarsRover\Geolocation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LandRoverHandlerSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    const EVENT_NAME = Events::ROVER_LANDED;
+    const EVENT_DATA = [
+        'x' =&gt; self::X,
+        'y' =&gt; self::Y,
+        'orientation' =&gt; self::ORIENTATION,
+    ];
+
+    function it_lands_a_rover_at_given_location(
+        AnEventHappened $anEventHappened,
+        Event $roverLanded,
+        EventStore $eventStore
+    ) {
+        $this-&gt;beConstructedwith($anEventHappened, $eventStore);
+        $landRover = new LandRover(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $anEventHappened-&gt;justNow(
+            self::EVENT_NAME,
+            self::EVENT_DATA
+        )-&gt;willReturn($roverLanded);
+        $eventStore-&gt;log($roverLanded)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($landRover);
+    }
+}
+</code></pre>
+
+<p>That should be it for our <code>navigation</code> package. Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All Green!</p>
+
+<h2 id="location">Location</h2>
+
+<p>Finally we can use our value objects in our <code>location</code> package:</p>
+
+<pre><code>cd ../location
+</code></pre>
+
+<p>We can now use <code>Orientation</code> for our constant in <code>spec/MarsRover/Location/LocateRoverHandlerSpec.php</code>,
+and also make sure both <code>FindLatestLocation</code> and <code>LocateRoverHandler</code> return a <code>Location</code>
+value object:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Location;
+
+use MarsRover\Geolocation\Coordinates;
+use MarsRover\Geolocation\Location;
+use MarsRover\Geolocation\Orientation;
+use MarsRover\Location\Service\FindLatestLocation;
+use PhpSpec\ObjectBehavior;
+
+class LocateRoverHandlerSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    const LOCATION = [
+        'x' =&gt; self::X,
+        'y' =&gt; self::Y,
+        'orientation' =&gt; self::ORIENTATION,
+    ];
+
+    function it_finds_a_rover_latest_location(
+        FindLatestLocation $findLatestLocation
+    ) {
+        $this-&gt;beConstructedWith($findLatestLocation);
+        $location = new Location(
+            new Coordinates(self::X, self::Y),
+            new Orientation(self::ORIENTATION)
+        );
+
+        $findLatestLocation-&gt;find()-&gt;willReturn($location);
+
+        $this-&gt;handle()-&gt;shouldBe($location);
+    }
+}
+</code></pre>
+
+<p>Let's update <code>src/MarsRover/Location/Service/FindLatestLocation.php</code> to add the return type:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Location\Service;
+
+use MarsRover\Geolocation\Location;
+
+interface FindLatestLocation
+{
+    public function find() : Location;
+}
+</code></pre>
+
+<p>And finally let's update <code>src/MarsRover/Location/LocateRoverHandler.php</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Location;
+
+use MarsRover\Geolocation\Location;
+use MarsRover\Location\Service\FindLatestLocation;
+
+class LocateRoverHandler
+{
+    private $findLatestLocation;
+
+    public function __construct(FindLatestLocation $findLatestLocation)
+    {
+        $this-&gt;findLatestLocation = $findLatestLocation;
+    }
+
+    public function handle() : Location
+    {
+        return $this-&gt;findLatestLocation-&gt;find();
+    }
+}
+</code></pre>
+
+<p>Now tests should pass:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! Let's check all tests across our project:</p>
+
+<pre><code>cd ../../
+vendor/bin/phpspec run
+</code></pre>
+
+<p><a href="https://www.youtube.com/watch?v=rKHh3EIFcZw">Super green</a>!
+We can now commit our work:</p>
+
+<pre><code>git add -A
+git commit -m 'Moved geolocation value objects in their package'
+git checkout master
+git merge --no-ff 5-location
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>And that's it! We now have a fully functional Mars Rover, that covers the
+following use cases:</p>
 
 <blockquote>
-  <p><strong>Note</strong>: Here are some references about MonoRepos:</p>
+  <ol>
+  <li>Mars Rovers need first to be landed at a given position. A position is
+  composed of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an
+  orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</li>
+  <li>Once a rover has been landed on Mars it is possible to drive them, using
+  instructions such as:
   
   <ul>
-  <li><a href="http://danluu.com/monorepo/">Advantages of a monolithic version control</a></li>
-  <li><a href="http://gregoryszorc.com/blog/2014/09/09/on-monolithic-repositories/">On Monolithic Repositories</a></li>
-  </ul>
+  <li><code>move_forward</code> (keeps orientation, but moves along the <code>x</code> or <code>y</code> axis)</li>
+  <li><code>turn_left</code> / <code>turn_right</code> (keeps the same coordinates, but changes the
+  orientation).</li>
+  </ul></li>
+  <li>Mars rover will be requested to give its current location (<code>x</code> and <code>y</code>
+  coordinates and the orientation).</li>
+  </ol>
 </blockquote>
 
-<h2 id="command-%2F-query-responsibility-segregation">Command / Query Responsibility Segregation</h2>
-
-<p>CQRS is about separating "write" logic from "read" logic, and it can be applied
-on many levels, for example:</p>
+<p>In order to follow the CQRS principle, we've decided to separate our code in
+two main packages:</p>
 
 <ul>
-<li>have a read-only microservice and a separate write microservice</li>
-<li>have endpoints / tasks that are either write or read only</li>
-<li>separate your models in two (again, read-only and write-only)</li>
+<li><code>navigation</code>: write logic</li>
+<li><code>location</code>: read logic</li>
 </ul>
 
-<p>It's important to note that CQRS can also be applied <em>partially</em> in the same
-project: use it only when it makes sense.</p>
+<p>With this we can imagine deploying <code>navigation</code> on a central, restricted in
+access server, and deploy many <code>location</code> servers, all synchronized with the
+data received in <code>navigation</code>.</p>
 
-<blockquote>
-  <p><strong>Note</strong>: Here are some references about CQRS:</p>
-  
-  <ul>
-  <li><a href="/2015/08/25/cqrs.html">Command / Query Responsibility Segregation</a></li>
-  <li><a href="http://martinfowler.com/bliki/CQRS.html">CQRS</a></li>
-  <li><a href="http://www.jefclaes.be/2013/02/adding-r-to-cqs-some-storage-options.html">Adding the R to CQS: some storage options</a></li>
-  <li><a href="http://udidahan.com/2009/12/09/clarified-cqrs/">Clarified CQRS</a></li>
-  <li><a href="http://verraes.net/2014/05/functional-foundation-for-cqrs-event-sourcing/">Functional foundation for CQRS / ES</a></li>
-  <li><a href="http://verraes.net/2015/01/messaging-flavours/">Messaging Flavours</a></li>
-  <li><a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avoiding the Mud</a></li>
-  <li><a href="https://medium.com/@benjamindulau/do-not-mistake-ddd-for-cqrs-yeah-but-where-to-start-5595b8e68a4d#.vnh8i8rhb">Do not mistake DDD for CQRS. Yeah but where to start?</a></li>
-  <li><a href="https://moquet.net/talks/phptour-2015/">CQRS/ES</a></li>
-  <li><a href="http://verraes.net/2013/12/fighting-bottlenecks-with-cqrs/">Fighting Bottlenecks with CQRS</a></li>
-  </ul>
-</blockquote>
+<p>Splitting our code into many packages would have been quite bothersome without
+Mono Repo: all our packages are versioned in the same git repository and can be
+linked together using Composer.</p>
 
-<h2 id="event-sourcing">Event Sourcing</h2>
-
-<p>With ES, every significant action is recorded as an "event". Keeping track of
-those events provides the following advantages:</p>
-
-<ul>
-<li>replay them to recreate the state of an application at a given time
-(undo, redo, synchronization)</li>
-<li>analyse how the latest state came to be (compare two versions or find who did
-what and when)</li>
-</ul>
-
-<p>Just like with CQRS, it's important to note that ES can also be applied
-<em>partially</em> inside a project : use it only when it makes sense.</p>
-
-<p>ES is often associated to CQRS, but they can be used separately.</p>
-
-<blockquote>
-  <p><strong>Note</strong>: Here are some references about ES:</p>
-  
-  <ul>
-  <li><a href="https://martin.kleppmann.com/2015/05/27/logs-for-data-infrastructure.html">Using logs to build a solid data infrastructure or: why dual writes are a bad idea</a></li>
-  <li><a href="http://martinfowler.com/eaaDev/EventSourcing.html">Event Sourcing</a></li>
-  <li><a href="http://verraes.net/2014/03/practical-event-sourcing.markdown/">Practical Event Sourcing</a></li>
-  <li><a href="https://moquet.net/talks/phptour-2015/">CQRS/ES</a></li>
-  <li><a href="http://verraes.net/2013/12/fighting-bottlenecks-with-cqrs/">Fighting Bottlenecks with CQRS</a></li>
-  <li><a href="http://verraes.net/2014/05/functional-foundation-for-cqrs-event-sourcing/">Functional foundation for CQRS / ES</a></li>
-  <li><a href="http://php-and-symfony.matthiasnoback.nl/2015/07/meeting-the-broadway-team/">Meeting the Broadway team - talking DDD, CQRS and event sourcing</a></li>
-  </ul>
-</blockquote>
-
-<h2 id="test-driven-development">Test Driven Development</h2>
-
-<p>TDD can be summed up in the following steps when developing:</p>
+<p>For each use case, we've structured our code as follow:</p>
 
 <ol>
-<li>create a test</li>
-<li>then write just enough code to make the test pass (quick and dirty, or
-"make it work")</li>
-<li>then refactor the code (clean, or "make it right")</li>
+<li>create a "Command" object that represents user input and intentation</li>
+<li>create a "Value Object" for each Command parameter, with simple input validation</li>
+<li>create a "CommandHandler" object that does the actual work</li>
 </ol>
 
-<p>Writing the test before the code forces us to think about how we'd like the
-future code to be <em>used</em>. It's like writing specifications, but with 3
-purposes: design, documentation and automated regression checking.</p>
+<p>With Event Sourcing, the "actual work" for "write" use cases is simply creating
+an event and store it. For the "read" use cases it could be retrieving the
+latests state by replaying all the past events in the store, or simply retrieving
+the latest state from a cache.</p>
 
-<p>This discipline makes it easy to have a high code coverage (although rigour
-still needs to be applied: we need to test all the happy paths and all the
-unhappy ones).</p>
+<p>And last but not least, we've written tests before writing the actual code, which
+helped us to think about how the code will be used. Our test method names were
+written as if they were sentences, which has the consequence to make our test
+a descriptive and accurate documentation. And of course our tests make sure we
+don't introduce regressions.</p>
+
+<p>I hope this series has helped to introduce you to those concepts.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Locating refactoring]]></title>
+            <link href="/2016/09/28/mars-rover-locating-refactoring.html"/>
+            <updated>2016-09-28T00:00:00+01:00</updated>
+            <id>/2016/09/28/mars-rover-locating-refactoring.html</id>
+            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It allows us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>We've already developed the first use case about landing the rover on mars,
+and the second one about driving it. We're now developing the last one,
+requesting its location:</p>
 
 <blockquote>
-  <p><strong>Note</strong>: Here are some references about TDD:</p>
-  
-  <ul>
-  <li><a href="http://codemanship.co.uk/parlezuml/blog/?postid=1170">Straw man TDD</a></li>
-  <li><a href="http://codemanship.co.uk/parlezuml/blog/?postid=1202">Coverage!!!</a></li>
-  <li><a href="http://blog.testdouble.com/posts/2014-01-25-the-failures-of-intro-to-tdd.html">The Failures of "Intro to TDD"</a></li>
-  <li><a href="http://tech.mybuilder.com/coupling-tests/">TDD, avoid testing implementation details</a></li>
-  <li><a href="http://blog.8thlight.com/uncle-bob/2014/04/25/MonogamousTDD.html">Monogamous TDD</a></li>
-  <li><a href="http://blog.8thlight.com/uncle-bob/2014/04/30/When-tdd-does-not-work.html">When TDD doesn't work</a></li>
-  <li><a href="http://codurance.com/2015/05/12/does-tdd-lead-to-good-design/">Does TDD really lead to good design?</a></li>
-  <li><a href="http://david.heinemeierhansson.com/2014/tdd-is-dead-long-live-testing.html">TDD is dead, long live testing</a></li>
-  <li><a href="http://www.daedtech.com/what-tdd-is-and-is-not/">What TDD is and is not</a></li>
-  <li><a href="https://vimeo.com/68375232">TDD, where it all went wrong</a></li>
-  <li><a href="https://medium.com/@davidihunt/tdd-and-complexity-1bbd5ca51ee7#.4mzrdro57">TDD and Complexity</a></li>
-  <li><a href="http://blog.cleancoder.com/uncle-bob/2016/03/19/GivingUpOnTDD.html">Giving up on TDD</a></li>
-  </ul>
+  <p>Mars rover will be requested to give its current location (<code>x</code> and <code>y</code>
+  coordinates and the orientation).</p>
 </blockquote>
 
-<h2 id="specifications">Specifications</h2>
+<p>In this article we're going to create the locating logic:</p>
 
-<p>The purpose of this series is to create the software of a Mars Rover, according
-to the following specifications.</p>
+<pre><code>git checkout 5-location
+</code></pre>
 
-<p>Mars Rovers need first to be landed at a given position. A position is composed
-of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an orientation
-(a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+<h2 id="location">Location</h2>
 
-<p>It is then possible to drive them, using instructions such as <code>move_forward</code>
-(keeps orientation, but moves along the <code>x</code> or <code>y</code> axis) or
-<code>turn_left</code> / <code>turn_right</code> (keeps the same coordinates, but changes the
-orientation).</p>
+<p>Our <code>LocateRover</code> command object relies on a <code>FindLatestLocation</code> service. They
+both currently return an array containing the coordinates and orientation of
+our rover. Since <code>FindLatestLocation</code> is an interface, we can't control what's
+being actually returned... This could be fixed by specifying a <code>Location</code>
+object as a return type, and it would make things more explicit.</p>
 
-<p>From time to time, they'll be requested to give their current location
-(again, <code>x</code> and <code>y</code> coordinates and the orientation).</p>
+<p>Since Our <code>Location</code> object will contain <code>Coordinates</code> and <code>Orientation</code>, we
+might want to create it in the <code>navigation</code> packages, where those two other
+objects are alreay:</p>
 
-<p>For example, a rover can be landed at <code>23</code>, <code>42</code>, <code>north</code> and then can be
-instructed to move forward twice, then to turn left, then to move forward once.
-When requested to, it should provide this location: <code>22</code>, <code>44</code>, <code>west</code>.</p>
+<pre><code>cd packages/navigation
+</code></pre>
 
-<h2 id="identifying-use-cases">Identifying use cases</h2>
+<p>We can now start writing <code>Location</code>'s test:</p>
 
-<p>From the above specifications, we can identify at least three use cases:</p>
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\Location'
+</code></pre>
 
-<ol>
-<li>Landing a Rover on Mars</li>
-<li>Driving the rover</li>
-<li>Requesting its location</li>
-</ol>
+<p>This should have bootstrapped the following
+<code>spec/MarsRover/Navigation/LocationSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Location;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class LocationSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(Location::class);
+    }
+}
+</code></pre>
+
+<p>We can then edit it to specify that it should contain <code>Coordinates</code> and
+<code>Orientation</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Coordinates;
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LocationSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    function it_has_coordinates()
+    {
+        $coordinates = new Coordinates(self::X, self::Y);
+        $orientation = new Orientation(self::ORIENTATION);
+        $this-&gt;beConstructedWith($coordinates, $orientation);
+
+        $this-&gt;getCoordinates()-&gt;shouldBe($coordinates);
+    }
+
+    function it_has_orientation()
+    {
+        $coordinates = new Coordinates(self::X, self::Y);
+        $orientation = new Orientation(self::ORIENTATION);
+        $this-&gt;beConstructedWith($coordinates, $orientation);
+
+        $this-&gt;getOrientation()-&gt;shouldBe($orientation);
+    }
+}
+</code></pre>
+
+<p>That sounds simple enough, we can run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>And of course they fail because <code>Location</code> doesn't exist yet. to help us write
+it, phpspec bootstrapped the following <code>src/MarsRover/Navigation/Location.php</code>
+file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Location
+{
+    private $coordinates;
+
+    private $orientation;
+
+    public function __construct(Coordinates $coordinates, Orientation $orientation)
+    {
+        $this-&gt;coordinates = $coordinates;
+        $this-&gt;orientation = $orientation;
+    }
+
+    public function getCoordinates()
+    {
+    }
+
+    public function getOrientation()
+    {
+    }
+}
+</code></pre>
+
+<p>Let's complete it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Location
+{
+    private $coordinates;
+    private $orientation;
+
+    public function __construct(
+        Coordinates $coordinates,
+        Orientation $orientation
+    ) {
+        $this-&gt;coordinates = $coordinates;
+        $this-&gt;orientation = $orientation;
+    }
+
+    public function getCoordinates() : Coordinates
+    {
+        return $this-&gt;coordinates;
+    }
+
+    public function getOrientation() : Orientation
+    {
+        return $this-&gt;orientation;
+    }
+}
+</code></pre>
+
+<p>This should be enough to make our tests pass:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We can now commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '5: Created Location'
+</code></pre>
+
+<h2 id="refactoring-landrover">Refactoring LandRover</h2>
+
+<p>This <code>Location</code> value object looks great! Why didn't we create it in the first
+place? That'll be pragmatism for you: don't create something you might need in
+the future, create something you need now. But now that's it's here, we can
+refactor <code>LocateRover</code> to use it.</p>
+
+<p>First let's update its test:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Location;
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LandRoverSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    function it_has_location()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $location = $this-&gt;getLocation();
+        $location-&gt;shouldHaveType(Location::class);
+        $coordinates = $location-&gt;getCoordinates();
+        $coordinates-&gt;getX()-&gt;shouldBe(self::X);
+        $coordinates-&gt;getY()-&gt;shouldBe(self::Y);
+        $location-&gt;getOrientation()-&gt;get()-&gt;shouldBe(self::ORIENTATION);
+    }
+}
+</code></pre>
+
+<p>Then its code:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRover
+{
+    private $location;
+
+    public function __construct($x, $y, $orientation)
+    {
+        $this-&gt;location = new Location(
+            new Coordinates($x, $y),
+            new Orientation($orientation)
+        );
+    }
+
+    public function getLocation() : Location
+    {
+        return $this-&gt;location;
+    }
+}
+</code></pre>
+
+<p>And finally <code>LandRoverHandler</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+use MarsRover\EventSourcing\{
+    AnEventHappened,
+    EventStore
+};
+
+class LandRoverHandler
+{
+    private $anEventHappened;
+    private $eventStore;
+
+    public function __construct(
+        AnEventHappened $anEventHappened,
+        EventStore $eventStore
+    ) {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(LandRover $landRover)
+    {
+        $location = $landRover-&gt;getLocation();
+        $coordinates = $location-&gt;getCoordinates();
+        $orientation = $location-&gt;getOrientation();
+        $roverLanded = $this-&gt;anEventHappened-&gt;justNow(Events::ROVER_LANDED, [
+            'x' =&gt; $coordinates-&gt;getX(),
+            'y' =&gt; $coordinates-&gt;getY(),
+            'orientation' =&gt; $orientation-&gt;get(),
+        ]);
+        $this-&gt;eventStore-&gt;log($roverLanded);
+    }
+}
+</code></pre>
+
+<p>Let's check the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! That should be enough to commit:</p>
+
+<pre><code>git add -A
+git commit -m '5: Used Location in LandRover'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>While we've been playing with the notion of <code>Location</code> since the very first
+use case, it's only now that we really need it that we created it.</p>
+
+<p>It encapsulates X and Y coordinates as well as an orientation.</p>
+
+<h2 id="what%27s-next%3F">What's next?</h2>
+
+<p><code>Location</code> is currently in the <code>navigation</code> package, but we also need it in
+the <code>location</code> package... To fix this we have the following solutions:</p>
+
+<ul>
+<li>add <code>navigation</code> as a dependency of <code>location</code></li>
+<li>merge together <code>navigation</code> and <code>location</code></li>
+<li>create a new <code>geolocation</code> package, with <code>Location</code>, <code>Coordinates</code> and
+<code>Orientation</code></li>
+</ul>
+
+<p>Since we want to keep <code>navigation</code> and <code>location</code> separate, we'll opt for the
+third option and create this new package in the next article.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Locating handler]]></title>
+            <link href="/2016/09/21/mars-rover-locating-handler.html"/>
+            <updated>2016-09-21T00:00:00+01:00</updated>
+            <id>/2016/09/21/mars-rover-locating-handler.html</id>
+            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It allows us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>We've already developed the first use case about landing the rover on mars,
+and the second one about driving it. We're now developing the last one,
+requesting its location:</p>
+
+<blockquote>
+  <p>Mars rover will be requested to give its current location (<code>x</code> and <code>y</code>
+  coordinates and the orientation).</p>
+</blockquote>
+
+<p>In this article we're going to create the locating logic:</p>
+
+<pre><code>cd packages/location
+git checkout 5-location
+</code></pre>
+
+<h2 id="locate-rover">Locate Rover</h2>
+
+<p>As usual, we're going to use our
+<a href="/2016/06/29/mars-rover-landing.html#twisting-command-bus">Command Bus twist</a>:</p>
+
+<ul>
+<li>create a Command object that contains and validates input parameters</li>
+<li>create a Command Handler object that receives the Command and does the
+actual logic</li>
+</ul>
+
+<p>However in this case we don't have any input parameters: we only want the
+location of the rover. So do we really need to create an empty <code>LocateRover</code>
+class?</p>
+
+<p>If in the future we want to handle many rovers (a Rover name or ID parameter)
+or if we want to know the location of a rover at a given time (time parameter),
+then having this empty class can make sense: we can then fill it later.</p>
+
+<p>However, in this tutorial anyway, we don't have such a need so we can be
+pragmatic about it and just omit it.</p>
+
+<h2 id="locateroverhandler">LocateRoverHandler</h2>
+
+<p>Let's start straight away by creating the <code>LocateRoverHandler</code>. We're starting
+by bootstraping the test class:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Location\LocateRoverHandler'
+</code></pre>
+
+<p>This should create the following
+<code>spec/MarsRover/Location/LocateRoverHandlerSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Location;
+
+use MarsRover\Location\LocateRoverHandler;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class LocateRoverHandlerSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(LocateRoverHandler::class);
+    }
+}
+</code></pre>
+
+<p>We'll need a service which is able to replay all the landing and driving events
+to compute the latest location of the rover. Let's call it <code>FindLatestLocation</code>.
+Or maybe it'd be faster if we computed that latest location on the go, while
+we receive each landing and driving event? In that case our <code>FindLatestLocation</code>
+would just need to retrieve those values from a sort of cache.</p>
+
+<p>It sounds like we can have many ways of finding the rover location, and
+commiting to one right now only to find out later that another implementation
+was better would be a shame. So let's delay our decision and rely on an
+interface for now:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Location;
+
+use MarsRover\Location\Service\FindLatestLocation;
+use PhpSpec\ObjectBehavior;
+
+class LocateRoverHandlerSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = 'north';
+
+    const LOCATION = [
+        'x' =&gt; self::X,
+        'y' =&gt; self::Y,
+        'orientation' =&gt; self::ORIENTATION,
+    ];
+
+    function it_finds_a_rover_latest_location(
+        FindLatestLocation $findLatestLocation
+    ) {
+        $this-&gt;beConstructedWith($findLatestLocation);
+
+        $findLatestLocation-&gt;find()-&gt;willReturn(self::LOCATION);
+
+        $this-&gt;handle()-&gt;shouldBe(self::LOCATION);
+    }
+}
+</code></pre>
+
+<p>It might be our smallest Handler of all. Since it only uses one service, we
+might start wondering if it was worth to have a handler at all (we could just
+use the <code>FindLatestLocation</code> service directly), after all we did skip the
+Command for similar reasons.</p>
+
+<p>However, if we throw away our handler, we'll lose our "automated use case
+documentation": the service is an interface and cannot be tested. So let's keep
+it. Let's run the tests now:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>They fail because <code>LocateRoverHandler</code> doesn't exist, but phpspec bootstrapped
+it for us in the <code>src/MarsRover/Location/LocateRoverHandler.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Location;
+
+use MarsRover\Location\Service\FindLatestLocation;
+
+class LocateRoverHandler
+{
+    private $findLatestLocation;
+
+    public function __construct(FindLatestLocation $findLatestLocation)
+    {
+        $this-&gt;findLatestLocation = $findLatestLocation;
+    }
+
+    public function handle()
+    {
+    }
+}
+</code></pre>
+
+<p>Thanks to the <a href="https://github.com/memio/spec-gen">SpecGen extension</a>, phpspec
+was able to detect Dependency Injection, and bootstrapped a constructor with
+an attribute initialization for us. How nice!</p>
+
+<p>We'll just need to complete the <code>handle</code> method:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Location;
+
+use MarsRover\Location\Service\FindLatestLocation;
+
+class LocateRoverHandler
+{
+    private $findLatestLocation;
+
+    public function __construct(FindLatestLocation $findLatestLocation)
+    {
+        $this-&gt;findLatestLocation = $findLatestLocation;
+    }
+
+    public function handle()
+    {
+        return $this-&gt;findLatestLocation-&gt;find();
+    }
+}
+</code></pre>
+
+<p>Overall, the code looks very similar to the test. Let's run them again:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We can commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '5: Created LocateRoverHandler'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Locating the rover is as simple as retrieving it from somewhere. We've
+delegated the decision on where this "somewhere" is because there are many
+valid solutions (replaying all the events from the EventStore, a cache, etc).</p>
+
+<p>Delegating those decisions can be done by creating an interface, it allows us
+to create as many implementations as we want, without having to modify the
+logic we've just written.</p>
+
+<h2 id="what%27s-next%3F">What's next?</h2>
+
+<p>The Test Driven Development cycle wouldn't be complete without a refactoring
+step. In the next article we'll create a <code>Location</code> value object, to make our
+<code>FindLatestLocation</code> and <code>LocateRoverHandler</code> classes return something more
+explicit.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Driving event]]></title>
+            <link href="/2016/09/07/mars-rover-driving-event.html"/>
+            <updated>2016-09-07T00:00:00+01:00</updated>
+            <id>/2016/09/07/mars-rover-driving-event.html</id>
+            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It allows us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>We've already developed the first use case about landing the rover on mars,
+and we've started the second one about driving it:</p>
+
+<blockquote>
+  <p>Once a rover has been landed on Mars it is possible to drive them, using
+  instructions such as <code>move_forward</code> (keeps orientation, but moves along the
+  <code>x</code> or <code>y</code> axis) or <code>turn_left</code> / <code>turn_right</code> (keeps the same coordinates,
+  but changes the orientation).</p>
+</blockquote>
+
+<p>In this article we're going to create the actual driving logic, using
+Event Sourcing:</p>
+
+<pre><code>cd packages/navigation
+git checkout 4-driving
+</code></pre>
+
+<h2 id="driveroverhandler">DriveRoverHandler</h2>
+
+<p>Following our <a href="/2016/06/29/mars-rover-landing.html#twisting-command-bus">Command Bus twist</a>,
+we're now going to create the <code>DriveRoverHandler</code> class that's going to take
+care of the actual logic associated to the <code>DriveRover</code> use case. We're
+starting by bootstraping the test class:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\DriveRoverHandler'
+</code></pre>
+
+<p>This should create the following
+<code>spec/MarsRover/Navigation/DriveRoverHandlerSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\DriveRoverHandler;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class DriveRoverHandlerSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(DriveRoverHandler::class);
+    }
+}
+</code></pre>
+
+<p><a href="/2016/06/15/mars-rover-introduction.html#event-sourcing">Event Sourcing</a> is
+all about recording significant actions. Driving a rover seems significant
+enough, so that's what <code>DriveRoverHandler</code> should do:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\EventSourcing\AnEventHappened;
+use MarsRover\EventSourcing\Event;
+use MarsRover\EventSourcing\EventStore;
+use MarsRover\Navigation\DriveRover;
+use MarsRover\Navigation\Instruction;
+use PhpSpec\ObjectBehavior;
+
+class DriveRoverHandlerSpec extends ObjectBehavior
+{
+    const DRIVING_INSTRUCTION = Instruction::MOVE_FORWARD;
+
+    const EVENT_NAME = 'rover_driven';
+    const EVENT_DATA = [
+        'instruction' =&gt; self::DRIVING_INSTRUCTION,
+    ];
+
+    function it_drives_a_rover_with_given_instruction(
+        AnEventHappened $anEventHappened,
+        Event $roverDriven,
+        EventStore $eventStore
+    ) {
+        $this-&gt;beConstructedWith($anEventHappened, $eventStore);
+        $driveRover = new DriveRover(
+            self::DRIVING_INSTRUCTION
+        );
+
+        $anEventHappened-&gt;justNow(
+            self::EVENT_NAME,
+            self::EVENT_DATA
+        )-&gt;willReturn($roverDriven);
+        $eventStore-&gt;log($roverDriven)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($driveRover);
+    }
+}
+</code></pre>
+
+<p>It's very similar to what we've done for <code>LandRoverHandler</code>, all we've done
+is create and event specific to driving the rover with its instructions
+and "logged" it in an `EventStore. Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>They fail because <code>DriveRoverHandler</code> doesn't exists, but phpspec bootstrapped
+it for us in the <code>src/MarsRover/Navigation/DriveRoverHandler.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+use MarsRover\EventSourcing\AnEventHappened;
+use MarsRover\EventSourcing\EventStore;
+
+class DriveRoverHandler
+{
+    private $anEventHappened;
+
+    private $eventStore;
+
+    public function __construct(AnEventHappened $anEventHappened, EventStore $eventStore)
+    {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(DriveRover $driveRover)
+    {
+    }
+}
+</code></pre>
+
+<p>Thanks to the <a href="https://github.com/memio/spec-gen">SpecGen extension</a>, phpspec
+was able to detect Dependency Injection, and bootstrapped a constructor with
+an attribute initialization for us. How nice!</p>
+
+<p>We'll just need to complete the <code>handle</code> method:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+use MarsRover\EventSourcing\{
+    AnEventHappened,
+    EventStore
+};
+
+class DriveRoverHandler
+{
+    const EVENT_NAME = 'rover_driven';
+
+    private $anEventHappened;
+    private $eventStore;
+
+    public function __construct(
+        AnEventHappened $anEventHappened,
+        EventStore $eventStore
+    ) {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(DriveRover $driveRover)
+    {
+        $roverDriven = $this-&gt;anEventHappened-&gt;justNow(self::EVENT_NAME, [
+            'instruction' =&gt; $driveRover-&gt;getInstruction()-&gt;get(),
+        ]);
+        $this-&gt;eventStore-&gt;log($roverDriven);
+    }
+}
+</code></pre>
+
+<p>Overall, the code looks very similar to the test. Let's run them again:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We're going to do a quick refactoring to move the event name in
+the <code>src/MarsRover/Navigation/Events.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Events
+{
+    const ROVER_LANDED = 'rover_landed';
+    const ROVER_DRIVEN = 'rover_driven';
+}
+</code></pre>
+
+<p>Then use it in the code:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+use MarsRover\EventSourcing\{
+    AnEventHappened,
+    EventStore
+};
+
+class DriveRoverHandler
+{
+    private $anEventHappened;
+    private $eventStore;
+
+    public function __construct(
+        AnEventHappened $anEventHappened,
+        EventStore $eventStore
+    ) {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(DriveRover $driveRover)
+    {
+        $roverDriven = $this-&gt;anEventHappened-&gt;justNow(Events::ROVER_DRIVEN, [
+            'instruction' =&gt; $driveRover-&gt;getInstruction()-&gt;get(),
+        ]);
+        $this-&gt;eventStore-&gt;log($roverDriven);
+    }
+}
+</code></pre>
+
+<p>and finally in the test:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\EventSourcing\AnEventHappened;
+use MarsRover\EventSourcing\Event;
+use MarsRover\EventSourcing\EventStore;
+use MarsRover\Navigation\DriveRover;
+use MarsRover\Navigation\Events;
+use MarsRover\Navigation\Instruction;
+use PhpSpec\ObjectBehavior;
+
+class DriveRoverHandlerSpec extends ObjectBehavior
+{
+    const DRIVING_INSTRUCTION = Instruction::MOVE_FORWARD;
+
+    const EVENT_NAME = Events::ROVER_DRIVEN;
+    const EVENT_DATA = [
+        'instruction' =&gt; self::DRIVING_INSTRUCTION,
+    ];
+
+    function it_drives_a_rover_with_given_instruction(
+        AnEventHappened $anEventHappened,
+        Event $roverDriven,
+        EventStore $eventStore
+    ) {
+        $this-&gt;beConstructedWith($anEventHappened, $eventStore);
+        $driveRover = new DriveRover(
+            self::DRIVING_INSTRUCTION
+        );
+
+        $anEventHappened-&gt;justNow(
+            self::EVENT_NAME,
+            self::EVENT_DATA
+        )-&gt;willReturn($roverDriven);
+        $eventStore-&gt;log($roverDriven)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($driveRover);
+    }
+}
+</code></pre>
+
+<p>We can run the tests one last time:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>Still green! We can commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '4: Created DriveRoverHandler'
+git checkout master
+git merge --no-ff 4-driving
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>With Event Sourcing, the logic associated to our "Driving a Rover on Mars" use
+case is quite simple: we just record it as an event.</p>
+
+<h2 id="what%27s-next%3F">What's next?</h2>
+
+<p>In the next article, we'll create a new package to take care of the last use
+case: "Requesting the Rover's location".</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Driving instruction]]></title>
+            <link href="/2016/08/17/mars-rover-driving-instruction.html"/>
+            <updated>2016-08-17T00:00:00+01:00</updated>
+            <id>/2016/08/17/mars-rover-driving-instruction.html</id>
+            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It allows us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>We've already developed the first use case about landing the rover on mars,
+and we've started the second one about driving it:</p>
+
+<blockquote>
+  <p>Once a rover has been landed on Mars it is possible to drive them, using
+  instructions such as <code>move_forward</code> (keeps orientation, but moves along the
+  <code>x</code> or <code>y</code> axis) or <code>turn_left</code> / <code>turn_right</code> (keeps the same coordinates,
+  but changes the orientation).</p>
+</blockquote>
+
+<p>In this article we're going to refactor <code>DriveRover</code>:</p>
+
+<pre><code>cd packages/navigation
+git checkout -b 4-driving
+</code></pre>
+
+<h2 id="responsibilities">Responsibilities</h2>
+
+<p>By having a look at <code>DriveRover</code>, we can guess that it has 1 reason to change:
+the list of instruction might grow bigger.</p>
+
+<p>This hints toward one new class: <code>Instruction</code>. Let's get cracking!</p>
+
+<h2 id="instruction">Instruction</h2>
+
+<p>First let's bootstrap the test class using <a href="http://phpspec.net">phpspec</a>:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\Instruction'
+</code></pre>
+
+<p>This will create the following <code>spec/MarsRover/Navigation/InstructionSpec.php</code>
+file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Instruction;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class InstructionSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(Instruction::class);
+    }
+}
+</code></pre>
+
+<p>We can edit it reusing what we've done in <code>DriveRover</code> test class, only with
+more information about the possible instruction:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use PhpSpec\ObjectBehavior;
+
+class InstructionSpec extends ObjectBehavior
+{
+    const MOVE_FORWARD = 'move_forward';
+    const TURN_LEFT = 'turn_left';
+    const TURN_RIGHT = 'turn_right';
+
+    const INVALID_INSTRUCTION = 'wake_up_polly_parrot';
+
+    function it_can_be_move_forward()
+    {
+        $this-&gt;beConstructedWith(self::MOVE_FORWARD);
+
+        $this-&gt;get()-&gt;shouldBe(self::MOVE_FORWARD);
+    }
+
+    function it_can_be_turn_left()
+    {
+        $this-&gt;beConstructedWith(self::TURN_LEFT);
+
+        $this-&gt;get()-&gt;shouldBe(self::TURN_LEFT);
+    }
+
+    function it_can_be_turn_right()
+    {
+        $this-&gt;beConstructedWith(self::TURN_RIGHT);
+
+        $this-&gt;get()-&gt;shouldBe(self::TURN_RIGHT);
+    }
+
+    function it_cannot_be_anything_else()
+    {
+        $this-&gt;beConstructedWith(self::INVALID_INSTRUCTION);
+
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
+    }
+}
+</code></pre>
+
+<p>Since this test is dedicated to instructions, we feel more free than in
+<code>DriveRover</code> to describe all the possible instructions. If we run the tests
+now, phpspec will bootstrap the <code>Instruction</code> class for us:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>Indeed, it created the <code>src/MarsRover/Navigation/Instruction.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Instruction
+{
+    public function __construct($argument)
+    {
+    }
+
+    public function get()
+    {
+    }
+}
+</code></pre>
+
+<p>All that's left for us to do is complete it, we can reuse the code in
+<code>DriveRover</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Instruction
+{
+    const MOVE_FORWARD = 'move_forward';
+    const TURN_LEFT = 'turn_left';
+    const TURN_RIGHT = 'turn_right';
+
+    const VALID_INSTRUCTIONS = [
+        self::MOVE_FORWARD,
+        self::TURN_LEFT,
+        self::TURN_RIGHT,
+    ];
+
+    private $instruction;
+
+    public function __construct($instruction)
+    {
+        if (false === in_array($instruction, self::VALID_INSTRUCTIONS, true)) {
+            throw new \InvalidArgumentException(
+                'Instruction should be one of: '
+                .implode(', ', self::VALID_INSTRUCTIONS)
+            );
+        }
+        $this-&gt;instruction = $instruction;
+    }
+
+    public function get() : string
+    {
+        return $this-&gt;instruction;
+    }
+}
+</code></pre>
+
+<p>We can now run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! <code>Instruction</code> is ready to be used in <code>DriveRover</code>, so let's update
+its test:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Instruction;
+use PhpSpec\ObjectBehavior;
+
+class DriveRoverSpec extends ObjectBehavior
+{
+    const DRIVING_INSTRUCTION = Instruction::MOVE_FORWARD;
+
+    function it_has_a_driving_instruction()
+    {
+        $this-&gt;beConstructedWith(
+            self::DRIVING_INSTRUCTION
+        );
+
+        $this-&gt;getInstruction()-&gt;get()-&gt;shouldBe(self::DRIVING_INSTRUCTION);
+    }
+}
+</code></pre>
+
+<p>We no longer need to check for invalid instructions as we trust <code>Instruction</code>
+to take care of it for us. Now let's update its code:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class DriveRover
+{
+    private $instruction;
+
+    public function __construct($instruction)
+    {
+        $this-&gt;instruction = new Instruction($instruction);
+    }
+
+    public function getInstruction() : Instruction
+    {
+        return $this-&gt;instruction;
+    }
+}
+</code></pre>
+
+<p>And that should make our tests pass:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We can refactor <code>Instruction</code> test class a bit, by reusing
+<code>Instruction</code> constants:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Instruction;
+use PhpSpec\ObjectBehavior;
+
+class InstructionSpec extends ObjectBehavior
+{
+    const MOVE_FORWARD = Instruction::MOVE_FORWARD;
+    const TURN_LEFT = Instruction::TURN_LEFT;
+    const TURN_RIGHT = Instruction::TURN_RIGHT;
+
+    const INVALID_INSTRUCTION = 'wake_up_polly_parrot';
+
+    function it_can_be_move_forward()
+    {
+        $this-&gt;beConstructedWith(self::MOVE_FORWARD);
+
+        $this-&gt;get()-&gt;shouldBe(self::MOVE_FORWARD);
+    }
+
+    function it_can_be_turn_left()
+    {
+        $this-&gt;beConstructedWith(self::TURN_LEFT);
+
+        $this-&gt;get()-&gt;shouldBe(self::TURN_LEFT);
+    }
+
+    function it_can_be_turn_right()
+    {
+        $this-&gt;beConstructedWith(self::TURN_RIGHT);
+
+        $this-&gt;get()-&gt;shouldBe(self::TURN_RIGHT);
+    }
+
+    function it_cannot_be_anything_else()
+    {
+        $this-&gt;beConstructedWith(self::INVALID_INSTRUCTION);
+
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
+    }
+}
+</code></pre>
+
+<p>Let's run the tests one last time:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All <em>grin</em> ;) . That's enough for us to commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '4: Created Instruction'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We've refactored <code>DriveRover</code> by extracting an <code>Instruction</code> value object. It
+allowed us to write more tests to describe all the possible values.</p>
 
 <h2 id="what%27s-next">What's next</h2>
 
-<p>In the next article we'll initialize the project by creating the MonoRepo and
-its first package: <code>navigation</code>.</p>
-
-<blockquote>
-  <p><strong>Note</strong> We'll be using:</p>
-  
-  <ul>
-  <li>PHP 7</li>
-  <li><a href="https://getcomposer.org">Composer</a></li>
-  <li>git</li>
-  <li><a href="http://phpspec.net/">phpspec</a>
-  and its <a href="http://memio.github.io/spec-gen">SpecGen extension</a></li>
-  </ul>
-</blockquote>
+<p>In the next article, we'll write the actual driving logic.</p>
 ]]></content>
         </entry>
             <entry>
-            <title type="html"><![CDATA[PHPUnit with phpspec]]></title>
-            <link href="/2015/09/23/phpunit-with-phpspec.html"/>
-            <updated>2015-09-23T00:00:00+00:00</updated>
-            <id>/2015/09/23/phpunit-with-phpspec.html</id>
-            <content type="html"><![CDATA[<p><a href="https://phpunit.de/">PHPUnit</a> is a port of <a href="http://junit.org/">jUnit</a>, its name
-might be deceptive: it allows you to write any type of tests (unit, but also functional,
-system, integration, end to end, acceptance, etc).</p>
-
-<p><a href="http://www.phpspec.net">phpspec</a> was at first a port of <a href="http://rspec.info/">rspec</a>,
-it can be considered as a unit test framework that enforces practices it considers best.</p>
-
-<blockquote>
-  <p><strong>Note</strong>: <a href="/2015/08/03/phpspec.html">read more about phpspec</a>.</p>
-</blockquote>
-
-<p>In this article, we'll see how to use both tools together in a same project.</p>
-
-<h2 id="fortune%3A-our-example">Fortune: our example</h2>
-
-<p>We're going to build part of a <a href="https://en.wikipedia.org/wiki/Fortune_%28Unix%29">fortune</a>
-application for our example, more precisely we're going to build a CLI allowing us to save quotes.</p>
-
-<p>To do so, we'll bootstrap a symfony application using the <a href="https://github.com/gnugat/symfony-empty-edition">Empty Edition</a>:</p>
-
-<pre><code>composer create-project gnugat/symfony-empty-edition fortune
-cd fortune
-</code></pre>
-
-<p>We'll need to install our test frameworks:</p>
-
-<pre><code>composer require --dev phpunit/phpunit
-composer require --dev phpspec/phpspec
-</code></pre>
-
-<p>Finally we'll configure PHPUnit:</p>
-
-<pre><code class="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
-
-&lt;!-- phpunit.xml.dist --&gt;
-&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
-&lt;phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="app/bootstrap.php"&gt;
-    &lt;testsuites&gt;
-        &lt;testsuite name="System Tests"&gt;
-            &lt;directory&gt;tests&lt;/directory&gt;
-        &lt;/testsuite&gt;
-    &lt;/testsuites&gt;
-&lt;/phpunit&gt;
-</code></pre>
-
-<h2 id="the-command">The command</h2>
-
-<p>Our first step will be to write a <strong>system test</strong> describing the command:</p>
-
-<pre><code class="php">&lt;?php
-// tests/Command/SaveQuoteCommandTest.php
-
-namespace AppBundle\Tests\Command;
-
-use AppKernel;
-use PHPUnit_Framework_TestCase;
-use Symfony\Bundle\FrameworkBundle\Console\Application;
-use Symfony\Component\Console\Tester\ApplicationTester;
-
-class SaveQuoteCommandTest extends PHPUnit_Framework_TestCase
-{
-    const EXIT_SUCCESS = 0;
-
-    private $app;
-
-    protected function setUp()
-    {
-        $kernel = new AppKernel('test', false);
-        $application = new Application($kernel);
-        $application-&gt;setAutoExit(false);
-        $this-&gt;app = new ApplicationTester($application);
-    }
-
-    /**
-     * @test
-     */
-    public function it_saves_a_new_quote()
-    {
-        $exitCode = $this-&gt;app-&gt;run(array(
-            'quote:save',
-            'quote' =&gt; 'Nobody expects the spanish inquisition',
-        ));
-
-        self::assertSame(self::EXIT_SUCCESS, $exitCode, $this-&gt;app-&gt;getDisplay());
-    }
-}
-</code></pre>
-
-<blockquote>
-  <p><strong>Note</strong>: Testing only the exit code is called "Smoke Testing" and is a very
-  efficient way to check if the application is broken.
-  Testing the output would be tedious and would make our test fragile as it might change often.</p>
-</blockquote>
-
-<p>Let's run it:</p>
-
-<pre><code>vendor/bin/phpunit
-</code></pre>
-
-<p>The tests fails because the command doesn't exist. Let's fix that:</p>
-
-<pre><code class="php">&lt;?php
-// src/AppBundle/Command/SaveQuoteCommand.php
-
-namespace AppBundle\Command;
-
-use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Output\OutputInterface;
-
-class SaveQuoteCommand extends ContainerAwareCommand
-{
-    protected function configure()
-    {
-        $this-&gt;setName('quote:save');
-        $this-&gt;addArgument('quote', InputArgument::REQUIRED);
-    }
-
-    protected function execute(InputInterface $input, OutputInterface $output)
-    {
-        $output-&gt;writeln('');
-        $output-&gt;writeln('// Saving quote');
-
-        $this-&gt;getContainer()-&gt;get('app.save_new_quote')-&gt;save(
-            $input-&gt;getArgument('quote')
-        );
-
-        $output-&gt;writeln('');
-        $output-&gt;writeln(' [OK] Quote saved');
-        $output-&gt;writeln('');
-    }
-}
-</code></pre>
-
-<p>Then run the test again:</p>
-
-<pre><code>vendor/bin/phpunit
-</code></pre>
-
-<p>It now fails for a different reason: the service used doesn't exist.</p>
-
-<h2 id="the-service">The service</h2>
-
-<p>The second step is to write the unit test for the service. With phpspec we can
-first bootstrap it:</p>
-
-<pre><code>vendor/bin/phpspec describe 'AppBundle\Service\SaveNewQuote'
-</code></pre>
-
-<p>Then we need to edit it:</p>
-
-<pre><code class="php">&lt;?php
-// spec/AppBundle/Service/SaveNewQuoteSpec.php
-
-namespace spec\AppBundle\Service;
-
-use PhpSpec\ObjectBehavior;
-use Symfony\Component\Filesystem\Filesystem;
-
-class SaveNewQuoteSpec extends ObjectBehavior
-{
-    const FILENAME = '/tmp/quotes.txt';
-    const QUOTE = 'Nobody expects the spanish inquisition!';
-
-    function let(Filesystem $filesystem)
-    {
-        $this-&gt;beConstructedWith($filesystem, self::FILENAME);
-    }
-
-    function it_saves_new_quote(Filesystem $filesystem)
-    {
-        $filesystem-&gt;dumpFile(self::FILENAME, self::QUOTE)-&gt;shouldBeCalled();
-
-        $this-&gt;save(self::QUOTE);
-    }
-}
-</code></pre>
-
-<p>Time to run the suite:</p>
-
-<pre><code>vendor/bin/phpspec run
-</code></pre>
-
-<p>phpspec will detect that the tested class doesn't exist and will bootstrap it for us,
-so we just have to edit it:</p>
-
-<pre><code class="php">&lt;?php
-// src/AppBundle/Service/SaveNewQuote.php
-
-namespace AppBundle\Service;
-
-use Symfony\Component\Filesystem\Filesystem;
-
-class SaveNewQuote
-{
-    private $filesystem;
-    private $filename;
-
-    public function __construct(Filesystem $filesystem, $filename)
-    {
-        $this-&gt;filesystem = $filesystem;
-        $this-&gt;filename = $filename;
-    }
-
-    public function save($quote)
-    {
-        $this-&gt;filesystem-&gt;dumpFile($this-&gt;filename, $quote);
-    }
-}
-</code></pre>
-
-<p>Again, we're going to run our unit test:</p>
-
-<pre><code>vendor/bin/phpspec run
-</code></pre>
-
-<p>It's finally green! Our final step will be to define our service in the Dependency Injection
-Container:</p>
-
-<pre><code># app/config/config.yml
-
-imports:
-    - { resource: parameters.yml }
-    - { resource: importer.php }
-
-framework:
-    secret: "%secret%"
-
-services:
-    app.save_new_quote:
-        class: AppBundle\Service\SaveNewQuote
-        arguments:
-            - "@filesystem"
-            - "%kernel.root_dir%/cache/quotes"
-</code></pre>
-
-<p>To make sure everything is fine, let's clear the cache and run the test:</p>
-
-<pre><code>rm -rf app/cache/*
-vendor/bin/phpunit
-</code></pre>
-
-<p>It's <a href="https://www.youtube.com/watch?v=lFeLDc2CzOs">Super Green</a>!</p>
-
-<h2 id="conclusion">Conclusion</h2>
-
-<p>As we can see, PHPUnit and phpspec can work perfectly well together.</p>
-
-<p>Of course we could write our unit test in a similar manner with PHPUnit:</p>
-
-<pre><code>&lt;?php
-// tests/Service/SaveNewQuoteTest.php
-
-namespace AppBundle\Tests\Service;
-
-use AppBundle\Service\SaveNewQuote;
-use PHPUnit_Framework_TestCase;
-
-class SaveNewQuoteTest extends PHPUnit_Framework_TestCase
-{
-    const FILENAME = '/tmp/quotes.txt';
-    const QUOTE = 'Nobody expects the spanish inquisition!';
-
-    private $filesystem;
-    private $saveNewQuote;
-
-    protected function setUp()
-    {
-        $this-&gt;filesystem = $this-&gt;prophesize('Symfony\Component\Filesystem\Filesystem');
-        $this-&gt;saveNewQuote = new SaveNewQuote($this-&gt;filesystem-&gt;reveal(), self::FILENAME);
-    }
-
-    /**
-     * @test
-     * @group unit
-     */
-    public function it_saves_new_quote()
-    {
-        $this-&gt;filesystem-&gt;dumpFile(self::FILENAME, self::QUOTE)-&gt;shouldBeCalled();
-
-        $this-&gt;saveNewQuote-&gt;save(self::QUOTE);
-    }
-}
-</code></pre>
-
-<p>And run it separately:</p>
-
-<pre><code>vendor/bin/phpunit --group=unit
-</code></pre>
-
-<p>But then we would lose all the advantages of phpspec:</p>
+            <title type="html"><![CDATA[Mars Rover, Driving]]></title>
+            <link href="/2016/08/10/mars-rover-driving.html"/>
+            <updated>2016-08-10T00:00:00+01:00</updated>
+            <id>/2016/08/10/mars-rover-driving.html</id>
+            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It allows us to practice the followings:</p>
 
 <ul>
-<li>it adds less overhead (this same test runs in ~20ms with phpspec, and ~80ms with PHPUnit)</li>
-<li>it tells you when it thinks you're doing something wrong (typically by making it harder/impossible for you to do it)</li>
-<li>it bootstraps things for you if you follow the TDD workflow (test first, then code)</li>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
 </ul>
 
+<p>We just finished developing the first use case, so we can now get cracking on
+the second one, Driving the rover:</p>
+
 <blockquote>
-  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
-</blockquote>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Master Symfony2 - part 2: Test Driven Development]]></title>
-            <link href="/2014/08/13/master-sf2-part-2-tdd.html"/>
-            <updated>2014-08-13T00:00:00+00:00</updated>
-            <id>/2014/08/13/master-sf2-part-2-tdd.html</id>
-            <content type="html"><![CDATA[<blockquote>
-  <p><strong>Deprecated</strong>: This series has been re-written - see
-  <a href="/2016/02/03/ultimate-symfony-http-kernel.html">The Ultimate Developer Guide to Symfony</a></p>
+  <p>Once a rover has been landed on Mars it is possible to drive them, using
+  instructions such as <code>move_forward</code> (keeps orientation, but moves along the
+  <code>x</code> or <code>y</code> axis) or <code>turn_left</code> / <code>turn_right</code> (keeps the same coordinates,
+  but changes the orientation).</p>
 </blockquote>
 
-<p>This is the second article of the series on mastering the
-<a href="http://symfony.com/">Symfony2</a> framework. Have a look at the first one:
-<a href="/2014/08/05/master-sf2-part-1-bootstraping.html">Bootstraping</a>.</p>
+<h2 id="drive-rover">Drive Rover</h2>
 
-<p>In the first article we bootstraped our project with the following files:</p>
+<p>Again, we start by creating a class with the name of our use case. It will
+take care of doing a simple validation on the input provided by the user:</p>
 
-<pre><code>.
-├── app
-│   ├── AppKernel.php
-│   ├── cache
-│   │   └── .gitkeep
-│   ├── config
-│   │   ├── config_prod.yml
-│   │   ├── config_test.yml
-│   │   ├── config.yml
-│   │   ├── parameters.yml.dist
-│   │   └── routing.yml
-│   ├── logs
-│   │   └── .gitkeep
-│   └── phpunit.xml.dist
-├── composer.json
-├── composer.lock
-├── src
-│   └── Fortune
-│       └── ApplicationBundle
-│           └── FortuneApplicationBundle.php
-└── web
-    └── app.php
+<pre><code>cd packages/navigation
+git checkout -b 4-driving
 </code></pre>
 
-<p>Here's the <a href="https://github.com/gnugat/mastering-symfony2">repository where you can find the actual code</a>.</p>
+<p>Using <a href="http://www.phpspec.net/en/stable/">phpspec</a>, we bootstrap the test
+class:</p>
 
-<p>In this one we'll implement the first User Story, by writing tests first.</p>
-
-<p><strong>Note</strong>: writing tests before writing any code is part of the
-<a href="/2014/02/19/test-driven-development.html">Test Driven Development (TDD) methodology</a>.</p>
-
-<h2 id="defining-the-user-story">Defining the User Story</h2>
-
-<p>With the help of our Scrum Master, our Product Owner (Nostradamus) managed to
-write the following user story:</p>
-
-<pre><code>As a User
-I want to be able to submit a new quote
-In order to make it available
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\DriveRover'
 </code></pre>
 
-<h2 id="writing-the-test">Writing the test</h2>
+<p>This should generate this <code>spec/MarsRover/Navigation/DriveRoverSpec.php</code> class:</p>
 
-<p>Our first reflex will be to write a functional test. First create the directory:</p>
+<pre><code class="php">&lt;?php
 
-<pre><code>mkdir -p src/Fortune/ApplicationBundle/Tests/Controller
-</code></pre>
+namespace spec\MarsRover\Navigation;
 
-<p>Then the test class:</p>
+use MarsRover\Navigation\DriveRover;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
 
-<pre><code>&lt;?php
-// File: src/Fortune/ApplicationBundle/Tests/Controller/QuoteControllerTest.php
-
-namespace Fortune\ApplicationBundle\Tests\Controller;
-
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpFoundation\Response;
-
-class QuoteControllerTest extends WebTestCase
+class DriveRoverSpec extends ObjectBehavior
 {
-    private function post($uri, array $data)
+    function it_is_initializable()
     {
-        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
-        $content = json_encode($data);
-        $client = static::createClient();
-        $client-&gt;request('POST', $uri, array(), array(), $headers, $content);
-
-        return $client-&gt;getResponse();
-    }
-
-    public function testSubmitNewQuote()
-    {
-        $response = $this-&gt;post('/api/quotes', array('content' =&gt; '&lt;KnightOfNi&gt; Ni!'));
-
-        $this-&gt;assertSame(Response::HTTP_CREATED, $response-&gt;getStatusCode());
+        $this-&gt;shouldHaveType(DriveRover::class);
     }
 }
 </code></pre>
 
-<h2 id="configuring-the-route">Configuring the route</h2>
+<p>This leaves us the task of editing it to start describing input parameters:</p>
 
-<p>Now we need to link the <code>/quotes</code> URL to a controller, so let's edit the
-configuration:</p>
+<pre><code class="php">&lt;?php
 
-<pre><code># File: app/config/routing.yml
-submit_quote:
-    path: /api/quotes
-    methods:
-        - POST
-    defaults:
-        _controller: FortuneApplicationBundle:Quote:submit
-</code></pre>
+namespace spec\MarsRover\Navigation;
 
-<h2 id="creating-the-controller">Creating the controller</h2>
+use PhpSpec\ObjectBehavior;
 
-<p>There wasn't any controllers until now, so we create the directory:</p>
-
-<pre><code>mkdir src/Fortune/ApplicationBundle/Controller
-</code></pre>
-
-<p>And finally the controller class:</p>
-
-<pre><code>&lt;?php
-// File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
-
-namespace Fortune\ApplicationBundle\Controller;
-
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
-
-class QuoteController extends Controller
+class DriveRoverSpec extends ObjectBehavior
 {
-    public function submitAction(Request $request)
+    const DRIVING_INSTRUCTION = 'move_forward';
+
+    function it_has_a_driving_instruction()
     {
-        $postedContent = $request-&gt;getContent();
-        $postedValues = json_decode($postedContent, true);
+        $this-&gt;beConstructedWith(
+            self::DRIVING_INSTRUCTION
+        );
 
-        $answer['quote']['content'] = $postedValues['content'];
-
-        return new JsonResponse($answer, Response::HTTP_CREATED);
+        $this-&gt;getInstruction()-&gt;shouldBe(self::DRIVING_INSTRUCTION);
     }
 }
 </code></pre>
 
-<p>Now let's run our tests:</p>
+<p>We can now run the tests:</p>
 
-<pre><code>./vendor/bin/phpunit -c app
+<pre><code>vendor/bin/phpspec run
 </code></pre>
 
-<p><a href="https://www.youtube.com/watch?v=lFeLDc2CzOs">All green</a>! This makes us
-confident enough to commit our work:</p>
+<p>This will generate the <code>src/MarsRover/Navigation/DriveRover.php</code> file:</p>
 
-<pre><code>git add -A
-git commit -m 'Created submission of quotes'
-</code></pre>
+<pre><code class="php">&lt;?php
 
-<h2 id="testing-bad-cases">Testing bad cases</h2>
+namespace MarsRover\Navigation;
 
-<p>The submitted content shouldn't be empty. Let's add a test for the bad cases:</p>
-
-<pre><code>&lt;?php
-// File: src/Fortune/ApplicationBundle/Tests/Controller/QuoteControllerTest.php
-
-namespace Fortune\ApplicationBundle\Tests\Controller;
-
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpFoundation\Response;
-
-class QuoteControllerTest extends WebTestCase
+class DriveRover
 {
-    private function post($uri, array $data)
-    {
-        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
-        $content = json_encode($data);
-        $client = static::createClient();
-        $client-&gt;request('POST', $uri, array(), array(), $headers, $content);
+    private $argument;
 
-        return $client-&gt;getResponse();
+    public function __construct($argument)
+    {
+        $this-&gt;argument = $argument;
     }
 
-    public function testSubmitNewQuote()
+    public function getInstruction()
     {
-        $response = $this-&gt;post('/api/quotes', array('content' =&gt; '&lt;KnightOfNi&gt; Ni!'));
-
-        $this-&gt;assertSame(Response::HTTP_CREATED, $response-&gt;getStatusCode());
-    }
-
-    public function testSubmitEmptyQuote()
-    {
-        $response = $this-&gt;post('/api/quotes', array('content' =&gt; ''));
-
-        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response-&gt;getStatusCode());
-    }
-
-    public function testSubmitNoQuote()
-    {
-        $response = $this-&gt;post('/api/quotes', array());
-
-        $this-&gt;assertSame(Response::HTTP_UNPROCESSABLE_ENTITY, $response-&gt;getStatusCode());
     }
 }
 </code></pre>
 
-<h2 id="checking-bad-cases">Checking bad cases</h2>
+<p>All we need to do is to edit it:</p>
 
-<p>Now let's fix the new tests:</p>
+<pre><code class="php">&lt;?php
 
-<pre><code>&lt;?php
-// File: src/Fortune/ApplicationBundle/Controller/QuoteController.php
+namespace MarsRover\Navigation;
 
-namespace Fortune\ApplicationBundle\Controller;
-
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
-
-class QuoteController extends Controller
+class DriveRover
 {
-    public function submitAction(Request $request)
+    private $instruction;
+
+    public function __construct($instruction)
     {
-        $postedContent = $request-&gt;getContent();
-        $postedValues = json_decode($postedContent, true);
+        $this-&gt;instruction = $instruction;
+    }
 
-        if (empty($postedValues['content'])) {
-            $answer = array('message' =&gt; 'Missing required parameter: content');
+    public function getInstruction() : string
+    {
+        return $this-&gt;instruction;
+    }
+}
+</code></pre>
 
-            return new JsonResponse($answer, Response::HTTP_UNPROCESSABLE_ENTITY);
+<p>Let's check the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! Now let's add some unhappy scenarios to our tests:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use PhpSpec\ObjectBehavior;
+
+class DriveRoverSpec extends ObjectBehavior
+{
+    const DRIVING_INSTRUCTION = 'move_forward';
+    const INVALID_DRIVING_INSTRUCTION = 'wake_up_polly_parrot';
+
+    function it_has_a_driving_instruction()
+    {
+        $this-&gt;beConstructedWith(
+            self::DRIVING_INSTRUCTION
+        );
+
+        $this-&gt;getInstruction()-&gt;shouldBe(self::DRIVING_INSTRUCTION);
+    }
+
+    function it_cannot_have_invalid_instruction()
+    {
+        $this-&gt;beConstructedWith(
+            self::INVALID_DRIVING_INSTRUCTION
+        );
+
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
+    }
+}
+</code></pre>
+
+<p>We can run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>They fail! So let's complete the code:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class DriveRover
+{
+    const VALID_INSTRUCTIONS = [
+        'move_forward',
+        'turn_left',
+        'turn_right',
+    ];
+
+    private $instruction;
+
+    public function __construct($instruction)
+    {
+        if (false === in_array($instruction, self::VALID_INSTRUCTIONS, true)) {
+            throw new \InvalidArgumentException(
+                'Instruction should be one of: '
+                .implode(', ', self::VALID_INSTRUCTIONS)
+            );
         }
-        $answer['quote']['content'] = $postedValues['content'];
+        $this-&gt;instruction = $instruction;
+    }
 
-        return new JsonResponse($answer, Response::HTTP_CREATED);
+    public function getInstruction() : string
+    {
+        return $this-&gt;instruction;
     }
 }
 </code></pre>
 
-<p>Finally run the tests:</p>
+<p>And re-run the tests:</p>
 
-<pre><code>./vendor/bin/phpunit -c app
+<pre><code>vendor/bin/phpspec run
 </code></pre>
 
-<p>All green! Let's call it a day and commit our work:</p>
+<p>All green! We can now commit our work:</p>
 
 <pre><code>git add -A
-git commit -m 'Managed submission of empty/no quotes'
+git commit -m '4: Created DriveRover'
 </code></pre>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>For those who didn't practice a lot with Symfony2, this article should have
-demonstrated how quick and simple it is to implement the first User Story
-(test and code alike).</p>
+<p>We've followed again the TDD methodology: write the test, then the code. We
+took care of describing first the happy scenario and then unhappy scenarios to
+cover all the cases.</p>
 
-<p>In the next article, we'll learn how to work with services.</p>
+<p>We've also used the same twist on the Command Bus pattern: we created a Command
+class that describes the use case (drive the rover) and does a simple
+validation on the input.</p>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article, we'll proceed to the third step of TDD: refactoring
+<code>DriveRover</code> by extracting <code>Instruction</code> in its own class.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Event Sourcing code]]></title>
+            <link href="/2016/08/03/mars-rover-event-sourcing-code.html"/>
+            <updated>2016-08-03T00:00:00+01:00</updated>
+            <id>/2016/08/03/mars-rover-event-sourcing-code.html</id>
+            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to the
+<a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It will allow us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>Up until now, we've implemented the first use case, "Landing a rover on Mars":</p>
+
+<blockquote>
+  <p>Mars Rovers need first to be landed at a given position. A position is
+  composed of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an
+  orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+</blockquote>
+
+<p>We've also created an <code>event-sourcing</code> package with the following interfaces:</p>
+
+<ul>
+<li><code>Event</code>, a Data Transfer Object (DTO) that contains the name and the data</li>
+<li><code>AnEventHappened</code>, which is actually an <code>Event</code> factory</li>
+<li><code>EventStore</code>, a service responsible for "logging" <code>Event</code>s</li>
+</ul>
+
+<p>In this article, we're going to implement them.</p>
+
+<h2 id="event">Event</h2>
+
+<p>Let's start by asking <a href="http://phpspec.net/">phpspec</a> to generate the test
+class:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\EventSourcing\Event'
+</code></pre>
+
+<p>It should have generated the following
+<code>spec/MarsRover/EventSourcing/EventSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\EventSourcing;
+
+use MarsRover\EventSourcing\Event;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class EventSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(Event::class);
+    }
+}
+</code></pre>
+
+<p>We're going to start writing test methods that describe what kind of data this
+DTO holds:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\EventSourcing;
+
+use PhpSpec\ObjectBehavior;
+
+class EventSpec extends ObjectBehavior
+{
+    const NAME = 'something_happened';
+    const DATA = [
+        'message' =&gt; 'We are the knights who say Ni!',
+    ];
+
+    function let(\DateTime $receivedAt)
+    {
+        $this-&gt;beConstructedWith(
+            self::NAME,
+            self::DATA,
+            $receivedAt
+        );
+    }
+
+    function it_has_a_name()
+    {
+        $this-&gt;getName()-&gt;shouldBe(self::NAME);
+    }
+
+    function it_has_data()
+    {
+        $this-&gt;getData()-&gt;shouldBe(self::DATA);
+    }
+
+    function it_has_been_received_at_a_date_and_time(\DateTime $receivedAt)
+    {
+        $this-&gt;getReceivedAt()-&gt;shouldBe($receivedAt);
+    }
+}
+</code></pre>
+
+<p>We can now run the tests to bootstrap the class:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>It will overwrite the existing <code>src/MarsRover/EventSourcing/Event.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\EventSourcing;
+
+use DateTimeInterface;
+
+class Event
+{
+    public function __construct($argument1, array $argument2, DateTimeInterface $dateTime)
+    {
+    }
+
+    public function getName()
+    {
+    }
+
+    public function getData()
+    {
+    }
+
+    public function getReceivedAt()
+    {
+    }
+}
+</code></pre>
+
+<p>We can edit it to make the tests pass:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\EventSourcing;
+
+class Event
+{
+    private $name;
+    private $data;
+    private $receivedAt;
+
+    public function __construct(
+        string $name,
+        array $data,
+        \DateTimeInterface $receivedAt
+    ) {
+        $this-&gt;name = $name;
+        $this-&gt;data = $data;
+        $this-&gt;receivedAt = $receivedAt;
+    }
+
+    public function getName() : string
+    {
+        return $this-&gt;name;
+    }
+
+    public function getData() : array
+    {
+        return $this-&gt;data;
+    }
+
+    public function getReceivedAt() : \DateTimeInterface
+    {
+        return $this-&gt;receivedAt;
+    }
+}
+</code></pre>
+
+<p>Let's check if everything is alright:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>And it is! Time to commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '3: Created Event'
+</code></pre>
+
+<h2 id="aneventhappened">AnEventHappened</h2>
+
+<p>The next class to implement is <code>AnEventHappened</code>. Let's create its test:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\EventSourcing\AnEventHappened'
+</code></pre>
+
+<p>It should generate the <code>spec/MarsRover/EventSourcing/AnEventHappenedSpec.php</code>
+file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\EventSourcing;
+
+use MarsRover\EventSourcing\AnEventHappened;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class AnEventHappenedSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(AnEventHappened::class);
+    }
+}
+</code></pre>
+
+<p>We can start describing this factory by writing test methods:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\EventSourcing;
+
+use MarsRover\EventSourcing\Event;
+use PhpSpec\ObjectBehavior;
+
+class AnEventHappenedSpec extends ObjectBehavior
+{
+    const NAME = 'something_happened';
+    const DATA = [
+        'message' =&gt; 'And now for something completly different',
+    ];
+
+    function it_can_create_events()
+    {
+        $this-&gt;justNow(self::NAME, self::DATA)-&gt;shouldHaveType(Event::class);
+    }
+}
+</code></pre>
+
+<p>Running the tests will generate the class:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>It should have overwritten the
+<code>src/MarsRover/EventSourcing/AnEventHappened.php</code> file with:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\EventSourcing;
+
+class AnEventHappened
+{
+    public function justNow($argument1, $argument2)
+    {
+    }
+}
+</code></pre>
+
+<p>We can now complete it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\EventSourcing;
+
+class AnEventHappened
+{
+    public function justNow(string $name, array $data) : Event
+    {
+        return new Event($name, $data, new \DateTime());
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! Time to commit:</p>
+
+<pre><code>git add -A
+git commit -m 'Created AnEventHappened'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We replaced the generated interfaces for <code>AnEventHappened</code> and <code>Event</code> with
+classes, which have been tested.</p>
+
+<p><code>EventStore</code> could log events in a log file, or in a database, or send them as
+messages to a queue to be treated later... For that reason we'll keep the
+interface.</p>
+
+<p>We're going to delay its implementations for later, when the rover will be
+almost done.</p>
+
+<p>If we run the tests from the project's root, we'll see that it runs tests for
+both <code>navigation</code> and <code>event-sourcing</code> in one go. This is one advantage of
+MonoRepo: it makes it easy to make sure that changes in a package don't break
+the other that depend on it.</p>
+
+<p>We can now merge our branch:</p>
+
+<pre><code>cd ../../
+git checkout master
+git merge --no-ff 3-event-sourcing
+</code></pre>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article we'll start developing the second use case: Driving the
+rover.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Event Sourcing package]]></title>
+            <link href="/2016/07/27/mars-rover-event-sourcing-package.html"/>
+            <updated>2016-07-27T00:00:00+01:00</updated>
+            <id>/2016/07/27/mars-rover-event-sourcing-package.html</id>
+            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to the
+<a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It will allow us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>Up until now, we've implemented the first use case, "Landing a rover on Mars":</p>
+
+<blockquote>
+  <p>Mars Rovers need first to be landed at a given position. A position is
+  composed of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an
+  orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+</blockquote>
+
+<p>In order to do so, we've:</p>
+
+<ul>
+<li>created a <a href="/2016/06/22/mars-rover-initialization.html">navigation package</a></li>
+<li>created <a href="/2016/06/29/mars-rover-landing.html">LandRover for input validation</a></li>
+<li>refactored it by:
+
+<ul>
+<li>extracting <a href="/2016/07/06/mars-rover-landing-coordinates.html">Coordinates</a></li>
+<li>extracting <a href="/2016/07/13/mars-rover-landing-orientation.html">Orientation</a></li>
+</ul></li>
+<li>created <a href="/2016/07/20/mars-rover-landing-event.html">LandRoverHandler for the actual logic</a></li>
+</ul>
+
+<p>In the last article, we wrote some Event Sourcing code:</p>
+
+<ul>
+<li><code>Event</code>, a Data Transfer Object (DTO) that contains the name and the data</li>
+<li><code>AnEventHappened</code>, which is actually an <code>Event</code> factory</li>
+<li><code>EventStore</code>, a service responsible for "logging" <code>Event</code>s</li>
+</ul>
+
+<p>In this article, we're going to extract them from the <code>navigation</code> package and
+put them in their own <code>event-sourcing</code> package.</p>
+
+<h2 id="creating-the-%60event-sourcing%60-package">Creating the <code>event-sourcing</code> package</h2>
+
+<p>We can start by creating the directory:</p>
+
+<pre><code>git checkout -b 3-event-sourcing
+mkdir -p packages/event-sourcing
+cd packages/event-sourcing
+</code></pre>
+
+<p>Composer needs us to set up the package by creating a <code>composer.json</code> file:</p>
+
+<pre><code>{
+    "name": "mars-rover/event-sourcing",
+    "license": "MIT",
+    "type": "library",
+    "description": "Mars Rover - Event Sourcing",
+    "autoload": {
+        "psr-4": { "MarsRover\\EventSourcing\\": "src/MarsRover/EventSourcing" }
+    },
+    "require": {
+        "php": "^7.0"
+    },
+    "require-dev": {
+        "memio/spec-gen": "^0.6"
+    }
+}
+</code></pre>
+
+<p>We've decided to use <a href="http://phpspec.net/">phpspec</a> as a test framework, and
+to get the most of it we'd like to use its <a href="http://memio.github.io/spec-gen">SpecGen</a>
+extension. To do so we need to create the <code>phpspec.yml.dist</code> file:</p>
+
+<pre><code>extensions:
+    Memio\SpecGen\MemioSpecGenExtension: ~
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: For more information about phpspec
+  <a href="/2015/08/03/phpspec.html">see this article</a>.</p>
+</blockquote>
+
+<p>Finally, we can configure this package's git by creating a <code>.gitignore</code> file:</p>
+
+<pre><code># Configuration
+/phpspec.yml
+
+# Third Party libraries
+/vendor/
+/composer.lock
+</code></pre>
+
+<p>With this we've finished creating our package. We can run Composer:</p>
+
+<pre><code>composer install --optimize-autoloader
+</code></pre>
+
+<p>That should be enough for a second commit:</p>
+
+<pre><code>git add -A
+git commit -m '3: Created Event Sourcing package'
+</code></pre>
+
+<h2 id="adding-%60event-sourcing%60-to-the-project">Adding <code>event-sourcing</code> to the project</h2>
+
+<p>Let's go back to the project's root:</p>
+
+<pre><code>cd ../../
+</code></pre>
+
+<p>All we need to do is to add a new line in the <code>require</code> section of our
+<code>composer.json</code> file:</p>
+
+<pre><code>{
+    "name": "mars-rover/mars-rover",
+    "license": "MIT",
+    "type": "project",
+    "description": "Mars Rover",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "./packages/*"
+        }
+    ],
+    "require": {
+        "mars-rover/event-sourcing": "*@dev",
+        "mars-rover/navigation": "*@dev",
+        "php": "^7.0"
+    },
+    "require-dev": {
+        "phpspec/phpspec": "^3.0@beta"
+    }
+}
+</code></pre>
+
+<p>Actually, we also need to add a new section in <code>phpspec.yml.dist</code>:</p>
+
+<pre><code>suites:
+    event-sourcing:
+        namespace: 'MarsRover\EventSourcing'
+        src_path: packages/event-sourcing/src
+        spec_path: packages/event-sourcing
+
+    navigation:
+        namespace: 'MarsRover\Navigation'
+        src_path: packages/navigation/src
+        spec_path: packages/navigation
+</code></pre>
+
+<p>And that's it! We are now able to run Composer and then phpspec:</p>
+
+<pre><code>composer update --optimize-autoloader
+vendor/bin/phpspec run
+</code></pre>
+
+<p>That should be enough for a second commit:</p>
+
+<pre><code>git add -A
+git commit -m '3: Added event-sourcing package to main project'
+</code></pre>
+
+<h2 id="event-sourcing-files">Event Sourcing files</h2>
+
+<p>It's now time to move Event Sourcing files from <code>navigation</code> to
+<code>event-sourcing</code>:</p>
+
+<pre><code>cd packages/event-sourcing
+mkdir -p src/MarsRover/EventSourcing
+mv ../navigation/src/MarsRover/Navigation/{EventStore.php,Event.php,AnEventHappened.php} ./src/MarsRover/EventSourcing/
+</code></pre>
+
+<p>We then need to change namespaces:</p>
+
+<pre><code>sed -i 's/Navigation/EventSourcing/g' ./src/MarsRover/EventSourcing/*
+</code></pre>
+
+<p>To continue those namespace changes we'll have to move back to the <code>navigation</code>
+package:</p>
+
+<pre><code>cd ../navigation
+</code></pre>
+
+<p>Then rename the namespaces:</p>
+
+<pre><code>sed -i 's/Navigation\\Event;/EventSourcing\\Event;/g' ./spec/MarsRover/Navigation/*
+sed -i 's/Navigation\\EventStore;/EventSourcing\\EventStore;/g' ./spec/MarsRover/Navigation/*
+sed -i 's/Navigation\\AnEventHappened;/EventSourcing\\AnEventHappened;/g' ./spec/MarsRover/Navigation/*
+</code></pre>
+
+<p>We'll also need to add use statements to
+<code>./src/MarsRover/Navigation/LandRoverHandler.php</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+use MarsRover\EventSourcing\{
+    AnEventHappened,
+    EventStore
+};
+
+class LandRoverHandler
+{
+    private $anEventHappened;
+    private $eventStore;
+
+    public function __construct(
+        AnEventHappened $anEventHappened,
+        EventStore $eventStore
+    ) {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(LandRover $landRover)
+    {
+        $roverLanded = $this-&gt;anEventHappened-&gt;justNow(Events::ROVER_LANDED, [
+            'x' =&gt; $landRover-&gt;getCoordinates()-&gt;getX(),
+            'y' =&gt; $landRover-&gt;getCoordinates()-&gt;getY(),
+            'orientation' =&gt; $landRover-&gt;getOrientation()-&gt;get(),
+        ]);
+        $this-&gt;eventStore-&gt;log($roverLanded);
+    }
+}
+</code></pre>
+
+<p>Since <code>navigation</code> now relies on <code>event-sourcing</code> classes, we need to add it in
+<code>composer.json</code>:</p>
+
+<pre><code>{
+    "name": "mars-rover/navigation",
+    "license": "MIT",
+    "type": "library",
+    "description": "Mars Rover - Navigation",
+    "autoload": {
+        "psr-4": { "MarsRover\\Navigation\\": "src/MarsRover/Navigation" }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../*"
+        }
+    ],
+    "require": {
+        "mars-rover/event-sourcing": "*@dev",
+        "php": "^7.0"
+    },
+    "require-dev": {
+        "memio/spec-gen": "^0.6"
+    }
+}
+</code></pre>
+
+<p>As we can see, it's quite similar to what we've done in the project's root:
+we've added a <code>repositories</code> section with the path to packages (<code>../</code>) and
+then added <code>mars-rover/event-sourcing</code> to the <code>require</code> section, with the
+version <code>*@dev</code> (any version, including unstable ones).</p>
+
+<p>We are now able to run Composer:</p>
+
+<pre><code>composer update --optimize-autoloader
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We can now succesfully commit our new package:</p>
+
+<pre><code>cd ../../
+git add -A
+git commit -m '3: Moved Event Sourcing classes to their own package'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We identified <code>AnEventHappened</code>, <code>Event</code> and <code>EventStore</code> as objects that
+could be in their own package, so we created <code>event-sourcing</code> and moved them
+in it. This also meant we had to add this package to the project's root and to
+navigation.</p>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article, we'll implement <code>AnEventHappened</code> and <code>Event</code>.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Landing event]]></title>
+            <link href="/2016/07/20/mars-rover-landing-event.html"/>
+            <updated>2016-07-20T00:00:00+01:00</updated>
+            <id>/2016/07/20/mars-rover-landing-event.html</id>
+            <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It will allow us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>Previously we've created a
+<a href="/2016/06/22/mars-rover-initialization.html">navigation package</a>, and in it
+a <code>LandRover</code> class that
+<a href="/2016/06/29/mars-rover-landing.html">validates input parameters</a> for our
+first use case:</p>
+
+<blockquote>
+  <p>Mars Rovers need first to be landed at a given position. A position is
+  composed of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an
+  orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+</blockquote>
+
+<p>We've then refactored it to extract
+<a href="/2016/07/06/mars-rover-landing-coordinates.html">coordinates</a>
+and <a href="/2016/07/13/mars-rover-landing-orientation.html">orientation</a>
+in their own classes.</p>
+
+<p>In this article we're going to create the actual landing logic, using
+Event Sourcing:</p>
+
+<pre><code>cd packages/navigation
+git checkout 2-landing
+</code></pre>
+
+<h2 id="landroverhandler">LandRoverHandler</h2>
+
+<p>Following our <a href="/2016/06/29/mars-rover-landing.html#twisting-command-bus">Command Bus twist</a>,
+we're now going to create the <code>LandRoverHandler</code> class that's going to take
+care of the actual logic associated to the <code>LandRover</code> use case. We're starting
+by bootstraping the test class:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\LandRoverHandler'
+</code></pre>
+
+<p>this should create the following
+<code>spec/MarsRover/Navigation/LandRoverHandlerSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\LandRoverHandler;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class LandRoverHandlerSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(LandRoverHandler::class);
+    }
+}
+</code></pre>
+
+<p><a href="/2016/06/15/mars-rover-introduction.html#event-sourcing">Event Sourcing</a> is
+all about recording significant actions. Landing a rover seems significant
+enough, so that's what <code>LandRoverHandler</code> should do:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\AnEventHappened;
+use MarsRover\Navigation\Event;
+use MarsRover\Navigation\EventStore;
+use MarsRover\Navigation\LandRover;
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LandRoverHandlerSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    const EVENT_NAME = 'rover_landed';
+    const EVENT_DATA = [
+        'x' =&gt; self::X,
+        'y' =&gt; self::Y,
+        'orientation' =&gt; self::ORIENTATION,
+    ];
+
+    function it_lands_a_rover_at_given_location(
+        AnEventHappened $anEventHappened,
+        Event $roverLanded,
+        EventStore $eventStore
+    ) {
+        $this-&gt;beConstructedWith($anEventHappened, $eventStore);
+        $landRover = new LandRover(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $anEventHappened-&gt;justNow(
+            self::EVENT_NAME,
+            self::EVENT_DATA
+        )-&gt;willReturn($roverLanded);
+        $eventStore-&gt;log($roverLanded)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($landRover);
+    }
+}
+</code></pre>
+
+<p>In this test, we rely on:</p>
+
+<ul>
+<li><code>Event</code>, a Data Transfer Object (DTO) that contains the name and the data</li>
+<li><code>AnEventHappened</code>, which is actually an <code>Event</code> factory</li>
+<li><code>EventStore</code>, a service responsible for "logging" <code>Event</code>s</li>
+</ul>
+
+<p>We could have done without the factory and create directly <code>Event</code> in
+<code>LandRoverHandler</code>, but then we'd have no way to check in our tests that it
+was constructed with the right data.</p>
+
+<p>Those classes don't exist yet, we've made them up to build a coherent
+<strong>story</strong>. Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>They fail because of the missing classes... But phpspec bootstrapped them for
+us!</p>
+
+<p>It created the <code>src/MarsRover/Navigation/AnEventHappened.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+interface AnEventHappened
+{
+
+    public function justNow($argument1, $argument2);
+}
+</code></pre>
+
+<p>It also created the <code>src/MarsRover/Navigation/Event.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+interface Event
+{
+}
+</code></pre>
+
+<p>And it created the <code>src/MarsRover/Navigation/EventStore.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+interface EventStore
+{
+
+    public function log($argument1);
+}
+</code></pre>
+
+<p>As we can see, when we reference a non existence class, phpspec generates an
+interface for us. It also generates methods, if we've described method calls
+in our test.</p>
+
+<p>For now we'll leave them like this, and have a look at the generated
+<code>src/MarsRover/Navigation/LandRoverHandler.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRoverHandler
+{
+    private $anEventHappened;
+
+    private $eventStore;
+
+    public function __construct(AnEventHappened $anEventHappened, EventStore $eventStore)
+    {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(LandRover $landRover)
+    {
+    }
+}
+</code></pre>
+
+<p>Thanks to the <a href="https://github.com/memio/spec-gen">SpecGen extension</a>, phpspec
+was able to detect Dependency Injection, and bootstrapped a constructor with
+an attribute initialization for us. How nice!</p>
+
+<p>We'll just need to complete the <code>handle</code> method:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRoverHandler
+{
+    const EVENT_NAME = 'rover_landed';
+
+    private $anEventHappened;
+    private $eventStore;
+
+    public function __construct(
+        AnEventHappened $anEventHappened,
+        EventStore $eventStore
+    ) {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(LandRover $landRover)
+    {
+        $roverLanded = $this-&gt;anEventHappened-&gt;justNow(self::EVENT_NAME, [
+            'x' =&gt; $landRover-&gt;getCoordinates()-&gt;getX(),
+            'y' =&gt; $landRover-&gt;getCoordinates()-&gt;getY(),
+            'orientation' =&gt; $landRover-&gt;getOrientation()-&gt;get(),
+        ]);
+        $this-&gt;eventStore-&gt;log($roverLanded);
+    }
+}
+</code></pre>
+
+<p>Overall, the code looks very similar to the test. Let's run them:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We might want to use the same event name in both the code and the
+test, so let's create a <code>src/MarsRover/Navigation/Events.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Events
+{
+    const ROVER_LANDED = 'rover_landed';
+}
+</code></pre>
+
+<p>Then use it in the code:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRoverHandler
+{
+    private $anEventHappened;
+    private $eventStore;
+
+    public function __construct(
+        AnEventHappened $anEventHappened,
+        EventStore $eventStore
+    ) {
+        $this-&gt;anEventHappened = $anEventHappened;
+        $this-&gt;eventStore = $eventStore;
+    }
+
+    public function handle(LandRover $landRover)
+    {
+        $roverLanded = $this-&gt;anEventHappened-&gt;justNow(Events::ROVER_LANDED, [
+            'x' =&gt; $landRover-&gt;getCoordinates()-&gt;getX(),
+            'y' =&gt; $landRover-&gt;getCoordinates()-&gt;getY(),
+            'orientation' =&gt; $landRover-&gt;getOrientation()-&gt;get(),
+        ]);
+        $this-&gt;eventStore-&gt;log($roverLanded);
+    }
+}
+</code></pre>
+
+<p>and finally in the test:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\AnEventHappened;
+use MarsRover\Navigation\Event;
+use MarsRover\Navigation\Events;
+use MarsRover\Navigation\EventStore;
+use MarsRover\Navigation\LandRover;
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LandRoverHandlerSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    const EVENT_NAME = Events::ROVER_LANDED;
+    const EVENT_DATA = [
+        'x' =&gt; self::X,
+        'y' =&gt; self::Y,
+        'orientation' =&gt; self::ORIENTATION,
+    ];
+
+    function it_lands_a_rover_at_given_location(
+        AnEventHappened $anEventHappened,
+        Event $roverLanded,
+        EventStore $eventStore
+    ) {
+        $this-&gt;beConstructedWith($anEventHappened, $eventStore);
+        $landRover = new LandRover(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $anEventHappened-&gt;justNow(
+            self::EVENT_NAME,
+            self::EVENT_DATA
+        )-&gt;willReturn($roverLanded);
+        $eventStore-&gt;log($roverLanded)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($landRover);
+    }
+}
+</code></pre>
+
+<p>We can run the tests one last time:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>Still green! We can commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '2: Created LandRoverHandler'
+git checkout master
+git merge --no-ff 2-landing
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>With Event Sourcing, the logic associated to our "Landing a Rover on Mars" use
+case is quite simple: we just record it as an event.</p>
+
+<h2 id="what%27s-next%3F">What's next?</h2>
+
+<p>In the next article, we'll extract Event Sourcing logic from the <code>navigation</code>
+package and put it in its own <code>event-sourcing</code> one.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Landing orientation]]></title>
+            <link href="/2016/07/13/mars-rover-landing-orientation.html"/>
+            <updated>2016-07-13T00:00:00+01:00</updated>
+            <id>/2016/07/13/mars-rover-landing-orientation.html</id>
+            <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It will allow us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>Previously we've created a
+<a href="/2016/06/22/mars-rover-initialization.html">navigation package</a>, and in it
+a <code>LandRover</code> class that
+<a href="/2016/06/29/mars-rover-landing.html">validates input parameters</a> for our
+first use case:</p>
+
+<blockquote>
+  <p>Mars Rovers need first to be landed at a given position. A position is
+  composed of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an
+  orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+</blockquote>
+
+<p>We've also started to refactor it by
+<a href="/2016/07/06/mars-rover-landing-coordinates.html">extracting coordinates in their own class</a>.</p>
+
+<p>In this article we're going to further refactor <code>LandRover</code>:</p>
+
+<pre><code>cd packages/navigation
+git checkout 2-landing
+</code></pre>
+
+<h2 id="responsibilities">Responsibilities</h2>
+
+<p>By having a look at <code>LandRover</code>, we can guess that it has 2 reasons to change:</p>
+
+<ul>
+<li>coordinates <code>x</code> and <code>y</code> might become floats, or have an additional <code>z</code></li>
+<li>orientation might become an angular degree, or have a vertical orientation</li>
+</ul>
+
+<p>This hints toward two new classes, extracted from <code>LandRover</code>: <code>Coordinates</code>
+and <code>Orientation</code>. In this article we'll take care of <code>Orientation</code>.</p>
+
+<h2 id="orientation">Orientation</h2>
+
+<p>Let's start by bootstraping <code>Orientation</code> test class using
+<a href="http://www.phpspec.net/en/stable/">phpspec</a>:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\Orientation'
+</code></pre>
+
+<p>It should create the <code>spec/MarsRover/Navigation/OrientationSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class OrientationSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(self::class);
+    }
+}
+</code></pre>
+
+<p>Instead of reusing tests from <code>LandRover</code>, we'll try to describe all the
+possible orientations:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use PhpSpec\ObjectBehavior;
+
+class OrientationSpec extends ObjectBehavior
+{
+    const NORTH = 'north';
+    const EAST = 'east';
+    const WEST = 'west';
+    const SOUTH = 'south';
+
+    function it_can_face_north()
+    {
+        $this-&gt;beConstructedWith(self::NORTH);
+
+        $this-&gt;get()-&gt;shouldBe(self::NORTH);
+    }
+
+    function it_can_face_east()
+    {
+        $this-&gt;beConstructedWith(self::EAST);
+
+        $this-&gt;get()-&gt;shouldBe(self::EAST);
+    }
+
+    function it_can_face_west()
+    {
+        $this-&gt;beConstructedWith(self::WEST);
+
+        $this-&gt;get()-&gt;shouldBe(self::WEST);
+    }
+
+    function it_can_face_south()
+    {
+        $this-&gt;beConstructedWith(self::SOUTH);
+
+        $this-&gt;get()-&gt;shouldBe(self::SOUTH);
+    }
+
+    function it_cannot_face_anywhere_else()
+    {
+        $this-&gt;beConstructedWith('Somehwere else');
+
+        $this
+            -&gt;shouldThrow(\InvalidArgumentException::class)
+            -&gt;duringInstantiation()
+        ;
+    }
+}
+</code></pre>
+
+<p>Now we can run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>They fail because <code>src/MarsRover/Navigation/Orientation.php</code> doesn't exist,
+so phpspec bootstrapped it for us:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Orientation
+{
+    private $argument;
+
+    public function __construct($argument)
+    {
+        $this-&gt;argument = $argument;
+    }
+
+    public function get()
+    {
+    }
+}
+</code></pre>
+
+<p>We can edit it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Orientation
+{
+    const NORTH = 'north';
+    const EAST = 'east';
+    const WEST = 'west';
+    const SOUTH = 'south';
+
+    const ALLOWED_ORIENTATIONS = [
+        self::NORTH,
+        self::EAST,
+        self::WEST,
+        self::SOUTH,
+    ];
+
+    private $orientation;
+
+    public function __construct($orientation)
+    {
+        if (false === in_array($orientation, self::ALLOWED_ORIENTATIONS, true)) {
+            throw new \InvalidArgumentException(
+                'Orientation must be one of: '
+                .implode(', ', self::ALLOWED_ORIENTATIONS)
+            );
+        }
+        $this-&gt;orientation = $orientation;
+    }
+
+    public function get() : string
+    {
+        return $this-&gt;orientation;
+    }
+}
+</code></pre>
+
+<p>And run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! It's important to note that tests should also be refactored.
+We're going to use <code>Orientation</code> constants in the tests:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class OrientationSpec extends ObjectBehavior
+{
+    function it_can_face_north()
+    {
+        $this-&gt;beConstructedWith(Orientation::NORTH);
+
+        $this-&gt;get()-&gt;shouldBe(Orientation::NORTH);
+    }
+
+    function it_can_face_east()
+    {
+        $this-&gt;beConstructedWith(Orientation::EAST);
+
+        $this-&gt;get()-&gt;shouldBe(Orientation::EAST);
+    }
+
+    function it_can_face_west()
+    {
+        $this-&gt;beConstructedWith(Orientation::WEST);
+
+        $this-&gt;get()-&gt;shouldBe(Orientation::WEST);
+    }
+
+    function it_can_face_south()
+    {
+        $this-&gt;beConstructedWith(Orientation::SOUTH);
+
+        $this-&gt;get()-&gt;shouldBe(Orientation::SOUTH);
+    }
+
+    function it_cannot_face_anywhere_else()
+    {
+        $this-&gt;beConstructedWith('Somehwere else');
+
+        $this
+            -&gt;shouldThrow(\InvalidArgumentException::class)
+            -&gt;duringInstantiation()
+        ;
+    }
+}
+</code></pre>
+
+<p>Running the tests again:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>Still green! We can now update <code>LandRover</code> tests to use <code>Orientation</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Orientation;
+use PhpSpec\ObjectBehavior;
+
+class LandRoverSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = Orientation::NORTH;
+
+    function it_has_coordinates()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $coordinates = $this-&gt;getCoordinates();
+        $coordinates-&gt;getX()-&gt;shouldBe(self::X);
+        $coordinates-&gt;getY()-&gt;shouldBe(self::Y);
+    }
+
+    function it_has_an_orientation()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $this-&gt;getOrientation()-&gt;get()-&gt;shouldBe(self::ORIENTATION);
+    }
+}
+</code></pre>
+
+<p>We've removed orientation checking from <code>LandRover</code> tests, as we now trust
+<code>Orientation</code> to do the job. Now We can use <code>Orientation</code> in <code>LandRover</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRover
+{
+    private $coordinates;
+    private $orientation;
+
+    public function __construct($x, $y, $orientation)
+    {
+        $this-&gt;coordinates = new Coordinates($x, $y);
+        $this-&gt;orientation = new Orientation($orientation);
+    }
+
+    public function getCoordinates() : Coordinates
+    {
+        return $this-&gt;coordinates;
+    }
+
+    public function getOrientation() : Orientation
+    {
+        return $this-&gt;orientation;
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We can now commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '2: Created Orientation'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Once again we've completed the full TDD cycle: first test, then code and
+finally refactor.</p>
+
+<p>Before we started to extract <code>Coordinates</code> and <code>Orientation</code>, <code>LandRover</code> tests
+were starting to get long and so we didn't bother to go too much into details.
+This refactoring allowed us to get more confidence and add more testing cases.</p>
+
+<p>phpspec has been really helpful by boostraping tests, and then when running the
+tests by bootstraping code: it makes the whole TDD cycle more natural. But
+it also allows us to have runnable self-checking specifications:</p>
+
+<pre><code>vendor/bin/phpspec run --format=pretty
+</code></pre>
+
+<p>This should now output:</p>
+
+<pre><code><br />      MarsRover\Navigation\Coordinates
+
+  12  ✔ has x coordinate
+  22  ✔ cannot have non integer x coordinate
+  34  ✔ has y coordinate
+  44  ✔ cannot have non integer y coordinate
+
+      MarsRover\Navigation\LandRover
+
+  14  ✔ has coordinates
+  27  ✔ has an orientation
+
+      MarsRover\Navigation\Orientation
+
+  10  ✔ can face north
+  17  ✔ can face east
+  24  ✔ can face west
+  31  ✔ can face south
+  38  ✔ cannot face anywhere else
+
+
+3 specs
+11 examples (11 passed)
+12ms
+</code></pre>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article we'll create the actual landing logic, using Event Sourcing.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Landing coordinates]]></title>
+            <link href="/2016/07/06/mars-rover-landing-coordinates.html"/>
+            <updated>2016-07-06T00:00:00+01:00</updated>
+            <id>/2016/07/06/mars-rover-landing-coordinates.html</id>
+            <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It will allow us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>Previously we've created a
+<a href="/2016/06/22/mars-rover-initialization.html">navigation package</a>, and in it
+a <code>LandRover</code> class that
+<a href="/2016/06/29/mars-rover-landing.html">validates input parameters</a> for our
+first use case:</p>
+
+<blockquote>
+  <p>Mars Rovers need first to be landed at a given position. A position is
+  composed of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an
+  orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+</blockquote>
+
+<p>In this article we're going to refactor <code>LandRover</code>:</p>
+
+<pre><code>cd packages/navigation
+git checkout 2-landing
+</code></pre>
+
+<h2 id="responsibilities">Responsibilities</h2>
+
+<p>By having a look at <code>LandRover</code>, we can guess that it has 2 reasons to change:</p>
+
+<ul>
+<li>coordinates <code>x</code> and <code>y</code> might become floats, or have an additional <code>z</code></li>
+<li>orientation might become an angular degree, or have a vertical orientation</li>
+</ul>
+
+<p>This hints toward two new classes, extracted from <code>LandRover</code>: <code>Coordinates</code>
+and <code>Orientation</code>. In this article we'll take care of <code>Coordinates</code>.</p>
+
+<h2 id="coordinates">Coordinates</h2>
+
+<p>First let's bootstrap the test class, using
+<a href="http://www.phpspec.net/en/stable/">phpspec</a>:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\Coordinates'
+</code></pre>
+
+<p>This will create the <code>spec/MarsRover/Navigation/CoordinatesSpec.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\Coordinates;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class CoordinatesSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(Coordinates::class);
+    }
+}
+</code></pre>
+
+<p>We can edit it, by using what we've done in <code>LandRover</code> test class:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use PhpSpec\ObjectBehavior;
+
+class CoordinatesSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+
+    function it_has_x_coordinate()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y
+        );
+
+        $this-&gt;getX()-&gt;shouldBe(self::X);
+    }
+
+    function it_cannot_have_non_integer_x_coordinate()
+    {
+        $this-&gt;beConstructedWith(
+            'Nobody expects the Spanish Inquisition!',
+            self::Y
+        );
+
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
+    }
+
+    function it_has_y_coordinate()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y
+        );
+
+        $this-&gt;getY()-&gt;shouldBe(self::Y);
+    }
+
+    function it_cannot_have_non_integer_y_coordinate()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            'No one expects the Spanish Inquisition!'
+        );
+
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
+    }
+}
+</code></pre>
+
+<p>If we run the tests now, it will bootsrap the <code>Coordinates</code> class:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>And it indeed created the <code>src/MarsRover/Navigation/Coordinates.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Coordinates
+{
+    private $argument1;
+
+    private $argument2;
+
+    public function __construct($argument1, $argument2)
+    {
+        $this-&gt;argument1 = $argument1;
+        $this-&gt;argument2 = $argument2;
+    }
+
+    public function getX()
+    {
+    }
+
+    public function getY()
+    {
+    }
+}
+</code></pre>
+
+<p>This leaves us with the task of completing it, reusing what's been done in
+<code>LandRover</code> class:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class Coordinates
+{
+    private $x;
+    private $y;
+
+    public function __construct($x, $y)
+    {
+        if (false === is_int($x)) {
+            throw new \InvalidArgumentException(
+                'X coordinate must be an integer'
+            );
+        }
+        $this-&gt;x = $x;
+        if (false === is_int($y)) {
+            throw new \InvalidArgumentException(
+                'Y coordinate must be an integer'
+            );
+        }
+        $this-&gt;y = $y;
+    }
+
+    public function getX() : int
+    {
+        return $this-&gt;x;
+    }
+
+    public function getY() : int
+    {
+        return $this-&gt;y;
+    }
+}
+</code></pre>
+
+<p>We can run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! Now all we have to do is update <code>LandRover</code> test class to use
+<code>Coordinates</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use PhpSpec\ObjectBehavior;
+
+class LandRoverSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = 'north';
+
+    function it_has_coordinates()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $coordinates = $this-&gt;getCoordinates();
+        $coordinates-&gt;getX()-&gt;shouldBe(self::X);
+        $coordinates-&gt;getY()-&gt;shouldBe(self::Y);
+    }
+
+    function it_has_an_orientation()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $this-&gt;getOrientation()-&gt;shouldBe(self::ORIENTATION);
+    }
+
+    function it_cannot_have_a_non_cardinal_orientation()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            'A hareng!'
+        );
+
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
+    }
+}
+</code></pre>
+
+<p>We no longer need to check for invalid <code>x</code> and <code>y</code> values, as we trust
+<code>Coordinates</code> to take care of them for us. We can now update <code>LandRover</code> class:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRover
+{
+    const VALID_ORIENTATIONS = ['north', 'east', 'west', 'south'];
+
+    private $coordinates;
+    private $orientation;
+
+    public function __construct($x, $y, $orientation)
+    {
+        $this-&gt;coordinates = new Coordinates($x, $y);
+        if (false === in_array($orientation, self::VALID_ORIENTATIONS, true)) {
+            throw new \InvalidArgumentException(
+                'Orientation must be one of: '
+                .implode(', ', self::VALID_ORIENTATIONS)
+            );
+        }
+        $this-&gt;orientation = $orientation;
+    }
+
+    public function getCoordinates() : Coordinates
+    {
+        return $this-&gt;coordinates;
+    }
+
+    public function getOrientation() : string
+    {
+        return $this-&gt;orientation;
+    }
+}
+</code></pre>
+
+<p>And that should make our test pass:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! That's enough for us to commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '2: Created Coordinates'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We've followed the full cycle of TDD: test, code and refactor. Using phpspec
+has been really helpful as it bootstraped the test classes and then their code
+classes for us.</p>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article, we'll extract <code>Orientation</code> from <code>LandRover</code>.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Mars Rover, Landing]]></title>
+            <link href="/2016/06/29/mars-rover-landing.html"/>
+            <updated>2016-06-29T00:00:00+01:00</updated>
+            <id>/2016/06/29/mars-rover-landing.html</id>
+            <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
+the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
+It will allow us to practice the followings:</p>
+
+<ul>
+<li>Monolithic Repositories (MonoRepo)</li>
+<li>Command / Query Responsibility Segregation (CQRS)</li>
+<li>Event Sourcing (ES)</li>
+<li>Test Driven Development (TDD)</li>
+</ul>
+
+<p>Previously we've created a
+<a href="/2016/06/22/mars-rover-initialization.html">navigation package</a>, we can now
+start developing the first use case:</p>
+
+<blockquote>
+  <p>Mars Rovers need first to be landed at a given position. A position is
+  composed of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an
+  orientation (a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
+</blockquote>
+
+<h2 id="twisting-command-bus">Twisting Command Bus</h2>
+
+<p>The <a href="/2016/05/11/towards-cqrs-command-bus.md">Command Bus design pattern</a>
+is composed of 3 classes:</p>
+
+<ul>
+<li>a <code>Command</code> class which validates use case input and with a name that
+communicates imperative intention (e.g. <code>LandRover</code>)</li>
+<li>associated to it (one to one relationship) is the <code>CommandHandler</code>,
+which does the actual logic for the use case</li>
+<li>a <code>CommandBus</code> that takes a <code>Command</code> and executes the appropriate
+<code>CommandHandler</code>, and that allows for middlewares</li>
+</ul>
+
+<p>We're going to twist this design pattern for the Mars Rover by omiting the
+<code>CommandBus</code> class, as we don't really need middlewares or to find the
+appropriate <code>CommandHandler</code> for a given <code>Command</code>.</p>
+
+<p>Let's start by creating the <code>Command</code> class that'll take care of the input
+parameter validation:</p>
+
+<pre><code>cd packages/navigation
+git checkout -b 2-landing
+</code></pre>
+
+<h2 id="land-rover">Land Rover</h2>
+
+<p>We're going to bootstrap the test class for <code>LandRover</code>, using
+<a href="http://www.phpspec.net/en/stable/">phpspec</a>:</p>
+
+<pre><code>vendor/bin/phpspec describe 'MarsRover\Navigation\LandRover'
+</code></pre>
+
+<p>This should generate this <code>spec/MarsRover/Navigation/LandRoverSpec.php</code> class:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use MarsRover\Navigation\LandRover;
+use PhpSpec\ObjectBehavior;
+use Prophecy\Argument;
+
+class LandRoverSpec extends ObjectBehavior
+{
+    function it_is_initializable()
+    {
+        $this-&gt;shouldHaveType(LandRover::class);
+    }
+}
+</code></pre>
+
+<p>This leaves us the task of editing it to start describing input parameters:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use PhpSpec\ObjectBehavior;
+
+class LandRoverSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = 'north';
+
+    function it_has_x_coordinate()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $this-&gt;getX()-&gt;shouldBe(self::X);
+    }
+
+    function it_has_y_coordinate()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $this-&gt;getY()-&gt;shouldBe(self::Y);
+    }
+
+    function it_has_an_orientation()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $this-&gt;getOrientation()-&gt;shouldBe(self::ORIENTATION);
+    }
+}
+</code></pre>
+
+<p>We can now run the tests:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>This will generate the <code>src/MarsRover/Navigation/LandRover.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRover
+{
+    private $argument1;
+
+    private $argument2;
+
+    private $argument3;
+
+    public function __construct($argument1, $argument2, $argument3)
+    {
+        $this-&gt;argument1 = $argument1;
+        $this-&gt;argument2 = $argument2;
+        $this-&gt;argument3 = $argument3;
+    }
+
+    public function getX()
+    {
+    }
+
+    public function getY()
+    {
+    }
+
+    public function getOrientation()
+    {
+    }
+}
+</code></pre>
+
+<p>All we need to do is to edit it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRover
+{
+    private $x;
+    private $y;
+    private $orientation;
+
+    public function __construct($x, $y, $orientation)
+    {
+        $this-&gt;x = $x;
+        $this-&gt;y = $y;
+        $this-&gt;orientation = $orientation;
+    }
+
+    public function getX() : int
+    {
+        return $this-&gt;x;
+    }
+
+    public function getY() : int
+    {
+        return $this-&gt;y;
+    }
+
+    public function getOrientation() : string
+    {
+        return $this-&gt;orientation;
+    }
+}
+</code></pre>
+
+<p>Let's run the tests again:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! But our job isn't finished yet, we haven't described invalid input
+parameters:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace spec\MarsRover\Navigation;
+
+use PhpSpec\ObjectBehavior;
+
+class LandRoverSpec extends ObjectBehavior
+{
+    const X = 23;
+    const Y = 42;
+    const ORIENTATION = 'north';
+
+    function it_has_x_coordinate()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $this-&gt;getX()-&gt;shouldBe(self::X);
+    }
+
+    function it_cannot_have_non_integer_x_coordinate()
+    {
+        $this-&gt;beConstructedWith(
+            'Nobody expects the Spanish Inquisition!',
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
+    }
+
+    function it_has_y_coordinate()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $this-&gt;getY()-&gt;shouldBe(self::Y);
+    }
+
+    function it_cannot_have_non_integer_y_coordinate()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            'No one expects the Spanish Inquisition!',
+            self::ORIENTATION
+        );
+
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
+    }
+
+    function it_has_an_orientation()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            self::ORIENTATION
+        );
+
+        $this-&gt;getOrientation()-&gt;shouldBe(self::ORIENTATION);
+    }
+
+    function it_cannot_have_a_non_cardinal_orientation()
+    {
+        $this-&gt;beConstructedWith(
+            self::X,
+            self::Y,
+            'A hareng!'
+        );
+
+        $this-&gt;shouldThrow(
+            \InvalidArgumentException::class
+        )-&gt;duringInstantiation();
+    }
+}
+</code></pre>
+
+<p>Running the tests again:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>They fail, because we need to check input parameters:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace MarsRover\Navigation;
+
+class LandRover
+{
+    const VALID_ORIENTATIONS = ['north', 'east', 'west', 'south'];
+
+    private $x;
+    private $y;
+    private $orientation;
+
+    public function __construct($x, $y, $orientation)
+    {
+        if (false === is_int($x)) {
+            throw new \InvalidArgumentException(
+                'X coordinate must be an integer'
+            );
+        }
+        $this-&gt;x = $x;
+        if (false === is_int($y)) {
+            throw new \InvalidArgumentException(
+                'Y coordinate must be an integer'
+            );
+        }
+        $this-&gt;y = $y;
+        if (false === in_array($orientation, self::VALID_ORIENTATIONS, true)) {
+            throw new \InvalidArgumentException(
+                'Orientation must be one of: '
+                .implode(', ', self::VALID_ORIENTATIONS)
+            );
+        }
+        $this-&gt;orientation = $orientation;
+    }
+
+    public function getX() : int
+    {
+        return $this-&gt;x;
+    }
+
+    public function getY() : int
+    {
+        return $this-&gt;y;
+    }
+
+    public function getOrientation() : string
+    {
+        return $this-&gt;orientation;
+    }
+}
+</code></pre>
+
+<p>Let's run the tests again:</p>
+
+<pre><code>vendor/bin/phpspec run
+</code></pre>
+
+<p>All green! We can now commit our work:</p>
+
+<pre><code>git add -A
+git commit -m '2: Created LandRover'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>We've followed the first steps of TDD: write a test then write the code.</p>
+
+<p>Using phpspec makes this process easier as the code gets bootstrapped for us
+once we've written the test.</p>
+
+<p>Since we write those tests first, in a descriptive way (test method names
+are sentences), we can use them as runnable self-checking specifications!
+phpspec allows us to display them explicitly:</p>
+
+<pre><code>vendor/bin/phpspec run --format=pretty
+</code></pre>
+
+<p>This should display:</p>
+
+<pre><code><br />      MarsRover\Navigation\LandRover
+
+  13  ✔ has x coordinate
+  24  ✔ cannot have non integer x coordinate
+  37  ✔ has y coordinate
+  48  ✔ cannot have non integer y coordinate
+  61  ✔ has an orientation
+  72  ✔ cannot have a non cardinal orientation
+
+
+1 specs
+6 examples (6 passed)
+10ms
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: <code>navigation</code> tests can also be run from the MonoRepo:</p>
+
+<pre><code>cd ../../
+composer update --optimize-autoloader
+vendor/bin/phpspec run
+</code></pre>
+</blockquote>
+
+<h2 id="what%27s-next">What's next</h2>
+
+<p>In the next article we'll complete the TDD cycle by refactoring <code>LandRover</code>:
+we'll extract <code>x</code> and <code>y</code> coordinates into their own class.</p>
 ]]></content>
         </entry>
     </feed>

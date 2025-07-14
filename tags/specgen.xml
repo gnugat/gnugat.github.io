@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-01-06T12:22:55+00:00</updated>
+    <updated>2025-07-14T16:12:21+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -11,7 +11,7 @@
             <entry>
             <title type="html"><![CDATA[ChatGPT: fluff or not? SpecBDD]]></title>
             <link href="/2023/04/19/chat-gpt-spec-bdd.html"/>
-            <updated>2023-04-19T00:00:00+00:00</updated>
+            <updated>2023-04-19T00:00:00+01:00</updated>
             <id>/2023/04/19/chat-gpt-spec-bdd.html</id>
             <content type="html"><![CDATA[<p>Now that a couple of months have passed since its over hyped launch,
 surely <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> has found some
@@ -563,7 +563,7 @@ the quest continues.</p>
             <entry>
             <title type="html"><![CDATA[SpecGen v0.3]]></title>
             <link href="/2015/05/28/spec-gen-0-3.html"/>
-            <updated>2015-05-28T00:00:00+00:00</updated>
+            <updated>2015-05-28T00:00:00+01:00</updated>
             <id>/2015/05/28/spec-gen-0-3.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.3 inserts a property for each constructor argument.</p>
@@ -724,7 +724,7 @@ probably be about using it for collaborators.</p>
             <entry>
             <title type="html"><![CDATA[SpecGen v0.2]]></title>
             <link href="/2015/05/20/spec-gen-0-2.html"/>
-            <updated>2015-05-20T00:00:00+00:00</updated>
+            <updated>2015-05-20T00:00:00+01:00</updated>
             <id>/2015/05/20/spec-gen-0-2.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> v0.2 inserts use statements.</p>
@@ -916,7 +916,7 @@ of a new generator: insertion of properties when the method is a constructor.</p
             <entry>
             <title type="html"><![CDATA[Memio SpecGen v0.1]]></title>
             <link href="/2015/05/13/memio-spec-gen.html"/>
-            <updated>2015-05-13T00:00:00+00:00</updated>
+            <updated>2015-05-13T00:00:00+01:00</updated>
             <id>/2015/05/13/memio-spec-gen.html</id>
             <content type="html"><![CDATA[<blockquote>
   <p><strong>TL;DR</strong>: <a href="http://github.com/memio/spec-gen">SpecGen</a> is a <a href="http://phpspec.net">phpspec</a>

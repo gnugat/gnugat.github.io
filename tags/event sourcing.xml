@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-01-06T12:22:55+00:00</updated>
+    <updated>2025-07-14T16:12:21+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -11,7 +11,7 @@
             <entry>
             <title type="html"><![CDATA[Mars Rover, Locating moving]]></title>
             <link href="/2016/10/12/mars-rover-locating-moving.html"/>
-            <updated>2016-10-12T00:00:00+00:00</updated>
+            <updated>2016-10-12T00:00:00+01:00</updated>
             <id>/2016/10/12/mars-rover-locating-moving.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -381,7 +381,7 @@ don't introduce regressions.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Driving event]]></title>
             <link href="/2016/09/07/mars-rover-driving-event.html"/>
-            <updated>2016-09-07T00:00:00+00:00</updated>
+            <updated>2016-09-07T00:00:00+01:00</updated>
             <id>/2016/09/07/mars-rover-driving-event.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -685,7 +685,7 @@ case: "Requesting the Rover's location".</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Event Sourcing code]]></title>
             <link href="/2016/08/03/mars-rover-event-sourcing-code.html"/>
-            <updated>2016-08-03T00:00:00+00:00</updated>
+            <updated>2016-08-03T00:00:00+01:00</updated>
             <id>/2016/08/03/mars-rover-event-sourcing-code.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to the
 <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -998,7 +998,7 @@ rover.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Event Sourcing package]]></title>
             <link href="/2016/07/27/mars-rover-event-sourcing-package.html"/>
-            <updated>2016-07-27T00:00:00+00:00</updated>
+            <updated>2016-07-27T00:00:00+01:00</updated>
             <id>/2016/07/27/mars-rover-event-sourcing-package.html</id>
             <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to the
 <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -1293,7 +1293,7 @@ navigation.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Landing event]]></title>
             <link href="/2016/07/20/mars-rover-landing-event.html"/>
-            <updated>2016-07-20T00:00:00+00:00</updated>
+            <updated>2016-07-20T00:00:00+01:00</updated>
             <id>/2016/07/20/mars-rover-landing-event.html</id>
             <content type="html"><![CDATA[<p>In this series we're going to build the software of a Mars Rover, according to
 the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
@@ -1661,7 +1661,7 @@ package and put it in its own <code>event-sourcing</code> one.</p>
             <entry>
             <title type="html"><![CDATA[Mars Rover, Introduction]]></title>
             <link href="/2016/06/15/mars-rover-introduction.html"/>
-            <updated>2016-06-15T00:00:00+00:00</updated>
+            <updated>2016-06-15T00:00:00+01:00</updated>
             <id>/2016/06/15/mars-rover-introduction.html</id>
             <content type="html"><![CDATA[<p>Welcome to this Mars Rover series where we're going to practice the followings:</p>
 

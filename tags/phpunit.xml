@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-01-06T12:22:55+00:00</updated>
+    <updated>2025-07-14T16:12:21+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -11,7 +11,7 @@
             <entry>
             <title type="html"><![CDATA[PHPUnit setUp() is a lie]]></title>
             <link href="/2024/07/03/phpunit-setup-is-a-lie.html"/>
-            <updated>2024-07-03T00:00:00+00:00</updated>
+            <updated>2024-07-03T00:00:00+01:00</updated>
             <id>/2024/07/03/phpunit-setup-is-a-lie.html</id>
             <content type="html"><![CDATA[<p><a href="https://phpunit.de/index.html">PHPUnit</a> creates as many instances a Test Class, as it has test methods.</p>
 
@@ -262,7 +262,7 @@ or as "executed everytime the test class is instanciated"?</p>
             <entry>
             <title type="html"><![CDATA[ChatGPT: fluff or not? SpecBDD]]></title>
             <link href="/2023/04/19/chat-gpt-spec-bdd.html"/>
-            <updated>2023-04-19T00:00:00+00:00</updated>
+            <updated>2023-04-19T00:00:00+01:00</updated>
             <id>/2023/04/19/chat-gpt-spec-bdd.html</id>
             <content type="html"><![CDATA[<p>Now that a couple of months have passed since its over hyped launch,
 surely <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> has found some
@@ -814,7 +814,7 @@ the quest continues.</p>
             <entry>
             <title type="html"><![CDATA[Decouple from Libraries]]></title>
             <link href="/2015/10/12/decouple-from-libraries.html"/>
-            <updated>2015-10-12T00:00:00+00:00</updated>
+            <updated>2015-10-12T00:00:00+01:00</updated>
             <id>/2015/10/12/decouple-from-libraries.html</id>
             <content type="html"><![CDATA[<p>Libraries are similar to frameworks: they solve infrastructure problems (e.g.
 requesting remote endpoints or querying databases). They also don't directly
@@ -1412,7 +1412,7 @@ it can be worth it to protect ourselves from external changes.</p>
             <entry>
             <title type="html"><![CDATA[Decouple from Frameworks]]></title>
             <link href="/2015/09/30/decouple-from-frameworks.html"/>
-            <updated>2015-09-30T00:00:00+00:00</updated>
+            <updated>2015-09-30T00:00:00+01:00</updated>
             <id>/2015/09/30/decouple-from-frameworks.html</id>
             <content type="html"><![CDATA[<p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
 While necessary, those concerns don't add any value to your project: the business
@@ -2006,7 +2006,7 @@ by <a href="https://twitter.com/mrkrstphr">Kristopher Wilson</a></li>
             <entry>
             <title type="html"><![CDATA[PHPUnit with phpspec]]></title>
             <link href="/2015/09/23/phpunit-with-phpspec.html"/>
-            <updated>2015-09-23T00:00:00+00:00</updated>
+            <updated>2015-09-23T00:00:00+01:00</updated>
             <id>/2015/09/23/phpunit-with-phpspec.html</id>
             <content type="html"><![CDATA[<p><a href="https://phpunit.de/">PHPUnit</a> is a port of <a href="http://junit.org/">jUnit</a>, its name
 might be deceptive: it allows you to write any type of tests (unit, but also functional,

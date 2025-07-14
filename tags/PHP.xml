@@ -1,18 +1,798 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="https://gnugat.github.io/feed/atom.xml" rel="self"/>
-    <link href="https://gnugat.github.io/"/>
-    <updated>2016-02-17T07:54:01+00:00</updated>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-07-14T16:12:21+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
+            <title type="html"><![CDATA[Find all available Fully Qualified ClassNames]]></title>
+            <link href="/2014/11/26/find-all-available-fqcn.html"/>
+            <updated>2014-11-26T00:00:00+00:00</updated>
+            <id>/2014/11/26/find-all-available-fqcn.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/nomo-spaco">Nomo Spaco</a> finds a given
+  project's PHP files, and read them to give you the available Fully Qualified
+  ClassNames.</p>
+</blockquote>
+
+<p>PHP provides the following function to find the declared classes of a project:
+<a href="http://php.net/get_declared_classes">get_declared_classes</a>.</p>
+
+<p>However this function only lists the classes which have been loaded
+(included/required) before its call: the usage of an autoloader breaks it
+(<a href="http://getcomposer.org">Composer</a> for example).</p>
+
+<p>In this article, we'll see how to solve this problem.</p>
+
+<h2 id="for-a-single-class">For a single class</h2>
+
+<p>The first step is to find a way to get the Fully Qualified ClassName (fqcn) of
+a single class.</p>
+
+<p>A solution would be to read in its source file: if the project follows the
+<a href="http://php-fig.org/psr/psr-0">PSR-0</a> or <a href="http://php-fig.org/psr/psr-4">PSR-4</a>
+standards, the file should only contain one class and its filename should be the
+same as the classname.</p>
+
+<p>Let's create a function that retrieves the namespace declaration:</p>
+
+<pre><code class="php">&lt;?php
+
+function _get_full_namespace($filename) {
+    $lines = file($filename);
+    $namespaceLine = array_shift(preg_grep('/^namespace /', $lines));
+    $match = array();
+    preg_match('/^namespace (.*);$/', $namespaceLine, $match);
+    $fullNamespace = array_pop($match);
+
+    return $fullNamespace;
+}
+</code></pre>
+
+<p>Now let's create a function that chops down the filename to get the classname:</p>
+
+<pre><code class="php">&lt;?php
+
+function _get_classname($filename) {
+    $directoriesAndFilename = explode('/', $filename);
+    $filename = array_pop($directoriesAndFilename);
+    $nameAndExtension = explode('.', $filename);
+    $className = array_shift($nameAndExtension);
+
+    return $className;
+}
+</code></pre>
+
+<p>That was easy! To get the Fully Qualified ClassName from a filename we can simply
+call those two functions:</p>
+
+<pre><code class="php">&lt;?php
+
+$fqcn = _get_full_namespace($filename).'\\'._get_class_name($filename);
+</code></pre>
+
+<h2 id="for-a-project">For a project</h2>
+
+<p>The second step is to find the filenames of all the project's classes. Let's use
+the <a href="http://symfony.com/doc/current/components/finder/index.html">Symfony2 Finder Component</a>:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Finder\Finder;
+
+require __DIR__.'/vendor/autoload.php';
+
+function _get_filenames($path) {
+    $finderFiles = Finder::create()-&gt;files()-&gt;in($path)-&gt;name('*.php');
+    $filenames = array();
+    foreach ($finderFiles as $finderFile) {
+        $filenames[] $finderFiles-&gt;getRealpath();
+    }
+
+    return $filenames;
+}
+</code></pre>
+
+<p>And that's it! We can now create a function which calls those three:</p>
+
+<pre><code class="php">&lt;?php
+
+function get_all_fcqns($path) {
+    $filenames = _get_filenames($projectRoot);
+    $fcqns = array();
+    foreach ($filenames as $filename) {
+        $fcqns[] = _get_full_namespace($filename).'\\'._get_class_name($filename);
+    }
+
+    return $fcqns
+}
+</code></pre>
+
+<p>It can simply be used like this:</p>
+
+<pre><code class="php">&lt;?php
+
+$allFcqns = get_all_fcqns(__DIR__);
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>By finding all the PHP filenames in a project, and reading them to extract their
+namespace and classname, we can easily find all the all available Fully
+Qualified ClassNames.</p>
+
+<p>The given functions are not meant to be used in production:</p>
+
+<ol>
+<li>they won't include standard and loaded extensions classes
+(we could merge the result with <code>get_declared_classes()</code>)</li>
+<li>they don't check if the files comply to PSR-0 or PSR-1</li>
+<li>they will include test and fixture PHP files</li>
+</ol>
+
+<p>I've started a proof of concept: <a href="https://github.com/gnugat/nomo-spaco">Nomo Spaco</a>.
+Hopefully it will grow to be more efficient, safer and tested. But for now it
+provides you with a package, so you don't have to copy paste anything :) .</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[PHP array manipulation]]></title>
+            <link href="/2014/10/15/php-array-manipulation.html"/>
+            <updated>2014-10-15T00:00:00+01:00</updated>
+            <id>/2014/10/15/php-array-manipulation.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> provides a nice
+  API to manipulate array of lines (insert, replace, go to line, etc).</p>
+</blockquote>
+
+<p>Arrays are surely one of the most used PHP functionality: they're simple,
+convenient and benefit from a large set of standard functions to manipulate them.</p>
+
+<p>Let's see the different possibilities:</p>
+
+<ul>
+<li><a href="#finding-an-element">Finding an element</a></li>
+<li><a href="#finding-an-element-relatively-to-a-given-index">Finding an element relatively to a given index</a></li>
+<li><a href="#inserting-a-new-element">Inserting a new element</a></li>
+<li><a href="#removing-an-element">Removing an element</a></li>
+<li><a href="#retrieving-elements-from-a-file">Retrieving elements from a file</a></li>
+<li><a href="#saving-changes-in-a-file">Saving changes in a file</a></li>
+<li><a href="#there-is-a-better-way">There is a better way</a>
+
+<ul>
+<li><a href="#retrieving-a-line">Retrieving a line</a></li>
+<li><a href="#finding-an-element-relatively-to-a-given-line-number">Finding an element relatively to a given line number</a></li>
+<li><a href="#inserting-a-new-line">Inserting a new line</a></li>
+<li><a href="#using-text">Using Text</a></li>
+<li><a href="#cheat-sheet">Cheat Sheet</a>
+
+<ul>
+<li><a href="#editor">Editor</a></li>
+<li><a href="#text">Text</a></li>
+<li><a href="#file">File</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="finding-an-element">Finding an element</h2>
+
+<p>In order to find the index of a string in an array, we can use one of the
+following functions:</p>
+
+<pre><code class="php">&lt;?php
+
+$montyPython = array(
+    'This is a dead parrot',
+    'No, no, it\'s not dead, it\'s resting!',
+);
+
+$exactSentence = 'This is a dead parrot';
+array_search($exactSentence, $montyPython, true); // Returns 0
+$regex = '/resting!$/';
+$found = preg_grep($regex, $montyPython);
+key($found); // Returns 1
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: The third parameter of <a href="http://php.net/array_search"><code>array_search</code></a>
+  enables the strict comparison (it makes sure the types are also the same).</p>
+</blockquote>
+
+<p>We can find the matching elements of a pattern using
+<a href="http://php.net/preg_grep"><code>preg_grep</code></a>. To get the index of the first result
+found, we can use <a href="http://php.net/key"><code>key</code></a>.</p>
+
+<h2 id="finding-an-element-relatively-to-a-given-index">Finding an element relatively to a given index</h2>
+
+<p>It's great! Now what if we want to remember the index and then make a search
+relatively to it? For example we want to find the index of the element
+<code>/a knewt/</code>, but only in the elements above <code>... I got better...</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+$holyGrail = array(
+    'She turned me into a knewt!',
+    'A knewt?',
+    '... I got better...',
+    'A WITCH!',
+);
+
+$index = array_search('... I got better...', $holyGrail, true);
+$section = array_slice($holyGrail, 0, $index, true);
+$reversedSection = array_reverse($section, true);
+$found = preg_grep('/a knewt/', $reversedSection);
+key($found); // Returns 0
+</code></pre>
+
+<p>In this code snippet, we get a subset of the array
+(from the first element to <code>... I got better</code>) using
+<a href="http://php.net/array_slice"><code>array_slice</code></a> (the last argument allows to keep
+the indexes unchanged). This also excludes <code>... I got better...</code>.</p>
+
+<p>Then we change the order of the elements using
+<a href="http://php.net/array_reverse"><code>array_reverse</code></a> (the second argument allows to
+keep the index unchanged) so the element above <code>... I got better...</code> would be
+the first result.</p>
+
+<p>Finally we look for <code>/a knewt/</code> as we did previously.</p>
+
+<h2 id="inserting-a-new-element">Inserting a new element</h2>
+
+<p>If we want to insert a new element after a given index in the array, we need to
+use <a href="http://php.net/array_splice"><code>array_splice</code></a>:</p>
+
+<pre><code class="php">&lt;?php
+
+$grandPiano = array(
+    'I would like to learn how to fly an aeroplane',
+    'A what?',
+    'An aeroplane',
+    'OH! An aeroplane, oh I say we are grand aren\'t we?',
+    'Pardon me while I\'m flying me aeroplane... NOW GET ON THE TABLE!',
+);
+
+$found = preg_grep('/grand/', $grandPiano);
+$index = key($found);
+array_splice($grandPiano, $index + 1, 0, 'No more cluttered cream for me, butler, I\'m off to play the grand piano');
+</code></pre>
+
+<p>Actually <code>array_splice</code> allows to replace a subsection of an array, here's the
+explanation of its arguments:</p>
+
+<ol>
+<li>the array to manipulate</li>
+<li>the starting index</li>
+<li>the ending index (<code>0</code> means replacing nothing, therefore just inserting)</li>
+<li>the replacement (in our case the element to insert)</li>
+</ol>
+
+<p>It's not very explicit, but we have a solution for this (keep reading to find
+out).</p>
+
+<h2 id="removing-an-element">Removing an element</h2>
+
+<p>Here's an easy one:</p>
+
+<pre><code class="php">&lt;?php
+
+$parrot = array(
+    'Hello, I would like to make a complain. Hello, miss?',
+    'What do you mean miss?',
+    'Sorry, I have a cold',
+);
+
+$index = array_search('Sorry, I have a cold', $parrot, true);
+unset($parrot[$index]);
+</code></pre>
+
+<p>You might want to reorder the indexes, to avoid gaps:</p>
+
+<pre><code class="php">&lt;?php
+
+$parrot = array(
+    'Hello, I would like to make a complain. Hello, miss?',
+    'What do you mean miss?',
+    'Sorry, I have a cold',
+);
+
+$index = array_search('What do you mean miss?', $parrot, true);
+unset($parrot[$index]);
+// Current value:
+// $parrot = array(
+//     0 =&gt; 'Hello, I would like to make a complain. Hello, miss?',
+//     2 =&gt; 'Sorry, I have a cold',
+// );
+
+$parrot = array_values($parrot);
+// Current value:
+// $parrot = array(
+//     0 =&gt; 'Hello, I would like to make a complain. Hello, miss?',
+//     1 =&gt; 'Sorry, I have a cold',
+// );
+</code></pre>
+
+<p>The <a href="http://php.net/array_values"><code>array_values</code></a> function is equivalent to:</p>
+
+<pre><code class="php">$newArray = array();
+foreach ($oldArray as $element) {
+    $newArray[] = $element;
+}
+</code></pre>
+
+<h2 id="retrieving-elements-from-a-file">Retrieving elements from a file</h2>
+
+<p>Until now, we've been using a hard coded array, but this is rarely what we
+encounter in real life project. The data could for example come from a file,
+which can be transformed into an array of lines:</p>
+
+<pre><code class="php">&lt;?php
+
+$file = file('/tmp/holy-grail.text', FILE_IGNORE_NEW_LINES);
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: the second argument will remove the trailing line breaks.</p>
+</blockquote>
+
+<p>The only problem with <a href="http://php.net/file"><code>file</code></a> is that it will remove the
+last line if it's empty. Let's use another function:</p>
+
+<pre><code class="php">&lt;?php
+
+$content = file_get_contents('/tmp/holy-grail.txt');
+$lines = explode("\n", $content);
+</code></pre>
+
+<p>The <a href="http://php.net/file_get_contents"><code>file_get_contents</code></a> function returns the
+content as a string.</p>
+
+<p>We used <a href="http://php.net/explode"><code>explode</code></a> to split it into an array of lines.</p>
+
+<p>This assumes that the file hasn't been created on Windows (where the line
+separator is <code>\r\n</code>)... We need to detect the line break:</p>
+
+<pre><code class="php">&lt;?php
+
+$content = @file_get_contents('/tmp/holy-grail.txt');
+$lineBreak = "\n"; // Used by every systems (except Windows), so used as default
+if (false === strpos($content, "\n")) { // No line break detected at all
+    $lineBreak = PHP_EOL; // Using the system's one
+}
+if (false !== strpos($content, "\r\n")) { // Windows line break detected
+    $lineBreak = "\r\n";
+}
+$lines = explode($lineBreak, $content);
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: There's many check to be done before actually reading the file
+  (does the file actually exists? Do we have the permission to read it?).
+  We have a solution for this (keep reading to find out).</p>
+</blockquote>
+
+<h2 id="saving-changes-in-a-file">Saving changes in a file</h2>
+
+<p>If we do any changes to those lines, we might want to save them on the
+filesystem:</p>
+
+<pre><code class="php">&lt;?php
+
+$lines = array(
+    'Morning, morning, morning',
+    'Morning Jim, Morning Jack',
+    'Can\'t complain, keep coming back',
+    'Boring, boring, boring',
+);
+$lineBreak = "\n"; // Or whatever has been detected
+$content = implode($lineBreak, $lines);
+file_put_contents('/tmp/silly-walk-song.txt', $content);
+</code></pre>
+
+<p>To convert back the array of lines to a string content, we use
+<a href="http://php.net/implode"><code>implode</code></a>.</p>
+
+<p>To write the content in the file, we use
+<a href="http://php.net/file_put_contents"><code>file_put_contents</code></a>.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: There's many check to be done before actually writing in a file
+  (does the path actually exists? Do we have the permissions? What happens if
+  the writing process fails during the execution?). To solve this, use the
+  Symfony2 Filesystem Component (<code>Filesystem#dumpFile()</code>).</p>
+</blockquote>
+
+<h2 id="there-is-a-better-way">There is a better way</h2>
+
+<p>You don't find <code>array_splice</code> very explicit for element insertion (or can't find
+a way to remember its argument order/meaning)?</p>
+
+<p>Keeping the elements, the index, the line break in separates variables looks too
+procedural for you?</p>
+
+<p>And what about error management?</p>
+
+<p>Don't panic! There is a better way: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a>
+(it means "Editor" in esperanto).</p>
+
+<p>This small library makes array manipulation easier by providing:</p>
+
+<ul>
+<li>an <code>Editor</code> object (open, save, find, insert, etc)</li>
+<li>a <code>Text</code> object (line break, elements, current index, etc)</li>
+<li>a <code>File</code> object (same as <code>Text</code>, but with filename)</li>
+</ul>
+
+<p>Use it in your projects, thanks to <a href="http://getcomposer.org">Composer</a>:</p>
+
+<pre><code>composer require 'gnugat/redaktilo:~1.1'
+</code></pre>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\EditorFactory;
+
+$editor = EditorFactory::createEditor();
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: In order to make operations more explicit, Redaktilo has adopted the
+  vocabulary of file edition (more specifically manipulation of lines). But in
+  the end it's still array manipulation.</p>
+</blockquote>
+
+<h3 id="retrieving-a-line">Retrieving a line</h3>
+
+<p>You don't have to worry about file checking and line break detection anymore:</p>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\EditorFactory;
+
+$editor = EditorFactory::createEditor();
+$file = $editor-&gt;open('/tmp/silly-walk-song.txt');
+$file-&gt;getLineBreak(); // Returns "\n" if the file hasn't been created on Windows
+</code></pre>
+
+<h3 id="finding-an-element-relatively-to-a-given-line-number">Finding an element relatively to a given line number</h3>
+
+<p>Redaktilo takes care of the search strategy for you (it uses <code>preg_grep</code> when
+you give a valid regular expression, and <code>array_search</code> when you give a string).</p>
+
+<p>It supports search relative to the current line number stored in the given
+<code>Text</code> and <code>File</code> (it uses <code>array_slice</code>, <code>array_reverse</code> and <code>key</code> internally).</p>
+
+<p>The <code>hasAbove</code> and <code>hasBelow</code> methods just return a boolean, while the
+<code>jumpAbove</code> and <code>jumpBelow</code> methods rather store the found line number in the
+given <code>Text</code> and <code>File</code> (and raise an exception if nothing is found):</p>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\EditorFactory;
+
+$editor = EditorFactory::createEditor();
+$file = $editor-&gt;open('/tmp/silly-walk-song.txt');
+
+$editor-&gt;jumpBelow($file, 'Boring, boring, boring');
+$file-&gt;getCurrentLineNumber(); // Returns 3
+
+$editor-&gt;hasAbove($file, '/morning,/'); // Returns true
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: <code>hasAbove</code>, <code>hasBelow</code>, <code>jumpAbove</code> and <code>jumpBelow</code> all have a third
+  argument which is a line number. If provided, the search will be done
+  relatively to this line number, rather than to the current one.</p>
+  
+  <p>For example, checking the presence of a pattern in the whole file can be done
+  as: <code>$editor-&gt;hasBelow($file, $pattern, 0); // starts the search from the top of the file</code>.</p>
+</blockquote>
+
+<h3 id="inserting-a-new-line">Inserting a new line</h3>
+
+<p>No more <code>array_splice</code> nonsense!</p>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\EditorFactory;
+
+$editor = EditorFactory::createEditor();
+$file = $editor-&gt;open('/tmp/silly-walk-song.txt');
+
+$editor-&gt;insertAbove($file, 'The silly walk song');
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: <code>insertAbove</code>, <code>insertBelow</code>, <code>replace</code> and <code>remove</code> all have a
+  third argument which is a line number. If provided, the anipulation will be
+  done relatively to it, instead of relatively to the current one.</p>
+</blockquote>
+
+<h3 id="using-text">Using Text</h3>
+
+<p>If you're not manipulating a file, you can use <code>Text</code> just like we used
+<code>File</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\EditorFactory;
+use Gnugat\Redaktilo\Service\LineBreak;
+use Gnugat\Redaktilo\Service\TextFactory;
+
+$lineBreak = new LineBreak();
+$textFactory = new TextFactory($lineBreak);
+
+$text = $textFactory-&gt;make(&lt;&lt;&lt;EOF
+Some raw text you would have got from somewhere,
+for example a database.
+EOF
+);
+
+$editor = EditorFactory::createEditor();
+$editor-&gt;hasBelow($text, '/a database/'); // Returns true
+</code></pre>
+
+<h3 id="cheat-sheet">Cheat Sheet</h3>
+
+<p>There's many more operations available, as you can discover in
+<a href="https://github.com/gnugat/redaktilo/tree/master/doc">the documentation</a>.</p>
+
+<p>To make it easier, here's some cheat sheet.</p>
+
+<h4 id="editor">Editor</h4>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+use Gnugat\Redaktilo\Search\PatternNotFoundException;
+use Gnugat\Redaktilo\Search\SearchEngine;
+use Gnugat\Redaktilo\Service\Filesystem;
+use Symfony\Component\Filesystem\Exception\FileNotFoundException;
+use Symfony\Component\Filesystem\Exception\IOException;
+
+class Editor
+{
+    public function open($filename, $force = false); // @throws FileNotFoundException
+    public function save(File $file); // @throws IOException If cannot write
+
+    // @throw PatternNotFoundException
+    public function jumpAbove(Text $text, $pattern, $location = null);
+    public function jumpBelow(Text $text, $pattern, $location = null);
+
+    // @return bool
+    public function hasAbove(Text $text, $pattern, $location = null);
+    public function hasBelow(Text $text, $pattern, $location = null);
+
+    public function insertAbove(Text $text, $addition, $location = null);
+    public function insertBelow(Text $text, $addition, $location = null);
+    public function replace(Text $text, $replacement, $location = null);
+    public function remove(Text $text, $location = null);
+}
+</code></pre>
+
+<h4 id="text">Text</h4>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class Text
+{
+    public function getLines();
+    public function setLines(array $lines);
+    public function getLength();
+    public function getLineBreak();
+    public function setLineBreak($lineBreak);
+    public function getCurrentLineNumber();
+
+    // @throw InvalidLineNumberException
+    public function setCurrentLineNumber($lineNumber);
+    public function getLine($lineNumber = null);
+    public function setLine($line, $lineNumber = null);
+}
+</code></pre>
+
+<h4 id="file">File</h4>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class File extends Text
+{
+    public function getFilename();
+    public function setFilename($filename);
+}
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>PHP provides plenty of built-in functions to manipulate arrays, but those are
+not enough. <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> is a small library
+which provides a nicer API.</p>
+
+<p>It allows you to select a line relatively to the current one and then do CRUD
+operations on it.</p>
+
+<p>I hope you'll find it as usefull as I do and if you find any bug or have any
+proposals feel free to do so on <a href="https://github.com/gnugat/redaktilo/issues">Github</a>
+where <a href="http://loickpiera.com/">Loïck Piera</a> and myself will both be glad to help
+you.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: As for the 15/10/2014, the current version of Redaktilo is 1.1.6
+  (stable). Future updates are already planned!</p>
+</blockquote>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[PHP Tokenizer]]></title>
+            <link href="/2014/06/04/php-tokenizer.html"/>
+            <updated>2014-06-04T00:00:00+01:00</updated>
+            <id>/2014/06/04/php-tokenizer.html</id>
+            <content type="html"><![CDATA[<p>The <a href="http://www.php.net/manual/en/book.tokenizer.php">PHP Tokenizer documentation</a>
+looks a bit empty, and you have to try it out by yourself to understand how it
+works.</p>
+
+<p>While I don't mind the "learn by practice" approach (that's actually my
+favorite way of learning), it's inconvenient as you might have to re-discover
+things when using it again two month later.</p>
+
+<p>To fix this, I'll try to provide a small reference guide in this article.</p>
+
+<h2 id="php-tokens">PHP tokens</h2>
+
+<p>A token is just a unique identifier allowing you to define what you're
+manipulating: PHP keywords, function names, whitespace and comments are all be
+represented as tokens.</p>
+
+<p>If you want to programmatically read a PHP file, analyze its source code and
+possibly manipulate it and save the changes, then tokens will make your life
+easier.</p>
+
+<p>Here's some actual examples of what tokens are used for:</p>
+
+<ul>
+<li>analyzing PHP code to detect coding standard violations:
+<a href="https://github.com/squizlabs/PHP_CodeSniffer">PHP_CodeSniffer</a></li>
+<li>programmatic edition of PHP: <a href="https://github.com/nikic/PHP-Parser">PHP Parser</a></li>
+<li>live backport of PHP features (e.g. 5.6 to 5.2):
+<a href="https://github.com/igorw/galapagos#galapagos">Galapagos</a></li>
+</ul>
+
+<h2 id="basic-api">Basic API</h2>
+
+<p>Tokenizer provides you with <code>token_get_all($source)</code> which takes a string
+containing PHP source code and makes an array of tokens and informations out of
+it.</p>
+
+<p>Here's an example:</p>
+
+<pre><code class="php">&lt;?php
+$code =&lt;&lt;&lt;'EOF'
+&lt;?php
+
+/**
+ * @param string $content
+ */
+function strlen($content)
+{
+    for ($length = 0; isset($content[$length]); $length++);
+
+    return $length;
+}
+EOF;
+
+$tokens = token_get_all($code);
+</code></pre>
+
+<p>Should produce:</p>
+
+<pre><code>$tokens = array(
+    // Either a string or an array with 3 elements:
+    // 0: code, 1: value, 2: line number
+
+    // Line 1
+    array(T_OPEN_TAG, "&lt;?php\n", 1),
+    // Line 2
+    array(T_WHITESPACE, "\n", 2),
+    // Lines 3, 4 and 5
+    array(T_DOC_COMMENT, "/**\n * @param string $content\n */", 3), // On many lines
+    array(T_WHITESPACE, "\n", 5),
+    // Line 6
+    array(T_FUNCTION, "function", 6),
+    array(T_WHITESPACE, " ", 6), // Empty lines and spaces are the same: whitespace
+    array(T_STRING, "strlen", 6),
+    "(", // yep, no token nor line number...
+    array(T_VARIABLE, "$content", 6),
+    ")",
+    array(T_WHITESPACE, "\n", 6),
+    "{",
+    // Line 7
+    array(T_WHITESPACE, "\n", 7),
+    // Line 8
+    array(T_FOR, "for", 8),
+    array(T_WHITESPACE, " ", 8),
+    "(",
+    array(T_VARIABLE, "$length", 8),
+    array(T_WHITESPACE, " ", 8),
+    "=",
+    array(T_WHITESPACE, " ", 8),
+    array(T_NUM, "0", 8),
+    ";",
+    array(T_WHITESPACE, " ", 8),
+    array(T_ISSET, "isset", 8),
+    "(",
+    array(T_VARIABLE, "$content", 8),
+    "[",
+    array(T_VARIABLE, "$length", 8),
+    "]",
+    ")",
+    ";",
+    array(T_WHITESPACE, " ", 8),
+    array(T_VARIABLE, "$length", 8),
+    array(T_INC, "++", 8),
+    ")",
+    ";",
+    array(T_WHITESPACE, "\n\n", 8), // Double new line in one token
+    // Line 10
+    array(T_RETURN, "return", 10),
+    array(T_WHITESPACE, " ", 10),
+    array(T_VARIABLE, "$length", 10),
+    ";",
+    array(T_WHITESPACE, "\n", 10),
+    "}",
+);
+</code></pre>
+
+<p>As you can see some things might seem odd, but once you know it you can start
+manipulating the tokens. You should rely only on constants because their value
+might vary between versions (e.g. <code>T_OPEN_TAG</code> is <code>376</code> in 5.6 and <code>374</code> in
+5.5).</p>
+
+<p>If you want to display a readable representation of the token's constant values,
+use <code>token_name($token)</code>.</p>
+
+<h2 id="further-resources">Further resources</h2>
+
+<p>Here's some resources you might find interresting:</p>
+
+<ul>
+<li><a href="http://www.php.net/manual/en/book.tokenizer.php">Tokenizer documentation</a></li>
+<li><a href="http://www.php.net/manual/en/function.token-name.php">token_name documentation</a></li>
+<li><a href="http://www.php.net/manual/en/function.token-get-all.php">token_get_all documentation</a></li>
+<li><a href="http://www.php.net/manual/en/tokens.php">list of PHP tokens</a></li>
+<li><a href="https://github.com/php/php-src/blob/master/Zend/zend_language_parser.y">PHP grammar rules</a></li>
+<li><a href="http://stackoverflow.com/a/2751170/3437428">How to get the entire function from a file? on Stack Overflow</a></li>
+<li><a href="http://stackoverflow.com/questions/5832412/compiling-an-ast-back-to-source-code">Compiling an AST back to source code, on Stack Overflow</a></li>
+<li><a href="https://github.com/nikic/PHP-Parser">PHP Parser</a></li>
+<li><a href="https://github.com/igorw/galapagos#galapagos">Galapagos</a></li>
+<li><a href="https://github.com/squizlabs/PHP_CodeSniffer">PHP_CodeSniffer</a></li>
+<li><a href="https://github.com/gnugat/redaktilo">Redaktilo</a></li>
+<li><a href="http://www.tig12.net/spip/Working-with-PHP-tokens.html">working with PHP tokens by Thierry Graff</a></li>
+</ul>
+]]></content>
+        </entry>
+            <entry>
             <title type="html"><![CDATA[PHP generators and coroutines]]></title>
-            <link href="https://gnugat.github.io/2014/04/30/php-generators-and-coroutines.html"/>
+            <link href="/2014/04/30/php-generators-and-coroutines.html"/>
             <updated>2014-04-30T00:00:00+01:00</updated>
-            <id>https://gnugat.github.io/2014/04/30/php-generators-and-coroutines.html</id>
+            <id>/2014/04/30/php-generators-and-coroutines.html</id>
             <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
 
 <p>In PHP ~5.5, a function containing <code>yield</code> becomes an instance of the
