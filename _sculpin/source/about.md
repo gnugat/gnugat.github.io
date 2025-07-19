@@ -36,8 +36,8 @@ This last one is my favourite as it allows the creation of decoupled code
 > I wrote a tutorial to learn Symfony:
 > [The Ultimate Developer Guide To Symfony](/tags/ultimate%20symfony%20series).
 
-I'm currently a Lead Developer at [Constant.Co](http://constant.co/),
-a start up based in London.
+Between 2014 and 2014, I've been a Lead Developer at
+[Constant.Co](http://constant.co/), a start up based in London.
 
 > Our customers are mainly brands (e.g. Unilever) and media websites
 > (e.g. [BBC Good Food](http://www.bbcgoodfood.com/) in the UK,
@@ -48,6 +48,10 @@ a start up based in London.
 
 You can read more about my role there here:
 [My role as a Lead PHP Engineer](/2024/12/09/my-role-as-a-php-lead-engineer.html).
+
+I'm now a Backend PHP Engineer at [Bumble](https://bumble.com/).
+
+> Our mission is to build people closer to love.
 
 On my free time, I spend between 10 to 15 hours a week on pet projects in order
 to learn new things.
