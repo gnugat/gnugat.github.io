@@ -3,11 +3,684 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-07-14T16:42:05+01:00</updated>
+    <updated>2025-07-19T19:24:57+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[PHPUnit Best Practices (Ultimate Guide)]]></title>
+            <link href="/2025/07/31/phpunit-best-practices.html"/>
+            <updated>2025-07-31T00:00:00+01:00</updated>
+            <id>/2025/07/31/phpunit-best-practices.html</id>
+            <content type="html"><![CDATA[<p>Forge battle-tested code, under the hammer of PHPUnit.</p>
+
+<ul>
+<li><a href="#unit-tests">Unit Tests</a>
+
+<ul>
+<li><a href="#factory-methods">Factory Methods</a></li>
+<li><a href="#attributes">Attributes</a></li>
+<li><a href="#data-providers">Data Providers</a></li>
+<li><a href="#testdox">Testdox</a></li>
+<li><a href="#coding-standards">Coding Standards</a></li>
+<li><a href="#principles">Principles</a></li>
+</ul></li>
+<li><a href="#mocking">Mocking</a></li>
+<li><a href="#integration-tests">Integration Tests</a>
+
+<ul>
+<li><a href="#smoke-tests">Smoke Tests</a></li>
+</ul></li>
+<li><a href="#useful-cli-options">Useful CLI options</a>
+
+<ul>
+<li><a href="#configuration">Configuration</a></li>
+</ul></li>
+</ul>
+
+<h2 id="unit-tests">Unit Tests</h2>
+
+<blockquote>
+  <p><em>Inspired by <strong>Sebastian Bergmann</strong>, _Sources</em>:</p>
+  
+  <ul>
+  <li><a href="https://www.youtube.com/watch?v=qwRdnoeq1H8">So you think you know PHPUnit - Sebastian Bergmann - PHPDD2024</a></li>
+  <li><a href="https://www.youtube.com/watch?v=wR6YflVkAt4">Optimizing Your Test Suite - Sebastian Bergmann - PHP fwdays 2021</a></li>
+  <li><a href="https://github.com/sebastianbergmann/raytracer/">Sebastian's raytracer project</a></li>
+  <li><a href="https://phpunit.de/documentation.html">PHPUnit documentation</a></li>
+  </ul>
+</blockquote>
+
+<p>Here's a unit test for a <code>CheckArray-&gt;check(string $field, mixed $value): array</code> class:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Unit\Domain\Check;
+
+use App\Domain\Check\CheckArray;
+use App\Domain\Exception\ValidationFailedException;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Small;
+use PHPUnit\Framework\Attributes\TestDox;
+use PHPUnit\Framework\TestCase;
+
+#[CoversClass(CheckArray::class)]
+#[Small]
+class CheckArrayTest extends TestCase
+{
+    private const string FIELD = 'path.field_name';
+
+    private function checkArray(): CheckArray
+    {
+        return new CheckArray();
+    }
+
+    public function test_it_accepts_valid_array(): void
+    {
+        $validArray = [23, 42, 1337];
+
+        $this-&gt;assertSame($validArray, $this-&gt;checkArray()-&gt;check(
+            self::FIELD,
+            $validArray,
+        ));
+    }
+
+    public function test_it_accepts_null(): void
+    {
+        // When checking that no exception is thrown
+        $this-&gt;expectNotToPerformAssertions();
+
+        $this-&gt;checkArray()-&gt;check(
+            self::FIELD,
+            null,
+        );
+    }
+
+    /**
+     * @return array&lt;string, array{mixed}&gt;
+     */
+    public static function nonArrayTypesProvider(): array
+    {
+        return [
+            'string' =&gt; ['hello world'],
+            'integer' =&gt; [42],
+            'boolean' =&gt; [false],
+        ];
+    }
+
+    #[DataProvider('nonArrayTypesProvider')]
+    public function test_it_rejects_non_array_types(mixed $notAnArray): void
+    {
+        $this-&gt;expectException(ValidationFailedException::class);
+
+        $this-&gt;checkArray()-&gt;check(
+            self::FIELD,
+            $notAnArray,
+        );
+    }
+}
+</code></pre>
+
+<h3 id="factory-methods">Factory Methods</h3>
+
+<p>When the System Under Test (SUT) has a simple constructor,
+or its instantiation is clear and consistent,
+then instantiate it directly in each test method.</p>
+
+<p>But when the SUT's constructor has multiple parameters,
+or a couple of test method require the same specific configuration, 
+consider moving that creation logic to a private factory method:</p>
+
+<ul>
+<li>it ensures test consistency and validity by eliminating configuration drift</li>
+<li>it centralizes complex instantiation logic, making tests more readable</li>
+</ul>
+
+<p>Finally, when your SUT legitimately needs to be tested under different configurations,
+create explicit factory methods that document these variations.</p>
+
+<h3 id="attributes">Attributes</h3>
+
+<p>Attributes (<code>#[&lt;Name&gt;]</code>) were introduced in PHP 8 and PHPUnit 10,
+they replace Annotations (PHPdoc <code>@&lt;Name&gt;</code>) which have been deprecated in PHPUnit 10
+and removed in PHPUnit 12.</p>
+
+<p>Their goal is to make PHP tooling more robust and IDE integration more reliable, use them!</p>
+
+<p><strong>Specify targeted class</strong>:</p>
+
+<ul>
+<li><code>#[CoversClass]</code>: enforces proper test boundaries, prevents accidental coverage,
+and makes the intent clearer both to the readers and tools
+(code coverage, static analysis, etc)</li>
+<li><code>#[UsesClass]</code>: if code from other classes is expected to be used</li>
+</ul>
+
+<p><strong>Categorize tests</strong> based on their scope, complexity and resource usage:</p>
+
+<ul>
+<li><code>#[Small]</code> for testing individual components in isolation (unit),
+fast execution (typically under 100ms)</li>
+<li><code>#[Medium]</code> for testing multiple components together in isolation (integration),
+moderate execution (typically under 1s)</li>
+<li><code>#[Large]</code> for complete workflows (end to end),
+slow execution (over 1s)</li>
+<li><code>#[Group]</code> for arbitrary categories (including temporary ones, eg <code>wip</code>)</li>
+</ul>
+
+<h3 id="data-providers">Data Providers</h3>
+
+<p><strong>Use Data Providers</strong> to test different sets of inputs / outputs:</p>
+
+<ul>
+<li><code>#[DataProvider(string $publicStaticMethodName)]</code>
+for a method in the test class</li>
+<li><code>#[DataProviderExternal(string $className, string $publicStaticMethodName)]</code>
+for a method in a different class from the test one</li>
+<li><code>#[TestWith(array $data)]</code>
+to provide one set at a time, without having to declare a static method</li>
+</ul>
+
+<h3 id="testdox">Testdox</h3>
+
+<p><strong>Run PHPUnit with <code>--testdox</code> option</strong> to get executable specifications:</p>
+
+<ul>
+<li><code>#[TestDox(string $text)]</code>
+to customize what PHPUnit will display</li>
+</ul>
+
+<blockquote>
+  <p><strong>Note 1</strong></p>
+  
+  <p>Running <code>phpunit --testdox</code> with the following data provider:</p>
+
+<pre><code class="php">    public static function nonArrayTypesProvider(): array
+    {
+        return [
+            ['hello world'],
+            [42],
+            [false],
+        ];
+    }
+
+    #[DataProvider('nonArrayTypesProvider')]
+    public function test_it_rejects_non_array_types(mixed $notAnArray): void
+</code></pre>
+  
+  <p>Will output:</p>
+
+<pre><code>Check Array (App\Tests\Unit\Domain\Check\CheckArray)
+ ✔ It rejects non array types with data set 0
+ ✔ It rejects non array types with data set 1
+ ✔ It rejects non array types with data set 2
+</code></pre>
+</blockquote>
+
+<hr />
+
+<blockquote>
+  <p><strong>Note 2</strong></p>
+  
+  <p>This is equivalent to:</p>
+
+<pre><code class="php">    #[TestWith(['hello world'])]
+    #[TestWith([42])]
+    #[TestWith([false])]
+    public function test_it_rejects_non_array_types(mixed $notAnArray): void
+</code></pre>
+</blockquote>
+
+<hr />
+
+<blockquote>
+  <p><strong>Note 3</strong></p>
+  
+  <p>However, we can use string keys to describe each set:</p>
+
+<pre><code class="php">    public static function nonArrayTypesProvider(): array
+    {
+        return [
+            'string' =&gt; ['hello world'],
+            'integer' =&gt; [42],
+            'boolean' =&gt; [false],
+        ];
+    }
+
+    #[DataProvider('nonArrayTypesProvider')]
+    public function test_it_rejects_non_array_types(mixed $notAnArray): void
+</code></pre>
+  
+  <p>Which will output:</p>
+
+<pre><code>Check Array (App\Tests\Unit\Domain\Check\CheckArray)
+ ✔ It rejects non array types with string
+ ✔ It rejects non array types with integer
+ ✔ It rejects non array types with boolean
+</code></pre>
+</blockquote>
+
+<hr />
+
+<blockquote>
+  <p><strong>Note 4</strong></p>
+  
+  <p>Finally, we can also change the text with <code>#[TestDox]</code>:</p>
+
+<pre><code class="php">    public static function nonArrayTypesProvider(): array
+    {
+        return [
+            'string' =&gt; ['hello world'],
+            'integer' =&gt; [42],
+            'boolean' =&gt; [false],
+        ];
+    }
+
+    #[DataProvider('nonArrayTypesProvider')]
+    #[TestDox('it rejects `$notAnArray` because it does not have type `array`')]
+    public function test_it_rejects_non_array_types(mixed $notAnArray): void
+</code></pre>
+  
+  <p>Which will output:</p>
+
+<pre><code>Check Array (App\Tests\Unit\Domain\Check\CheckArray)
+ ✔ it rejects `hello·world` because it does not have type `array`
+ ✔ it rejects `42` because it does not have type `array`
+ ✔ it rejects `false` because it does not have type `array`
+</code></pre>
+</blockquote>
+
+<h3 id="coding-standards">Coding Standards</h3>
+
+<p><strong>Follow Coding Standards</strong> to ensure consistency across the PHP ecosystem,
+and internal projects:</p>
+
+<ul>
+<li><a href="https://www.php-fig.org/psr/psr-4/">PSR-4</a> for file, namespace and class names</li>
+<li><a href="https://www.php-fig.org/psr/psr-12/">PSR-12</a> for the rest</li>
+<li>discuss, agree and enforce coding styles in your team
+eg using <a href="https://cs.symfony.com/">PHP CS Fixer</a></li>
+</ul>
+
+<p><em>Here are examples of topics you can debate</em>:</p>
+
+<ul>
+<li><strong>Enforce strict types declaration</strong> (<code>declare(strict_types=1)</code>)
+to prevent type coercion bugs that can cause tests to pass when they shouldn't</li>
+<li><strong>Make test classes final</strong> 
+as they should never be extended from</li>
+<li><strong>Use visibility and type hint keywords</strong> 
+for future-proofing against language changes</li>
+<li><strong>Follow snake case for test method names</strong>
+so they read as text, with underscores representing spaces</li>
+<li><strong>Use <code>$this</code> over <code>self</code></strong>
+to call PHPUnit assertions</li>
+<li><strong>Use <code>#[Test]</code> attribute and <code>it_</code> prefix</strong>
+to help name test methods in an articulate way</li>
+</ul>
+
+<h3 id="principles">Principles</h3>
+
+<p>FIRST properties of Unit Tests, they should be:</p>
+
+<ul>
+<li><strong>Fast</strong>: to provide a short feedback loop</li>
+<li><strong>Isolated</strong>: one test failure shouldn't impact another test</li>
+<li><strong>Repeatable</strong>: the outcome of a test should be consistent over time</li>
+<li><strong>Self-validating</strong>: automated test should fail or pass for the right reason</li>
+<li><strong>Timely</strong>: write the test around the time the code was written, not long after (but ideally before)</li>
+</ul>
+
+<p>Follow <a href="https://wiki.c2.com/?ArrangeActAssert">AAA</a>,
+each test method should group these functional sections, separated by blank lines:</p>
+
+<ol>
+<li><strong>Arrange</strong>: all necessary preconditions and input</li>
+<li><strong>Act</strong>: on the System Under Test (SUT)</li>
+<li><strong>Assert</strong>: that the expected results have occurred</li>
+</ol>
+
+<p>Not necessarily in that order (eg when testing exceptions: Arrange, Expect, Act).</p>
+
+<p><a href="https://wiki.c2.com/?DontRepeatYourself">DRY</a> vs DAMP (aka WET),
+it's all about finding the right balance: pick whichever is more readable,
+on a case-by-case basis.</p>
+
+<blockquote>
+  <p>"DRY (Don't Repeat Yourself) increases maintainability
+  by isolating change (risk) to only those parts of the system that must change.</p>
+  
+  <p>DAMP (Descriptive And Meaningful Phrases, <em>aka WET: We Edit Twice</em>) increases maintainability
+  by reducing the time necessary to read and understand the code."</p>
+  
+  <p>— Chris Edwards</p>
+</blockquote>
+
+<h2 id="mocking">Mocking</h2>
+
+<blockquote>
+  <p><strong>Note</strong>: this is "In My Humble Opinion".</p>
+</blockquote>
+
+<p>There are two Test Driven Development (TDD) schools of thought:</p>
+
+<ul>
+<li><strong>Chicago / Detroit (classical)</strong>: use real objects, avoid mocks</li>
+<li><strong>London (specification Behaviour Driven Development - spec BDD)</strong>:
+use mocks to describe interactions between the System Under Test (SUT) and its dependencies (collaborators)</li>
+</ul>
+
+<p>The mocking library <a href="https://github.com/phpspec/prophecy">prophecy</a>'s expressive syntax
+allows for an approach that's more aligned with spec BDD.
+It can be used in PHPUnit with the <code>phpspec/prophecy-phpunit</code> package:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Unit\Domain\Event\Check;
+
+use App\Domain\Check\CheckDateTimeIso8601;
+use App\Domain\Event\Check\CheckStart;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Small;
+use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
+
+#[CoversClass(CheckStart::class)]
+#[Small]
+final class CheckStartTest extends TestCase
+{
+    use ProphecyTrait;
+
+    private const string FIELD = 'start';
+    private const string START = '2025-06-17T13:00:00';
+
+    public function test_it_checks_start(): void
+    {
+        $checkDateTimeIso8601 = $this-&gt;prophesize(CheckDateTimeIso8601::class);
+
+        $checkDateTimeIso8601-&gt;check(
+            self::FIELD,
+            self::START,
+        )-&gt;shouldBeCalled()-&gt;willReturn(self::START);
+
+        $checkStart = new CheckStart(
+            $checkDateTimeIso8601-&gt;reveal(),
+        );
+        $this-&gt;assertSame(self::START, $checkStart-&gt;check(
+            self::FIELD,
+            self::START,
+        ));
+    }
+}
+</code></pre>
+
+<h2 id="integration-tests">Integration Tests</h2>
+
+<blockquote>
+  <p>🤫 <strong>Super Secret Tip</strong>:</p>
+  
+  <p>PHPUnit instantiates the test class once per test method and once per data provider row.
+  This is a fundamental design decision that prioritizes test isolation over performance.</p>
+  
+  <p>So if you have:</p>
+  
+  <ul>
+  <li>5 regular test methods: that's 5 instances</li>
+  <li>1 test method with 10 data provider rows: that's 10 instances</li>
+  <li>Total: 15 instances created</li>
+  </ul>
+  
+  <p>Why This Matters:</p>
+  
+  <ul>
+  <li><strong>Performance</strong> : expensive <code>setUp()</code> and constructors will have a measurable impact</li>
+  <li><strong>Memory Usage</strong>: Each instance holds its own state in memory until the end of the testsuite run</li>
+  <li><strong>Test Isolation</strong>: Ensures no state leakage between tests (the main benefit)</li>
+  </ul>
+  
+  <p>Since each test method creates a new instance, expensive operations compound quickly. Watch out for:</p>
+  
+  <ul>
+  <li>repeated kernel booting</li>
+  <li>database connections</li>
+  <li>fixture loading (especially when Doctrine ORM Entity hydration is involved)</li>
+  <li>external API calls</li>
+  </ul>
+  
+  <p>You can use singletons for stateless services, transactions for database cleanup, and mocks for external dependencies.
+  The example below uses <code>AppSingleton::get()</code> to share a stateless application instance across the entire testsuite.</p>
+</blockquote>
+
+<h3 id="smoke-tests">Smoke Tests</h3>
+
+<blockquote>
+  <p><strong>Note</strong>: this is the pragmatic approach.</p>
+</blockquote>
+
+<p>For controllers and commands, no need to mock internal dependencies
+or asserting on complex business logic.</p>
+
+<p>Just craft the input, pass it to application, and verify the status code.</p>
+
+<p>This tests the entire request-response cycle:
+routing, middleware, validation, business logic, serialization... Everything.</p>
+
+<p>Here's an integration test for a <code>POST /v1/events</code> endpoint controller:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Integration\Controller\Event;
+
+use App\Controller\Event\CreateController;
+use App\Tests\AppSingleton;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Medium;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Request;
+
+#[CoversClass(CreateController::class)]
+#[Medium]
+final class CreateControllerTest extends TestCase
+{
+    public function test_it_creates_new_one(): void
+    {
+        $appKernel = AppSingleton::get()-&gt;appKernel();
+
+        $headers = [
+            'CONTENT_TYPE' =&gt; 'application/json',
+        ];
+        $request = Request::create('/v1/events', 'POST', [], [], [], $headers, (string) json_encode([
+            'title' =&gt; 'Daily stand up',
+            'start' =&gt; (new \DateTimeImmutable('now'))-&gt;format('Y-m-d\TH:i:s'),
+            'end' =&gt; (new \DateTimeImmutable('now + 1 second'))-&gt;format('Y-m-d\TH:i:s'),
+        ]));
+
+        $response = $appKernel-&gt;handle($request);
+        $appKernel-&gt;terminate($request, $response);
+
+        $this-&gt;assertSame(201, $response-&gt;getStatusCode(), (string) $response-&gt;getContent());
+    }
+
+    public function test_it_cannot_create_new_one_without_required_fields(): void
+    {
+        $appKernel = AppSingleton::get()-&gt;appKernel();
+
+        $headers = [
+            'CONTENT_TYPE' =&gt; 'application/json',
+        ];
+        $request = Request::create('/v1/events', 'POST', [], [], [], $headers, (string) json_encode([
+            'start' =&gt; '2025-07-09T09:00:00+00:00',
+            'end' =&gt; '2025-07-09T09:15:00+00:00',
+        ]));
+
+        $response = $appKernel-&gt;handle($request);
+        $appKernel-&gt;terminate($request, $response);
+
+        $this-&gt;assertSame(422, $response-&gt;getStatusCode(), (string) $response-&gt;getContent());
+    }
+}
+</code></pre>
+
+<p>And here's an integration test for a <code>./bin/console events:list</code> CLI command:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Integration\Command\Event;
+
+use App\Command\Event\ListCommand;
+use App\Tests\AppSingleton;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Medium;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Command\Command;
+
+#[CoversClass(ListCommand::class)]
+#[Medium]
+final class ListCommandTest extends TestCase
+{
+    public function test_it_lists_existing_ones(): void
+    {
+        $applicationTester = AppSingleton::get()-&gt;applicationTester();
+
+        $input = [
+            ListCommand::NAME,
+        ];
+
+        $statusCode = $applicationTester-&gt;run($input);
+
+        $this-&gt;assertSame(Command::SUCCESS, $statusCode, $applicationTester-&gt;getDisplay());
+    }
+}
+</code></pre>
+
+<h2 id="useful-cli-options">Useful CLI options</h2>
+
+<pre><code class="console">phpunit
+
+  # Configuration:
+  --generate-configuration             Generate configuration file with suggested settings
+  --migrate-configuration              Migrate configuration file to current format
+
+  # Selection:
+  --list-groups                        List available test groups
+  --group small                        Only run tests from the specified group(s)
+  --exclude-group small                Exclude tests from the specified group(s)
+
+  --list-tests                         List available tests
+  --covers 'CheckArray'                Only run tests that intend to cover &lt;name&gt;
+  --filter 'CheckArrayTest'            Filter which tests to run (test class, or test method)
+  --filter 'test_it_accepts_valid_array'
+
+  ## Useful for running testsuites individually, in the CI
+  --list-testsuites                    List available testsuites
+  --testsuite unit                     Only run tests from the specified testsuite(s)
+  --exclude-testsuite unit             Exclude tests from the specified testsuite(s)
+
+  # Execution
+  --stop-on-failure                    Stop after first failure
+  --order-by &lt;order&gt;                   Run tests in order: default|defects|depends|duration|no-depends|random|reverse|size
+
+  # Reporting
+  --no-progress                        Disable output of test execution progress (the dots)
+  --testdox                            Replace default result output with TestDox format
+</code></pre>
+
+<blockquote>
+  <p><strong>Order By options</strong>:</p>
+  
+  <ul>
+  <li><code>default</code>: tests run in the order they're discovered
+  (filesystem order, typically alphabetical)</li>
+  <li><code>defects</code>: previously failed/errored tests run first
+  (requires <code>--cache-result</code> to remember past failures)</li>
+  <li><code>depends</code>: tests with dependencies run after their dependencies, non-dependent tests run first</li>
+  <li><code>duration</code>: fastest tests run first, slowest tests run last
+  (requires <code>--cache-result</code> to remember execution times)</li>
+  <li><code>no-depends</code>: ignores test dependencies and runs tests in discovery order</li>
+  <li><code>random</code>: tests run in random order
+  (use <code>--random-order-seed &lt;N&gt;</code> for reproducible randomness)</li>
+  <li><code>reverse</code>: tests run in reverse discovery order</li>
+  <li><code>size</code>: tests run by size: <code>#[Small]</code>, then <code>#[Medium]</code>, after <code>#[Large]</code>, and finally unsized tests</li>
+  </ul>
+  
+  <p><em>Worth noting</em>: > * Combining options: <code>--order-by=depends,defects</code></p>
+</blockquote>
+
+<h3 id="configuration">Configuration</h3>
+
+<pre><code class="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!-- https://phpunit.readthedocs.io/en/latest/configuration.html --&gt;
+&lt;phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+
+         cacheDirectory=".phpunit.cache"
+         executionOrder="depends,defects"
+         requireCoverageMetadata="true"
+         beStrictAboutCoverageMetadata="true"
+         beStrictAboutOutputDuringTests="true"
+         displayDetailsOnPhpunitDeprecations="true"
+         failOnPhpunitDeprecation="true"
+         failOnRisky="true"
+         failOnWarning="true"
+
+         shortenArraysForExportThreshold="10"
+         colors="true"
+&gt;
+    &lt;php&gt;
+        &lt;!-- Useful for CI environments --&gt;
+        &lt;ini name="display_errors" value="1" /&gt;
+        &lt;ini name="error_reporting" value="-1" /&gt;
+
+        &lt;!-- Useful for Symfony --&gt;
+        &lt;env name="KERNEL_CLASS" value="App\Kernel" /&gt;
+        &lt;env name="APP_ENV" value="test" force="true" /&gt;
+        &lt;env name="APP_DEBUG" value="0" force="true" /&gt;
+        &lt;env name="SHELL_VERBOSITY" value="-1" /&gt;
+    &lt;/php&gt;
+
+    &lt;testsuites&gt;
+        &lt;testsuite name="unit"&gt;
+            &lt;directory&gt;tests/Unit&lt;/directory&gt;
+        &lt;/testsuite&gt;
+        &lt;testsuite name="integration"&gt;
+            &lt;directory&gt;tests/Integration&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+
+    &lt;source
+        ignoreIndirectDeprecations="true"
+        restrictNotices="true"
+        restrictWarnings="true"
+    &gt;
+        &lt;include&gt;
+            &lt;directory&gt;src&lt;/directory&gt;
+        &lt;/include&gt;
+    &lt;/source&gt;
+&lt;/phpunit&gt;
+</code></pre>
+
+<blockquote>
+  <p><strong>Notes</strong>:</p>
+  
+  <ul>
+  <li><code>bootstrap</code> defaults to <code>vendor/autoload.php</code></li>
+  <li><code>shortenArraysForExportThreshold</code> defaults to <code>0</code> from v11.3 and <code>10</code> from v12</li>
+  <li><code>colors</code> defaults to <code>false</code>, for automated/scripted environment compatibility</li>
+  </ul>
+</blockquote>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - CLI Example]]></title>
             <link href="/2016/04/06/ultimate-symfony-cli-example.html"/>
