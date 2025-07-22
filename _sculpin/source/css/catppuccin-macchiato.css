@@ -1,0 +1,275 @@
+/**
+ * Dark Mode using Catppuccin Macchiato
+ * Based on https://catppuccin.com/palette
+ */
+
+/* Catppuccin Macchiato Variables */
+:root {
+  --rosewater: #f4dbd6;
+  --flamingo: #f0c6c6;
+  --pink: #f5bde6;
+  --mauve: #c6a0f6;
+  --red: #ed8796;
+  --maroon: #ee99a0;
+  --peach: #f5a97f;
+  --yellow: #eed49f;
+  --green: #a6da95;
+  --teal: #8bd5ca;
+  --sky: #91d7e3;
+  --sapphire: #7dc4e4;
+  --blue: #8aadf4;
+  --lavender: #b7bdf8;
+  --text: #cad3f5;
+  --subtext1: #b8c0e0;
+  --subtext0: #a5adcb;
+  --overlay2: #939ab7;
+  --overlay1: #8087a2;
+  --overlay0: #6e738d;
+  --surface2: #5b6078;
+  --surface1: #494d64;
+  --surface0: #363a4f;
+  --base: #24273a;
+  --mantle: #1e2030;
+  --crust: #181926;
+}
+
+/* Dark Mode Styles */
+html,
+body {
+  background-color: var(--base);
+  color: var(--text);
+  color-scheme: dark;
+}
+
+.container {
+  background-color: var(--base);
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text);
+}
+
+p {
+  color: var(--text);
+}
+
+/* Links */
+a {
+  color: var(--blue);
+}
+
+a:hover {
+  color: var(--sky);
+}
+
+/* Buttons */
+.button,
+button,
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+  color: var(--text);
+  background-color: var(--surface0);
+  border-color: var(--surface2);
+}
+
+.button:hover,
+button:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover,
+input[type="button"]:hover,
+.button:focus,
+button:focus,
+input[type="submit"]:focus,
+input[type="reset"]:focus,
+input[type="button"]:focus {
+  color: var(--text);
+  background-color: var(--surface1);
+  border-color: var(--surface2);
+}
+
+.button.button-primary,
+button.button-primary,
+input[type="submit"].button-primary,
+input[type="reset"].button-primary,
+input[type="button"].button-primary {
+  color: var(--base);
+  background-color: var(--blue);
+  border-color: var(--blue);
+}
+
+.button.button-primary:hover,
+button.button-primary:hover,
+input[type="submit"].button-primary:hover,
+input[type="reset"].button-primary:hover,
+input[type="button"].button-primary:hover,
+.button.button-primary:focus,
+button.button-primary:focus,
+input[type="submit"].button-primary:focus,
+input[type="reset"].button-primary:focus,
+input[type="button"].button-primary:focus {
+  color: var(--base);
+  background-color: var(--sky);
+  border-color: var(--sky);
+}
+
+/* Custom Button Styles */
+.button.button-deprecated,
+button.button-deprecated,
+input[type="submit"].button-deprecated,
+input[type="reset"].button-deprecated,
+input[type="button"].button-deprecated {
+  color: var(--text);
+  background-color: var(--red);
+  border-color: var(--maroon);
+}
+
+.button.button-deprecated:hover,
+button.button-deprecated:hover,
+input[type="submit"].button-deprecated:hover,
+input[type="reset"].button-deprecated:hover,
+input[type="button"].button-deprecated:hover,
+.button.button-deprecated:focus,
+button.button-deprecated:focus,
+input[type="submit"].button-deprecated:focus,
+input[type="reset"].button-deprecated:focus,
+input[type="button"].button-deprecated:focus {
+  color: var(--text);
+  background-color: var(--maroon);
+  border-color: var(--red);
+}
+
+.button.button-reference,
+button.button-reference,
+input[type="submit"].button-reference,
+input[type="reset"].button-reference,
+input[type="button"].button-reference {
+  color: var(--base);
+  background-color: var(--green);
+  border-color: var(--teal);
+}
+
+.button.button-reference:hover,
+button.button-reference:hover,
+input[type="submit"].button-reference:hover,
+input[type="reset"].button-reference:hover,
+input[type="button"].button-reference:hover,
+.button.button-reference:focus,
+button.button-reference:focus,
+input[type="submit"].button-reference:focus,
+input[type="reset"].button-reference:focus,
+input[type="button"].button-reference:focus {
+  color: var(--base);
+  background-color: var(--teal);
+  border-color: var(--green);
+}
+
+/* Forms */
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="text"],
+input[type="tel"],
+input[type="url"],
+input[type="password"],
+textarea,
+select {
+  background-color: var(--surface0);
+  border-color: var(--surface2);
+  color: var(--text);
+}
+
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+input[type="text"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--blue);
+}
+
+label,
+legend {
+  color: var(--text);
+}
+
+/* Code */
+code {
+  background-color: var(--surface0);
+  border-color: var(--surface1);
+  color: var(--text);
+}
+
+pre > code {
+  background-color: var(--surface0);
+  color: var(--text);
+}
+
+/* Tables */
+th,
+td {
+  border-bottom-color: var(--surface1);
+  color: var(--text);
+}
+
+th {
+  color: var(--subtext1);
+}
+
+/* Horizontal Rules */
+hr {
+  border-top-color: var(--surface1);
+}
+
+/* Blockquotes */
+blockquote {
+  border-left: 4px solid var(--surface1);
+  color: var(--subtext1);
+  background-color: var(--surface0);
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+/* Title and Navigation */
+.title {
+  color: var(--text);
+}
+
+.title a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.title a:hover {
+  color: var(--blue);
+}
+
+.sub-title {
+  color: var(--subtext1);
+}
+
+/* Smooth transitions */
+html,
+body,
+.container,
+.title,
+.title a,
+.sub-title,
+h1, h2, h3, h4, h5, h6,
+p, a,
+.button, button,
+input, textarea, select,
+code, pre,
+th, td,
+hr, blockquote {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
