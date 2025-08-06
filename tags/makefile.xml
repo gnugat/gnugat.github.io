@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-08-03T07:33:50+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[My Symfony Makefile]]></title>
+            <link href="/2025/08/13/my-symfony-makefile.html"/>
+            <updated>2025-08-13T00:00:00+01:00</updated>
+            <id>/2025/08/13/my-symfony-makefile.html</id>
+            <content type="html"><![CDATA[<p>Command your codebase with the crown of steel: <a href="https://www.gnu.org/software/make/">Make</a>,
+the eternal overlord of task runners.</p>
+]]></content>
+        </entry>
+    </feed>
