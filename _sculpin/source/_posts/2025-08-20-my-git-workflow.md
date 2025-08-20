@@ -27,7 +27,6 @@ In this article, we'll explore some of the subtleties I've discovered along the 
 * [Branch out of main](#branch-out-of-main)
 * [Rebase to update](#rebase-to-update)
 * [Merge back in main](#merge-back-in-main)
-* [Reflection on Continuous Delivery](#reflection-on-continuous-delivery)
 
 ## Branch out of main
 
@@ -164,34 +163,3 @@ git merge --no-fast-forward FEAT-4423-my-feature
 The `--no-fast-forward` (`--no-ff`) option will force git to create a merge commit,
 which then makes it simple to undo a feature, using `git revert -m 1 <merge-commit-hash>`
 (this will create a reverse diff of all the changes introduced by the merge).
-
-## Reflection on Continuous Delivery
-
-For the many years I've used this workflow,
-I was working in a small team of 4 developers,
-and I was curious to see if it would scale well in bigger teams.
-
-A habbit I had taken was to break the feature into small "atomic" steps,
-and so my branches would look like that:
-
-```
-*   a1b2c3d - Merged in feature-y (pull request #321) (Dev A)
-|\
-| * e4f5g6h - feature y step 3 (Dev A)
-| * f1a2b3c - feature y step 2 (Dev A)
-| * h7i8j9k - feature y step 1 (Dev A)
-|/
-*
-```
-
-These feature would take me about a week to implement,
-meaning I could deliver the feature to production within the 2-weeks sprint.
-
-But hearing about Continuous Delivery,
-and how some teams deploy to prod sometimes multiple times a day,
-I realy was wondering how it could at all be possible.
-
-During my time at Bumble in 2025, I finally got some answers on these two questions.
-
-
-
