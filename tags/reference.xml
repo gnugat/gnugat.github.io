@@ -3,11 +3,211 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-08-13T06:56:38+01:00</updated>
+    <updated>2025-08-20T13:22:13+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[My Git Workflow]]></title>
+            <link href="/2025/08/20/my-git-workflow.html"/>
+            <updated>2025-08-20T00:00:00+01:00</updated>
+            <id>/2025/08/20/my-git-workflow.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>:</p>
+  
+  <ol>
+  <li><code>git checkout -b FEAT-4423-my-feature</code> from <code>main</code></li>
+  <li><code>git rebase main</code> to update</li>
+  <li><code>git merge --no-ff feature</code> back in <code>main</code></li>
+  </ol>
+</blockquote>
+
+<p>Wield the crimson blade of version control,
+where every commit carves your legacy into the eternal codex of time.</p>
+
+<p>I wrote about <a href="/2014/12/10/keep-it-simple-and-git.html">my git workflow back in 2014</a>,
+which really was just <a href="https://github.com/jbenet">@jbenet</a>'s
+2013 <a href="https://gist.github.com/jbenet/ee6c9ac48068889b0912">simple git branching model</a>.</p>
+
+<p>I very much like this workflow as I still use it, a decade after!</p>
+
+<p>In this article, we'll explore some of the subtleties I've discovered along the way.</p>
+
+<ul>
+<li><a href="#branch-out-of-main">Branch out of main</a></li>
+<li><a href="#rebase-to-update">Rebase to update</a></li>
+<li><a href="#merge-back-in-main">Merge back in main</a></li>
+<li><a href="#reflection-on-continuous-delivery">Reflection on Continuous Delivery</a></li>
+</ul>
+
+<h2 id="branch-out-of-main">Branch out of main</h2>
+
+<p>Whenever a change (feature, bug fix, etc) needs to be made,
+create a new branch from an up-to-date <code>main</code>:</p>
+
+<pre><code class="console"># Update main
+git checkout main
+git pull --rebase
+
+# Create new branch
+git checkout -b FEAT-4423-my-feature
+</code></pre>
+
+<blockquote>
+  <p><strong>Super Secret Tip 1</strong>: establish a direct relationship between code modifications and project tasks,
+  by including the Ticket ID in your branch name. This will allow:</p>
+  
+  <ul>
+  <li><strong>Automated Integration</strong>: like linking the branch, its commits, and its Pull Request
+  to the ticket, enabling synchronisation between the ticket and the pull request status,
+  as well as deployment</li>
+  <li><strong>Traceability and Context</strong>: trace any code change back to its original purpose,
+  which can be helpful when debugging some issues in the future</li>
+  </ul>
+</blockquote>
+
+<h2 id="rebase-to-update">Rebase to update</h2>
+
+<p>Update your branch often with the changes in <code>main</code>:</p>
+
+<pre><code class="console"># Update remote main
+git fetch origin
+
+# Get latest main changes
+git rebase origin/main
+
+# Update remote feature branch
+git push -fu origin FEAT-4423-my-feature
+</code></pre>
+
+<blockquote>
+  <p><strong>Super Secret Tip 2</strong>: Enable git's "Reuse Recorded Resolution" (aka "rerere"),
+  for automatic conflict resolutions: <code>git config --global rerere.enabled true</code>.</p>
+  
+  <p>This won't solve everything for you, but will save you time when the same
+  conflict happens repeatedly.</p>
+</blockquote>
+
+<p>The rebase command will <strong>move</strong> your commits after the ones in the <code>main</code> branch:</p>
+
+<ul>
+<li>it'll be like starting from the latest changes in <code>main</code> as the foundation</li>
+<li>then your commits are replayed one by one, allowing for simpler conflict resolution</li>
+<li>finally this makes your branch history more linear and clear</li>
+</ul>
+
+<p>So for example, instead of having branches look like this:</p>
+
+<pre><code>*   a1b2c3d - Merged in feature-x (pull request #123) (Dev A)
+|\
+| *   e4f5g6h - Merge main into feature-x (Dev A)
+| |\
+* | | b7c8d9e - Merged in hotfix-y (pull request #124) (Dev B)
+|\| |
+| * | f1a2b3c - hotfix for critical bug (Dev B)
+| |/
+|/|
+* |   d4e5f6g - Merged in feature-z (pull request #122) (Dev C)
+|\ \
+| |/
+|/|
+* | h7i8j9k - refactor database layer (Dev C)
+|/
+*
+</code></pre>
+
+<p>With rebase it'd look like that:</p>
+
+<pre><code>*   a1b2c3d - Merged in feature-x (pull request #123) (Dev A)
+|\
+| * e4f5g6h - implement feature x functionality (Dev A)
+|/
+*   b7c8d9e - Merged in hotfix-y (pull request #124) (Dev B)
+|\
+| * f1a2b3c - hotfix for critical bug (Dev B)
+|/
+*   d4e5f6g - Merged in feature-z (pull request #122) (Dev C)
+|\
+| * h7i8j9k - refactor database layer (Dev C)
+|/
+*
+</code></pre>
+
+<p>As you can see each feature is now a clean line of commits,
+making it easy to see what each feature contributed.</p>
+
+<p>The linear, readable history allows us to identify merge commits we might want to
+revert, when we want to roll back a feature.</p>
+
+<blockquote>
+  <p><strong>Super Secret Tip 3</strong>: To display branches with <code>git lg</code>,
+  set the following alias in your git config:</p>
+
+<pre><code>[alias]
+   # Logs history in a graph format with colours:
+   # * abbreviated commit hash in red
+   # * branch and tag names in cyan
+   # * commit title in white
+   # * author name in yellow
+   # * author date in green (format: `Mon, 02 Jan 2006 15:04:05 +0000`)
+   lg  = log --graph --pretty=tformat:'%Cred%h%Creset -%C(cyan)%d %Creset%s (%C(yellow)%an%Creset %Cgreen%aD%Creset)' --abbrev-commit
+</code></pre>
+</blockquote>
+
+<h2 id="merge-back-in-main">Merge back in main</h2>
+
+<p>Once tests pass, code quality checks are green, code review is approved,
+and overall the changes in the branch are production ready,
+you can finally merge it back to main:</p>
+
+<pre><code class="console"># Update main
+git checkout main
+git pull --rebase origin/main
+
+
+# Double check you had the latest changes
+git checkout -
+git rebase main
+## ⚠️ If there are new changes from main, redo all checks (test, code quality, etc)
+
+# Merge your branch in main
+git checkout main
+git merge --no-fast-forward FEAT-4423-my-feature
+</code></pre>
+
+<p>The <code>--no-fast-forward</code> (<code>--no-ff</code>) option will force git to create a merge commit,
+which then makes it simple to undo a feature, using <code>git revert -m 1 &lt;merge-commit-hash&gt;</code>
+(this will create a reverse diff of all the changes introduced by the merge).</p>
+
+<h2 id="reflection-on-continuous-delivery">Reflection on Continuous Delivery</h2>
+
+<p>For the many years I've used this workflow,
+I was working in a small team of 4 developers,
+and I was curious to see if it would scale well in bigger teams.</p>
+
+<p>A habbit I had taken was to break the feature into small "atomic" steps,
+and so my branches would look like that:</p>
+
+<pre><code>*   a1b2c3d - Merged in feature-y (pull request #321) (Dev A)
+|\
+| * e4f5g6h - feature y step 3 (Dev A)
+| * f1a2b3c - feature y step 2 (Dev A)
+| * h7i8j9k - feature y step 1 (Dev A)
+|/
+*
+</code></pre>
+
+<p>These feature would take me about a week to implement,
+meaning I could deliver the feature to production within the 2-weeks sprint.</p>
+
+<p>But hearing about Continuous Delivery,
+and how some teams deploy to prod sometimes multiple times a day,
+I realy was wondering how it could at all be possible.</p>
+
+<p>During my time at Bumble in 2025, I finally got some answers on these two questions.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[My Symfony Makefile]]></title>
             <link href="/2025/08/13/my-symfony-makefile.html"/>

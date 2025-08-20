@@ -1,19 +1,53 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
-    <title><![CDATA[Loïc Faugeron]]></title>
-    <link href="/feed/atom.xml" rel="self"/>
-    <link href="/"/>
-    <updated>2025-08-20T13:22:13+01:00</updated>
-    <id>http://gnugat.github.com</id>
-            <author>
-            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
-        <generator uri="http://sculpin.io/">Sculpin</generator>
-            <entry>
-            <title type="html"><![CDATA[My Git Workflow]]></title>
-            <link href="/2025/08/20/my-git-workflow.html"/>
-            <updated>2025-08-20T00:00:00+01:00</updated>
-            <id>/2025/08/20/my-git-workflow.html</id>
-            <content type="html"><![CDATA[<blockquote>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>My Git Workflow &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2025/08/20/my-git-workflow.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/github-dark.min.css">
+    <link rel="stylesheet" href="/css/catppuccin-macchiato.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+            
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/main/_sculpin">Sources</a>
+            </nav>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    My Git Workflow
+    <span class="sub-title">20/08/2025</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="/tags/git">git</a>
+                                                            <a class="button " href="/tags/introducing-methodology">introducing-methodology</a>
+                                                                                        <a class="button button-reference" href="/tags/reference">reference</a>
+                    </nav>
+                </header>
+
+                <blockquote>
   <p><strong>TL;DR</strong>:</p>
   
   <ol>
@@ -206,110 +240,36 @@ and how some teams deploy to prod sometimes multiple times a day,
 I realy was wondering how it could at all be possible.</p>
 
 <p>During my time at Bumble in 2025, I finally got some answers on these two questions.</p>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Keep It Simple and Git]]></title>
-            <link href="/2014/12/10/keep-it-simple-and-git.html"/>
-            <updated>2014-12-10T00:00:00+00:00</updated>
-            <id>/2014/12/10/keep-it-simple-and-git.html</id>
-            <content type="html"><![CDATA[<blockquote>
-  <p><strong>TL;DR</strong>: Branch only from master, merge back when done and immediately deploy.</p>
-</blockquote>
 
-<p>Git proposes a branch system with the possibility to merge them together,
-allowing you to separate released code from work in progress one.</p>
 
-<p>Git flows have been created to help you keep the same process in your team.
-In this article, we'll have a look at <a href="https://github.com/jbenet">@jbenet</a>'s
-<a href="https://gist.github.com/jbenet/ee6c9ac48068889b0912">simple git branching model</a>:</p>
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2025/08/13/my-symfony-makefile.html" title="My Symfony Makefile">Previous &lt; My Symfony Makefile</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
 
-<blockquote>
-  <ol>
-  <li><code>master</code> must always be deployable.</li>
-  <li><strong>all changes</strong> are made through feature branches (pull-request + merge)</li>
-  <li>rebase to avoid/resolve conflicts; merge in to <code>master</code></li>
-  </ol>
-</blockquote>
+        <footer>
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/main/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
 
-<h2 id="working-on-a-change">Working on a change</h2>
+    <script src="/js/highlight.min.js"></script>
+    <script type="text/javascript">hljs.highlightAll();</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9V6KYH7PW"></script>
+    <script type="text/javascript">
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
 
-<p>Changes can be new features, bug fixes, enhancements. They're all coming from
-master:</p>
-
-<pre><code class="bash">git checkout master
-git checkout -b my-changes
-</code></pre>
-
-<h2 id="making-the-change-ready">Making the change ready</h2>
-
-<p>Once you're happy with your branch, you need to update it with the last changes
-from master:</p>
-
-<pre><code class="bash">git checkout master
-git pull --rebase
-git checkout my-changes
-git rebase master
-git push -fu origin my-changes
-</code></pre>
-
-<blockquote>
-  <p><strong>Note</strong>: <code>rebase</code> will rewrite your commits, their dates will be changed
-  (therefore their hash will be changed).</p>
-</blockquote>
-
-<p>Check your tests, the coding standards and ask for a code review.</p>
-
-<h3 id="managing-conflicts">Managing conflicts</h3>
-
-<p>You can list conflicts (if any):</p>
-
-<pre><code class="bash">git status
-</code></pre>
-
-<p>Edit your files and then mark them as solved:</p>
-
-<pre><code class="bash">git add &lt;file&gt;
-</code></pre>
-
-<p>When all conflicted files have been resolved, you can continue:</p>
-
-<pre><code class="bash">git rebase --continue
-</code></pre>
-
-<h3 id="when-to-merge">When to merge</h3>
-
-<p>Here's a to do list you can use to know if a branch is ready to be merged:</p>
-
-<ul>
-<li>is it compliant with the coding standards?</li>
-<li>has the code been reviewed?</li>
-<li>do the tests pass?</li>
-<li>has the Quality Assurance team checked the feature?</li>
-<li>will someone be available in the next hour in case of emergency?</li>
-<li>does the product owner want this feature now?</li>
-</ul>
-
-<h2 id="deploying-the-new-change">Deploying the new change</h2>
-
-<p>If everything is ok with your change, then you can merge it into master:</p>
-
-<pre><code class="bash">git checkout master
-git merge --no-ff my-change
-git push
-git push origin :my-changes
-git branch -D my-changes
-</code></pre>
-
-<p>It's now time to deploy! You can make a tag:</p>
-
-<pre><code class="bash">git tag -a &lt;version&gt;
-git push --tags
-</code></pre>
-
-<h2 id="conclusion">Conclusion</h2>
-
-<p>Make small changes, release often.</p>
-]]></content>
-        </entry>
-    </feed>
+        gtag('config', 'G-Q9V6KYH7PW');
+    </script>
+</body>
+</html>
