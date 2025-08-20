@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-08-20T13:22:13+01:00</updated>
+    <updated>2025-08-20T13:45:04+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -38,7 +38,6 @@ which really was just <a href="https://github.com/jbenet">@jbenet</a>'s
 <li><a href="#branch-out-of-main">Branch out of main</a></li>
 <li><a href="#rebase-to-update">Rebase to update</a></li>
 <li><a href="#merge-back-in-main">Merge back in main</a></li>
-<li><a href="#reflection-on-continuous-delivery">Reflection on Continuous Delivery</a></li>
 </ul>
 
 <h2 id="branch-out-of-main">Branch out of main</h2>
@@ -179,33 +178,6 @@ git merge --no-fast-forward FEAT-4423-my-feature
 <p>The <code>--no-fast-forward</code> (<code>--no-ff</code>) option will force git to create a merge commit,
 which then makes it simple to undo a feature, using <code>git revert -m 1 &lt;merge-commit-hash&gt;</code>
 (this will create a reverse diff of all the changes introduced by the merge).</p>
-
-<h2 id="reflection-on-continuous-delivery">Reflection on Continuous Delivery</h2>
-
-<p>For the many years I've used this workflow,
-I was working in a small team of 4 developers,
-and I was curious to see if it would scale well in bigger teams.</p>
-
-<p>A habbit I had taken was to break the feature into small "atomic" steps,
-and so my branches would look like that:</p>
-
-<pre><code>*   a1b2c3d - Merged in feature-y (pull request #321) (Dev A)
-|\
-| * e4f5g6h - feature y step 3 (Dev A)
-| * f1a2b3c - feature y step 2 (Dev A)
-| * h7i8j9k - feature y step 1 (Dev A)
-|/
-*
-</code></pre>
-
-<p>These feature would take me about a week to implement,
-meaning I could deliver the feature to production within the 2-weeks sprint.</p>
-
-<p>But hearing about Continuous Delivery,
-and how some teams deploy to prod sometimes multiple times a day,
-I realy was wondering how it could at all be possible.</p>
-
-<p>During my time at Bumble in 2025, I finally got some answers on these two questions.</p>
 ]]></content>
         </entry>
     </feed>
