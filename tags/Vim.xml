@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-09-03T07:18:36+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[My IDE is Vim]]></title>
+            <link href="/2025/09/03/my-ide-is-vim.html"/>
+            <updated>2025-09-03T00:00:00+01:00</updated>
+            <id>/2025/09/03/my-ide-is-vim.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p>The keyboards leak molten steel, as Vim motions carve runes through silicon,
+  the code prostrates itself before the LSP's omniscient eye:</p>
+  
+  <ul>
+  <li>autocomplete rain Valhalla's arrows</li>
+  <li>diagnostics burn syntax errors and typos alike</li>
+  <li>go-to-definition shatters dimensional barriers like the Bifrost's rainbow bridge</li>
+  </ul>
+  
+  <p>phpactor descends as the shape-shifting overlord who bends variables and
+  transmutes classes into monuments of perfect refactors.</p>
+  
+  <p>XDebug breakpoints become lightning-riders galloping through Vim buffers.</p>
+</blockquote>
+
+<p>In this article, I'll discuss why Vim is my favourite IDE
+(not test/code editor, no, fully fledged IDE).</p>
+
+<ul>
+<li><a href="#my-history-with-ides">My history with IDEs</a></li>
+<li><a href="#why-Vim">Why Vim</a></li>
+<li><a href="#what-is-an-ide">What is an IDE</a></li>
+<li><a href="#vim-motions">Vim Motions</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="my-history-with-ides">My history with IDEs</h2>
+
+<p>I started my programming journey in 2004 on <a href="https://en.wikipedia.org/wiki/Smultron">Smultron</a>,
+since I was told the go-to app was Notepad++, but my parents had a mac.</p>
+
+<p>When I migrated to Ubuntu in 2006, I simply switched to Gedit.
+I remember learning vi at the time, just to be able to do things while ssh-ing
+onto remote servers.</p>
+
+<p>It was at University, in 2008, that I started to use a proper IDE: Emacs,
+which was mandatory for all students.
+I didn't mind though as I was happy to level up my geekiness,
+and by that time I was developing a strong preference for the terminal.</p>
+
+<p>But during my multiple internships and apprenticeships,
+I was told that professionals used proper IDEs, and was made to use Eclipse and NetBeans.</p>
+
+<p>I have to say I was never impressed with the lack of responsiveness from these tools.</p>
+
+<p>When I started to work at SensioLabs in 2013, frustrated with how slow these IDEs were,
+I switched to Sublime Text.</p>
+
+<p>When I moved to the UK in 2014 and started to work for the startup Constant.Co,
+I continued to use Sublime Text, to my colleague's amusement.</p>
+
+<p>In 2015, Adam, who'd become our VP of Engineering, joined and we had a lot of
+extremely interesting conversations. One of the many things he told me, which stuck with me,
+regarding Text / Code Editors versus IDEs was:</p>
+
+<blockquote>
+  <p>It's not the tool that matters, it's how well you learn, understand and use it.</p>
+</blockquote>
+
+<p>This is when I decided to drop Sublime Text. And use Vim instead.</p>
+
+<p>Before I talk more about Vim, I want to mention that after joining Telum Media in 2024,
+I was made to use PhpStorm as it was mandatory. Same policy when I joined Bumble in 2025.</p>
+
+<h2 id="why-vim">Why Vim</h2>
+
+<p>In terms of preference, the terminal has always taken precedence over
+the Graphical User Interface for me, and I tend to favour using the keyboard
+(and shortcuts) over the mouse and gestures.</p>
+
+<p>In retrospect, I think there's also a lot of noise that comes with the default
+interface of Eclipse, NetBeans and PhpStorm, which I personally find distracting.</p>
+
+<p>So I considered the two options in front of me: Emacs or Vim?
+After finding out that Vim motions were supported in other IDEs, I made my choice.</p>
+
+<h2 id="what-is-an-ide">What is an IDE</h2>
+
+<blockquote>
+  <p>Why don't you use a proper IDE?</p>
+</blockquote>
+
+<p>This is a question I often get when I mention I use Vim.</p>
+
+<p>A "proper" IDE provides:</p>
+
+<ul>
+<li>syntax highlighting</li>
+<li>autocompletion, documentation</li>
+<li>diagnostics (marking errors and warnings)</li>
+<li>project navigation with: go to definition, find reference and usage</li>
+<li>refactoring actions</li>
+</ul>
+
+<p>By integrating Vim with <a href="https://en.wikipedia.org/wiki/Language_Server_Protocol">LSP</a>
+we get all the features listed above.</p>
+
+<p>Another important feature of IDEs is:</p>
+
+<ul>
+<li>step debugging</li>
+</ul>
+
+<p>As it turns out, it's also possible to integrate Vim with those (eg xdebug).</p>
+
+<p>Other integration, that some might add to the list of important things, are:</p>
+
+<ul>
+<li>testing (eg phpunit)</li>
+<li>version control (eg git)</li>
+<li>AI tooling (eg copilot)</li>
+</ul>
+
+<p>These are also possible, but personally I much prefer to use directly the tools
+for these from the terminal.</p>
+
+<p>So. Can anyone let me know what I'm missing out from Vim, that I'd be getting
+from "proper" IDEs?</p>
+
+<h2 id="vim-motions">Vim Motions</h2>
+
+<p>Perhaps the biggest argument in favour of Vim would be the <strong>Motions</strong>:</p>
+
+<ul>
+<li><code>h</code>, <code>j</code>, <code>k</code>, <code>l</code>: move one character Left, Down, Up, Right (LDUR)</li>
+<li><code>0</code>, <code>^</code>, <code>$</code>: move to the first character of the line, first non whitespace character, last character</li>
+<li><code>f{char}</code>, <code>t{char}</code>: move to next occurrence of character in the line, on the character or before it</li>
+</ul>
+
+<p>They can be <strong>Composed</strong> with operators:</p>
+
+<ul>
+<li><code>d</code>: deleting</li>
+<li><code>y</code>: yank, aka copying</li>
+<li><code>p</code>: paste</li>
+<li><code>c</code>: change</li>
+</ul>
+
+<p>For more Precision, <strong>Text Objects</strong> can be used:</p>
+
+<ul>
+<li><code>w</code>: a word</li>
+<li><code>s</code>: a sentence</li>
+<li><code>p</code>: a paragraph</li>
+</ul>
+
+<p>Here are a couple of examples:</p>
+
+<ul>
+<li><code>dt;</code>: delete, until, character <code>;</code>: to cut everything before the semi colon</li>
+<li><code>ci'</code>: change, inside, simple quotes: to replace text inside single quotes
+(works with double quote, parenthesis, curly braces, etc)</li>
+</ul>
+
+<p>Making one's changes repeatable will unleash even more power:</p>
+
+<ul>
+<li><code>d23d</code>: delete 23 lines</li>
+<li><code>.</code>: replay previous action</li>
+<li><code>qa</code>: register keystrokes in register <code>a</code></li>
+<li><code>@a</code>: replay keystrokes from register <code>a</code></li>
+</ul>
+
+<p>While there is a lot to learn, I'd say the Vim motions aren't too difficult to
+memorize since they are mnemonic as much as possible.</p>
+
+<p>They also have some logic in terms of direction: lowercase is forward
+(<code>yf</code>: copy from cursor to next space, space included) and uppercase is backward
+(<code>yF</code>: copy from cursor to <em>previous</em> space, space included).</p>
+
+<p>But I can attest that there's a lot to learn, and it's easy to plateau.
+I've personally stuck with a small subset of these for a decade,
+and have only decided this year (2025) to learn more (macros are AMAZING).</p>
+
+<h2 id="%C2%A0conclusion"> Conclusion</h2>
+
+<p>When I was mandated to use PhpStorm at Telum Media in 2024,
+I decided to give it a fair chance and use it exactly as intended.
+But I wasn't convinced I gained any efficiency compared to Vim.</p>
+
+<p>When the same requirement came up at Bumble in 2025,
+I took a different approach: minimalistic UI, Vim motions enabled
+(though support isn't perfect: I experienced issues with macros, for example).</p>
+
+<p>This compromise will likely be my path forward: use Vim when possible,
+and configure whatever I'm required to use to feel as Vim-like as possible.</p>
+
+<p>The broader lesson? Unless there's a compelling reason,
+forcing developers away from tools they've mastered is counterproductive.</p>
+
+<p>Listen to Adam's wise advice:
+Deep knowledge of one's workflow, getting proficient with one's tool
+and seeking improvement matters more
+than whatever software happen to be the most popular.</p>
+]]></content>
+        </entry>
+    </feed>

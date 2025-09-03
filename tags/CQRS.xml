@@ -3,19 +3,17 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-08-27T07:15:12+01:00</updated>
+    <updated>2025-09-03T07:18:36+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
-            <title type="html"><![CDATA[Mars Rover, Locating geolocation]]></title>
-            <link href="/2016/10/05/mars-rover-locating-geolocation.html"/>
-            <updated>2016-10-05T00:00:00+01:00</updated>
-            <id>/2016/10/05/mars-rover-locating-geolocation.html</id>
-            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
-the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
-It allows us to practice the followings:</p>
+            <title type="html"><![CDATA[Mars Rover, Introduction]]></title>
+            <link href="/2016/06/15/mars-rover-introduction.html"/>
+            <updated>2016-06-15T00:00:00+01:00</updated>
+            <id>/2016/06/15/mars-rover-introduction.html</id>
+            <content type="html"><![CDATA[<p>Welcome to this Mars Rover series where we're going to practice the followings:</p>
 
 <ul>
 <li>Monolithic Repositories (MonoRepo)</li>
@@ -24,432 +22,1449 @@ It allows us to practice the followings:</p>
 <li>Test Driven Development (TDD)</li>
 </ul>
 
-<p>We've already developed the first use case about landing the rover on mars,
-and the second one about driving it. We're now developing the last one,
-requesting its location:</p>
+<p>In this introductory article, we're simply going to describe our Mars Rover
+specifications.</p>
 
 <blockquote>
-  <p>Mars rover will be requested to give its current location (<code>x</code> and <code>y</code>
-  coordinates and the orientation).</p>
+  <p><strong>Note</strong>: This programming exercise originally comes from
+  <a href="http://dallashackclub.com/rover">Dallas Hack Club</a>, which is now
+  unfortunately down.</p>
+  
+  <p>This Mars Rover <a href="https://en.wikipedia.org/wiki/Kata_(programming)">kata</a>
+  has been adapted for the needs of this series.</p>
 </blockquote>
 
-<p>In this article we're going to create a new package for the geolocation value
-objects (<code>Location</code>, <code>Coordinates</code> and <code>Orientation</code>).</p>
+<p>But first, let's have a quick reminder on what the practices mentioned above
+are.</p>
 
-<h2 id="creating-the-%60geolocation%60-package">Creating the <code>geolocation</code> package</h2>
+<h2 id="monolithic-repositories">Monolithic Repositories</h2>
 
-<p>We can start by creating the directory:</p>
+<p>A MonoRepo is a single versioning repository containing many packages that
+would otherwise be versioned in their own repositories.</p>
 
-<pre><code>git checkout 5-location
-mkdir -p packages/geolocation
-cd packages/geolocation
-</code></pre>
+<p>With it, everything can be found in one place, which makes it easy to:</p>
 
-<p>Composer needs us to set up the package by creating a <code>composer.json</code> file:</p>
+<ul>
+<li>navigate</li>
+<li>manage dependencies</li>
+<li>set up</li>
+<li>run tests</li>
+</ul>
 
-<pre><code>{
-    "name": "mars-rover/geolocation",
-    "license": "MIT",
-    "type": "library",
-    "description": "Mars Rover - Geolocation",
-    "autoload": {
-        "psr-4": { "MarsRover\\Geolocation\\": "src/MarsRover/Geolocation" }
-    },
-    "require": {
-        "php": "^7.0"
-    },
-    "require-dev": {
-        "memio/spec-gen": "^0.6"
-    }
-}
-</code></pre>
+<p>However it also brings the following disadvantages:</p>
 
-<p>We've decided to use <a href="http://phpspec.net/">phpspec</a> as a test framework, and
-to get the most of it we'd like to use its <a href="http://memio.github.io/spec-gen">SpecGen</a>
-extension. To do so we need to create the <code>phpspec.yml.dist</code> file:</p>
+<ul>
+<li>no hard separation between packages (thigh coupling is possible)</li>
+<li>limited regarding scaling (disk space, bandwidth)</li>
+<li>no finely grain permission management (a user has access to everything
+or nothing)</li>
+</ul>
 
-<pre><code>extensions:
-    Memio\SpecGen\MemioSpecGenExtension: ~
-</code></pre>
+<p>MonoRepos make sense for projects that would be packaged / released together
+(although it makes it possible to package / release them independently).</p>
 
 <blockquote>
-  <p><strong>Note</strong>: For more information about phpspec
-  <a href="/2015/08/03/phpspec.html">see this article</a>.</p>
+  <p><strong>Note</strong>: Here are some references about MonoRepos:</p>
+  
+  <ul>
+  <li><a href="http://danluu.com/monorepo/">Advantages of a monolithic version control</a></li>
+  <li><a href="http://gregoryszorc.com/blog/2014/09/09/on-monolithic-repositories/">On Monolithic Repositories</a></li>
+  </ul>
 </blockquote>
 
-<p>Finally, we can configure this package's git by creating a <code>.gitignore</code> file:</p>
+<h2 id="command-%2F-query-responsibility-segregation">Command / Query Responsibility Segregation</h2>
 
-<pre><code># Configuration
-/phpspec.yml
+<p>CQRS is about separating "write" logic from "read" logic, and it can be applied
+on many levels, for example:</p>
 
-# Third Party libraries
-/vendor/
-/composer.lock
-</code></pre>
+<ul>
+<li>have a read-only microservice and a separate write microservice</li>
+<li>have endpoints / tasks that are either write or read only</li>
+<li>separate your models in two (again, read-only and write-only)</li>
+</ul>
 
-<p>With this we've finished creating our package. We can run Composer:</p>
+<p>It's important to note that CQRS can also be applied <em>partially</em> in the same
+project: use it only when it makes sense.</p>
 
-<pre><code>composer install --optimize-autoloader
-</code></pre>
+<blockquote>
+  <p><strong>Note</strong>: Here are some references about CQRS:</p>
+  
+  <ul>
+  <li><a href="/2015/08/25/cqrs.html">Command / Query Responsibility Segregation</a></li>
+  <li><a href="http://martinfowler.com/bliki/CQRS.html">CQRS</a></li>
+  <li><a href="http://www.jefclaes.be/2013/02/adding-r-to-cqs-some-storage-options.html">Adding the R to CQS: some storage options</a></li>
+  <li><a href="http://udidahan.com/2009/12/09/clarified-cqrs/">Clarified CQRS</a></li>
+  <li><a href="http://verraes.net/2014/05/functional-foundation-for-cqrs-event-sourcing/">Functional foundation for CQRS / ES</a></li>
+  <li><a href="http://verraes.net/2015/01/messaging-flavours/">Messaging Flavours</a></li>
+  <li><a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avoiding the Mud</a></li>
+  <li><a href="https://medium.com/@benjamindulau/do-not-mistake-ddd-for-cqrs-yeah-but-where-to-start-5595b8e68a4d#.vnh8i8rhb">Do not mistake DDD for CQRS. Yeah but where to start?</a></li>
+  <li><a href="https://moquet.net/talks/phptour-2015/">CQRS/ES</a></li>
+  <li><a href="http://verraes.net/2013/12/fighting-bottlenecks-with-cqrs/">Fighting Bottlenecks with CQRS</a></li>
+  </ul>
+</blockquote>
 
-<p>That should be enough for a first commit:</p>
+<h2 id="event-sourcing">Event Sourcing</h2>
 
-<pre><code>git add -A
-git commit -m '5: Created Geolocation package'
-</code></pre>
+<p>With ES, every significant action is recorded as an "event". Keeping track of
+those events provides the following advantages:</p>
 
-<h2 id="adding-%60geolocation%60-to-the-project">Adding <code>geolocation</code> to the project</h2>
+<ul>
+<li>replay them to recreate the state of an application at a given time
+(undo, redo, synchronization)</li>
+<li>analyse how the latest state came to be (compare two versions or find who did
+what and when)</li>
+</ul>
 
-<p>Let's go back to the project's root:</p>
+<p>Just like with CQRS, it's important to note that ES can also be applied
+<em>partially</em> inside a project : use it only when it makes sense.</p>
 
-<pre><code>cd ../../
-</code></pre>
+<p>ES is often associated to CQRS, but they can be used separately.</p>
 
-<p>All we need to do is to add a new line in the <code>require</code> section of our
-<code>composer.json</code> file:</p>
+<blockquote>
+  <p><strong>Note</strong>: Here are some references about ES:</p>
+  
+  <ul>
+  <li><a href="https://martin.kleppmann.com/2015/05/27/logs-for-data-infrastructure.html">Using logs to build a solid data infrastructure or: why dual writes are a bad idea</a></li>
+  <li><a href="http://martinfowler.com/eaaDev/EventSourcing.html">Event Sourcing</a></li>
+  <li><a href="http://verraes.net/2014/03/practical-event-sourcing.markdown/">Practical Event Sourcing</a></li>
+  <li><a href="https://moquet.net/talks/phptour-2015/">CQRS/ES</a></li>
+  <li><a href="http://verraes.net/2013/12/fighting-bottlenecks-with-cqrs/">Fighting Bottlenecks with CQRS</a></li>
+  <li><a href="http://verraes.net/2014/05/functional-foundation-for-cqrs-event-sourcing/">Functional foundation for CQRS / ES</a></li>
+  <li><a href="http://php-and-symfony.matthiasnoback.nl/2015/07/meeting-the-broadway-team/">Meeting the Broadway team - talking DDD, CQRS and event sourcing</a></li>
+  </ul>
+</blockquote>
 
-<pre><code>{
-    "name": "mars-rover/mars-rover",
-    "license": "MIT",
-    "type": "project",
-    "description": "Mars Rover",
-    "repositories": [
-        {
-            "type": "path",
-            "url": "./packages/*"
-        }
-    ],
-    "require": {
-        "mars-rover/event-sourcing": "*@dev",
-        "mars-rover/geolocation": "*@dev",
-        "mars-rover/location": "*@dev",
-        "mars-rover/navigation": "*@dev",
-        "php": "^7.0"
-    },
-    "require-dev": {
-        "phpspec/phpspec": "^3.0"
-    }
-}
-</code></pre>
+<h2 id="test-driven-development">Test Driven Development</h2>
 
-<p>Actually, we also need to add a new section in <code>phpspec.yml.dist</code>:</p>
+<p>TDD can be summed up in the following steps when developing:</p>
 
-<pre><code>suites:
-    event-sourcing:
-        namespace: 'MarsRover\EventSourcing'
-        src_path: packages/event-sourcing/src
-        spec_path: packages/event-sourcing
+<ol>
+<li>create a test</li>
+<li>then write just enough code to make the test pass (quick and dirty, or
+"make it work")</li>
+<li>then refactor the code (clean, or "make it right")</li>
+</ol>
 
-    geolocation:
-        namespace: 'MarsRover\Geolocation'
-        src_path: packages/geolocation/src
-        spec_path: packages/geolocation
+<p>Writing the test before the code forces us to think about how we'd like the
+future code to be <em>used</em>. It's like writing specifications, but with 3
+purposes: design, documentation and automated regression checking.</p>
 
-    location:
-        namespace: 'MarsRover\Location'
-        src_path: packages/location/src
-        spec_path: packages/location
+<p>This discipline makes it easy to have a high code coverage (although rigour
+still needs to be applied: we need to test all the happy paths and all the
+unhappy ones).</p>
 
-    navigation:
-        namespace: 'MarsRover\Navigation'
-        src_path: packages/navigation/src
-        spec_path: packages/navigation
-</code></pre>
+<blockquote>
+  <p><strong>Note</strong>: Here are some references about TDD:</p>
+  
+  <ul>
+  <li><a href="http://codemanship.co.uk/parlezuml/blog/?postid=1170">Straw man TDD</a></li>
+  <li><a href="http://codemanship.co.uk/parlezuml/blog/?postid=1202">Coverage!!!</a></li>
+  <li><a href="http://blog.testdouble.com/posts/2014-01-25-the-failures-of-intro-to-tdd.html">The Failures of "Intro to TDD"</a></li>
+  <li><a href="http://tech.mybuilder.com/coupling-tests/">TDD, avoid testing implementation details</a></li>
+  <li><a href="http://blog.8thlight.com/uncle-bob/2014/04/25/MonogamousTDD.html">Monogamous TDD</a></li>
+  <li><a href="http://blog.8thlight.com/uncle-bob/2014/04/30/When-tdd-does-not-work.html">When TDD doesn't work</a></li>
+  <li><a href="http://codurance.com/2015/05/12/does-tdd-lead-to-good-design/">Does TDD really lead to good design?</a></li>
+  <li><a href="http://david.heinemeierhansson.com/2014/tdd-is-dead-long-live-testing.html">TDD is dead, long live testing</a></li>
+  <li><a href="http://www.daedtech.com/what-tdd-is-and-is-not/">What TDD is and is not</a></li>
+  <li><a href="https://vimeo.com/68375232">TDD, where it all went wrong</a></li>
+  <li><a href="https://medium.com/@davidihunt/tdd-and-complexity-1bbd5ca51ee7#.4mzrdro57">TDD and Complexity</a></li>
+  <li><a href="http://blog.cleancoder.com/uncle-bob/2016/03/19/GivingUpOnTDD.html">Giving up on TDD</a></li>
+  </ul>
+</blockquote>
 
-<p>And that's it! We are now able to run Composer and then phpspec:</p>
+<h2 id="specifications">Specifications</h2>
 
-<pre><code>composer update --optimize-autoloader
-vendor/bin/phpspec run
-</code></pre>
+<p>The purpose of this series is to create the software of a Mars Rover, according
+to the following specifications.</p>
 
-<p>That should be enough for a second commit:</p>
+<p>Mars Rovers need first to be landed at a given position. A position is composed
+of coordinates (<code>x</code> and <code>y</code>, which are both integers) and an orientation
+(a string being one of <code>north</code>, <code>east</code>, <code>west</code> or <code>south</code>).</p>
 
-<pre><code>git add -A
-git commit -m '5: Added geolocation package to main project'
-</code></pre>
+<p>It is then possible to drive them, using instructions such as <code>move_forward</code>
+(keeps orientation, but moves along the <code>x</code> or <code>y</code> axis) or
+<code>turn_left</code> / <code>turn_right</code> (keeps the same coordinates, but changes the
+orientation).</p>
 
-<h2 id="adding-%60geolocation%60-to-%60navigation%60">Adding <code>geolocation</code> to <code>navigation</code></h2>
+<p>From time to time, they'll be requested to give their current location
+(again, <code>x</code> and <code>y</code> coordinates and the orientation).</p>
 
-<p>Now let's go to the <code>navigation</code> package:</p>
+<p>For example, a rover can be landed at <code>23</code>, <code>42</code>, <code>north</code> and then can be
+instructed to move forward twice, then to turn left, then to move forward once.
+When requested to, it should provide this location: <code>22</code>, <code>44</code>, <code>west</code>.</p>
 
-<pre><code>cd packages/navigation
-</code></pre>
+<h2 id="identifying-use-cases">Identifying use cases</h2>
 
-<p>All we need to do is to add a new line in the <code>require</code> section of our
-<code>composer.json</code> file:</p>
+<p>From the above specifications, we can identify at least three use cases:</p>
 
-<pre><code>{
-    "name": "mars-rover/navigation",
-    "license": "MIT",
-    "type": "library",
-    "description": "Mars Rover - Navigation",
-    "autoload": {
-        "psr-4": { "MarsRover\\Navigation\\": "src/MarsRover/Navigation" }
-    },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../*"
-        }
-    ],
-    "require": {
-        "mars-rover/event-sourcing": "*@dev",
-        "mars-rover/geolocation": "*@dev",
-        "php": "^7.0"
-    },
-    "require-dev": {
-        "memio/spec-gen": "^0.6"
-    }
-}
-</code></pre>
-
-<p>And that's it! We are now able to run Composer and then phpspec:</p>
-
-<pre><code>composer update --optimize-autoloader
-vendor/bin/phpspec run
-</code></pre>
-
-<p>That should be enough for a third commit:</p>
-
-<pre><code>git add -A
-git commit -m '5: Added geolocation package to navigation package'
-</code></pre>
-
-<h2 id="adding-%60geolocation%60-to-%60location%60">Adding <code>geolocation</code> to <code>location</code></h2>
-
-<p>Now let's go to the <code>location</code> package:</p>
-
-<pre><code>cd ../location
-</code></pre>
-
-<p>This time, in addition to a new line in the <code>require</code> section we also need to
-add a new <code>repositories</code> section to our <code>composer.json</code> file:</p>
-
-<pre><code>{
-    "name": "mars-rover/location",
-    "license": "MIT",
-    "type": "library",
-    "description": "Mars Rover - Location",
-    "autoload": {
-        "psr-4": { "MarsRover\\Location\\": "src/MarsRover/Location" }
-    },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../*"
-        }
-    ],
-    "require": {
-        "mars-rover/geolocation": "*@dev",
-        "php": "^7.0"
-    },
-    "require-dev": {
-        "memio/spec-gen": "^0.6"
-    }
-}
-</code></pre>
-
-<p>And that's it! We are now able to run Composer and then phpspec:</p>
-
-<pre><code>composer update --optimize-autoloader
-vendor/bin/phpspec run
-</code></pre>
-
-<p>That should be enough for a fourth and last commit:</p>
-
-<pre><code>git add -A
-git commit -m '5: Added geolocation package to location package'
-</code></pre>
-
-<h2 id="conclusion">Conclusion</h2>
-
-<p>We've now created a <code>geolocation</code> package that is shared between <code>navigation</code>
-and <code>location</code>, keeping them both separate.</p>
+<ol>
+<li>Landing a Rover on Mars</li>
+<li>Driving the rover</li>
+<li>Requesting its location</li>
+</ol>
 
 <h2 id="what%27s-next">What's next</h2>
 
-<p>In the next article, we'll start moving our value objects to our new package.</p>
+<p>In the next article we'll initialize the project by creating the MonoRepo and
+its first package: <code>navigation</code>.</p>
+
+<blockquote>
+  <p><strong>Note</strong> We'll be using:</p>
+  
+  <ul>
+  <li>PHP 7</li>
+  <li><a href="https://getcomposer.org">Composer</a></li>
+  <li>git</li>
+  <li><a href="http://phpspec.net/">phpspec</a>
+  and its <a href="http://memio.github.io/spec-gen">SpecGen extension</a></li>
+  </ul>
+</blockquote>
 ]]></content>
         </entry>
             <entry>
-            <title type="html"><![CDATA[Mars Rover, Locating package]]></title>
-            <link href="/2016/09/14/mars-rover-locating-package.html"/>
-            <updated>2016-09-14T00:00:00+01:00</updated>
-            <id>/2016/09/14/mars-rover-locating-package.html</id>
-            <content type="html"><![CDATA[<p>In this series we're building the software of a Mars Rover, according to
-the <a href="/2016/06/15/mars-rover-introduction.html">following specifications</a>.
-It allows us to practice the followings:</p>
+            <title type="html"><![CDATA[Towards CQRS, Search Engine]]></title>
+            <link href="/2016/05/18/towards-cqrs-search-engine.html"/>
+            <updated>2016-05-18T00:00:00+01:00</updated>
+            <id>/2016/05/18/towards-cqrs-search-engine.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: A <code>Search Engine</code> component can help you get the CQRS "Query" part right.</p>
+</blockquote>
+
+<p>The <a href="http://martinfowler.com/bliki/CQRS.html">Command / Query Responsibility Segregation</a>
+(CQRS) principle states that "write" and "read" logic should be separated.
+For example a single "Publisher" server (write) with many "Subscribers" servers
+(read) is a macro example of applying this principle, and an API that defines
+a read endpoint free from write side effects is a micro example of applying it.</p>
+
+<p>Because it's hard to go from a regular mindset to a CQRS one, we've seen in the
+last article how we can use <a href="/2016/05/11/towards-cqrs-command-bus.html">the Command Bus pattern</a>
+to help us get the Command part right.</p>
+
+<p>The "Query" equivalent of the Command Bus would be the <a href="http://code.tutsplus.com/tutorials/the-repository-design-pattern--net-35804">Repository design pattern</a>.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Here's some nice articles about this pattern:</p>
+  
+  <ul>
+  <li><a href="http://martinfowler.com/eaaCatalog/gateway.html">Gateway</a></li>
+  <li><a href="http://mnapoli.fr/repository-interface/">Refactoring code that accesses external services</a></li>
+  <li><a href="http://martinfowler.com/articles/refactoring-external-service.html">The Repository interface</a></li>
+  <li><a href="http://mnapoli.fr/collection-interface-and-database-abstraction/">The Collection interface and Database abstraction</a></li>
+  </ul>
+</blockquote>
+
+<p>However repositories can grow into an object containing many methods like
+<code>findByName</code>, <code>findAllInDescendingOrder</code>, <code>findByNameInDescendingOrder</code>, etc.
+To avoid this, we can combine it with the <a href="https://en.wikipedia.org/wiki/Specification_pattern">Specification design pattern</a>:
+our Repository would only have one single <code>search</code> method taking a Criteria object
+that describes our query parameters.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: For more articles on the topic, see:</p>
+  
+  <ul>
+  <li><a href="http://dev.imagineeasy.com/post/44139111915/taiming-repository-classes-in-doctrine-with-the">Taiming repository classes in Doctrine with the QueryBuilder</a></li>
+  <li><a href="http://www.whitewashing.de/2013/03/04/doctrine_repositories.html">On Taming Repository Classes in Doctrine</a></li>
+  <li><a href="http://blog.kevingomez.fr/2015/02/07/on-taming-repository-classes-in-doctrine-among-other-things/">On Taming Repository Classes in Doctrine… Among other things</a></li>
+  <li><a href="http://blog.kevingomez.fr/2015/03/14/rulerz-specifications-and-symfony-are-in-a-boat/">RulerZ, specifications and Symfony are in a boat</a></li>
+  </ul>
+</blockquote>
+
+<p>In this article, we'll build a private "Search Engine" component to help us get
+the Query part right.</p>
+
+<h2 id="requirements">Requirements</h2>
+
+<p>All projects are different, and while the feature described here might have some
+similarity with other projects requirements, there's a big chance that creating
+a single common library might prove too hard.</p>
+
+<p>So instead we'll create a "private" Component for our project: it's going to be
+decoupled, allowing it to become a library on its own just in the unlikely event
+it turns out to be the "Universal Search Engine Component".</p>
+
+<p>Our requirements will be the following: we need to create an endpoint that allows
+us to search "profiles", with the following features:</p>
 
 <ul>
-<li>Monolithic Repositories (MonoRepo)</li>
-<li>Command / Query Responsibility Segregation (CQRS)</li>
-<li>Event Sourcing (ES)</li>
-<li>Test Driven Development (TDD)</li>
+<li>it has to be paginated (default page = <code>1</code>, default number of profiles per page = <code>10</code>)</li>
+<li>it has to be ordered (default field = <code>name</code>, default direction = <code>ASC</code>)</li>
+<li>it can be filtered</li>
 </ul>
 
-<p>We've already developed the first use case about landing the rover on mars,
-and the second one about driving it. We're now going to start developing the
-last one, requesting its location:</p>
+<p>Here's a HTTP Request example:</p>
 
-<blockquote>
-  <p>Mars rover will be requested to give its current location (<code>x</code> and <code>y</code>
-  coordinates and the orientation).</p>
-</blockquote>
-
-<p>In this article we're going to create a new package for the location logic.</p>
-
-<h2 id="why-a-new-package%3F">Why a new package?</h2>
-
-<p>Until now we've been putting our Landing and Driving code in the <code>navigation</code>
-package. It's a "write" type of logic: an event occurs and we log it in the
-Event Store.</p>
-
-<p>On the other hand, requesting the location of the rover is a "read" type of
-logic, since we've decided to follow the CQRS principle we're going to
-separate them and put it in its own package.</p>
-
-<p>The benefit of this approach can become more apparent if we decide to create
-web APIs to control our Mars Rover and replicate the data accross multiple
-servers: we could put the "write" endpoints on a single "Publishing" server,
-and then put the "read" endpoints on many "Subsriber" servers.</p>
-
-<p>The "Subscriber" servers only need to synchronize their data with the
-"Publisher" server, allowing us to scale.</p>
-
-<h2 id="creating-the-%60location%60-package">Creating the <code>location</code> package</h2>
-
-<p>We can start by creating the directory:</p>
-
-<pre><code>git checkout -b 5-location
-mkdir -p packages/location
-cd packages/location
-</code></pre>
-
-<p>Composer needs us to set up the package by creating a <code>composer.json</code> file:</p>
-
-<pre><code>{
-    "name": "mars-rover/location",
-    "license": "MIT",
-    "type": "library",
-    "description": "Mars Rover - Location",
-    "autoload": {
-        "psr-4": { "MarsRover\\Location\\": "src/MarsRover/Location" }
-    },
-    "require": {
-        "php": "^7.0"
-    },
-    "require-dev": {
-        "memio/spec-gen": "^0.6"
-    }
-}
-</code></pre>
-
-<p>We've decided to use <a href="http://phpspec.net/">phpspec</a> as a test framework, and
-to get the most of it we'd like to use its <a href="http://memio.github.io/spec-gen">SpecGen</a>
-extension. To do so we need to create the <code>phpspec.yml.dist</code> file:</p>
-
-<pre><code>extensions:
-    Memio\SpecGen\MemioSpecGenExtension: ~
+<pre><code>GET /v1/profiles?name=marvin&amp;page=42&amp;per_page=23&amp;sort=-name HTTP/1.1
+Accept: application/json
 </code></pre>
 
 <blockquote>
-  <p><strong>Note</strong>: For more information about phpspec
-  <a href="/2015/08/03/phpspec.html">see this article</a>.</p>
+  <p><strong>Note</strong>: <code>sort</code>'s value can be either <code>name</code> (the default) or <code>-name</code>
+  (changes the direction to be descending).</p>
 </blockquote>
 
-<p>Finally, we can configure this package's git by creating a <code>.gitignore</code> file:</p>
+<p>And here's a HTTP Response example:</p>
 
-<pre><code># Configuration
-/phpspec.yml
+<pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
 
-# Third Party libraries
-/vendor/
-/composer.lock
-</code></pre>
-
-<p>With this we've finished creating our package. We can run Composer:</p>
-
-<pre><code>composer install --optimize-autoloader
-</code></pre>
-
-<p>That should be enough for a first commit:</p>
-
-<pre><code>git add -A
-git commit -m '5: Created Location package'
-</code></pre>
-
-<h2 id="adding-%60location%60-to-the-project">Adding <code>location</code> to the project</h2>
-
-<p>Let's go back to the project's root:</p>
-
-<pre><code>cd ../../
-</code></pre>
-
-<p>All we need to do is to add a new line in the <code>require</code> section of our
-<code>composer.json</code> file:</p>
-
-<pre><code>{
-    "name": "mars-rover/mars-rover",
-    "license": "MIT",
-    "type": "project",
-    "description": "Mars Rover",
-    "repositories": [
+{
+    "items": [
         {
-            "type": "path",
-            "url": "./packages/*"
+            "name": "Arthur Dent"
+        },
+        {
+            "name": "Ford Prefect"
+        },
+        {
+            "name": "Trillian Astra"
         }
     ],
-    "require": {
-        "mars-rover/event-sourcing": "*@dev",
-        "mars-rover/location": "*@dev",
-        "mars-rover/navigation": "*@dev",
-        "php": "^7.0"
-    },
-    "require-dev": {
-        "phpspec/phpspec": "^3.0"
+    "page": {
+        "current_page": 1,
+        "per_page": 10,
+        "total_elements": 3,
+        "total_pages": 1
     }
 }
 </code></pre>
 
-<p>Actually, we also need to add a new section in <code>phpspec.yml.dist</code>:</p>
+<h2 id="the-search-engine-component">The Search Engine component</h2>
 
-<pre><code>suites:
-    event-sourcing:
-        namespace: 'MarsRover\EventSourcing'
-        src_path: packages/event-sourcing/src
-        spec_path: packages/event-sourcing
+<p>In order to satisfy the above requirements, we need to create a flexible
+Search Engine component that can accept any of those parameters. That can be done
+in one interface and a few (4) value objects.</p>
 
-    location:
-        namespace: 'MarsRover\Location'
-        src_path: packages/location/src
-        spec_path: packages/location
+<p>First, we can have a <code>SearchEngine</code> interface:</p>
 
-    navigation:
-        namespace: 'MarsRover\Navigation'
-        src_path: packages/navigation/src
-        spec_path: packages/navigation
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\Search;
+
+use Porpaginas\Result;
+
+interface SearchEngine
+{
+    public function match(Criteria $criteria) : Result;
+}
 </code></pre>
 
-<p>And that's it! We are now able to run Composer and then phpspec:</p>
+<blockquote>
+  <p><strong>Note</strong>: We're using <a href="https://github.com/beberlei/porpaginas">porpaginas</a>,
+  a  library that makes paginated result a breeze to handle.
+  <a href="/2015/11/05/porpaginas.html">Find out more about it here</a>.</p>
+</blockquote>
 
-<pre><code>composer update --optimize-autoloader
-vendor/bin/phpspec run
+<p>A <code>Criteria</code> is a value object, composed of:</p>
+
+<ul>
+<li>a resource name (e.g. <code>profile</code>)</li>
+<li>a <code>Paginating</code> value object</li>
+<li>an <code>Ordering</code> value object</li>
+<li>a <code>Filtering</code> value object</li>
+</ul>
+
+<p>It can be constructed using the query parameters:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\Search;
+
+use AppBundle\Search\Criteria\Filtering;
+use AppBundle\Search\Criteria\Ordering;
+use AppBundle\Search\Criteria\Paginating;
+
+class Criteria
+{
+    public $resourceName;
+    public $filtering;
+    public $ordering;
+    public $paginating;
+
+    public function __construct(
+        string $resourceName,
+        Filtering $filtering,
+        Ordering $ordering,
+        Paginating $paginating
+    ) {
+        $this-&gt;resourceName = $resourceName;
+        $this-&gt;filtering = $filtering;
+        $this-&gt;ordering = $ordering;
+        $this-&gt;paginating = $paginating;
+    }
+
+    public static function fromQueryParameters(string $resourceName, array $queryParameters) : self
+    {
+        return new self(
+            $resourceName,
+            Filtering::fromQueryParameters($queryParameters),
+            Ordering::fromQueryParameters($queryParameters),
+            Paginating::fromQueryParameters($queryParameters)
+        );
+    }
+}
 </code></pre>
 
-<p>That should be enough for a second commit:</p>
+<p>The <code>Paginating</code> value object takes care of the <code>page</code> parameter (e.g. <code>1</code>) and
+the <code>per_page</code> parameter (e.g. <code>10</code>):</p>
 
-<pre><code>git add -A
-git commit -m '5: Added location package to main project'
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\Search\Criteria;
+
+class Paginating
+{
+    const DEFAULT_CURRENT_PAGE = 1;
+    const DEFAULT_ITEMS_PER_PAGE = 10;
+
+    public $currentPage;
+    public $itemsPerPage;
+    public $offset;
+
+    public function __construct(int $currentPage, int $itemsPerPage)
+    {
+        $this-&gt;currentPage = $currentPage;
+        if ($this-&gt;currentPage &lt;= 0) {
+            $this-&gt;currentPage = self::DEFAULT_CURRENT_PAGE;
+        }
+        $this-&gt;itemsPerPage = $itemsPerPage;
+        if ($this-&gt;itemsPerPage &lt;= 0) {
+            $this-&gt;itemsPerPage = self::DEFAULT_ITEMS_PER_PAGE;
+        }
+        $this-&gt;offset = $this-&gt;currentPage * $this-&gt;itemsPerPage - $this-&gt;itemsPerPage;
+    }
+
+    public static function fromQueryParameters(array $queryParameters) : self
+    {
+        $currentPage = $queryParameters['page'] ?? self::DEFAULT_CURRENT_PAGE;
+        $maximumResults = $queryParameters['per_page'] ?? self::DEFAULT_ITEMS_PER_PAGE;
+
+        return new self($currentPage, $maximumResults);
+    }
+}
 </code></pre>
+
+<p>The <code>Ordering</code> value object takes care of the <code>sort</code> parameter (e.g. <code>-name</code>):</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\Search\Criteria;
+
+class Ordering
+{
+    const DEFAULT_FIELD = 'name';
+    const DEFAULT_DIRECTION = 'ASC';
+
+    public $field;
+    public $direction;
+
+    public function __construct(string $field, string $direction)
+    {
+        $this-&gt;field = $field;
+        $this-&gt;direction = $direction;
+    }
+
+    public static function fromQueryParameters(array $queryParameters) : self
+    {
+        $column = $queryParameters['sort'] ?? self::DEFAULT_FIELD;
+        $direction = self::DEFAULT_DIRECTION;
+        if ('-' === $column[0]) {
+            $direction = 'DESC';
+            $column = trim($column, '-');
+        }
+
+        return new self($column, $direction);
+    }
+}
+</code></pre>
+
+<p>The <code>Filtering</code> value object takes care of all the other parameters:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\Search\Criteria;
+
+class Filtering
+{
+    public $fields;
+
+    public function __construct(array $fields)
+    {
+        $this-&gt;fields = $fields;
+    }
+
+    public static function fromQueryParameters(array $queryParameters) : self
+    {
+        $fields = $queryParameters;
+        unset($fields['page']);
+        unset($fields['per_page']);
+        unset($fields['sort']);
+
+        return new self($fields);
+    }
+}
+</code></pre>
+
+<p>With this we have a generic Search Engine. The next step is to provide an
+implementation.</p>
+
+<h2 id="a-doctrine-implementation">A Doctrine implementation</h2>
+
+<p>All implementations of <code>SearchEngine</code> need to be able to handle many types of
+parameters (pagination, filtering, etc).</p>
+
+<p>To <a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">avoid our Doctrine implementation to become a big ball of mud</a>,
+we're going to split the work into <code>Builders</code>, which construct the DQL query using
+the <code>QueryBuilder</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\DoctrineSearch;
+
+use AppBundle\Search\Criteria;
+use AppBundle\Search\SearchEngine;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
+use Porpaginas\Result;
+
+class DoctrineSearchEngine implements SearchEngine
+{
+    private $connection;
+    private $builders = [];
+
+    public function __construct(Connection $connection)
+    {
+        $this-&gt;connection = $connection;
+    }
+
+    public function add(Builder $builder)
+    {
+        $this-&gt;builders[] = $builder;
+    }
+
+    public function match(Criteria $criteria) : Result
+    {
+        $queryBuilder = new QueryBuilder($this-&gt;connection);
+        foreach ($this-&gt;builders as $builder) {
+            if (true === $builder-&gt;supports($criteria)) {
+                $builder-&gt;build($criteria, $queryBuilder);
+            }
+        }
+
+        return new DoctrineResult($queryBuilder);
+    }
+}
+</code></pre>
+
+<p>Here's the <code>Builder</code> interface:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\DoctrineSearch;
+
+use AppBundle\Search\Criteria;
+use Doctrine\DBAL\Query\QueryBuilder;
+
+interface Builder
+{
+    public function supports(Criteria $criteria) : bool;
+    public function build(Criteria $criteria, QueryBuilder $queryBuilder);
+}
+</code></pre>
+
+<p>We're not going to execute the query immediately, we're instead going to return
+the <code>QueryBuilder</code> wrapped in a <code>Result</code> implementation: this will allow us to
+choose between getting all the profiles or only getting a subset:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\DoctrineSearch;
+
+use Doctrine\DBAL\Query\QueryBuilder;
+use Porpaginas\Result;
+
+class DoctrineResult implements Result
+{
+    private $queryBuilder;
+
+    public function __construct(QueryBuilder $queryBuilder)
+    {
+        $this-&gt;queryBuilder = $queryBuilder;
+    }
+
+    public function take($offset, $limit)
+    {
+        $queryBuilder = clone $this-&gt;queryBuilder;
+        $queryBuilder-&gt;setFirstResult($offset);
+        $queryBuilder-&gt;setMaxResults($limit);
+        $statement = $queryBuilder-&gt;execute();
+
+        return new IteratorPage($statement-&gt;getIterator(), $offset, $limit, $this-&gt;count());
+    }
+
+    public function count()
+    {
+        $queryBuilder = clone $this-&gt;queryBuilder;
+        $subSql = $queryBuilder-&gt;getSql();
+        $sql = &lt;&lt;&lt;SQL
+SELECT count(*) AS count
+FROM (
+    $subSql
+) as sub_query
+SQL
+        ;
+        $result = $queryBuilder-&gt;getConnection()-&gt;fetchAssoc($sql, $queryBuilder-&gt;getParameters());
+
+        return $result['count'] ?? 0;
+    }
+
+    public function getIterator()
+    {
+        $queryBuilder = clone $this-&gt;queryBuilder;
+        $statement = $queryBuilder-&gt;execute();
+
+        return $statement-&gt;getIterator();
+    }
+}
+</code></pre>
+
+<p>Finally if a subset is asked, we need to provide our implementation of <code>Page</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\DoctrineSearch;
+
+use Porpaginas\Page;
+
+class IteratorPage implements Page
+{
+    private $iterator;
+    private $offset;
+    private $limit;
+    private $totalCount;
+
+    public function __construct(\Iterator $iterator, int $offset, int $limit, int $totalCount)
+    {
+        $this-&gt;iterator = $iterator;
+        $this-&gt;offset = $offset;
+        $this-&gt;limit = $limit;
+        $this-&gt;totalCount = $totalCount;
+    }
+
+    public function getCurrentOffset()
+    {
+        return $this-&gt;offset;
+    }
+
+    public function getCurrentPage()
+    {
+        if (0 === $this-&gt;limit) {
+            return 1;
+        }
+
+        return floor($this-&gt;offset / $this-&gt;limit) + 1;
+    }
+
+    public function getCurrentLimit()
+    {
+        return $this-&gt;limit;
+    }
+
+    public function count()
+    {
+        return count($this-&gt;iterator);
+    }
+
+    public function totalCount()
+    {
+        return $this-&gt;totalCount;
+    }
+
+    public function getIterator()
+    {
+        return $this-&gt;iterator;
+    }
+}
+</code></pre>
+
+<h2 id="building-our-query">Building our Query</h2>
+
+<p>Now that we have a fully functional Search Engine, we need to create <code>Builders</code>
+specific for our need. The first one will be about selecting profiles:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\Profile\DoctrineSearch;
+
+use AppBundle\DoctrineSearch\Builder;
+use AppBundle\Search\Criteria;
+use Doctrine\DBAL\Query\QueryBuilder;
+
+class SelectProfileBuilder implements Builder
+{
+    public function supports(Criteria $criteria) : bool
+    {
+        return 'profile' === $criteria-&gt;resourceName;
+    }
+
+    public function build(Criteria $criteria, QueryBuilder $queryBuilder)
+    {
+        $queryBuilder-&gt;select('name');
+        $queryBuilder-&gt;from('profile', 'p');
+    }
+}
+</code></pre>
+
+<p>We also need to be able to order our results:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\Profile\DoctrineSearch;
+
+use AppBundle\DoctrineSearch\Builder;
+use AppBundle\Search\Criteria;
+use Doctrine\DBAL\Query\QueryBuilder;
+
+class OrderingBuilder implements Builder
+{
+    public function supports(Criteria $criteria) : bool
+    {
+        return true;
+    }
+
+    public function build(Criteria $criteria, QueryBuilder $queryBuilder)
+    {
+        $queryBuilder-&gt;orderBy(
+            $criteria-&gt;ordering-&gt;field,
+            $criteria-&gt;ordering-&gt;direction
+        );
+    }
+}
+</code></pre>
+
+<p>Finally if a name filter is provided we want to apply it:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\Profile\DoctrineSearch;
+
+use AppBundle\DoctrineSearch\Builder;
+use AppBundle\Search\Criteria;
+use Doctrine\DBAL\Query\QueryBuilder;
+
+class ProfileNameFilteringBuilder implements Builder
+{
+    public function supports(Criteria $criteria) : bool
+    {
+        return 'profile' === $criteria-&gt;resourceName &amp;&amp; isset($criteria-&gt;filtering-&gt;fields['name']);
+    }
+
+    public function build(Criteria $criteria, QueryBuilder $queryBuilder)
+    {
+        $queryBuilder-&gt;where('p.name LIKE :name');
+        $queryBuilder-&gt;setParameter('name', "%{$criteria-&gt;filtering-&gt;fields['name']}");
+    }
+}
+</code></pre>
+
+<h2 id="usage-example">Usage example</h2>
+
+<p>Let's create our controller:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Controller/SearchProfilesController.php
+
+namespace AppBundle\Controller;
+
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class SearchProfilesController extends Controller
+{
+    /**
+     * @Route("/api/v1/profiles")
+     * @Method({"GET"})
+     */
+    public function searchProfilesAction(Request $request)
+    {
+        $criteria = Criteria::fromQueryParameters(
+            'profile',
+            $request-&gt;query-&gt;all()
+        );
+        $page = $this-&gt;get('app.search_engine')-&gt;match($criteria)-&gt;take(
+            $criteria-&gt;paginating-&gt;offset,
+            $criteria-&gt;paginating-&gt;itemsPerPage
+        );
+        $totalElements = $page-&gt;totalCount();
+        $totalPages = (int) ceil($totalElements / $criteria-&gt;paginating-&gt;itemsPerPage);
+
+        return new JsonResponse(array(
+            'items' =&gt; iterator_to_array($page-&gt;getIterator()),
+            'page' =&gt; array(
+                'current_page' =&gt; $criteria-&gt;paginating-&gt;currentPage,
+                'per_page' =&gt; $criteria-&gt;paginating-&gt;itemsPerPage,
+                'total_elements' =&gt; $totalElements,
+                'total_pages' =&gt; $totalPages,
+            ),
+        ), 200);
+    }
+}
+</code></pre>
+
+<p>And that's it!</p>
 
 <h2 id="conclusion">Conclusion</h2>
 
-<p>In order to keep the "write" logic in the <code>navigation</code> package separated
-from the "read" logic, we've created a new <code>location</code> package.</p>
+<p>Just like using and overusing the "Command Bus" pattern can help us learn more on
+how to get the "Command" part of CQRS right, using and overusing the "Repository"
+design pattern in combination with the "Specification" one can help us get the
+"Query" part right.</p>
 
-<h2 id="what%27s-next">What's next</h2>
+<p>Building a private Search Engine component for our project is one way to achieve
+this.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Towards CQRS, Command Bus]]></title>
+            <link href="/2016/05/11/towards-cqrs-command-bus.html"/>
+            <updated>2016-05-11T00:00:00+01:00</updated>
+            <id>/2016/05/11/towards-cqrs-command-bus.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: The <code>Command Bus</code> pattern can help you get the CQRS "Command" part right.</p>
+</blockquote>
 
-<p>In the next article, we'll start creating the <code>LocateDriverHandler</code> class.</p>
+<p>By following the <a href="http://martinfowler.com/bliki/CQRS.html">Command / Query Responsibility Segregation</a>
+(CQRS) principle, we separate "write" logic from "read" logic.
+This can be applied on many levels, for example on the macro one we can have a
+single "Publisher" server (write) with many "Subscribers" servers (read), and on
+a micro level we can use this principle to keep our controllers small.</p>
+
+<p>However, transitioning from a regular mindset to a CQRS one can be difficult.</p>
+
+<p>In this article, we'll explore the "Command Bus" pattern, to help us to get the
+Command (write) part right.</p>
+
+<h2 id="starting-example">Starting Example</h2>
+
+<p>Let's take the following code for our example:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Controller/ProfileCreationController.php;
+
+namespace AppBundle\Controller;
+
+use AppBundle\Entity\Profile;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationController extends Controller
+{
+    /**
+     * @Route("/api/v1/profiles")
+     * @Method({"POST"})
+     */
+    public function createProfileAction(Request $request)
+    {
+        $em = $this-&gt;get('doctrine.orm.entity_manager');
+
+        $name = $request-&gt;request-&gt;get('name');
+        if (null === $name) {
+            return new JsonResponse(array('error' =&gt; 'The "name" parameter is missing from the request\'s body'), 422);
+        }
+        if (null !== $em-&gt;getRepository('AppBundle:Profile')-&gt;findOneByName($name)) {
+            return new JsonResponse(array('error' =&gt; 'The name "'.$name.'" is already taken'), 422);
+        }
+        $createdProfile = new Profile($name);
+        $em-&gt;persist($createdProfile);
+        $em-&gt;flush();
+
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+    }
+}
+</code></pre>
+
+<p>It's an endpoint allowing us to create new "profiles". All the logic is done in
+the Controller:</p>
+
+<ul>
+<li>we get a <code>name</code> parameter from the <code>Request</code></li>
+<li>we validate it (is it missing? Does it duplicate an existing name?)</li>
+<li>we create a new <code>Profile</code> out of it</li>
+<li>we persist it</li>
+<li>we return it as JSON in the <code>Response</code></li>
+</ul>
+
+<h2 id="command-bus">Command Bus</h2>
+
+<p>The Command Bus pattern relies on 3 types of classes:</p>
+
+<ul>
+<li><code>Command</code>: encapsulate our input, does simple validation on it</li>
+<li><code>CommandHandler</code>: dedicated to a single <code>Command</code>, does the actual logic</li>
+</ul>
+
+<p>Finally there's a <code>CommandBus</code> interface allowing us to build <code>Middlewares</code>:</p>
+
+<ol>
+<li>we can have a <code>CommandBus</code> that calls the appropriate <code>CommandHandle</code> for the given <code>Command</code></li>
+<li>we can have a <code>CommandBus</code> that wraps the above one in a database transaction</li>
+<li>we can have a <code>CommandBus</code> that wraps the above ones to logs all incoming commands</li>
+<li>we can have a <code>CommandBus</code> that wraps the above ones to check permissions</li>
+<li>etc</li>
+</ol>
+
+<p><code>Middlewares</code> can do any action we want before and/or after the wrapped <code>CommandBus</code>.
+They can be nested in a specific order, allowing us a fine grained control over
+how the <code>Command</code> will be handled.</p>
+
+<h2 id="using-command-bus-in-the-controller">Using Command Bus in the controller</h2>
+
+<p>Using our previous example, we're going to create the <code>Command</code> first. It needs
+to contain all the input parameters, do a simple validation on it and have an
+intention revealing name describing the action we'd like to do:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Profile/CreateNewProfile.php;
+
+namespace AppBundle\Profile;
+
+class CreateNewProfile
+{
+    public $name;
+
+    public function __construct($name)
+    {
+        if (null === $name) {
+            throw new \DomainException('Missing required "name" parameter');
+        }
+        $this-&gt;name = (string) $name;
+    }
+}
+</code></pre>
+
+<p>Unit tests can be created for Commands, to document their input requirements:</p>
+
+<pre><code class="php">&lt;?php
+// File: tests/AppBundle/Profile/CreateNewProfileTest.php;
+
+namespace tests\AppBundle\Profile;
+
+use AppBundle\Profile\CreateNewProfile;
+
+class CreateNewProfileTest extends \PHPUnit_Framework_TestCase
+{
+    const NAME = 'Arthur Dent';
+
+    /**
+     * @test
+     */
+    public function it_has_a_name()
+    {
+        $createNewProfile = new CreateNewProfile(self::NAME);
+
+        self::assertSame(self::NAME, $createNewProfile-&gt;name);
+    }
+
+    /**
+     * @test
+     */
+    public function it_cannot_miss_a_name()
+    {
+        $this-&gt;expectException(\DomainException::class);
+        $createNewProfile = new CreateNewProfile(null);
+    }
+}
+</code></pre>
+
+<p>The second step is to create the <code>CommandHandler</code>. It needs to do more complex
+validation, and the actual logic associated to the <code>Command</code>'s intention:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Profile/CreateNewProfileHandler.php;
+
+namespace AppBundle\Profile;
+
+use AppBundle\Entity\Profile;
+use Doctrine\ORM\EntityManager;
+
+class CreateNewProfileHandler
+{
+    private $entityManager;
+
+    public function __construct(EntityManager $entityManager)
+    {
+        $this-&gt;entityManager = $entityManager;
+    }
+
+    public function handle(CreateNewProfile $createNewProfile)
+    {
+        if (null !== $this-&gt;entityManager-&gt;getRepository('AppBundle:Profile')-&gt;findOneByName($createNewProfile-&gt;name)) {
+            throw new \DomainException("Invalid \"name\" parameter: \"$name\" already exists and duplicates are not allowed");
+        }
+        $createdProfile = new Profile($name);
+        $em-&gt;persist($createdProfile);
+        $em-&gt;flush();
+
+        return $createdProfile
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: a unit test can be created for CommandHandlers, to document use cases
+  and their edge cases (happy and unhappy scenario).</p>
+</blockquote>
+
+<p>Finally we can use the Command Bus in our controller:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Controller/ProfileCreationController.php;
+
+namespace AppBundle\Controller;
+
+use AppBundle\Profile\CreateNewProfile;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationController extends Controller
+{
+    /**
+     * @Route("/api/v1/profiles")
+     * @Method({"POST"})
+     */
+    public function createProfileAction(Request $request)
+    {
+        try {
+            $createdProfile = $this-&gt;get('command_bus')-&gt;handle(new CreateNewProfile(
+                $request-&gt;request-&gt;get('name')
+            ));
+        } catch (\DomainException $e) {
+            return new JsonResponse(array('error' =&gt; $e-&gt;getMessage()), 422);
+        }
+
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Exceptions could be handled in an event listener.</p>
+</blockquote>
+
+<h2 id="refactoring-the-command-handler">Refactoring the Command Handler</h2>
+
+<p>Our Command Handler is tightly coupled to Doctrine. We can <a href="/2015/10/12/decouple-from-libraries.html">decouple from libraries</a>
+by introducing interfaces:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Profile/CreateNewProfileHandler.php;
+
+namespace AppBundle\Profile;
+
+use AppBundle\Profile\Service\CheckProfileNameDuplicates;
+use AppBundle\Profile\Service\SaveNewProfile;
+
+class CreateNewProfileHandler
+{
+    private $checkProfileNameDuplicates;
+    private $saveNewProfile;
+
+    public function __construct(
+        CheckProfileNameDuplicates $checkProfileNameDuplicates,
+        SaveNewProfile $saveNewProfile
+    ) {
+        $this-&gt;checkProfileNameDuplicates = $checkProfileNameDuplicates;
+        $this-&gt;saveNewProfile = $saveNewProfile;
+    }
+
+    public function handle(CreateNewProfile $createNewProfile)
+    {
+        if (true !== $this-&gt;checkProfileNameDuplicates-&gt;check($createNewProfile-&gt;name)) {
+            throw new \DomainException("Invalid \"name\" parameter: \"$name\" already exists and duplicates are not allowed");
+        }
+        $newProfile = new Profile($name); // Entity moved to Profile namespace
+        $this-&gt;saveNewProfile-&gt;save($newProfile);
+
+        return $newProfile
+    }
+}
+</code></pre>
+
+<p>In this way, it becomes much easier to write a unit test:</p>
+
+<pre><code class="php">&lt;?php
+// File: tests/AppBundle/Profile/CreateNewProfileHandlerTest.php;
+
+namespace tests\AppBundle\Profile;
+
+use AppBundle\Profile\CreateNewProfile;
+use AppBundle\Profile\CreateNewProfileHandler;
+use AppBundle\Profile\Profile;
+use AppBundle\Profile\Service\CheckProfileNameDuplicates;
+use AppBundle\Profile\Service\SaveNewProfile;
+use Prophecy\Argument;
+
+class CreateNewProfileHandlerTest extends \PHPUnit_Framework_TestCase
+{
+    const NAME = 'Arthur Dent';
+
+    private $checkProfileNameDuplicates;
+    private $saveNewProfile;
+    private $createNewProfileHandler;
+
+    protected function setUp()
+    {
+        $this-&gt;checkProfileNameDuplicates = $this-&gt;prophesize(CheckProfileNameDuplicates::class);
+        $this-&gt;saveNewProfile = $this-&gt;prophesize(SaveNewProfile::class);
+
+        $this-&gt;createNewProfileHandler = new CreateNewProfileHandler(
+            $this-&gt;checkProfileNameDuplicates-&gt;reveal(),
+            $this-&gt;saveNewProfile-&gt;reveal()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_creates_new_profiles()
+    {
+        $createNewProfile = new CreateNewProfile(self::NAME);
+
+        $this-&gt;checkProfileNameDuplicates-&gt;check(self::NAME)-&gt;willReturn(false);
+        $this-&gt;saveNewProfile-&gt;save(Argument::type(Profile::class))-&gt;shouldBeCalled();
+
+        self::assertType(
+            Profile::class,
+            $this-&gt;createNewProfileHandler-&gt;handle($createNewProfile)
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_cannot_create_profiles_with_duplicated_name()
+    {
+        $createNewProfile = new CreateNewProfile(self::NAME);
+
+        $this-&gt;checkProfileNameDuplicates-&gt;check(self::NAME)-&gt;willReturn(true);
+        $this-&gt;saveNewProfile-&gt;save(Argument::type(Profile::class))-&gt;shouldNotBeCalled();
+
+        $this-&gt;expectException(\DomainException::class);
+        $this-&gt;createNewProfileHandler-&gt;handle($createNewProfile);
+    }
+}
+</code></pre>
+
+<p>Doctrine implementations are easy to write, for example <code>CheckProfileNameDuplicates</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\Profile\Bridge;
+
+use AppBundle\Profile\Service\CheckProfileNameDuplicates;
+use Doctrine\ORM\EntityManager;
+
+class DoctrineCheckProfileNameDuplicates implements CheckProfileNameDuplicates
+{
+    private $entityManager;
+
+    public function __construct($entityManager)
+    {
+        $this-&gt;entityManager = $entityManager;
+    }
+
+    public function check(name)
+    {
+        return null === $this-&gt;entityManager-&gt;getRepository('AppBundle:Profile')-&gt;findOneByName($name));
+    }
+}
+</code></pre>
+
+<h2 id="to-sum-up">To sum up</h2>
+
+<p>With the Command Bus pattern, we've reduced our controller to the following
+responsibilities:</p>
+
+<ul>
+<li>Create a Command by extracting input parameters from the Request</li>
+<li>Create a Response by using the Command Handler returned value (via the Command Bus)</li>
+</ul>
+
+<p>Our Command allows us to make explicit all input parameters and their requirements
+(thanks to its unit tests, and by doing a simple validation on them).</p>
+
+<p>Our Command Handler allows us to make explicit the actual logic with and to
+highlight its edge cases in tests.</p>
+
+<p>While refactoring our controller, we took the opportunity to use the Dependency
+Inversion Principle to decouple our code from thrid party libraries (Doctrine).
+This was simply done by introducing interfaces, which have the benefit to provide
+more explicit names.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The best way to learn how to get the Command part in CQRS right is to start using
+the Command Bus pattern. And to abuse it, by using it everywhere and returning
+values from Command Handlers.</p>
+
+<p>Once we feel more at ease with the Command Bus pattern, we can start considering
+alternative uses:</p>
+
+<ul>
+<li>do we really need a Command Bus? For example do we use any Middlewares?</li>
+<li>do we really need to return a value from the Command Handler? For example with asynchronous commands?</li>
+<li>do we really need to use it everywhere? For example in "read" endpoints?</li>
+</ul>
+
+<p>We might realize that ditching the Command Bus and keeping the Command Handler
+and the Command can still be beneficial. We also might realize that Commands don't
+solve our "read" logic...</p>
+
+<p>In the next article, we'll experiment with a "Search Engine" pattern to try to
+get the Query part of CQRS right!</p>
+
+<p>In the meantime, here's some resources related to Command Bus and CQRS:</p>
+
+<ul>
+<li><a href="http://shawnmc.cool/command-bus">CommandBus</a>
+by <a href="https://twitter.com/ShawnMcCool">Shawn McCool</a></li>
+<li><a href="https://www.reddit.com/r/PHP/comments/29a6qz/what_am_i_missing_with_this_whole_command_bus/">What am I missing with this whole command bus (reddit question)</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/tags/SimpleBus/">A wave of command buses (series)</a>
+by <a href="https://twitter.com/matthiasnoback">Matthias Noback</a></li>
+<li><a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avoid the Mud (slides)</a>
+by <a href="https://twitter.com/mr_r_miller">Richard Miller</a></li>
+<li><a href="http://verraes.net/2015/01/messaging-flavours/">Messaging Flavours</a>
+and <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command, Model validation</a>
+and also <a href="http://verraes.net/2014/05/functional-foundation-for-cqrs-event-sourcing/">Functional Foundation for CQRS/ES</a>
+by <a href="https://twitter.com/mathiasverraes">Mathias Verraes</a></li>
+<li><a href="http://tactician.thephpleague.com/">Tactician</a>, a simple Command Bus library for PHP</li>
+<li><a href="http://www.udidahan.com/2009/12/09/clarified-cqrs/">Clarified CQRS</a>
+by <a href="https://twitter.com/UdiDahan">Udi Dahan</a></li>
+</ul>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Command/Query Responsibility Segregation]]></title>
+            <link href="/2015/08/25/cqrs.html"/>
+            <updated>2015-08-25T00:00:00+01:00</updated>
+            <id>/2015/08/25/cqrs.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: CQRS is about not mixing "read" and "write" logic. You can use patterns
+  like a Repostiory / Search Engine and Command Bus to help you achieve this.</p>
+</blockquote>
+
+<p>The <a href="https://en.wikipedia.org/wiki/Single_responsibility_principle">Single Responsibility Principle</a>
+(SRP) has many applications: we can find it in the <a href="https://en.wikipedia.org/wiki/Unix_philosophy">Unix philosophy</a>
+("do one thing and do it well") and usually refactoring is all about identifying
+responsibilities and extracting them in their own classes.</p>
+
+<p><a href="http://martinfowler.com/bliki/CQRS.html">Command/Query Responsibility Segregation</a>
+(CQRS) can be viewed as a part of it.</p>
+
+<p>In this article, we'll explore the pros and cons of CQRS and we'll see some ways
+to implement it.</p>
+
+<h2 id="messages">Messages</h2>
+
+<p>We usually communicate with our application by giving it an input which can be
+viewed as a "message". Messages can be classified in 3 different types:</p>
+
+<ul>
+<li>Imperative: we want the application to do something (e.g. register a new member)</li>
+<li>Interrogatory: we want to know the state of the application (e.g. the list of registered members)</li>
+<li>Informative: we notify the application of an event (e.g. a member visited a page)</li>
+</ul>
+
+<blockquote>
+  <p><strong>Note</strong>: For more information, have a look at <a href="http://verraes.net/2015/01/messaging-flavours/">Messaging Flavours</a>
+  by <a href="https://twitter.com/mathiasverraes">Mathias Verraes</a>.</p>
+</blockquote>
+
+<p>The CQRS principle states that Imperative messages should not be mixed with
+Interrogatory ones.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Here's an interresting article about
+  <a href="http://verraes.net/2015/02/form-command-model-validation/">validating those messages</a>.</p>
+</blockquote>
+
+<h2 id="asynchronous-use-case">Asynchronous use case</h2>
+
+<p>Let's take the <a href="https://en.wikipedia.org/wiki/A/B_testing">A/B testing</a> example:
+we'd like to know which setting will attract more visits on a given page.
+To do so when a user visits the page, we send a request to an API with some helpful information.</p>
+
+<p>On receiving the request, the API can simply push a message to a Messaging Queue
+(e.g. RabbitMQ). This request was an Informative message.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: To learn more about RabbitMQ, have a look at <a href="https://www.sensiolabsblog.co.uk/blog/improve-the-performance-of-your-symfony-application-using-rabbitmq">this article</a>
+  and <a href="http://www.slideshare.net/cakper/2014-0821-symfony-uk-meetup-scaling-symfony2-apps-with-rabbit-mq">those slides</a>.</p>
+</blockquote>
+
+<p>Eventually, the Messaging Queue will call a consumer and give it the message: now
+the consumer must register the information somewhere. This message is an Imperative one.</p>
+
+<p>Later on, we can display the statistic on a dashboard. This time, we're dealing
+with an interrogatory message.</p>
+
+<p>As we can see, the CQRS principle is applied here. It is really useful whith
+asynchronous use cases.</p>
+
+<h2 id="synchonous-use-case">Synchonous use case</h2>
+
+<p>Another example would be member registration: a new member submits a registration
+form. If it is valid, they're told to check their email: a confirmation token has
+been sent to them.</p>
+
+<p>Behind the scene, our application receives the request: it is an Imperative
+message so we create a token and save the information somewhere. Once done the
+application can send a "Member registered" event, which will trigger a listener
+that will send the email.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: the registration logic can be decoupled from the email logic: we can
+  first have a service that registers members and when done sends a "Member registered"
+  event. Then a listener could call our email service.</p>
+</blockquote>
+
+<p>Once again, we've applied the CQRS principle, but in a synchronous use case. If
+later on our application gets successful, we'll might want to make those process
+asynchronous and it will be easy to do so.</p>
+
+<h2 id="imperative-messages-expecting-return-value">Imperative messages expecting return value</h2>
+
+<p>Our final example will be about an API that allows scientists to report a new species.
+They need to send a POST Request to the endpoint, which in turn will return a response
+containing the created resource.</p>
+
+<p>The issue here is that we're going to mix an Imperative message (report a new species)
+and an Interrogatory message (get the newly reported species).</p>
+
+<p>CQRS cannot be applied "fully" everywhere, but we can try the following compromises:</p>
+
+<ul>
+<li>our entry point can first handle the imperative message, and then handle the interrogatory one</li>
+<li>our imperative message handler can return directly the result without extra "read" queries</li>
+</ul>
+
+<blockquote>
+  <p><strong>Note</strong>: for the second solution, we need to create our own UUID, instead of
+  relying on the database to generate the IDs.</p>
+</blockquote>
+
+<h2 id="handling-imperative-messages">Handling Imperative Messages</h2>
+
+<p>The Command Bus pattern is really helpful to handle Imperative Messages.
+It's composed of 3 objects:</p>
+
+<ul>
+<li>Command: a Data Transfer Object (DTO) with a meaningful name (e.g. ReportNewSpecies) that wraps the message parameters</li>
+<li>CommandHandler: a service dedicated to a single Command, that encapsulates the logic</li>
+<li>CommandBus: contains all CommandHandlers and calls the appropriate one for the given Command</li>
+</ul>
+
+<p>The Command would be constructed in an entry point (Controller, Command, EventListener),
+with parameters extracted from the input (Request, Input, Event) and then given to
+the CommandBus.</p>
+
+<p>The CommandBus is usually a Middleware:</p>
+
+<ul>
+<li>we can have a simple CommandBus that calls the apprioriate command</li>
+<li>we can have a CommandBus that wraps the simple one in a database transaction</li>
+<li>we can have a CommandBus that wraps the transaction one in an exception handler</li>
+<li>etc...</li>
+</ul>
+
+<blockquote>
+  <p><strong>Note</strong>: To learn more about this pattern, have a look at the following articles:</p>
+  
+  <ul>
+  <li><a href="http://shawnmc.cool/command-bus">CommandBus</a></li>
+  <li><a href="http://www.reddit.com/r/PHP/comments/29a6qz/what_am_i_missing_with_this_whole_command_bus/">What am I missing with this whole command bus</a></li>
+  <li>Command Bus series:
+  
+  <ul>
+  <li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/a-wave-of-command-buses/">Command and CommandHandler</a></li>
+  <li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/responsibilities-of-the-command-bus/">CommandBus</a></li>
+  <li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/from-commands-to-events/">EventBus</a></li>
+  <li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/some-questions-about-the-command-bus/">FAQ</a></li>
+  <li><a href="http://php-and-symfony.matthiasnoback.nl/2015/01/collecting-events-and-the-events-aware-command-bus/">Event dispatching</a></li>
+  </ul></li>
+  </ul>
+</blockquote>
+
+<h2 id="handling-interrogatory-messages">Handling Interrogatory Messages</h2>
+
+<p>There's actually many options to handle Interrogatory messages.</p>
+
+<h3 id="repository">Repository</h3>
+
+<p>The <a href="http://code.tutsplus.com/tutorials/the-repository-design-pattern--net-35804">Repository design pattern</a>
+introduces a class that acts like a collection, but behind the scene relies
+on a Gateway to actually retrieve data (could be from a file, a database, a remote endpoint etc)
+and on a Factory to format the returned value.</p>
+
+<p>Usually "find" methods are added to the repository with a name describing the expected
+criterias.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Here's a list of nice articles about this parttern:</p>
+  
+  <ul>
+  <li><a href="http://martinfowler.com/eaaCatalog/gateway.html">Gateway</a></li>
+  <li><a href="http://martinfowler.com/articles/refactoring-external-service.html">Refactoring external service</a></li>
+  <li><a href="http://mnapoli.fr/repository-interface/">Repository interface</a></li>
+  <li><a href="http://mnapoli.fr/collection-interface-and-database-abstraction/">Collection interface and database abstraction</a></li>
+  </ul>
+</blockquote>
+
+<h3 id="criteria">Criteria</h3>
+
+<p>Sometimes the repositories will grow bigger and bigger. The alternative solution
+would be to build a Criteria object and pass it to a service.</p>
+
+<p>Here's some of these solutions:</p>
+
+<ul>
+<li><a href="http://dev.imagineeasy.com/post/44139111915/taiming-repository-classes-in-doctrine-with-the">Using the QueryBuilder</a></li>
+<li><a href="http://www.whitewashing.de/2013/03/04/doctrine_repositories.html">build a Criteria and give it to the repository</a></li>
+<li><a href="http://blog.kevingomez.fr/2015/02/07/on-taming-repository-classes-in-doctrine-among-other-things/">using the specification pattern</a></li>
+<li><a href="http://blog.kevingomez.fr/2015/03/14/rulerz-specifications-and-symfony-are-in-a-boat/">RulerZ, a library using the specification pattern</a></li>
+</ul>
+
+<p>Personally I've been experimenting with a Proof Of Concept (POC): <a href="http://gnugat.github.io/search-engine/">SearchEngine</a>.
+I still need more experimentations to start advising on this subject, so if you
+want to share your experience you'd be welome to post a comment :) .</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>CQRS helps you to decouple your code (from itself and from third party libraries)
+even if, like every principles, it cannot be applied everywhere.</p>
+
+<p>To help you apply it, you can use Command Bus and Repositories / SearchEngine.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Here's a list of interresting articles about CQRS:</p>
+  
+  <ul>
+  <li><a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avoiding the mud</a></li>
+  <li><a href="https://medium.com/@benjamindulau/do-not-mistake-ddd-for-cqrs-yeah-but-where-to-start-5595b8e68a4d">Do not mistake DDD for CQRS, yeah, but where to start?</a></li>
+  <li><a href="http://verraes.net/2014/05/functional-foundation-for-cqrs-event-sourcing/">functional foundation for CQRS Event Sourcing</a></li>
+  <li><a href="http://www.udidahan.com/2009/12/09/clarified-cqrs/">clarified CQRS</a></li>
+  <li><a href="http://martinfowler.com/bliki/CQRS.html">CQRS</a></li>
+  </ul>
+</blockquote>
 ]]></content>
         </entry>
     </feed>

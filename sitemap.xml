@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc></loc>
-    <lastmod>2025-08-27T07:15:12+01:00</lastmod>
+    <lastmod>2025-09-03T07:18:36+01:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>/about</loc>
-    <lastmod>2025-08-27T07:15:12+01:00</lastmod>
+    <lastmod>2025-09-03T07:18:36+01:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>/2025/09/03/my-ide-is-vim.html</loc>
+    <lastmod>2025-09-03T00:00:00+01:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>/2025/08/27/my-dotfiles.html</loc>
