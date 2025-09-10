@@ -1,0 +1,1536 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-09-10T10:14:49+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Redaktilo 1.3]]></title>
+            <link href="/2014/11/06/redaktilo-1-3.html"/>
+            <updated>2014-11-06T00:00:00+00:00</updated>
+            <id>/2014/11/06/redaktilo-1-3.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> is a library
+  which wraps array manipulation to make it feel like using a text editor.</p>
+</blockquote>
+
+<p><a href="/2014/05/09/redaktilo.html">Six months ago</a>, I talked about a
+<a href="https://github.com/gnugat/redaktilo">silly library</a> I was working on.</p>
+
+<p>I've just released it's version 1.3, so I figured that maybe it's time to talk
+about it as the mature and usefull project it has become.</p>
+
+<h2 id="statistics">Statistics</h2>
+
+<p>First, here's some meaningless figures:</p>
+
+<ul>
+<li>fisrt commit: at 08:06:46, on the 24th thursday of April 2014</li>
+<li>number of releases: 36 (including 11 stable ones)</li>
+<li>number of contributors: 3 (<a href="http://loickpiera.com/">Loick Piera</a>, <a href="http://wouterj.nl/">WouterJ</a> and myself)</li>
+<li>lines of code (according to <a href="https://insight.sensiolabs.com/projects/fbe2d89f-f64d-45c2-a680-bbafac4b0d08/analyses/36">Insight, for version 1.3.0</a>): 1 183</li>
+</ul>
+
+<h2 id="history">History</h2>
+
+<p>In my two previous pet projects (GnugatWizardBundle and Fossil), as well as in
+professional projects, I've encountered the need to manipulate lines (from a
+file or a static string).</p>
+
+<p>I've done 3 different implementations, each less reusable than the other, so I
+started to think that there was something to do here.</p>
+
+<p>That's how <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> is born!</p>
+
+<h2 id="public-api">Public API</h2>
+
+<p>My purpose was to create a single service which would be used as a text editor
+("redaktilo" means "editor", in esperanto):</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class Editor
+{
+    // Filesystem operations:
+    public function open($filename, $force = false);
+    public function save(File $file);
+
+    // Line selection
+    public function jumpAbove(Text $text, $pattern, $location = null);
+    public function jumpBelow(Text $text, $pattern, $location = null);
+
+    // Line detection
+    public function hasAbove(Text $text, $pattern, $location = null);
+    public function hasBelow(Text $text, $pattern, $location = null);
+
+    // Line manipulations
+    public function insertAbove(Text $text, $addition, $location = null);
+    public function insertBelow(Text $text, $addition, $location = null);
+    public function replace(Text $text, $replacement, $location = null);
+    public function replaceAll(Text $text, $pattern, $replacement);
+    public function remove(Text $text, $location = null);
+
+    // You can execute custom commands!
+    public function run($name, array $input);
+}
+</code></pre>
+
+<p>This service is <strong>stateless</strong>, it manipulates the following model:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class Text
+{
+    public function getLines();
+    public function setLines(array $lines);
+    public function getLength();
+
+    public function getLineBreak();
+    public function setLineBreak($lineBreak);
+
+    public function getCurrentLineNumber();
+    public function setCurrentLineNumber($lineNumber);
+    public function getLine($lineNumber = null);
+    public function setLine($line, $lineNumber = null);
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: The <code>File</code> model extends <code>Text</code> and adds <code>filename</code> getter and
+  setter.</p>
+</blockquote>
+
+<p>As you can see, everything is centered around a current line, but specifying
+directly a line number is possible (that's the meaning of the <code>$location</code>
+argument).</p>
+
+<h2 id="facade-and-extension-points">Facade and extension points</h2>
+
+<p>To be honest, <code>Editor</code> doesn't do anything, it just wraps some low level
+services. Amongst those, we have:</p>
+
+<ul>
+<li><code>SearchEngine</code>: decides which <code>SearchStrategy</code> will be used</li>
+<li><code>CommandInvoker</code>: executes a <code>Command</code></li>
+</ul>
+
+<p>Those two are actually here to provide extension points: if you need to look for
+a line with something else than a regular expression, you can create your own
+<code>SearchStrategy</code>, register it in <code>SearchEngine</code> and it will be available
+directly from the <code>Editor</code>!</p>
+
+<p>If the manipulations provided out of the box aren't sufficient, you can create
+your own <code>Command</code>, register it in <code>CommandInvoker</code> and it will be available
+directly from the <code>Editor</code>!</p>
+
+<p>Commands rely on user input, which is why Loïck worked on <code>InputSanitizer</code> to
+validate it. If the ones provided aren't enough, you can still create your own
+implementations.</p>
+
+<p>Finally, I'd like to highlight Wouter's work on the <code>EditorFatory</code> helper: it is
+really cumbersome to instantiate manually <code>Editor</code>... But thanks to this
+factory, you'll never have to do it by yourself!</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Working on a <a href="http://symfony.com">Symfony2</a> project? You can use
+  <a href="https://github.com/gnugat/redaktilo-bundle">RedaktiloBundle</a>, which also
+  provides tags to register custom search strategies and commands.</p>
+</blockquote>
+
+<h2 id="what%27s-next%3F">What's next?</h2>
+
+<p>Loïck is currently improving the library's exceptions for the version 1.4.</p>
+
+<p>For version 1.5, two new methods will be added to <code>Text</code>:
+<code>incrementCurrentLineNumber</code> and <code>decrementCurrentLineNumber</code>, to avoid the
+following:</p>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\EditorFactory;
+
+$editor = EditorFactory::createEditor();
+$file = $editor-&gt;open('/tmp/monty-python.txt');
+
+// Currently
+$currentLineNumber = $file-&gt;getCurrentLineNumber();
+$file-&gt;setCurrentLineNumber($currentLineNumber + 2);
+
+// Soon...
+$file-&gt;incrementCurrentLineNumber(2);
+</code></pre>
+
+<p>For the final version 1.6, a strong documentation of the deprecations will be
+done, leading the way to version 2.0 where those will be removed (50% of the code
+base will vanish!).</p>
+
+<blockquote>
+  <p><strong>Note</strong>: As I'm using Redaktilo everyday, I might discover new improvements
+  to be done, leading the given version numbers above to change.</p>
+</blockquote>
+
+<h2 id="frequently-asked-questions">Frequently Asked Questions</h2>
+
+<h3 id="is-it-a-gui-%2F-cli-tool%3F">Is it a GUI / CLI tool?</h3>
+
+<p>A question I've been often asked, because describing Redaktilo as a text editor
+might be a bit misleading. It is a library which <strong>feels like</strong> an editor, but
+it is in no way an actual editor you might run.</p>
+
+<p>Here's an example of what you might be doing currently without Redaktilo:</p>
+
+<pre><code class="php">&lt;?php
+
+$lines = file('/tmp/monty-python.txt');
+$currentLineNumber = 42;
+$section = array_slice($lines, 0, $current, true); // Lines from 0 to 42
+$reversedSection = array_reverse($section, true);
+$found = preg_grep('/a knewt/', $reversedSection); // finding the first occurence, above line 42
+$currentLineNumber = key($found);
+
+array_splice($lines, $currentLineNumber + 1, 0, 'new line below "a knewt"');
+$content = implode("\n", $lines); // Let's hope it wasn't a file created on Windows.
+file_put_contents($content, '/tmp/monty-python');
+</code></pre>
+
+<p>With redaktilo:</p>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\EditorFactory;
+
+$editor = EditorFactory::createEditor();
+$file = $editor-&gt;open('/tmp/monty-python');
+$editor-&gt;jumpAbove($file, '/a knewt/', 42);
+$editor-&gt;insertBelow($file, 'new line below "a knewt"');
+$editor-&gt;save($file);
+</code></pre>
+
+<h3 id="is-it-a-code-editor%3F">Is it a code editor?</h3>
+
+<p>Because the code example on the README is about inserting a new line in the
+<code>AppKernel</code> file of a Symfony2 application, I also get this question.</p>
+
+<p>Redaktilo can edit any text file, so it includes source files. But keep in mind
+that it only manipulates lines, when you might want to manipulate an AST to edit
+code.</p>
+
+<p>I'm working on a new silly project: <a href="https://github.com/gnugat/medio">Medio</a>.
+It heavily relies on Redaktilo to actually edit code: so you can make a code
+editor with it, but again before you start ask yourself if an AST wouldn't be
+better.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Redaktilo is a library which makes line manipulation dead easy! It provides
+extension points and will soon reach version 2 which will mark its final
+maturity point.</p>
+
+<p>Until then, you can still use it safely, it's been stable for 11 releases now.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[PHP array manipulation]]></title>
+            <link href="/2014/10/15/php-array-manipulation.html"/>
+            <updated>2014-10-15T00:00:00+01:00</updated>
+            <id>/2014/10/15/php-array-manipulation.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> provides a nice
+  API to manipulate array of lines (insert, replace, go to line, etc).</p>
+</blockquote>
+
+<p>Arrays are surely one of the most used PHP functionality: they're simple,
+convenient and benefit from a large set of standard functions to manipulate them.</p>
+
+<p>Let's see the different possibilities:</p>
+
+<ul>
+<li><a href="#finding-an-element">Finding an element</a></li>
+<li><a href="#finding-an-element-relatively-to-a-given-index">Finding an element relatively to a given index</a></li>
+<li><a href="#inserting-a-new-element">Inserting a new element</a></li>
+<li><a href="#removing-an-element">Removing an element</a></li>
+<li><a href="#retrieving-elements-from-a-file">Retrieving elements from a file</a></li>
+<li><a href="#saving-changes-in-a-file">Saving changes in a file</a></li>
+<li><a href="#there-is-a-better-way">There is a better way</a>
+
+<ul>
+<li><a href="#retrieving-a-line">Retrieving a line</a></li>
+<li><a href="#finding-an-element-relatively-to-a-given-line-number">Finding an element relatively to a given line number</a></li>
+<li><a href="#inserting-a-new-line">Inserting a new line</a></li>
+<li><a href="#using-text">Using Text</a></li>
+<li><a href="#cheat-sheet">Cheat Sheet</a>
+
+<ul>
+<li><a href="#editor">Editor</a></li>
+<li><a href="#text">Text</a></li>
+<li><a href="#file">File</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="finding-an-element">Finding an element</h2>
+
+<p>In order to find the index of a string in an array, we can use one of the
+following functions:</p>
+
+<pre><code class="php">&lt;?php
+
+$montyPython = array(
+    'This is a dead parrot',
+    'No, no, it\'s not dead, it\'s resting!',
+);
+
+$exactSentence = 'This is a dead parrot';
+array_search($exactSentence, $montyPython, true); // Returns 0
+$regex = '/resting!$/';
+$found = preg_grep($regex, $montyPython);
+key($found); // Returns 1
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: The third parameter of <a href="http://php.net/array_search"><code>array_search</code></a>
+  enables the strict comparison (it makes sure the types are also the same).</p>
+</blockquote>
+
+<p>We can find the matching elements of a pattern using
+<a href="http://php.net/preg_grep"><code>preg_grep</code></a>. To get the index of the first result
+found, we can use <a href="http://php.net/key"><code>key</code></a>.</p>
+
+<h2 id="finding-an-element-relatively-to-a-given-index">Finding an element relatively to a given index</h2>
+
+<p>It's great! Now what if we want to remember the index and then make a search
+relatively to it? For example we want to find the index of the element
+<code>/a knewt/</code>, but only in the elements above <code>... I got better...</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+$holyGrail = array(
+    'She turned me into a knewt!',
+    'A knewt?',
+    '... I got better...',
+    'A WITCH!',
+);
+
+$index = array_search('... I got better...', $holyGrail, true);
+$section = array_slice($holyGrail, 0, $index, true);
+$reversedSection = array_reverse($section, true);
+$found = preg_grep('/a knewt/', $reversedSection);
+key($found); // Returns 0
+</code></pre>
+
+<p>In this code snippet, we get a subset of the array
+(from the first element to <code>... I got better</code>) using
+<a href="http://php.net/array_slice"><code>array_slice</code></a> (the last argument allows to keep
+the indexes unchanged). This also excludes <code>... I got better...</code>.</p>
+
+<p>Then we change the order of the elements using
+<a href="http://php.net/array_reverse"><code>array_reverse</code></a> (the second argument allows to
+keep the index unchanged) so the element above <code>... I got better...</code> would be
+the first result.</p>
+
+<p>Finally we look for <code>/a knewt/</code> as we did previously.</p>
+
+<h2 id="inserting-a-new-element">Inserting a new element</h2>
+
+<p>If we want to insert a new element after a given index in the array, we need to
+use <a href="http://php.net/array_splice"><code>array_splice</code></a>:</p>
+
+<pre><code class="php">&lt;?php
+
+$grandPiano = array(
+    'I would like to learn how to fly an aeroplane',
+    'A what?',
+    'An aeroplane',
+    'OH! An aeroplane, oh I say we are grand aren\'t we?',
+    'Pardon me while I\'m flying me aeroplane... NOW GET ON THE TABLE!',
+);
+
+$found = preg_grep('/grand/', $grandPiano);
+$index = key($found);
+array_splice($grandPiano, $index + 1, 0, 'No more cluttered cream for me, butler, I\'m off to play the grand piano');
+</code></pre>
+
+<p>Actually <code>array_splice</code> allows to replace a subsection of an array, here's the
+explanation of its arguments:</p>
+
+<ol>
+<li>the array to manipulate</li>
+<li>the starting index</li>
+<li>the ending index (<code>0</code> means replacing nothing, therefore just inserting)</li>
+<li>the replacement (in our case the element to insert)</li>
+</ol>
+
+<p>It's not very explicit, but we have a solution for this (keep reading to find
+out).</p>
+
+<h2 id="removing-an-element">Removing an element</h2>
+
+<p>Here's an easy one:</p>
+
+<pre><code class="php">&lt;?php
+
+$parrot = array(
+    'Hello, I would like to make a complain. Hello, miss?',
+    'What do you mean miss?',
+    'Sorry, I have a cold',
+);
+
+$index = array_search('Sorry, I have a cold', $parrot, true);
+unset($parrot[$index]);
+</code></pre>
+
+<p>You might want to reorder the indexes, to avoid gaps:</p>
+
+<pre><code class="php">&lt;?php
+
+$parrot = array(
+    'Hello, I would like to make a complain. Hello, miss?',
+    'What do you mean miss?',
+    'Sorry, I have a cold',
+);
+
+$index = array_search('What do you mean miss?', $parrot, true);
+unset($parrot[$index]);
+// Current value:
+// $parrot = array(
+//     0 =&gt; 'Hello, I would like to make a complain. Hello, miss?',
+//     2 =&gt; 'Sorry, I have a cold',
+// );
+
+$parrot = array_values($parrot);
+// Current value:
+// $parrot = array(
+//     0 =&gt; 'Hello, I would like to make a complain. Hello, miss?',
+//     1 =&gt; 'Sorry, I have a cold',
+// );
+</code></pre>
+
+<p>The <a href="http://php.net/array_values"><code>array_values</code></a> function is equivalent to:</p>
+
+<pre><code class="php">$newArray = array();
+foreach ($oldArray as $element) {
+    $newArray[] = $element;
+}
+</code></pre>
+
+<h2 id="retrieving-elements-from-a-file">Retrieving elements from a file</h2>
+
+<p>Until now, we've been using a hard coded array, but this is rarely what we
+encounter in real life project. The data could for example come from a file,
+which can be transformed into an array of lines:</p>
+
+<pre><code class="php">&lt;?php
+
+$file = file('/tmp/holy-grail.text', FILE_IGNORE_NEW_LINES);
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: the second argument will remove the trailing line breaks.</p>
+</blockquote>
+
+<p>The only problem with <a href="http://php.net/file"><code>file</code></a> is that it will remove the
+last line if it's empty. Let's use another function:</p>
+
+<pre><code class="php">&lt;?php
+
+$content = file_get_contents('/tmp/holy-grail.txt');
+$lines = explode("\n", $content);
+</code></pre>
+
+<p>The <a href="http://php.net/file_get_contents"><code>file_get_contents</code></a> function returns the
+content as a string.</p>
+
+<p>We used <a href="http://php.net/explode"><code>explode</code></a> to split it into an array of lines.</p>
+
+<p>This assumes that the file hasn't been created on Windows (where the line
+separator is <code>\r\n</code>)... We need to detect the line break:</p>
+
+<pre><code class="php">&lt;?php
+
+$content = @file_get_contents('/tmp/holy-grail.txt');
+$lineBreak = "\n"; // Used by every systems (except Windows), so used as default
+if (false === strpos($content, "\n")) { // No line break detected at all
+    $lineBreak = PHP_EOL; // Using the system's one
+}
+if (false !== strpos($content, "\r\n")) { // Windows line break detected
+    $lineBreak = "\r\n";
+}
+$lines = explode($lineBreak, $content);
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: There's many check to be done before actually reading the file
+  (does the file actually exists? Do we have the permission to read it?).
+  We have a solution for this (keep reading to find out).</p>
+</blockquote>
+
+<h2 id="saving-changes-in-a-file">Saving changes in a file</h2>
+
+<p>If we do any changes to those lines, we might want to save them on the
+filesystem:</p>
+
+<pre><code class="php">&lt;?php
+
+$lines = array(
+    'Morning, morning, morning',
+    'Morning Jim, Morning Jack',
+    'Can\'t complain, keep coming back',
+    'Boring, boring, boring',
+);
+$lineBreak = "\n"; // Or whatever has been detected
+$content = implode($lineBreak, $lines);
+file_put_contents('/tmp/silly-walk-song.txt', $content);
+</code></pre>
+
+<p>To convert back the array of lines to a string content, we use
+<a href="http://php.net/implode"><code>implode</code></a>.</p>
+
+<p>To write the content in the file, we use
+<a href="http://php.net/file_put_contents"><code>file_put_contents</code></a>.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: There's many check to be done before actually writing in a file
+  (does the path actually exists? Do we have the permissions? What happens if
+  the writing process fails during the execution?). To solve this, use the
+  Symfony2 Filesystem Component (<code>Filesystem#dumpFile()</code>).</p>
+</blockquote>
+
+<h2 id="there-is-a-better-way">There is a better way</h2>
+
+<p>You don't find <code>array_splice</code> very explicit for element insertion (or can't find
+a way to remember its argument order/meaning)?</p>
+
+<p>Keeping the elements, the index, the line break in separates variables looks too
+procedural for you?</p>
+
+<p>And what about error management?</p>
+
+<p>Don't panic! There is a better way: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a>
+(it means "Editor" in esperanto).</p>
+
+<p>This small library makes array manipulation easier by providing:</p>
+
+<ul>
+<li>an <code>Editor</code> object (open, save, find, insert, etc)</li>
+<li>a <code>Text</code> object (line break, elements, current index, etc)</li>
+<li>a <code>File</code> object (same as <code>Text</code>, but with filename)</li>
+</ul>
+
+<p>Use it in your projects, thanks to <a href="http://getcomposer.org">Composer</a>:</p>
+
+<pre><code>composer require 'gnugat/redaktilo:~1.1'
+</code></pre>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\EditorFactory;
+
+$editor = EditorFactory::createEditor();
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: In order to make operations more explicit, Redaktilo has adopted the
+  vocabulary of file edition (more specifically manipulation of lines). But in
+  the end it's still array manipulation.</p>
+</blockquote>
+
+<h3 id="retrieving-a-line">Retrieving a line</h3>
+
+<p>You don't have to worry about file checking and line break detection anymore:</p>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\EditorFactory;
+
+$editor = EditorFactory::createEditor();
+$file = $editor-&gt;open('/tmp/silly-walk-song.txt');
+$file-&gt;getLineBreak(); // Returns "\n" if the file hasn't been created on Windows
+</code></pre>
+
+<h3 id="finding-an-element-relatively-to-a-given-line-number">Finding an element relatively to a given line number</h3>
+
+<p>Redaktilo takes care of the search strategy for you (it uses <code>preg_grep</code> when
+you give a valid regular expression, and <code>array_search</code> when you give a string).</p>
+
+<p>It supports search relative to the current line number stored in the given
+<code>Text</code> and <code>File</code> (it uses <code>array_slice</code>, <code>array_reverse</code> and <code>key</code> internally).</p>
+
+<p>The <code>hasAbove</code> and <code>hasBelow</code> methods just return a boolean, while the
+<code>jumpAbove</code> and <code>jumpBelow</code> methods rather store the found line number in the
+given <code>Text</code> and <code>File</code> (and raise an exception if nothing is found):</p>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\EditorFactory;
+
+$editor = EditorFactory::createEditor();
+$file = $editor-&gt;open('/tmp/silly-walk-song.txt');
+
+$editor-&gt;jumpBelow($file, 'Boring, boring, boring');
+$file-&gt;getCurrentLineNumber(); // Returns 3
+
+$editor-&gt;hasAbove($file, '/morning,/'); // Returns true
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: <code>hasAbove</code>, <code>hasBelow</code>, <code>jumpAbove</code> and <code>jumpBelow</code> all have a third
+  argument which is a line number. If provided, the search will be done
+  relatively to this line number, rather than to the current one.</p>
+  
+  <p>For example, checking the presence of a pattern in the whole file can be done
+  as: <code>$editor-&gt;hasBelow($file, $pattern, 0); // starts the search from the top of the file</code>.</p>
+</blockquote>
+
+<h3 id="inserting-a-new-line">Inserting a new line</h3>
+
+<p>No more <code>array_splice</code> nonsense!</p>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\EditorFactory;
+
+$editor = EditorFactory::createEditor();
+$file = $editor-&gt;open('/tmp/silly-walk-song.txt');
+
+$editor-&gt;insertAbove($file, 'The silly walk song');
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: <code>insertAbove</code>, <code>insertBelow</code>, <code>replace</code> and <code>remove</code> all have a
+  third argument which is a line number. If provided, the anipulation will be
+  done relatively to it, instead of relatively to the current one.</p>
+</blockquote>
+
+<h3 id="using-text">Using Text</h3>
+
+<p>If you're not manipulating a file, you can use <code>Text</code> just like we used
+<code>File</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\EditorFactory;
+use Gnugat\Redaktilo\Service\LineBreak;
+use Gnugat\Redaktilo\Service\TextFactory;
+
+$lineBreak = new LineBreak();
+$textFactory = new TextFactory($lineBreak);
+
+$text = $textFactory-&gt;make(&lt;&lt;&lt;EOF
+Some raw text you would have got from somewhere,
+for example a database.
+EOF
+);
+
+$editor = EditorFactory::createEditor();
+$editor-&gt;hasBelow($text, '/a database/'); // Returns true
+</code></pre>
+
+<h3 id="cheat-sheet">Cheat Sheet</h3>
+
+<p>There's many more operations available, as you can discover in
+<a href="https://github.com/gnugat/redaktilo/tree/master/doc">the documentation</a>.</p>
+
+<p>To make it easier, here's some cheat sheet.</p>
+
+<h4 id="editor">Editor</h4>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+use Gnugat\Redaktilo\Search\PatternNotFoundException;
+use Gnugat\Redaktilo\Search\SearchEngine;
+use Gnugat\Redaktilo\Service\Filesystem;
+use Symfony\Component\Filesystem\Exception\FileNotFoundException;
+use Symfony\Component\Filesystem\Exception\IOException;
+
+class Editor
+{
+    public function open($filename, $force = false); // @throws FileNotFoundException
+    public function save(File $file); // @throws IOException If cannot write
+
+    // @throw PatternNotFoundException
+    public function jumpAbove(Text $text, $pattern, $location = null);
+    public function jumpBelow(Text $text, $pattern, $location = null);
+
+    // @return bool
+    public function hasAbove(Text $text, $pattern, $location = null);
+    public function hasBelow(Text $text, $pattern, $location = null);
+
+    public function insertAbove(Text $text, $addition, $location = null);
+    public function insertBelow(Text $text, $addition, $location = null);
+    public function replace(Text $text, $replacement, $location = null);
+    public function remove(Text $text, $location = null);
+}
+</code></pre>
+
+<h4 id="text">Text</h4>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class Text
+{
+    public function getLines();
+    public function setLines(array $lines);
+    public function getLength();
+    public function getLineBreak();
+    public function setLineBreak($lineBreak);
+    public function getCurrentLineNumber();
+
+    // @throw InvalidLineNumberException
+    public function setCurrentLineNumber($lineNumber);
+    public function getLine($lineNumber = null);
+    public function setLine($line, $lineNumber = null);
+}
+</code></pre>
+
+<h4 id="file">File</h4>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class File extends Text
+{
+    public function getFilename();
+    public function setFilename($filename);
+}
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>PHP provides plenty of built-in functions to manipulate arrays, but those are
+not enough. <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> is a small library
+which provides a nicer API.</p>
+
+<p>It allows you to select a line relatively to the current one and then do CRUD
+operations on it.</p>
+
+<p>I hope you'll find it as usefull as I do and if you find any bug or have any
+proposals feel free to do so on <a href="https://github.com/gnugat/redaktilo/issues">Github</a>
+where <a href="http://loickpiera.com/">Loïck Piera</a> and myself will both be glad to help
+you.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: As for the 15/10/2014, the current version of Redaktilo is 1.1.6
+  (stable). Future updates are already planned!</p>
+</blockquote>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Redaktilo v0.7]]></title>
+            <link href="/2014/05/27/redaktilo-0-7.html"/>
+            <updated>2014-05-27T00:00:00+01:00</updated>
+            <id>/2014/05/27/redaktilo-0-7.html</id>
+            <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p>Since the announcement of <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> on
+this blog, this silly library has jumped from 164 lines of code in v0.3 to 571
+in v0.7.</p>
+
+<p>In this article:</p>
+
+<ol>
+<li>we'll quickly oversee <a href="#changes-done">the changes done</a></li>
+<li>then we'll have some insight on <a href="#upcoming-changes">the upcoming changes</a></li>
+<li>finally I'll list <a href="#remaining-unresolved-questions">the remaining unresolved questions</a></li>
+</ol>
+
+<h2 id="changes-done">Changes done</h2>
+
+<p>Thanks to <a href="https://github.com/gnugat/redaktilo/commits?author=WouterJ">WouterJ</a>
+you can now:</p>
+
+<ul>
+<li>remove the current line: <code>$editor-&gt;remove($file);</code></li>
+<li>replace the current line: <code>$editor-&gt;changeTo($file, $replacement);</code></li>
+<li>replace all occurences: <code>$editor-&gt;replaceWith($file, $regex, $callback);</code></li>
+<li>check line presence: <code>$editor-&gt;has($file, $pattern);</code></li>
+</ul>
+
+<p>I've updated to documentation to make the library easier to learn with:</p>
+
+<ul>
+<li>a <a href="https://github.com/gnugat/redaktilo/blob/master/doc/01-tutorial.md">tutorial</a></li>
+<li>a <a href="https://github.com/gnugat/redaktilo/blob/master/doc/03-reference.md">code reference</a></li>
+</ul>
+
+<p><strong>Redaktilo</strong> has been created to fulfill actual needs. To make sure it keeps
+this promise, I've added executable
+<a href="https://github.com/gnugat/redaktilo/tree/master/tests/example">examples using PHPUnit tests</a>.</p>
+
+<p>The major changes have been massive refactorings to allow the library to be
+extended:</p>
+
+<ul>
+<li><a href="https://github.com/gnugat/redaktilo/tree/master/src/Gnugat/Redaktilo/Search">you can add search strategies</a></li>
+<li><a href="https://github.com/gnugat/redaktilo/tree/master/src/Gnugat/Redaktilo/Converter">you can convert the file's content</a></li>
+</ul>
+
+<p>As highlited by <a href="https://twitter.com/clemherreman/status/466497340824911872">Clément Herreman</a>,
+those refactorings have introduced a more complex construction schema.
+To make things easier, a
+<a href="https://github.com/gnugat/redaktilo/blob/master/src/Gnugat/Redaktilo/DependencyInjection/StaticContainer.php">static Dependency Injection Container</a>
+has been created.</p>
+
+<h2 id="upcoming-changes">Upcoming changes</h2>
+
+<p><a href="http://www.sublimetext.com/">Sublime Text's go to anything</a> feature is
+really awesome, which is why I'd like to implement something similar:</p>
+
+<ul>
+<li>go to the previous/next line (<code>array_search</code>)</li>
+<li>go to x lines above/under</li>
+<li>go to the previous/next substring match (<code>strpos</code>)</li>
+<li>go to the previous/next regex match (<code>preg_grep</code>)</li>
+<li>go to the previous/next PHP class/method/function (<code>token_get_all</code>)</li>
+</ul>
+
+<p>The two first ones are already available, so the other one still have to be
+implemented (the last one might be done by
+<a href="https://github.com/gnugat/redaktilo/issues/6#issuecomment-44005931">Loick Piera</a>).</p>
+
+<p>The methods allowing this throw exception when nothing is found. Adding a
+relative check (<code>hasBefore</code> and <code>hasAfter</code>) might make things easier.</p>
+
+<p>Moving relatively isn't always sufficient. To go to an absolute line number
+you have to use directly <code>File</code>, maybe it would be nicer to add a new method
+to <code>Editor</code> (<code>jumpToFirst</code>).</p>
+
+<p>Finally, the editor should allow insertion, replacement and removal in any
+locations, not just on the current line.</p>
+
+<p>Once these features added, more refactoring should take place: since the
+creation of <strong>Redaktilo</strong>, <a href="https://github.com/jfsimon">Jean-François Simon</a>
+advised me to use the command and memento patterns, which would allow the
+undo/redo feature.
+While I now think that <code>Command</code> is indeed more suitable than <code>ReplaceStrategy</code>
+for insertion, replacement and removal, I'm not sure the versioning feature
+is actually needed... For now.</p>
+
+<p>And that should bring us near an alpha version :) .</p>
+
+<p>A lot of renaming should happen at this stage:</p>
+
+<ul>
+<li><code>changeTo</code> to <code>replace</code></li>
+<li><code>replaceWith</code> to <code>replaceAll</code></li>
+<li><code>NotSupportedException</code> to <code>NotFoundEsception</code></li>
+</ul>
+
+<p>And perhaps some other methods or class names.</p>
+
+<p>Once the heavy renaming done, beta versions can begin, with a main focus on
+making every thing safer (argument checking, exception handling).</p>
+
+<h2 id="remaining-unresolved-questions">Remaining unresolved questions</h2>
+
+<p>I'm still not fully sure of what Redaktilo v1.0 will look like. Mainly because
+I still haven't anwsered this by question (which have been in my mind since the
+begining):</p>
+
+<p>Should <strong>Redaktilo</strong> handle different kinds of files?</p>
+
+<p>Sometimes I think it should, which is why the project has seen:</p>
+
+<ul>
+<li><a href="https://github.com/gnugat/redaktilo/tree/v0.1.0/src/Gnugat/Redaktilo/Editor">Editor interface</a></li>
+<li><a href="https://github.com/gnugat/redaktilo/tree/v0.1.0/src/Gnugat/Redaktilo/File">File interface</a></li>
+<li><a href="https://github.com/gnugat/redaktilo/tree/v0.6.1/src/Gnugat/Redaktilo">a premature ReplaceEngine/ReploaceStrategy</a></li>
+<li><a href="https://github.com/gnugat/redaktilo/tree/v0.7.0/src/Gnugat/Redaktilo/Converter">ContentConverter interface</a></li>
+</ul>
+
+<p>The motives behind this is the JSON use case: you can currently edit JSON
+files, but it's tedious.</p>
+
+<p>Let's take the <code>composer.json</code> example. What if you need to
+<a href="https://getcomposer.org/doc/articles/scripts.md">add a script</a> when:</p>
+
+<ul>
+<li>there's no <code>scripts</code> section yet?</li>
+<li>there's no subsection in <code>script</code> yet?</li>
+<li>there's already a script, but not in an array</li>
+<li>there's already some scripts</li>
+</ul>
+
+<p>Another example would be the addition of a new element in an array: you
+currently have to manually a trailing comma to the previous entry...</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p><strong>Redaktilo</strong> fulfills 98% of my use cases (inserting new lines in a YAML
+configuration file, editing PHP files and replacing bits in a documentation
+file) and is now extensible.</p>
+
+<p>Some search strategies will be added to make it similar to the
+<a href="http://www.sublimetext.com/">Sublime Text's go to anything</a>, and some
+refactoring are still necessary before an alpha version.</p>
+
+<p>There's still some unresolved questions (JSON edition is the 2% use case left),
+but I'm sure they'll be answered during the development.</p>
+
+<p>In the end <code>Editor</code> should have the following methods (no guaranty on the
+names):</p>
+
+<ul>
+<li>filesystem operations: open/save</li>
+<li>checking line presence: has/hasBefore/hasAfter</li>
+<li>content navigation: jumpTo/jumpUpTo/jumpDownTo</li>
+<li>content manipulation: insert/remove/replace (on the current line or at the
+given location)</li>
+<li>global manipulation: replaceAll</li>
+</ul>
+
+<p>I'd like to thank the early contributors:</p>
+
+<ul>
+<li><a href="https://github.com/jfsimon">Jean-François Simon</a></li>
+<li><a href="https://github.com/gnugat/redaktilo/commits?author=WouterJ">WouterJ</a></li>
+<li><a href="https://github.com/gnugat/redaktilo/commit/7c8da2d94e1d659318e9bb1745c8cc19435cb3af#commitcomment-6279956">Clément Debiaune</a></li>
+<li><a href="https://twitter.com/clemherreman/status/466497340824911872">Clément Herreman</a></li>
+<li><a href="https://github.com/gnugat/redaktilo/issues/6#issuecomment-44005931">Loick Piera</a></li>
+</ul>
+
+<p>Any help is appreciated, whether it's some code review, typo fixing or
+code/documentation contribution. But the biggest help you could give me:
+provide me with some feedback on Redaktilo's usage :) .</p>
+
+<p>If you have any questions, remarks, please feel free to
+<a href="https://github.com/gnugat/redaktilo/issues?state=open">open an issue</a> and
+start a discussion here.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Facade design pattern, by example]]></title>
+            <link href="/2014/05/21/facade-design-pattern-by-example.html"/>
+            <updated>2014-05-21T00:00:00+01:00</updated>
+            <id>/2014/05/21/facade-design-pattern-by-example.html</id>
+            <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p>Sometimes, you just want to hide low level complexity behind a unique interface
+which communicates a high level policy. The Facade design pattern is all about
+this.</p>
+
+<p>In this article, we'll see a real world example with
+<a href="https://github.com/gnugat/redaktilo">Redaktilo</a>.</p>
+
+<h2 id="low-level-file-manipulation">Low level file manipulation</h2>
+
+<p><strong>Redaktilo</strong> provides an object oriented way to manipulate files. For example
+you can open existing ones, or create new ones:</p>
+
+<pre><code class="php">&lt;?php
+require_once __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\DependencyInjection\StaticContainer;
+
+$filesystem = StaticContainer::makeFilesystem();
+
+$filename = '/tmp/monthy.py';
+if ($filesystem-&gt;exists($filename)) {
+    $file = $filesystem-&gt;open('/tmp/existing.txt');
+} else {
+    $file = $filesystem-&gt;create('/tmp/new.txt');
+}
+
+// ...
+</code></pre>
+
+<p>The main interest in this library lies in manipulations you can do, for example
+jumping to a line and adding a new one under it:</p>
+
+<pre><code class="php">&lt;?php
+// ...
+
+$lineSearchStrategy = StaticContainer::makeLineSearchStrategy();
+$lineReplaceStrategy = StaticContainer::makeLineReplaceStrategy();
+
+$lineNumber = $lineSearchStrategy-&gt;findNext('if Knight.saysNi():');
+$lineReplaceStrategy-&gt;insertAt($file, $lineNumber, '    print "Ni!"');
+
+// ...
+</code></pre>
+
+<p>Finally, you need to actually save the changes (they were only done in memory
+until now) :</p>
+
+<pre><code class="php">// ...
+
+$filesystem-&gt;write($file);
+</code></pre>
+
+<h2 id="a-higher-level-api%3F">A higher level API?</h2>
+
+<p>The Filesystem and Search/Replace strategies are low level APIs and require a
+lot of boilerplate code to do every day tasks.</p>
+
+<p>What if we provided a unique interface in front of those services? One that
+would be in a higher level, say a text editor metaphor for instance?</p>
+
+<pre><code class="php">&lt;?php
+require_once __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\DependencyInjection\StaticContainer;
+
+$editor = StaticContainer::makeEditor();
+
+$filename = '/tmp/monthy.py';
+$file = $editor-&gt;open($filename, true); // Force file creation.
+
+$editor-&gt;jumpDownTo($file, 'if Knight.saysNi():');
+$editor-&gt;addAfter($file, '    print "Ni!"');
+
+$editor-&gt;save($file);
+</code></pre>
+
+<p>You don't need to take care of every service creation, and now you only have to
+learn a small set of methods. The text editor metaphor also provides you with a
+neat way to easily remember these methods!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Facades hide low level implementation by providing a unique high level API.</p>
+
+<p>Here's another blog post about this pattern, by
+<a href="http://mikeebert.tumblr.com/post/25342991856/design-pattern-facade-pattern">Mike Ebert</a>.</p>
+
+<p>I hope you found this article interesting, if you have any questions or
+feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twitter</a>.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Open/Closed principle, by example]]></title>
+            <link href="/2014/05/14/open-closed-principle-by-example.html"/>
+            <updated>2014-05-14T00:00:00+01:00</updated>
+            <id>/2014/05/14/open-closed-principle-by-example.html</id>
+            <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p>This week I've read two articles, which just have been published, on the
+Open/Closed principle:</p>
+
+<ul>
+<li>one by <a href="http://blog.8thlight.com/uncle-bob/2014/05/12/TheOpenClosedPrinciple.html">Uncle Bob</a></li>
+<li>another one by <a href="http://verraes.net/2014/05/final-classes-in-php/">Mathias Verraes</a></li>
+</ul>
+
+<p>I'd like to add my small contribution to their explanation by providing a real
+world example: <a href="https://github.com/gnugat/redaktilo">Redaktilo</a>.</p>
+
+<h2 id="problem-statement">Problem statement</h2>
+
+<p>Let's say you have the following file:</p>
+
+<pre><code>Egg
+Sausage
+Bacon
+Spam
+</code></pre>
+
+<p>Redaktilo provides an <code>Editor</code> class which allows you to jump to the line you
+want, provided that you know exactly its content:</p>
+
+<pre><code class="php">$editor-&gt;has($file, 'Bacon'); // true!
+$editor-&gt;jumpDownTo($file, 'Bacon'); // Current line: Bacon
+$editor-&gt;jumpUpTo($file, 'Sausage'); // Current line: Sausage
+</code></pre>
+
+<p>But what if you want to jump two lines under <code>Sausage</code>? You'd have to create
+a new method:</p>
+
+<pre><code class="php">$editor-&gt;moveDown($file, 2); // Current line: Spam
+</code></pre>
+
+<p>You have extended <code>Editor</code> by modifying it.</p>
+
+<h2 id="complying-to-the-open%2Fclosed-principle">Complying to the Open/Closed principle</h2>
+
+<p>Having to fork a library to extend it doesn't feel natural. What does the
+Open/Closed principle say?</p>
+
+<blockquote>
+  <p>Software entities (classes, modules, functions, etc.) should be open for
+  extension, but closed for modification.</p>
+</blockquote>
+
+<p>Our <code>Editor</code> class is open to extension, but also to modification.</p>
+
+<p>To fix this, we can transfer the responsibility of finding a pattern in the file
+to a <code>SearchStrategy</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo\Search;
+
+use Gnugat\Redaktilo\File;
+
+interface SearchStrategy
+{
+    public function has(File $file, $pattern);
+
+    public function findNext(File $file, $pattern);
+    public function findPrevious(File $file, $pattern);
+
+    public function supports($pattern);
+}
+
+</code></pre>
+
+<p>Here's some implementation ideas:</p>
+
+<ul>
+<li><code>LineSearchStrategy</code>: looking for the exact line in the file</li>
+<li><code>LineNumberSearchStrategy</code>: jumping to a line relatively to the current one</li>
+<li><code>RegexpSearchStrategy</code>: looking for a pattern in the file using regular expressions</li>
+<li><code>PhpTokenSearchStrategy</code>: parsing PHP tokens</li>
+</ul>
+
+<p>The <code>supports</code> method tells you that <code>LineSearchStrategy</code> needs <code>$pattern</code> to be
+a string, but that <code>RegexpSearchStrategy</code> needs an <code>Expression</code> value object.</p>
+
+<p>The responsibility to find a <code>SearchStrategy</code> which supports the given pattern
+should be delegated to <code>SearchEngine</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo\Search;
+
+class SearchEngine
+{
+    private $searchStrategies = array();
+
+    public function registerStrategy(SearchStrategy $searchStrategy)
+    {
+        $this-&gt;searchStrategies[] = $searchStrategy;
+    }
+
+    public function resolve($pattern)
+    {
+        foreach ($this-&gt;searchStrategies as $searchStrategy) {
+            if ($searchStrategy-&gt;supports($pattern)) {
+                return $searchStrategy;
+            }
+        }
+
+        throw new PatternNotSupportedException($pattern);
+    }
+}
+</code></pre>
+
+<p>You no longer need to fork Redaktilo to add new search related behavior, you can
+now just create a new implementation of <code>SearchStrategy</code>, register it into
+<code>SearchEngine</code> and then inject it into the <code>Editor</code>:</p>
+
+<pre><code class="php">use Gnugat\Redaktilo\Editor;
+use Gnugat\Redaktilo\Filesystem;
+use Gnugat\Redaktilo\Search\SearchEngine;
+use Gnugat\Redaktilo\Search\LineNumberSearchStrategy;
+use Gnugat\Redaktilo\Search\LineSearchStrategy;
+use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
+
+$searchEngine = new SearchEngine();
+
+$lineSearchStrategy = new LineSearchStrategy();
+$searchEngine-&gt;registerStrategy($lineSearchStrategy);
+
+$lineNumberSearchStrategy = new LineNumberSearchStrategy();
+$searchEngine-&gt;registerStrategy($lineNumberSearchStrategy);
+
+$symfonyFilesystem = new SymfonyFilesystem();
+$filesystem = new Filesystem($symfonyFilesystem);
+$editor = new Editor($filesystem, $searchEngine);
+</code></pre>
+
+<p>We just made Redaktilo open to extension (still) and closed to modifications,
+hooray!</p>
+
+<h2 id="editor%27s-diff">Editor's diff</h2>
+
+<p>Here's what <code>Editor</code> looked like after adding <code>moveDown</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class Editor
+{
+    public function jumpDownTo(File $file, $pattern)
+    {
+        $lines = $file-&gt;readlines();
+        $filename = $file-&gt;getFilename();
+        $currentLineNumber = $file-&gt;getCurrentLineNumber() + 1;
+        $length = count($lines);
+        while ($currentLineNumber &lt; $length) {
+            if ($lines[$currentLineNumber] === $pattern) {
+                $file-&gt;setCurrentLineNumber($currentLineNumber);
+
+                return;
+            }
+            $currentLineNumber++;
+        }
+
+        throw new \Exception("Couldn't find line $pattern in $filename");
+    }
+
+    public function jumpUpTo(File $file, $pattern)
+    {
+        $lines = $file-&gt;readlines();
+        $filename = $file-&gt;getFilename();
+        $currentLineNumber = $file-&gt;getCurrentLineNumber() - 1;
+        while (0 &lt;= $currentLineNumber) {
+            if ($lines[$currentLineNumber] === $pattern) {
+                $file-&gt;setCurrentLineNumber($currentLineNumber);
+
+                return;
+            }
+            $currentLineNumber--;
+        }
+
+        throw new \Exception("Couldn't find line $pattern in $filename");
+    }
+
+    public function moveUp(File $file, $lines = 1)
+    {
+        $newLineNumber = $file-&gt;getCurrentLineNumber() - $lines;
+
+        if ($newLineNumber &lt; 0) {
+            $newLineNumber = 0;
+        }
+
+        $file-&gt;setCurrentLineNumber($newLineNumber);
+    }
+
+    public function has(File $file, $pattern)
+    {
+        return $file-&gt;hasLine($pattern);
+    }
+}
+</code></pre>
+
+<p>And now, here's what it looks like:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+use Gnugat\Redaktilo\Search\SearchEngine;
+
+class Editor
+{
+    private $searchEngine;
+
+    public function __construct(SearchEngine $searchEngine)
+    {
+        $this-&gt;searchEngine = $searchEngine;
+    }
+
+    public function jumpDownTo(File $file, $pattern)
+    {
+        $searchStrategy = $this-&gt;searchEngine-&gt;resolve($pattern);
+        $foundLineNumber = $searchStrategy-&gt;findNext($file, $pattern);
+
+        $file-&gt;setCurrentLineNumber($foundLineNumber);
+    }
+
+    public function jumpUpTo(File $file, $pattern)
+    {
+        $searchStrategy = $this-&gt;searchEngine-&gt;resolve($pattern);
+        $foundLineNumber = $searchStrategy-&gt;findPrevious($file, $pattern);
+
+        $file-&gt;setCurrentLineNumber($foundLineNumber);
+    }
+
+    public function has(File $file, $pattern)
+    {
+        $searchStrategy = $this-&gt;searchEngine-&gt;resolve($pattern);
+
+        return $searchStrategy-&gt;has($file, $pattern);
+    }
+}
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>You should be able to add new features without modifying existing code.</p>
+
+<p>I hope you found this article interesting, if you have any questions or
+feedback please feel free to do so on <a href="https://twitter.com/epiloic">Twitter</a>.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Redaktilo: because your code too needs an editor]]></title>
+            <link href="/2014/05/09/redaktilo.html"/>
+            <updated>2014-05-09T00:00:00+01:00</updated>
+            <id>/2014/05/09/redaktilo.html</id>
+            <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p>I've been working on a silly library lately:
+<a href="https://github.com/gnugat/redaktilo">Redaktilo</a> (it means editor in esperanto).</p>
+
+<p>Redaktilo has been created to fulfill actual needs. In this article we'll see
+what it is all about, and why it won't stay silly for long.</p>
+
+<h2 id="use-case-1%3A-yaml-configuration-edition">Use case 1: YAML configuration edition</h2>
+
+<p><a href="https://github.com/Incenteev/ParameterHandler">Incenteev\ParameterHandler</a>
+is a good example: it updates a YAML configuration after each update of the
+dependencies using <a href="https://getcomposer.org/">Composer</a>.</p>
+
+<p>It uses the
+<a href="http://symfony.com/doc/current/components/yaml/introduction.html">Symfony2 Yaml component</a>
+which converts a YAML string into a PHP array, and then converts it back.
+The problem with it is that it strips empty lines, custom formatting and
+comments...</p>
+
+<p>Redaktilo only inserts a new line in the file, leaving it as it is.</p>
+
+<h2 id="use-case-2%3A-json-file-edition">Use case 2: JSON file edition</h2>
+
+<p>The <code>composer.json</code> file is really usefull and can be almost completly edited
+using the <code>composer.phar</code> CLI application.</p>
+
+<p>Some part still need manual edition, like the script section. To automate this
+you could use <code>json_decode</code> and <code>json_encode</code>, but similarly to the previous use
+case you would lose empty lines and custom formatting...</p>
+
+<p>Redaktilo aims at solving this problem, but isn't ready yet: inserting a line
+in JSON often means adding a comma at the end of the previous one.</p>
+
+<h2 id="use-case-3%3A-php-source-code-edition">Use case 3: PHP source code edition</h2>
+
+<p>To be fair this use case isn't limited to PHP source code: it can be useful for
+any plain text files (text, XML, java, python, anything).</p>
+
+<p><a href="https://github.com/gnugat/GnugatWizardBundle">GnugatWizardBundle</a> automatically
+registers new bundles installed using Composer in your Symfony2 application.</p>
+
+<p>To do so it uses
+<a href="https://github.com/sensiolabs/SensioGeneratorBundle">SensioGeneratorBundle</a>'s
+<a href="https://github.com/sensiolabs/SensioGeneratorBundle/blob/8b7a33aa3d22388443b6de0b0cf184122e9f60d2/Manipulator/KernelManipulator.php">KernelManipulator</a>
+to insert a line in the <code>app/AppKernel.php</code>. However this class registers bundles for every
+environments, and doesn't take into account bundle which depend on the kernel.</p>
+
+<p>If you take a look at the <a href="https://github.com/sensiolabs/SensioGeneratorBundle/blob/8b7a33aa3d22388443b6de0b0cf184122e9f60d2/Manipulator/KernelManipulator.php">KernelManipulator source code</a>
+you'll realise it has been a bit over engineered as it parses PHP tokens.</p>
+
+<p>A new <code>KernelManipulator</code> could be written using Redaktilo as follow:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Sensio\Bundle\GeneratorBundle\Manipulator;
+
+use Gnugat\Redaktilo\Editor;
+
+class KernelManipulator extends Manipulator
+{
+    protected $editor;
+    protected $appKernelFilename;
+
+    public function __construct(Editor $editor, $appKernelFilename)
+    {
+        $this-&gt;editor = $editor;
+        $this-&gt;appKernelFilename = $appKernelFilename;
+    }
+
+    public function addBundle($bundle)
+    {
+        $file = $this-&gt;editor-&gt;open($this-&gt;appKernelFilename);
+        $newLine = sprintf('            new %s(),', $bundle);
+
+        $this-&gt;editor-&gt;jumpDownTo('    public function registerBundles()');
+        $this-&gt;editor-&gt;jumpDownTo('        $bundles = array(');
+        $this-&gt;editor-&gt;jumpDownTo('        );');
+
+        $this-&gt;editor-&gt;addBefore($file, $newLine);
+
+        $this-&gt;editor-&gt;save($file);
+
+        return true;
+    }
+}
+</code></pre>
+
+<h2 id="usage">Usage</h2>
+
+<p>A great effort has been put to document the project, as you can see in the
+<a href="https://github.com/gnugat/redaktilo/#redaktilo">README</a>.</p>
+
+<p>Here's an overview!</p>
+
+<p>You can install Redaktilo using <a href="https://getcomposer.org/">Composer</a>:</p>
+
+<pre><code>composer require "gnugat/redaktilo:~0.3@dev"
+</code></pre>
+
+<p>Then you need to create an instance of the <code>Editor</code> class:</p>
+
+<pre><code class="php">&lt;?php
+require_once __DIR__.'/vendor/autoload.php';
+
+use Gnugat\Redaktilo\Filesystem;
+use Gnugat\Redaktilo\Editor;
+use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
+
+$symfonyFilesystem = new SymfonyFilesystem();
+$filesystem = new Filesystem($symfonyFilesystem);
+$editor = new Editor($filesystem);
+</code></pre>
+
+<p><code>Editor</code> is completly stateless, which means you can use the same instance
+everywhere in your scripts/applications/libraries.</p>
+
+<p>Let's now have a look at the available classes and their responsibility.</p>
+
+<h2 id="file">File</h2>
+
+<p>The basic idea behind Redaktilo is to provide an object oriented way to
+represent files:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class File
+{
+    public function getFilename();
+
+    public function read();
+    public function write($newContent);
+
+    // ...
+}
+</code></pre>
+
+<p>Once this domain model available, you can build services to manipulate it.</p>
+
+<h2 id="filesystem">Filesystem</h2>
+
+<p>This is the first service available:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class Filesystem
+{
+    public function open($filename); // Cannot open new files
+    public function create($filename); // Cannot create existing files
+
+    public function exists($filename);
+
+    public function write(File $file);
+}
+</code></pre>
+
+<p>It creates instances of <code>File</code> and write their content in the actual file.</p>
+
+<h2 id="editor">Editor</h2>
+
+<p>Developers should only use the <code>Editor</code> class: it's a facade which provides the
+text edition metaphor:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Gnugat\Redaktilo;
+
+class Editor
+{
+    // Filesystem operations.
+    public function open($filename, $force = false);
+    public function save(File $file);
+
+    // Line insertion.
+    public function addBefore(File $file, $add);
+    public function addAfter(File $file, $add);
+
+    // Content navigation.
+    public function jumpDownTo(File $file, $line);
+    public function jumpUpTo(File $file, $line);
+}
+</code></pre>
+
+<p>And that's it.It told you it was a small and simple library ;) . Now let's see
+what's planned for the next releases.</p>
+
+<h2 id="version-0.4-should-bring-searchengine">Version 0.4 should bring SearchEngine</h2>
+
+<p>There's still some search logic left in <code>Editor</code>.</p>
+
+<p>To remove it, a whole system will be put in place: <code>SearchEngineCollection</code> will
+be called by <code>Editor</code> and will ask its <code>SearchEngine</code>s if they support the
+pattern.</p>
+
+<p>This should allow many search strategies:</p>
+
+<ul>
+<li>find by line (what's currently done, an exact matching)</li>
+<li>find by line number</li>
+<li>find by regexp</li>
+<li>find by symbol (similar to <a href="http://www.sublimetext.com/">SublimeText</a>'s <code>@</code>)</li>
+</ul>
+
+<p>You could then have an extending point!</p>
+
+<h2 id="version-0.5-should-bring-contentconverter">Version 0.5 should bring ContentConverter</h2>
+
+<p>Some extra logic are also left in <code>File</code>, regarding the conversion of the
+content into an array of lines.</p>
+
+<p><code>ContentConverter</code> could take a file, and convert its content into anything:</p>
+
+<ul>
+<li>an array of lines</li>
+<li>an array of <code>IndentedLine</code></li>
+<li>PHP tokens</li>
+</ul>
+
+<p>This would allow new types of <code>SearchEngine</code>, and maybe the creation of
+<code>ContentEditor</code> which would bear the single responsibility of inserting,
+replacing or removing bits of it.</p>
+
+<h2 id="i-need-your-humble-opinion-%2F-help">I need your humble opinion / help</h2>
+
+<p>I'd like to hear about more use cases: what would you do with Redaktilo? What
+would you like to do with it?</p>
+
+<p>You can <a href="https://github.com/gnugat/redaktilo/issues/new">open issues to start discussions</a>,
+just make sure to provide a real life use case ;) .</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p><a href="https://github.com/gnugat/redaktilo">Redaktilo</a> provides an Object Oriented way
+to manipulate files, through the editor metaphor:</p>
+
+<ul>
+<li>your scripts can open a file</li>
+<li>they can then navigate in the file to select a line</li>
+<li>next, they can insert a new line above/under the current one</li>
+<li>finally they can save the changes on the filesystem</li>
+</ul>
+]]></content>
+        </entry>
+    </feed>

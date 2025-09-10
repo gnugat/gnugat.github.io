@@ -1,52 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>My IDE is Vim &mdash; Loïc Faugeron &mdash; Technical Blog</title>
-    <meta name="description" content="Technical articles about Symfony and TDD">
-    <meta name="author" content="Loïc Faugeron">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <link rel="canonical" href="/2025/09/03/my-ide-is-vim.html"/>
-        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
-    
-    <link rel="stylesheet" href="/css/normalize.css">
-    <link rel="stylesheet" href="/css/skeleton.css">
-    <link rel="stylesheet" href="/css/dop-dop-dop.css">
-    <link rel="stylesheet" href="/css/github-dark.min.css">
-    <link rel="stylesheet" href="/css/catppuccin-macchiato.css">
-</head>
-<body>
-    <div class="container">
-        <header class="title">
-            <h1>
-                <a href="/">Loïc Faugeron</a>
-                <span class="sub-title">Technical Blog</span>
-            </h1>
-            
-            <nav class="row">
-                <a class="button two columns" href="/about">About</a>
-                <a class="button two columns" href="/">Articles</a>
-                <a class="button three columns" href="/best-articles">Best Articles</a>
-                <a class="button two columns" href="/feed/atom.xml">RSS</a>
-                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/main/_sculpin">Sources</a>
-            </nav>
-        </header>
-
-        <article>
-            <header>
-                <h2>
-    My IDE is Vim
-    <span class="sub-title">03/09/2025</span>
-</h2>
-                            <nav>
-                                                            <a class="button " href="/tags/introducing-tools">introducing-tools</a>
-                                                            <a class="button " href="/tags/Vim">Vim</a>
-                    </nav>
-                </header>
-
-                <blockquote>
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-09-10T10:14:49+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[My IDE is Vim]]></title>
+            <link href="/2025/09/03/my-ide-is-vim.html"/>
+            <updated>2025-09-03T00:00:00+01:00</updated>
+            <id>/2025/09/03/my-ide-is-vim.html</id>
+            <content type="html"><![CDATA[<blockquote>
   <p>The keyboards leak molten steel, as Vim motions carve runes through silicon,
   the code prostrates itself before the LSP's omniscient eye:</p>
   
@@ -241,37 +208,6 @@ forcing developers away from tools they've mastered is counterproductive.</p>
 Deep knowledge of one's workflow, getting proficient with one's tool
 and seeking improvement matters more
 than whatever software happen to be the most popular.</p>
-
-
-            <footer>
-                            <nav class="row">
-                            <a class="button six columns" href="/2025/08/27/my-dotfiles.html" title="My Dotfiles">Previous &lt; My Dotfiles</a>
-                                        <a class="button six columns" href="/2025/09/10/xl-1-dockerizing-2005-lamp-app.html" title="eXtreme Legacy 1: Dockerizing a 2005 LAMP app">Next &gt; eXtreme Legacy 1: Dockerizing a 2005 LAMP app</a>
-                    </nav>
-                    <hr />
-            </footer>
-        </article>
-
-        <footer>
-            <nav class="row">
-                <a class="button two columns" href="/about">About</a>
-                <a class="button two columns" href="/">Articles</a>
-                <a class="button three columns" href="/best-articles">Best Articles</a>
-                <a class="button two columns" href="/feed/atom.xml">RSS</a>
-                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/main/_sculpin">Sources</a>
-            </nav>
-        </footer>
-    </div>
-
-    <script src="/js/highlight.min.js"></script>
-    <script type="text/javascript">hljs.highlightAll();</script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9V6KYH7PW"></script>
-    <script type="text/javascript">
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-Q9V6KYH7PW');
-    </script>
-</body>
-</html>
+]]></content>
+        </entry>
+    </feed>

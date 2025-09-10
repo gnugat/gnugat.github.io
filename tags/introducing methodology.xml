@@ -1,0 +1,485 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-09-10T10:14:49+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Semantic Versioning]]></title>
+            <link href="/2014/12/17/semantic-versioning.html"/>
+            <updated>2014-12-17T00:00:00+00:00</updated>
+            <id>/2014/12/17/semantic-versioning.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: A library's public API can be: fully qualified class names,
+  object's types, exceptions, method names and arguments.</p>
+</blockquote>
+
+<p>When working on a project, every change made to it can possibly break its usage.
+Sometimes this is because we introduced a bug, but some other times this is
+because the project's usage needed to be changed.</p>
+
+<p>Or did it?</p>
+
+<p>In this article, we will discuss about semantic versioning, and public API.</p>
+
+<h2 id="semantic-versioning">Semantic Versioning</h2>
+
+<p>In order to make the migration between two versions easier for users, we could
+use <a href="http://semver.org/">Semantic Versioning</a>, which can be summed up as follow:</p>
+
+<blockquote>
+  <p>Given a version number MAJOR.MINOR.PATCH, increment the:</p>
+  
+  <ol>
+  <li>MAJOR version when you make incompatible API changes</li>
+  <li>MINOR version when you add functionality in a backwards-compatible manner</li>
+  <li>PATCH version when you make backwards-compatible bug fixes</li>
+  </ol>
+</blockquote>
+
+<p>The trick is to define a "public API" (what the user actually use) and promise
+that we won't break it as long as we don't increment the MAJOR version.</p>
+
+<h2 id="public-api">Public API</h2>
+
+<p>The "public API" will vary between projects:</p>
+
+<ul>
+<li>for a CLI tool, it will be the command names, their options and arguments</li>
+<li>for a web API, it will be the URLs</li>
+<li>for a library, it will be a set of defined classes</li>
+</ul>
+
+<p>Let's focus on libraries.</p>
+
+<h2 id="redaktilo-example">Redaktilo example</h2>
+
+<p>When I started the <a href="https://github.com/gnugat/redaktilo">Redaktilo</a> library I
+had a lot of decisions to make:</p>
+
+<ul>
+<li>what name and responsibility to give to new objects</li>
+<li>what names and arguments to give to methods</li>
+<li>what exception to throw in case of errors</li>
+</ul>
+
+<p>I knew that I could make the wrong choices, which would mean changing names,
+types, arguments, etc. Basically, for the developers using the library it would
+mean breaking their code.</p>
+
+<h3 id="private-and-public-classes">Private and public classes</h3>
+
+<p>In order to avoid that as much as possible, I've decided to minimize the number
+of classes the developers would use: a <code>Text</code> model and an <code>Editor</code> service.
+<code>Editor</code> doesn't contain any logic, it relies on several "private" classes to do
+the actual job. It's a <a href="http://en.wikipedia.org/wiki/Facade_pattern">Facade</a>.</p>
+
+<p>So my public API was the <code>Gnugat\Redaktilo\Editor</code>'s fully qualified classname
+(full namespace and the class name), and its methods (name and arguments).</p>
+
+<h3 id="private-class-constructors">Private class constructors</h3>
+
+<p>Later on in the project we've introduced a version that didn't change the
+defined public API, but broke the projects that were using Redaktilo: the issue
+was that we added a new arguments in a private class's constructor.</p>
+
+<p>Therefore the public API was extended to <strong>every</strong> constructors.</p>
+
+<p>To fix the backward compatibility break, we made this new argument optional.</p>
+
+<h3 id="exceptions">Exceptions</h3>
+
+<p>Some time passed and we've decided to re-organize the project's exceptions:
+moving them to their own sub-namespace (<code>Gnugat\Redaktilo\Exception</code>)
+and throwing only exceptions we owned.
+But by doing so we could potentially break project's using our library.</p>
+
+<p>Hence we extended the public API to exceptions.</p>
+
+<p>To avoid backward compatible breaks we simply duplicated the exceptions:
+the new ones in the sub-namespace contain all the logic and inherit from the old
+exceptions to get their types.</p>
+
+<h2 id="making-changes-to-the-public-api">Making changes to the public API</h2>
+
+<p>Defining a public API doesn't mean we can't make changes to it:</p>
+
+<ul>
+<li>we can add new arguments to methods, by making them optional</li>
+<li>we can change a class name and type, by creating a new one and make it extend the old one</li>
+<li>we can change a method name, by creating a new one and use it in the old one</li>
+<li>we can add a method to an interface, by creating a new interface and make it extend the old one</li>
+</ul>
+
+<p>Those changes will introduce deprecations that will be removed only when the
+MAJOR version is incremented.</p>
+
+<p>This can be documented directly in the code, using <a href="http://www.phpdoc.org/docs/latest/references/phpdoc/tags/deprecated.html">phpdoc</a>:
+use <code>@deprecated &lt;since-version&gt; &lt;what to use instead&gt;</code>.</p>
+
+<p>This can also be described in a migration documentation (e.g. <code>UPGRADE-2.0.md</code>).</p>
+
+<h2 id="avoid-complete-rewrites">Avoid complete rewrites</h2>
+
+<p>Semantic versioning only applies to versions greater than <code>1.0.0</code>: if you tag your project as
+being in version <code>0.MINOR.PATCH</code> you are allowed to break everything. But
+remember that it will make your project very unstable, and people won't trust
+it.</p>
+
+<p>In theory you could break everything again when incrementing the MAJOR version
+(e.g. from version 1 to version 2), but this won't be appealing at all for
+people that already use your project. Try to make as few changes as possible,
+document them and give time to your users to stop using deprecated stuff.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Semantic versioning is a versioning methodology which has its perks and
+advantages. It gives high priority to user's experience, so you have to define a
+line between what should be used (public API) and what shouldn't (private).</p>
+
+<p>Changes to the public API can be made by keeping the old stuff and document it
+as deprecated.</p>
+
+<p>When creating a library, remember that exceptions and all constructors (even of
+private classes) are part of the public API.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Many thanks to <a href="http://loickpiera.com/">Loïck Piera</a> and his help,
+  without him I'd still think that declaring a class as being part of the public
+  API is sufficient.</p>
+</blockquote>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Keep It Simple and Git]]></title>
+            <link href="/2014/12/10/keep-it-simple-and-git.html"/>
+            <updated>2014-12-10T00:00:00+00:00</updated>
+            <id>/2014/12/10/keep-it-simple-and-git.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: Branch only from master, merge back when done and immediately deploy.</p>
+</blockquote>
+
+<p>Git proposes a branch system with the possibility to merge them together,
+allowing you to separate released code from work in progress one.</p>
+
+<p>Git flows have been created to help you keep the same process in your team.
+In this article, we'll have a look at <a href="https://github.com/jbenet">@jbenet</a>'s
+<a href="https://gist.github.com/jbenet/ee6c9ac48068889b0912">simple git branching model</a>:</p>
+
+<blockquote>
+  <ol>
+  <li><code>master</code> must always be deployable.</li>
+  <li><strong>all changes</strong> are made through feature branches (pull-request + merge)</li>
+  <li>rebase to avoid/resolve conflicts; merge in to <code>master</code></li>
+  </ol>
+</blockquote>
+
+<h2 id="working-on-a-change">Working on a change</h2>
+
+<p>Changes can be new features, bug fixes, enhancements. They're all coming from
+master:</p>
+
+<pre><code class="bash">git checkout master
+git checkout -b my-changes
+</code></pre>
+
+<h2 id="making-the-change-ready">Making the change ready</h2>
+
+<p>Once you're happy with your branch, you need to update it with the last changes
+from master:</p>
+
+<pre><code class="bash">git checkout master
+git pull --rebase
+git checkout my-changes
+git rebase master
+git push -fu origin my-changes
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: <code>rebase</code> will rewrite your commits, their dates will be changed
+  (therefore their hash will be changed).</p>
+</blockquote>
+
+<p>Check your tests, the coding standards and ask for a code review.</p>
+
+<h3 id="managing-conflicts">Managing conflicts</h3>
+
+<p>You can list conflicts (if any):</p>
+
+<pre><code class="bash">git status
+</code></pre>
+
+<p>Edit your files and then mark them as solved:</p>
+
+<pre><code class="bash">git add &lt;file&gt;
+</code></pre>
+
+<p>When all conflicted files have been resolved, you can continue:</p>
+
+<pre><code class="bash">git rebase --continue
+</code></pre>
+
+<h3 id="when-to-merge">When to merge</h3>
+
+<p>Here's a to do list you can use to know if a branch is ready to be merged:</p>
+
+<ul>
+<li>is it compliant with the coding standards?</li>
+<li>has the code been reviewed?</li>
+<li>do the tests pass?</li>
+<li>has the Quality Assurance team checked the feature?</li>
+<li>will someone be available in the next hour in case of emergency?</li>
+<li>does the product owner want this feature now?</li>
+</ul>
+
+<h2 id="deploying-the-new-change">Deploying the new change</h2>
+
+<p>If everything is ok with your change, then you can merge it into master:</p>
+
+<pre><code class="bash">git checkout master
+git merge --no-ff my-change
+git push
+git push origin :my-changes
+git branch -D my-changes
+</code></pre>
+
+<p>It's now time to deploy! You can make a tag:</p>
+
+<pre><code class="bash">git tag -a &lt;version&gt;
+git push --tags
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Make small changes, release often.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Read it Later]]></title>
+            <link href="/2014/11/21/read-it-later.html"/>
+            <updated>2014-11-21T00:00:00+00:00</updated>
+            <id>/2014/11/21/read-it-later.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: Use <a href="https://ifttt.com/">IFTTT</a> and <a href="http://getpocket.com/">Pocket</a>
+  to read tweets, blogs and stuff later (in a commute, in the loo, anywhere).</p>
+</blockquote>
+
+<p>We often find interesting links on the web, but don't have time to read them
+immediately. This article will describe how to efficiently manage them so we can
+read them later.</p>
+
+<blockquote>
+  <p><em>Note</em>: this is an actualization of an article wrote
+  <a href="/2014/01/08/technology-scouting.html">ten month ago</a>.</p>
+</blockquote>
+
+<h2 id="pocket">Pocket</h2>
+
+<p>We all have different strategies to "bookmark" links: actually bookmark them,
+favorite a tweet, subscribing to a RSS feed... The problem arises when we do all
+of those in the same time: wouldn't it be nice to have a single place to read
+them all?</p>
+
+<p>We could use our emails for this: we check them often, we can archive them,
+favorite them or delete them. <a href="http://www.google.com/inbox/">Inbox</a> from Google
+makes the task even easier: we can snooze an email so it only appears at a given
+time, or a given location.</p>
+
+<p>The problem is that it mixes "bookmarks" and "notifications": we could
+accidently ignore a business email by mistaking it with a "bookmark".</p>
+
+<p>But don't panic! There's an application for this: <a href="http://getpocket.com/">Pocket</a>
+(formerly "Read it later").
+The advantage of Pocket is that you can install an extension in your browser so
+you can save a link or a tweet, and there's a mobile application which works
+offline, so you can read in the subway if you want.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Pocket's ain page is the list of item to read, you can then favorite
+  them, tag them, archive them or delete them.</p>
+</blockquote>
+
+<h2 id="if-%22this%22%2C-then-%22that%22">If "this", then "that"</h2>
+
+<p>The Pocket extension allows us to save manually links, but what about RSS feeds?
+What if we're used to favorite tweets (habits die hard)?</p>
+
+<p>Well there's an application for this: <a href="https://ifttt.com/">If This Then That</a>.
+Basically you can select one of the (many) supported triggers (RSS feed, tweet
+favoriting and others), then select one of the (many) supported actions (save to
+pocket, send an email and others).</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>All the tools are here! They're free of charge and they follow the philosophy
+"do one thing and do it well".</p>
+
+<p>I personally store every links to read later in Pocket, either using the browser
+extension or with IFTTT using the following recipe templates:</p>
+
+<ul>
+<li>If new tweet by specific user, then save in Pocket</li>
+<li>If new RSS feed item, then save in Pocket</li>
+</ul>
+
+<p>I then read everyting in the subway (no network, but pocket preloads the items
+and keeps them available offline).</p>
+
+<p>If you have trouble going back to Pocket, have a look at
+<a href="http://geoffrey.io/muna-your-personnal-paperboy.html">Muna</a>: it should soon be
+able to send you a digested email of your Pocket's links to read, every morning.</p>
+
+<p>I hope you enjoyed this article, <a href="https://twitter.com/epiloic">tweet me</a> your
+questions/comments if you have nay :) .</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Pomodoro: manage your breaks, improve your focus]]></title>
+            <link href="/2014/04/16/pomodoro-manage-your-breaks-improve-your-focus.html"/>
+            <updated>2014-04-16T00:00:00+01:00</updated>
+            <id>/2014/04/16/pomodoro-manage-your-breaks-improve-your-focus.html</id>
+            <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p><a href="http://pomodorotechnique.com/">The Pomodoro Technique®</a> helps you to manage
+your time in order to become more efficient with the following schema:</p>
+
+<ol>
+<li>work and focus for 25 minutes</li>
+<li>then have a 5 minutes break from your computer</li>
+<li>repeat until you've reached 4 work &amp; 3 break sessions</li>
+<li>have a 20 minutes break from your computer</li>
+</ol>
+
+<p>All you need is a pomodoro timer (I use
+<a href="https://launchpad.net/tomate">tomate on Ubuntu</a>), and a strong will to avoid
+distractions.</p>
+
+<h2 id="benefits">Benefits</h2>
+
+<p>Breaks have been proven to improve productivity and mental well-being. By taking
+them regurarly, you should be fresh from monday morning to friday afternoon!</p>
+
+<h2 id="drawbacks">Drawbacks</h2>
+
+<p>One of the points in the pomodoro technique is to avoid any disturbance. But
+when working in a team you cannot ignore your teamates for 25 minutes: what if
+they're stucked and need your help?</p>
+
+<h2 id="tips">Tips</h2>
+
+<p>You can use it for any type of work. Just keep in mind that breaks should
+completly cut you off from your work: if you're a developer, then you should
+walk away from the computer (do some physical exercise, or have a non work
+related talk with your colleagues).</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Have 4 work sessions of 25 minutes, interspersed by 3 break sessions of 5
+minutes. Then have a 20 minutes break, and start again!</p>
+
+<p>This will help you to stay focused the whole day while preventing burnout.</p>
+
+<p>I hope you found this article interesting. If you have any comments or
+questions, don't be shy and drop me line on
+<a href="https://twitter.com/epiloic">Twitter</a> ;) .</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Technology scouting]]></title>
+            <link href="/2014/01/08/technology-scouting.html"/>
+            <updated>2014-01-08T00:00:00+00:00</updated>
+            <id>/2014/01/08/technology-scouting.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This article has been re-written - see <a href="/2014/11/21/read-it-later.html">Read it Later</a></p>
+</blockquote>
+
+<p>As a curious person I'm constantly trying to learn new practices and to discover
+tools which might help me, by collecting information via technology scouting and
+then reading it.</p>
+
+<p>In this article, I will present how to do so effectively.</p>
+
+<h2 id="collecting-information">Collecting information</h2>
+
+<p>Whenever you find an interesting link, send it to <a href="http://getpocket.com/">Pocket</a>
+so you can read it later.</p>
+
+<h3 id="blogs">Blogs</h3>
+
+<p>To find interesting links subscribe to blog RSS feeds using
+<a href="https://ifttt.com/">If This Then That</a>: it will send new entries directly to
+pocket.</p>
+
+<p>Here are some blogs I personnally follow (caution, they're not really sorted):</p>
+
+<ul>
+<li><a href="http://williamdurand.fr/">William Durand's blog</a></li>
+<li><a href="http://www.mountaingoatsoftware.com/blog">Mountain Goat Software</a></li>
+<li><a href="http://blog.karolsojko.com/">Karol Sójko's blog</a></li>
+<li><a href="http://blog.8thlight.com/">8th light</a></li>
+<li><a href="http://richardmiller.co.uk/">Richard Miller's blog</a></li>
+<li><a href="http://verraes.net/#blog">Mathias Verraes's blog</a></li>
+<li><a href="http://www.whitewashing.de/">Benjamin Eberlei's blog</a></li>
+<li><a href="http://nedroid.com/">Nedroid</a></li>
+<li><a href="https://igor.io/">Igor Wiedler's blog</a></li>
+</ul>
+
+<h3 id="twitter">Twitter</h3>
+
+<p>You can also use <a href="https://twitter.com/">Twitter</a>:</p>
+
+<ol>
+<li>create a private list which will serve as a pool</li>
+<li>add any author which might post interresting messages</li>
+<li>after a week or so, add the author to a public list</li>
+</ol>
+
+<p>The lists only show messages (not retweets) and conversations between people
+you follow. They also allow you to create categories.</p>
+
+<p>If you want, you can have a look at
+<a href="https://twitter.com/epiloic/lists/">my own public lists</a>.</p>
+
+<h3 id="github">Github</h3>
+
+<p>Last but not least, <a href="https://github.com/">Github</a> can also be a great source of
+discoveries: by following someone which stars or watch a lot of projects you
+will have them listed on your homepage.</p>
+
+<p>Here's my advice: <a href="https://github.com/pborreli">Pascal Borreli</a> contributes to
+many repositories, you should start to follow him.</p>
+
+<h2 id="reading-it">Reading it</h2>
+
+<p>Collecting resources is a thing, getting it read is another one. Just like
+<a href="http://verraes.net/2012/12/how-to-read-more-books/">Mathias Verraes advised it</a>,
+you should get an e-reader: you can send the pages you gathered on Pocket and
+then read them everywhere.</p>
+
+<p>Pocket allows you to remove the articles you found not so interresting after
+all, it also allows you to archive the good ones and to favorite the great ones.</p>
+
+<p>Speaking of reading and e-readers, books are another good way of discovering new
+things. Do not underestimate them. Here's a list of books I'd recommend:</p>
+
+<ul>
+<li><a href="http://git-scm.com/book">Pro Git</a></li>
+<li>Clean Code, by Robert C. Martin</li>
+<li>Agile Software Development, Principles, Patterns, and Practices, by Robert C. Martin</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The point is: current tools won't last and there's a lot of practices you're
+not aware of. If you want to improve yourself and keep up with other developers,
+you have to try your best to discover new practices (which might be rather old
+actually) and new trending tools.</p>
+
+<p>I hope you found this article enjoyable and helpful.</p>
+]]></content>
+        </entry>
+    </feed>

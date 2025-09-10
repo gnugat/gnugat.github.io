@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-09-10T10:14:49+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[eXtreme Legacy 1: Dockerizing a 2005 LAMP app]]></title>
+            <link href="/2025/09/10/xl-1-dockerizing-2005-lamp-app.html"/>
+            <updated>2025-09-10T00:00:00+01:00</updated>
+            <id>/2025/09/10/xl-1-dockerizing-2005-lamp-app.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p>🤘 From the abyssal depths of forgotten servers,
+  Docker the Void-Walker awakens to drag ancient LAMP stack from their tombs,
+  wrapping them in the obsidian chains of containerization! 🔥</p>
+</blockquote>
+
+<p>Back in 2005, I learned how to write Linux/Apache/MySQL/PHP websites thanks
+to the Site du Zero (SdZ), which is now known as <a href="https://openclassrooms.com/en/">Open Classrooms</a>.</p>
+
+<p>I also used to play a web-browser game, similar to <a href="https://fr.wikipedia.org/wiki/OGame">OGame</a>,
+called BisouLand (SkySwoon). Turns out its creator also built it through SdZ tutorials!</p>
+
+<p>Fast forward 20 years later (today),
+I received a message on LinkedIn from a CTO asking me the following:</p>
+
+<blockquote>
+  <p>💬 "Are you willing to work with <strong>eXtreme Legacy</strong> code on occasion?"</p>
+</blockquote>
+
+<p>I wondered to myself: what is eXtreme Legacy code? And I immediately remembered BisouLand.</p>
+
+<p>You see, back in 2011,
+its creator had made it Open Source on github and made me code collaborator...</p>
+
+<p>So I <em>do</em> have access to a 2005 LAMP stack website,
+cobbled together by someone learning stuff on the go from the internet.</p>
+
+<p>What would it take, in 2025, to get an eXtreme Legacy app up and running?</p>
+
+<p>This is what we're going to find out in this series.</p>
+
+<p>Today's first article is about getting it to run, at least locally.</p>
+
+<ul>
+<li><a href="#the-project">The Project</a></li>
+<li><a href="#containerization">Containerisation</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="the-project">The Project</h2>
+
+<p>The <a href="https://github.com/pyricau/bisouland/tree/v1">version 1</a> has the following tree directory:</p>
+
+<pre><code>web/
+├── .htaccess
+├── checkConnect.php
+├── deconnexion.php
+├── favicon.ico
+├── images/
+├── includes/
+│   ├── bisouStyle2.css
+│   ├── compteur.js
+│   ├── newbisouStyle2.css
+│   └── prev.js
+├── index.php
+├── phpincludes/
+│   ├── accueil.php
+│   ├── action.php
+│   ├── aide.php
+│   ├── attaque.php
+│   ├── bd.php
+│   ├── bisous.php
+│   ├── confirmation.php
+│   ├── connected.php
+│   ├── connexion.php
+│   ├── erreur404.php
+│   ├── evo.php
+│   ├── fctIndex.php
+│   ├── nuage.php
+│   ├── ...
+│   ├── pages.php
+│   └── yeux.php
+└── redirect.php
+</code></pre>
+
+<p>The <code>.htaccess</code> file contains URL rewrite rules for Apache:</p>
+
+<pre><code>RewriteEngine on
+RewriteRule (.+)\.confirmation\.html$ /index.php?page=confirmation&amp;id=$1
+RewriteRule (.+)\.bisous\.html$ /index.php?page=bisous&amp;cancel=$1
+RewriteRule (.+)\.(.+)\.nuage\.html$ /index.php?page=nuage&amp;saut=1&amp;sautnuage=$1&amp;sautposition=$2
+RewriteRule (.+)\.nuage\.html$ /index.php?page=nuage&amp;nuage=$1
+RewriteRule (.+)\.(.+)\.action\.html$ /index.php?page=action&amp;nuage=$1&amp;position=$2
+RewriteRule (.+)\.(.+)\.yeux\.html$ /index.php?page=yeux&amp;Dnuage=$1&amp;Dpos=$2
+RewriteRule (.+)\.html$ /index.php?page=$1
+ErrorDocument 404 /erreur404.html
+</code></pre>
+
+<p>There are no Database schema, but a quick scan at the files will reveal the use
+of MySQL, for example <code>web/phpincludes/bd.php</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+function bd_connect() {
+        mysql_pconnect("HOST", "USER", "PASSWORD");
+        mysql_select_db("DATABASE");
+}
+</code></pre>
+
+<p>As for the code architecture, the file <code>web/index.php</code> acts as a
+front controller that displays the layout of the website, and then includes
+a file from <code>web/phpincludes/</code> for the actual page content.</p>
+
+<p>The HTML is mixed with the MySQL queries, session managemenet, game logic
+and any other PHP code. Code and comments are written in French, and there are
+several encoding issues.</p>
+
+<p>Here's an extract from <code>web/index.php</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+header('Content-type: text/html; charset=ISO-8859-1'); 
+
+session_start();
+ob_start();
+include 'phpincludes/bd.php';
+bd_connect();
+include('phpincludes/fctIndex.php');
+
+//Si la variable $_SESSION['logged'] n'existe pas, on la créée, et on l'initialise a false
+if (!isset($_SESSION['logged'])) $_SESSION['logged'] = false;
+
+//Si on est pas connecté.
+if ($_SESSION['logged'] == false)
+{
+  $id=0;
+  //On récupère les cookies enregistrés chez l'utilisateurs, s'ils sont la.
+  if (isset($_COOKIE['pseudo']) &amp;&amp; isset($_COOKIE['mdp']))
+  {
+    $pseudo = htmlentities(addslashes($_COOKIE['pseudo']));
+    $mdp = htmlentities(addslashes($_COOKIE['mdp']));
+    //La requête qui compte le nombre de pseudos
+    $sql = mysql_query("SELECT COUNT(*) AS nb_pseudo FROM membres WHERE pseudo='".$pseudo."'");
+    if (mysql_result($sql,0,'nb_pseudo') != 0)
+    {
+      //Sélection des informations.
+      $sql_info = mysql_query("SELECT id, confirmation, mdp, nuage FROM membres WHERE pseudo='".$pseudo."'");
+      $donnees_info = mysql_fetch_assoc($sql_info);
+      //Si le mot de passe est le même (le mot de passe est déjà crypté).
+      if ($donnees_info['mdp'] == $mdp)
+      {
+        //Si le compte est confirmé.
+        if ($donnees_info['confirmation'] == 1)
+        {
+          //On modifie la variable qui nous indique que le membre est connecté.
+          $_SESSION['logged'] = true;
+          $page='cerveau';
+        }
+      }
+    }
+  }
+}
+
+if ($_SESSION['logged'] == true)
+{
+  //l'id du membre.
+  $id=$_SESSION['id'];
+
+  //Fonction destinée à l'administration
+  if (isset($_POST['UnAct']) &amp;&amp; $id==12)
+  {
+    actionAdmin();
+  }
+
+  $sql_info = mysql_query(
+    "SELECT timestamp, coeur, bouche, amour, jambes, smack, baiser, pelle, tech1, tech2, tech3, tech4, dent, langue, bloque, soupe, oeil"
+    ." FROM membres WHERE id='".$id."'"
+  );
+  $donnees_info = mysql_fetch_assoc($sql_info);
+  //On récupère le nombre de points d'amour.
+  $amour = $donnees_info['amour'];
+?&gt;
+
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" /&gt; 
+  &lt;link rel="stylesheet" media="screen" type="text/css" title="bisouStyle2" href="includes/bisouStyle2.css" /&gt; 
+  &lt;link rel="shorcut icon" href="http://bisouland.piwai.info/favicon.ico"/&gt;
+  &lt;meta http-equiv="Content-Language" content="fr" /&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id="speedbarre"&gt;
+  &lt;?php if ($_SESSION['logged'] == true)
+    {?&gt;
+      &lt;?php echo formaterNombre(floor($amour)); ?&gt;
+    &lt;?php
+    }
+    else
+    {
+    ?&gt;
+    &lt;a href="connexion.html"&gt;Connexion&lt;/a&gt;
+    &lt;?php } ?&gt;
+  &lt;/div&gt;
+
+  &lt;div id="corps"&gt;
+    &lt;?php
+    include('phpincludes/pages.php');
+    if (isset($array_pages[$page]))
+    {
+      include('phpincludes/'.$array_pages[$page]);
+    }
+    else
+    {
+      include('phpincludes/erreur404.php');
+    }
+    ?&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>😵</p>
+
+<p>In addition to the spaghetti code, we can immediately spot security issues.
+But we cannot fix anything until we can manually test the website,
+so how do we get it to run?</p>
+
+<h2 id="containerisation">Containerisation</h2>
+
+<p>Back in 2005, the most common versions of the LAMP stack were:</p>
+
+<ul>
+<li>Apache: 2</li>
+<li>MySQL: MySQL 4.0 - 5.0</li>
+<li>PHP 4.3 - 5.1</li>
+</ul>
+
+<p>Applications written for MySQL 4.0 and PHP 4.3 can be run up to MySQL 5.7
+and PHP 5.6. Some deprecation notices would be issued, but in terms of backward
+compatibility that's how far we can stretch things.</p>
+
+<p>So let's create a <code>Dockerfile</code> that will have Apache 2, PHP 5.6 and MySQL 5.7:</p>
+
+<pre><code># syntax=docker/dockerfile:1
+
+FROM php:5.6-apache
+
+# Update sources.list to use archive repositories for Debian Stretch
+RUN sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list \
+    &amp;&amp; sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list \
+    &amp;&amp; sed -i '/stretch-updates/d' /etc/apt/sources.list
+
+# Install system dependencies and PHP extensions in single layer
+RUN docker-php-ext-install mysql \
+    &amp;&amp; a2enmod rewrite
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy application files with proper ownership
+COPY --chown=www-data:www-data web/ /var/www/html/
+</code></pre>
+
+<p>With the following <code>compose.yaml</code>, we'll set up the Apache and MySQL servers:</p>
+
+<pre><code class="yaml">name: skyswoon-monolith
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web:/var/www/html
+    depends_on:
+      - db
+    environment:
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+    restart: unless-stopped
+
+  db:
+    image: mysql:5.7
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_USER: ${DATABASE_USER}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "127.0.0.1:3306:3306"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+</code></pre>
+
+<p>You might notice that I've mentioned some environment variables,
+to configure the database. These will need to be set in a <code>.env</code> file:</p>
+
+<pre><code># Database
+DATABASE_HOST=db
+DATABASE_USER=database_user
+DATABASE_PASSWORD=database_password
+DATABASE_NAME=database_name
+# MySQL root password (for Docker)
+MYSQL_ROOT_PASSWORD=mysql_root_password
+</code></pre>
+
+<p>When the <code>docker compose up</code> is run,
+Docker Composer automatically reads from <code>.env</code> and sets the environment variable,
+then PHP will copy these into the <code>$_ENV</code> array super global,
+so we can get the values like so in <code>web/phpincludes/bd.php</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+function bd_connect()
+{
+    mysql_pconnect(
+        $_ENV['DATABASE_HOST'],
+        $_ENV['DATABASE_USER'],
+        $_ENV['DATABASE_PASSWORD'],
+    );
+    mysql_select_db($_ENV['DATABASE_NAME']);
+}
+</code></pre>
+
+<p>Last but not least, I'm adding a <code>Makefile</code>, to avoid having to type long
+<code>docker compose build; docker compose up</code> commands: <a href="https://github.com/pyricau/bisouland/blob/b31597c47a49e0dd2b87fbd55bd608530f81efec/Makefile">see file in github</a>.</p>
+
+<blockquote>
+  <p><strong>Super Secret Tip</strong>:
+  I've written about <a href="/2025/08/06/my-symfony-dockerfile.html">My Symfony Dockerfile</a>,
+  and <a href="/2025/08/06/my-symfony-makefile.html">My Symfony Makefile</a>.</p>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<blockquote>
+  <p>💻 Source code:
+  * <a href="https://github.com/pyricau/bisouland/tree/4.0.0">Before our changes</a>
+  * <a href="https://github.com/pyricau/bisouland/tree/4.0.6">After containerisation</a></p>
+</blockquote>
+
+<p><img alt="BisouLand screenshot" src="/images/xl-1-bisouland-screenshot.png" width="100%" /></p>
+
+<p>And we did it! now by typing:</p>
+
+<pre><code class="console">make build; make up
+</code></pre>
+
+<p>We get BisouLand running live, 20 years after its conception.</p>
+
+<p>You can visit it there: http://localhost:8080/accueil.html.</p>
+
+<blockquote>
+  <p>⁉️ <em>What do you mean it doesn't work? It works on my machine!</em></p>
+</blockquote>
+]]></content>
+        </entry>
+    </feed>

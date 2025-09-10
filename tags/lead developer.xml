@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-09-10T10:14:49+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[My role as a Lead PHP Engineer]]></title>
+            <link href="/2024/12/09/my-role-as-a-lead-php-engineer.html"/>
+            <updated>2024-12-09T00:00:00+00:00</updated>
+            <id>/2024/12/09/my-role-as-a-lead-php-engineer.html</id>
+            <content type="html"><![CDATA[<h2 id="about-me">About me</h2>
+
+<p>In September 2014, I left SensioLabs (the creator of the Symfony Framework)
+to work as a PHP/Symfony Developer at Foodity, a London start-up that created
+a service allowing people to add ingredients from online recipes to the basket
+of the retailer of their choice.</p>
+
+<p>After 9 months, I pitched an idea to the CEO: we had a platform that
+theoretically allowed us to add <em>ANY</em> product to the basket, not just food
+items. We called it Smart Product.</p>
+
+<p>So I was given the opportunity to build a Proof of Concept. Once completed and
+launched it proved successful and was promoted "Lead PHP Engineer" in charge
+of a small team to develop it further.</p>
+
+<p>And so in June 2015, Foodity pivoted and became Constant Commerce, with Smart
+Product being one of its main product.</p>
+
+<p>Later, in August 2018, the start-up pivoted again and became Constant.Co: my
+team and I were given the responsibility to design and develop the API for its
+new main product: Landing Space.</p>
+
+<p>This article is about my role as a Lead PHP Engineer during that time, and what
+my job and responsibilities were about, on a day to day basis.</p>
+
+<h2 id="responsibilities">Responsibilities</h2>
+
+<p>As a lead developer, my responsibilities were:</p>
+
+<ul>
+<li>Develop the different endpoints using PHP, Symfony and PostgreSQL</li>
+<li>Lead, mentor, and manage a team of backend developers (junior and senior)</li>
+<li>Ensure code quality, maintainability, and best practices through
+code reviews, testing (TDD), and continuous integration processes</li>
+<li>Oversee the design, development and deployment of the backend APIs</li>
+<li>Collaborate with cross-functional teams, including Sales, Product,
+Frontend, Other API teams, QA, Content and DevOps</li>
+</ul>
+
+<h2 id="agile-methodology">Agile Methodology</h2>
+
+<p>The company as a whole would work through Cycles: each Cycle is 6 week long,
+and contains 3 sprints (2 week sprints).</p>
+
+<p>Prior to the Cycle (ie during the previous cycle), the CEO, Sales and Product
+would flesh out a milestone to achieve. Meetings between the CEO, Sales,
+Product, Technical Leads and QA would be held to identify the user stories and
+their acceptance criteria.</p>
+
+<p>As a Lead Developer, my role in this meeting was to assess the feasibility of
+the features described, evaluate how the new requirements would affect the
+existing code base (ie is this already implemented, management of the technical
+debt, etc) and provide technical guidance.</p>
+
+<p>Architecture meetings between Product, Technical Leads and QA would be held to
+write technical specifications.</p>
+
+<p>As a Lead Developer, my role in this meeting was to collaborate with other
+teams on how to best integrate the different systems, document the
+requirements, identify and resolve performance bottlenecks, security
+vulnerabilities, and other technical issues.</p>
+
+<p>When the Cycle starts, so does the first Sprint: a Sprint Planning meeting is
+held between Product, the technical teams and QA, where User Stories are picked
+from the backlog and given an estimated Complexity Points, and assigned to
+developers. Once the Team Capacity is reached, based on previous Velocity, then
+the development can start.</p>
+
+<h2 id="test-driven-development">Test Driven Development</h2>
+
+<p>I'd start by picking a ticket and moving it to "In Progress".</p>
+
+<p>I'd then write an integration test that fits to one of the User Story's
+Acceptance Criteria. Usually the first test is about a "Happy Scenario": what
+we expect. following tests would be about "Unhappy Scenario" and trying to
+identify edge cases. Then run them to make sure they fails for the right
+reasons (ie because the code isn't written yet).</p>
+
+<p>Next I'd write a unit test. Run it to make sure it fails for the right reason.</p>
+
+<p>After that I'd write the code for that test. And run the test suite to make
+sure it fulfils the new requirements without breaking the previous ones.</p>
+
+<p>Once the tests pass, I can add new scenarios to my test suite, and start
+the process again, until everything is covered, and only then I'd also consider
+refactoring the code to ensure the maintainability of the project.</p>
+
+<p>Finally, I can commit my work with a detailed message, push, create a
+Pull Request and assign it to someone for Code Review.</p>
+
+<p>The ticket can now be moved to "Code Review".</p>
+
+<p>I take this opportunity to check if there are any open Pull Requests waiting
+for me to review them.</p>
+
+<h2 id="code-review">Code Review</h2>
+
+<p>First thing I do when reviewing a Pull Request is check the corresponding
+ticket to get familiar with the problem that it tries to solve.</p>
+
+<p>I'd then pull the code to my local machine, execute the test suite and
+launch the application to navigate it and try the feature first hand.</p>
+
+<p>Next, I have a look at the code, with the objective to answer these three
+questions:</p>
+
+<ul>
+<li>does the code work?</li>
+<li>does the code make sense?</li>
+<li>does the code meet the standards?</li>
+</ul>
+
+<p>The purpose of Code Reviews isn't to nitpick or force what you'd have done
+instead, but to help your co-worker:</p>
+
+<ul>
+<li>spot errors early</li>
+<li>spread the knowledge across the team</li>
+<li>have an opportunity for both of you to learn and improve</li>
+</ul>
+
+<p>There are two kinds of feedback that can be left:</p>
+
+<ul>
+<li>change request, which need to happen in order for the Pull Request to be
+accepted (something is broken)</li>
+<li>suggestions that can optionally be taken into account,</li>
+</ul>
+
+<p>Once the feedback from the first round has been taken into account, other
+rounds of Code Reviews can be done, but to get the feature deployed as early
+as possible it's important to focus these on identifying broken things and
+fixing them (rather than making more suggestions for improvements).</p>
+
+<p>Finally, when the Pull Request is accepted, it can be merged and sent to QA.</p>
+
+<h2 id="mentoring">Mentoring</h2>
+
+<p>As a Lead Developer, one of my responsibility is the mentoring of team members.</p>
+
+<p>One aspect of this was the preparation and delivery of training (Symfony, Git,
+Test Driven Development), but I'd also give (and encourage others to give) some
+presentations or lightning talks on different topics (libraries, practices,
+etc).</p>
+
+<p>But one of my favourite tool was Pair Programming, which proved quite efficient
+when on boarding the junior developer. These would be short sessions, rather
+than whole days spent together, and we'd follow a strict Driver-Navigator rule
+(ie the one with keyboard only writes what they agree to, while the other one
+explains the vision) with regular switching at first, and then on task as we
+became more synchronised.</p>
+]]></content>
+        </entry>
+    </feed>

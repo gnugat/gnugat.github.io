@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-09-10T10:14:49+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[My Dotfiles]]></title>
+            <link href="/2025/08/27/my-dotfiles.html"/>
+            <updated>2025-08-27T00:00:00+01:00</updated>
+            <id>/2025/08/27/my-dotfiles.html</id>
+            <content type="html"><![CDATA[<p>Through the storm of scattered settings, your <a href="https://dotfiles.github.io/">dotfiles</a>
+emerge as the lightning-born shepherds that bind chaos to your will.</p>
+
+<ul>
+<li><a href="#why">Why?</a></li>
+<li><a href="#what-are-dotfiles">What are dotfiles?</a></li>
+<li><a href="#how-to-manage-them">How to manage them?</a></li>
+<li><a href="#my-system">My system</a></li>
+<li><a href="#my-framework">My Framework</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="why%3F">Why?</h2>
+
+<p><a href="https://github.com/gnugat/dotfiles">My dotfiles repository</a> is how I backup,
+restore and synchronise my shell / system preferences and settings.</p>
+
+<p>I felt the need to do so back in 2014, when I had 3 computers
+(personal desktop, personal laptop and work laptop) and wanted to keep the same
+config across the different devices.</p>
+
+<p>I now have one single device, yet this has proven very useful over the years,
+especially any time I upgraded to a new device.</p>
+
+<p>A decade ago, I tried my best to come up with a system that would:</p>
+
+<ul>
+<li>be simple</li>
+<li>be flexible</li>
+<li>stand the test of time</li>
+</ul>
+
+<p>I'm happy to report I was successful in this,
+and I was even able to add cross platform compability (macOS) in 2025.</p>
+
+<h2 id="what-are-dotfiles%3F">What are dotfiles?</h2>
+
+<p>The configuration files for most UNIX tools usually start with a dot (<code>.</code>),
+hence the name "dot files".</p>
+
+<p>Examples of such files are:</p>
+
+<ul>
+<li><code>.bashrc</code>, configuring the bash shell</li>
+<li><code>.vimrc</code>, setting up the powerful IDE</li>
+<li><code>.gitconfig</code>, instructing git about your personal preferences</li>
+</ul>
+
+<h2 id="how-to-manage-them%3F">How to manage them?</h2>
+
+<p>It's only this year that I started researching solutions on how to manage
+dotfiles, in order to add support for macOS. There are so many tools:</p>
+
+<ul>
+<li><a href="https://www.gnu.org/software/stow/">GNU stow</a>, which symlinks the files from your dotfiles repo
+to your home directory</li>
+<li><a href="https://www.chezmoi.io/">chezmoi</a>, which adds templates and password manager support</li>
+<li><a href="https://yadm.io/">yadm</a>, stands for Yet Another Dotfiles Manager,
+is similar to chezmoi but less complex</li>
+<li><a href="https://github.com/nix-community/home-manager">Nix home manager</a>,
+which makes any changes to your configuration idempotent</li>
+</ul>
+
+<p>I got really interested in <a href="https://docs.ansible.com/">Ansible</a>, which promised
+to set up my computers in an automated way.</p>
+
+<p>But then I realise the size of the configuration files were way longer than if
+I did it in a simple bash script. I also didn't like the idea to have to learn,
+and maintain knowledge of yet another tool.</p>
+
+<p>So in the end I decided to stick with what I had set up.
+And cross platform compatibility turned out to be a breeze to implement!</p>
+
+<h2 id="my-system">My system</h2>
+
+<p><a href="https://github.com/gnugat/dotfiles">My dotfile repository</a> follows this file tree structure:</p>
+
+<pre><code>.
+├── &lt;xy&gt;-&lt;package&gt;/
+│   ├── _&lt;package-manager&gt;.sh
+│   ├── config/
+│   ├── install.sh
+│   └── README.md
+└── install.sh
+</code></pre>
+
+<p>The root <code>install.sh</code> script is just here to iterate through each <strong>package</strong>
+sub directories, it'll find the local <code>install.sh</code> there and execute it.</p>
+
+<p>Examples of packages I have there are:</p>
+
+<pre><code>.
+├── 12-bash/
+├── 13-curl/
+├── 14-less/
+├── 21-git/
+├── 22-php/
+├── 23-vim/
+├── 24-tree/
+└── 25-ack/
+</code></pre>
+
+<p>As for an example of what the inside of a package sub directory looks like:</p>
+
+<pre><code>12-bash/
+├── _apt.sh
+├── _brew.sh
+├── config/
+│   ├── bashrc
+│   ├── prompt.sh
+│   └── shopt.sh
+├── install.sh
+└── README.md
+</code></pre>
+
+<p>The role of the package's <code>install.sh</code> script is to:</p>
+
+<ol>
+<li>call the appropriate <code>_&lt;package-manager&gt;.sh</code> script (<code>apt</code> for Ubuntu, <code>brew</code> for macOS)</li>
+<li>copy / symlink the config from the repo to <code>~/.config</code></li>
+<li>execute any additional installation steps (eg install vim plugins, or register Environment Variables, etc)</li>
+</ol>
+
+<p>For instance, here's the <code>install.sh</code> for bash:</p>
+
+<pre><code class="bash">#!/usr/bin/env bash
+# File: /12-bash/install.sh
+# ──────────────────────────────────────────────────────────────────────────────
+# 💲 bash - GNU Bourne-Again SHell
+# ──────────────────────────────────────────────────────────────────────────────
+
+_SSDF_PACKAGE_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]:-$0}")")"
+SSDF_ROOT_DIR="$(realpath "${_SSDF_PACKAGE_DIR}/..")"
+source "${SSDF_ROOT_DIR}/00-_ssdf/functions.sh"
+
+_SSDF_PACKAGE_NAME="bash"
+
+_ssdf_echo_section_title "Installing ${_SSDF_PACKAGE_NAME}..."
+
+## ─────────────────────────────────────────────────────────────────────────────
+## 📦 Call to `./_&lt;package-manager&gt;.sh` script.
+## ─────────────────────────────────────────────────────────────────────────────
+
+_ssdf_select_package_manager
+_ssdf_install_with_package_manager "${_SSDF_PACKAGE_DIR}" "${SSDF_PACKAGE_MANAGER}"
+
+## ─────────────────────────────────────────────────────────────────────────────
+## 🔗 Symbolic links.
+## ─────────────────────────────────────────────────────────────────────────────
+
+mkdir -p "${HOME}/.config/bash"
+cp -i "${_SSDF_PACKAGE_DIR}/config/bashrc" "${HOME}/.bashrc"
+ln -nsf "${_SSDF_PACKAGE_DIR}/config/prompt.sh" "${HOME}/.config/bash/prompt.sh"
+ln -nsf "${_SSDF_PACKAGE_DIR}/config/shopt.sh" "${HOME}/.config/bash/shopt.sh"
+
+## ─────────────────────────────────────────────────────────────────────────────
+## ➕ Additional config / install
+## ─────────────────────────────────────────────────────────────────────────────
+
+if [ -e "${HOME}/.bashrc" ]; then
+    _ssdf_append_source \
+        "${HOME}/.bashrc" \
+        "${HOME}/.config/shell/common.sh"
+    _ssdf_append_source \
+        "${HOME}/.config/shell/prompt.local.sh" \
+        "${HOME}/.config/bash/prompt.sh"
+fi
+
+_ssdf_echo_success "${_SSDF_PACKAGE_NAME} installed"
+
+## ─────────────────────────────────────────────────────────────────────────────
+## 🧹 Cleaning up local variables
+## ─────────────────────────────────────────────────────────────────────────────
+
+_ssdf_unset_envvars
+</code></pre>
+
+<h2 id="my-framework">My Framework</h2>
+
+<blockquote>
+  <p><strong>Note</strong>: Nothing you need to know or do in this section.
+  But for the curious, here goes nothing!</p>
+</blockquote>
+
+<p>Initially the scripts would use directly commands and bash syntax,
+but in 2025 with the need for cross platform compatibility I've decided to create
+a set of helper functions: they can be found in the
+<a href="https://github.com/gnugat/dotfiles/tree/main/00-_ssdf">ssdf</a> directory
+(SSDF stands for Super Secret DotFiles).</p>
+
+<p>Inside, we can find helpful documentation:</p>
+
+<ul>
+<li>how to use v3 compatible bash arrays,
+<a href="https://apple.stackexchange.com/questions/238278/why-does-os-x-have-bash-v3-2-57">the forever default version on macOS</a></li>
+<li>how to import (source) bash scripts using relative paths</li>
+<li>how BSD (macOS) and GNU (Ubuntu) sed differs</li>
+</ul>
+
+<p>We can also find some cross platform scripts (<code>sed</code> and <code>grep &lt;x&gt; | sed</code>).</p>
+
+<p>And we can find some functions which I use in the different scripts:</p>
+
+<ul>
+<li><code>_ssdf_prepend_path "${HOME}/bin" "${HOME}/.local/bin"</code>:
+Prepends <code>bin</code> and <code>.local/bin</code> to PATH, if they exist and aren't already added</li>
+<li><code>_ssdf_append_envvar ~/.config/shell/envvars.local.sh "ACKRC" "${HOME}/.config/ack/ackrc"</code>:
+Appends to <code>~/.config/shell/envvars.local.sh</code> the <code>ACKRC</code> with <code>~/.config/ack/ackrc</code></li>
+<li><code>_ssdf_unset_envvars</code>:
+<a href="https://www.youtube.com/watch?v=yup8gIXxWDU&amp;t=185s">🗑️ Garbage Collectooooooooooooor~ 🎶🤘</a></li>
+</ul>
+
+<hr />
+
+<p>Last but not least, the <code>quarry</code> (of Creation) folder is a repository of Blocks:
+reusable templates that help bootstrap or extend packages.</p>
+
+<p>Let's say I want to add settings for a new package (eg <a href="https://www.nerdfonts.com/">Nerd Fonts</a>),
+then I'll run:</p>
+
+<pre><code class="console">_SSDF_INPUT_PACKAGE_ID='31' \
+    _SSDF_INPUT_PACKAGE_NAME='nerd-fonts' \
+    _SSDF_INPUT_PACKAGE_EMOJI='🤓' \
+    _SSDF_INPUT_PACKAGE_TITLE='Nerd Fonts' \
+    _SSDF_INPUT_PACKAGE_SHORT_DESCRIPTION='Iconic font aggregator, collection, and patcher.' \
+    bash ~/.dotfiles/00-_ssdf/quarry/0a01-new-package/1.0/install.sh
+</code></pre>
+
+<p>And badabim, badaboom, there's now a <code>31-nerd-fonts</code> folder with skeleton scripts
+and bootstraped <code>README.md</code>.</p>
+
+<p>Fun fact, <code>00-_ssdf/quarry/0a00-new-quarry-block</code> was used to bootstrap <code>00-_ssdf/quarry/0a01-new-package</code>.</p>
+
+<p>This whole Quarry of Creation concept is a thing I've been toying with,
+I'll probably write more about it in the future so stay tuned!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>To sum up, I use a git repository to backup my shell settings, so I can then
+share them accross many devices.</p>
+
+<p>And I also use some plain and simple bash script to restore and install them.</p>
+
+<p>This might seem like a lot, it's been suiting me well for the past decade.
+I hope this can inspire you to do something of your own!</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[My Git Workflow]]></title>
+            <link href="/2025/08/20/my-git-workflow.html"/>
+            <updated>2025-08-20T00:00:00+01:00</updated>
+            <id>/2025/08/20/my-git-workflow.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>:</p>
+  
+  <ol>
+  <li><code>git checkout -b FEAT-4423-my-feature</code> from <code>main</code></li>
+  <li><code>git rebase main</code> to update</li>
+  <li><code>git merge --no-ff feature</code> back in <code>main</code></li>
+  </ol>
+</blockquote>
+
+<p>Wield the crimson blade of version control,
+where every commit carves your legacy into the eternal codex of time.</p>
+
+<p>I wrote about <a href="/2014/12/10/keep-it-simple-and-git.html">my git workflow back in 2014</a>,
+which really was just <a href="https://github.com/jbenet">@jbenet</a>'s
+2013 <a href="https://gist.github.com/jbenet/ee6c9ac48068889b0912">simple git branching model</a>.</p>
+
+<p>I very much like this workflow as I still use it, a decade after!</p>
+
+<p>In this article, we'll explore some of the subtleties I've discovered along the way.</p>
+
+<ul>
+<li><a href="#branch-out-of-main">Branch out of main</a></li>
+<li><a href="#rebase-to-update">Rebase to update</a></li>
+<li><a href="#merge-back-in-main">Merge back in main</a></li>
+</ul>
+
+<h2 id="branch-out-of-main">Branch out of main</h2>
+
+<p>Whenever a change (feature, bug fix, etc) needs to be made,
+create a new branch from an up-to-date <code>main</code>:</p>
+
+<pre><code class="console"># Update main
+git checkout main
+git pull --rebase
+
+# Create new branch
+git checkout -b FEAT-4423-my-feature
+</code></pre>
+
+<blockquote>
+  <p><strong>Super Secret Tip 1</strong>: establish a direct relationship between code modifications and project tasks,
+  by including the Ticket ID in your branch name. This will allow:</p>
+  
+  <ul>
+  <li><strong>Automated Integration</strong>: like linking the branch, its commits, and its Pull Request
+  to the ticket, enabling synchronisation between the ticket and the pull request status,
+  as well as deployment</li>
+  <li><strong>Traceability and Context</strong>: trace any code change back to its original purpose,
+  which can be helpful when debugging some issues in the future</li>
+  </ul>
+</blockquote>
+
+<h2 id="rebase-to-update">Rebase to update</h2>
+
+<p>Update your branch often with the changes in <code>main</code>:</p>
+
+<pre><code class="console"># Update remote main
+git fetch origin
+
+# Get latest main changes
+git rebase origin/main
+
+# Update remote feature branch
+git push -fu origin FEAT-4423-my-feature
+</code></pre>
+
+<blockquote>
+  <p><strong>Super Secret Tip 2</strong>: Enable git's "Reuse Recorded Resolution" (aka "rerere"),
+  for automatic conflict resolutions: <code>git config --global rerere.enabled true</code>.</p>
+  
+  <p>This won't solve everything for you, but will save you time when the same
+  conflict happens repeatedly.</p>
+</blockquote>
+
+<p>The rebase command will <strong>move</strong> your commits after the ones in the <code>main</code> branch:</p>
+
+<ul>
+<li>it'll be like starting from the latest changes in <code>main</code> as the foundation</li>
+<li>then your commits are replayed one by one, allowing for simpler conflict resolution</li>
+<li>finally this makes your branch history more linear and clear</li>
+</ul>
+
+<p>So for example, instead of having branches look like this:</p>
+
+<pre><code>*   a1b2c3d - Merged in feature-x (pull request #123) (Dev A)
+|\
+| *   e4f5g6h - Merge main into feature-x (Dev A)
+| |\
+* | | b7c8d9e - Merged in hotfix-y (pull request #124) (Dev B)
+|\| |
+| * | f1a2b3c - hotfix for critical bug (Dev B)
+| |/
+|/|
+* |   d4e5f6g - Merged in feature-z (pull request #122) (Dev C)
+|\ \
+| |/
+|/|
+* | h7i8j9k - refactor database layer (Dev C)
+|/
+*
+</code></pre>
+
+<p>With rebase it'd look like that:</p>
+
+<pre><code>*   a1b2c3d - Merged in feature-x (pull request #123) (Dev A)
+|\
+| * e4f5g6h - implement feature x functionality (Dev A)
+|/
+*   b7c8d9e - Merged in hotfix-y (pull request #124) (Dev B)
+|\
+| * f1a2b3c - hotfix for critical bug (Dev B)
+|/
+*   d4e5f6g - Merged in feature-z (pull request #122) (Dev C)
+|\
+| * h7i8j9k - refactor database layer (Dev C)
+|/
+*
+</code></pre>
+
+<p>As you can see each feature is now a clean line of commits,
+making it easy to see what each feature contributed.</p>
+
+<p>The linear, readable history allows us to identify merge commits we might want to
+revert, when we want to roll back a feature.</p>
+
+<blockquote>
+  <p><strong>Super Secret Tip 3</strong>: To display branches with <code>git lg</code>,
+  set the following alias in your git config:</p>
+
+<pre><code>[alias]
+   # Logs history in a graph format with colours:
+   # * abbreviated commit hash in red
+   # * branch and tag names in cyan
+   # * commit title in white
+   # * author name in yellow
+   # * author date in green (format: `Mon, 02 Jan 2006 15:04:05 +0000`)
+   lg  = log --graph --pretty=tformat:'%Cred%h%Creset -%C(cyan)%d %Creset%s (%C(yellow)%an%Creset %Cgreen%aD%Creset)' --abbrev-commit
+</code></pre>
+</blockquote>
+
+<h2 id="merge-back-in-main">Merge back in main</h2>
+
+<p>Once tests pass, code quality checks are green, code review is approved,
+and overall the changes in the branch are production ready,
+you can finally merge it back to main:</p>
+
+<pre><code class="console"># Update main
+git checkout main
+git pull --rebase origin/main
+
+
+# Double check you had the latest changes
+git checkout -
+git rebase main
+## ⚠️ If there are new changes from main, redo all checks (test, code quality, etc)
+
+# Merge your branch in main
+git checkout main
+git merge --no-fast-forward FEAT-4423-my-feature
+</code></pre>
+
+<p>The <code>--no-fast-forward</code> (<code>--no-ff</code>) option will force git to create a merge commit,
+which then makes it simple to undo a feature, using <code>git revert -m 1 &lt;merge-commit-hash&gt;</code>
+(this will create a reverse diff of all the changes introduced by the merge).</p>
+]]></content>
+        </entry>
+    </feed>

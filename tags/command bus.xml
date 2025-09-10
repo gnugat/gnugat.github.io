@@ -1,0 +1,1640 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-09-10T10:14:49+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[PragmatiClean - Command Bus]]></title>
+            <link href="/2017/09/20/pragmaticlean-command-bus.html"/>
+            <updated>2017-09-20T00:00:00+01:00</updated>
+            <id>/2017/09/20/pragmaticlean-command-bus.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: Use Command Bus pattern in your controllers, but drop the bus.</p>
+</blockquote>
+
+<p>The Command Bus pattern relies on 3 types of classes:</p>
+
+<p>The first one is the <em>Command</em>:</p>
+
+<ul>
+<li>its class name should describe the intended action in an imperative manner
+(eg <code>SubmitNewQuote</code>, <code>AssignReviewers</code>, etc)</li>
+<li>it is constructed using the input parameters
+(eg a Request's query/post/header parameters, a Console's input argument/option, etc)</li>
+<li>it applies "simple" validation on those parameters
+(eg parameter type, missing required parameter, etc)</li>
+</ul>
+
+<p>Next is the <em>Command Handler</em>:</p>
+
+<ul>
+<li>it is dedicated to a single Command
+and its class name is its Command's name suffixed with <code>Handler</code></li>
+<li>it applies "complex" validation on the Command's parameters
+(eg existence of referenced resource, existence of duplicates, etc)</li>
+<li>it calls services to apply the actual logic,
+reading it should feel like reading the steps of a use case</li>
+<li>it shouldn't return anything, to allow asynchronous actions</li>
+</ul>
+
+<p>And Finally there's a <em>Command Bus</em> interface allowing us to build Middlewares:</p>
+
+<ol>
+<li>we can have a Command Bus that calls the appropriate Command Handler for the given Command</li>
+<li>we can have a Command Bus that wraps the above one in a database transaction</li>
+<li>we can have a Command Bus that wraps the above ones to log all incoming commands</li>
+<li>we can have a Command Bus that wraps the above ones to check permissions</li>
+<li>etc</li>
+</ol>
+
+<p>Middlewares can do any action we want before and/or after the wrapped Command Bus.
+They can be nested in a specific order, allowing us a fine grained control over
+how the Command will be handled.</p>
+
+<h2 id="clean-code">Clean Code</h2>
+
+<p>Command Bus can be described as a routing for the domain:
+a Command (like a Request) is given to the Command Bus (like a Router)
+which is going to call the appropriate Command Handler (like a Controller).</p>
+
+<p>We can use Command Bus in our controller: create the Command using the
+Request's inputs, and then take the code that would be in the Controller
+and move it in the Command Handler.</p>
+
+<p>This way our Domain logic is decoupled from the Framework. The idea of being
+able to switch an application to a different framework might seem ludicrous
+(when does that ever happen?), but the truth is that two major versions of
+a single framework often feel like having two different frameworks
+(eg symony1 V Symfony2) and in some cases it's even the case for minor versions
+(eg Symfony 2.0 V Symfony 2.1).</p>
+
+<h2 id="pragmatic-code">Pragmatic Code</h2>
+
+<p>The main point of Command Bus is the possibility to create Middlewares, however
+the same thing could be achieved with a good old Event Dispatcher, so let's
+ditch the Bus.</p>
+
+<p>The Routing thing should already be done for us by the framework, and it should
+be true regardless of the framework or version upgrades. So we can safely inject
+Command Handlers directly in Controllers.</p>
+
+<p>Finally, most of the time applications aren't asynchronous. So when it's not
+the case it should be OK for the Command Handler to return a value
+(eg the created or updated resource).</p>
+
+<h2 id="symfony-example">Symfony Example</h2>
+
+<p>Let's put all this wisdom into practice by creating a Controller allowing us to
+submit a code to reset a counter.</p>
+
+<p>First we're going to create the Command, it should contain all the input
+parameters, do a simple validation on it and have an
+intention revealing name describing the action we'd like to do:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/Dharma/Swan/SubmitCode.php;
+
+namespace Dharma\Swan\Code;
+
+class SubmitCode
+{
+    public $code;
+
+    /**
+     * @throws \DomainException If the required "code" parameter is missing
+     * @throws \DomainException If the "code" parameter is not a string
+     */
+    public function __construct($code)
+    {
+        if (null === $code) {
+            throw new \DomainException(
+                'Missing required "code" parameter',
+                422
+            );
+        }
+        if (!is_string($code)) {
+            throw new \DomainException(
+                'Invalid "code" parameter: should be a string',
+                422
+            );
+        }
+        $this-&gt;code = (string) $code;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><em>Note 1</em>: Command class attributes are set in the constructor, and then read
+  in the Command Handler. Since it's never used anywhere else, there's no point
+  creating a getter or setter for it, we can just make those attributes public.</p>
+  
+  <p><em>Note 2</em>: Commands are going to check the parameters type, so there's no need
+  to type hint the constructor arguments (we should allow wrong types so we can
+  throw an exception with a helpful message).</p>
+  
+  <p><em>Note 3:</em> <code>DomainException</code> is the PHP standard exception for application
+  errors (eg not found, forbidden, etc). Here we use the code <code>422</code> which is
+  the HTTP status code for <code>UNPROCESSABLE ENTITY</code> ("validation failed").
+  Our advice is to create custom Application Exceptions that extend
+  <code>DomainException</code> and set the right code (eg <code>ValidationFailed</code> with code 422,
+  <code>NotFound</code> with code 404, etc).</p>
+</blockquote>
+
+<p>The second step is to create the Command Handler. It needs to do more complex
+validation, and the actual logic associated to the Command's intention:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/Dharma/Swan/SubmitCodeHandler.php;
+
+namespace Dharma\Swan;
+
+use Dharma\Swan\Service\CheckCode;
+use Dharma\Swan\Service\ResetCounter;
+
+class SubmitCodeHandler
+{
+    private $checkCode;
+    private $resetCounter;
+
+    public function __construct(
+        CheckCode $checkCode,
+        ResetCounter $resetCounter
+    ) {
+        $this-&gt;checkCode = $checkCode;
+        $this-&gt;resetCounter = $resetCounter;
+    }
+
+    /**
+     * @throws \DomainException If the "code" parameter is not a valid code
+     */
+    public function handle(SubmitCode $submitCode): int
+    {
+        $this-&gt;checkCode-&gt;check(
+            $submitCode-&gt;code
+        );
+        $newCount = $this-&gt;resetCounter-&gt;reset();
+
+        return $newCount;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><em>Note 4</em>: Services with descriptive names are injected and used in the
+  Command Handler, so that reading the <code>handle</code> methods feels like reading the
+  steps of the current use case.</p>
+  
+  <p><em>Note 5</em>: The <code>CheckCode</code> service will throw a 442 exception if the code is
+  invalid (eg if the code is not <code>4 8 15 16 23 42</code>).</p>
+  
+  <p><em>Note 6</em>: We've decided for <code>ResetCounter</code> to return the new count.
+  For an asynchronous application, it wouldn't return anything, neither would
+  the Command Handler.</p>
+</blockquote>
+
+<p>Finally we can use the Command and Command Handler in our Controller:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/Dharma/Swan/Controller/SubmitCodeController.php;
+
+namespace Dharma\Swan\Controller;
+
+use Dharma\Swan\SubmitCode;
+use Dharma\Swan\SubmitCodeHandler;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Request;
+
+class SubmitCodeController
+{
+    private $submitCodeHandler;
+
+    public function __construct(SubmitCodeHandler $submitCodeHandler)
+    {
+        $this-&gt;submitCodeHandler = $submitCodeHandler;
+    }
+
+    /**
+     * @throws \DomainException If the required "code" parameter is missing
+     * @throws \DomainException If the "code" parameter is not a string
+     * @throws \DomainException If the "code" parameter is not a valid code
+     */
+    public function submitCode(Request $request): Response
+    {
+        $newCount = $this-&gt;submitCodeHandler-&gt;handle(new SubmitCode(
+            $request-&gt;request-&gt;get('code')
+        ));
+
+        return new Response(json_encode(['counter' =&gt; $newCount]), 200, [
+            'Content-Type' =&gt; 'application/json',
+        ]);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><em>Note 7</em>: Exceptions should be handled by event listeners, those should log
+  important errors and create an appropriate response.</p>
+  
+  <p><em>Note 8</em>: Some controllers have more than one action meaning they'd be
+  injected with more than one Command Handler, however only one will be called
+  per Request. Since Symfony 3.3 <a href="https://symfony.com/blog/new-in-symfony-3-3-service-locators">Service Locators</a>
+  can be injected so that the controller can only access the listed Command
+  Handlers, and only one Command Handler will actually be instantiated.
+  Before Symfony 3.3, the Container should be injected (same effect, but all
+  services are accessible).</p>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Command Bus allows us to decouple our application logic from the framework,
+protecting us from Backward Compability Breaking changes.</p>
+
+<p>However since the Bus can be replaced by Event Listeners, we can simply drop it
+and inject the Command Handlers directly in Controllers. If our application
+isn't asynchronous, then Command Handlers should be able to return values.</p>
+
+<p>So our PragmatiClean Command Bus is simply a Command and Command Handler pair
+for each Use Case in our application (so one pair per Controller action).</p>
+
+<blockquote>
+  <p>For more resources one the Command Bus design pattern, check these links:</p>
+  
+  <ul>
+  <li><a href="http://shawnmc.cool/command-bus">CommandBus</a>
+  by <a href="https://twitter.com/ShawnMcCool">Shawn McCool</a></li>
+  <li><a href="https://www.reddit.com/r/PHP/comments/29a6qz/what_am_i_missing_with_this_whole_command_bus/">What am I missing with this whole command bus (reddit question)</a></li>
+  <li><a href="http://php-and-symfony.matthiasnoback.nl/tags/SimpleBus/">A wave of command buses (series)</a>
+  by <a href="https://twitter.com/matthiasnoback">Matthias Noback</a></li>
+  <li><a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avoid the Mud (slides)</a>
+  by <a href="https://twitter.com/mr_r_miller">Richard Miller</a></li>
+  <li><a href="http://verraes.net/2015/01/messaging-flavours/">Messaging Flavours</a>
+  and <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command, Model validation</a>
+  and also <a href="http://verraes.net/2014/05/functional-foundation-for-cqrs-event-sourcing/">Functional Foundation for CQRS/ES</a>
+  by <a href="https://twitter.com/mathiasverraes">Mathias Verraes</a></li>
+  <li><a href="http://tactician.thephpleague.com/">Tactician</a>, a simple Command Bus library for PHP</li>
+  <li><a href="http://www.udidahan.com/2009/12/09/clarified-cqrs/">Clarified CQRS</a>
+  by <a href="https://twitter.com/UdiDahan">Udi Dahan</a></li>
+  </ul>
+  
+  <p>Also here are some usage examples, with code and everything:</p>
+  
+  <ul>
+  <li><a href="https://gnugat.github.io/2016/06/15/mars-rover-introduction.html">Mars Rover</a>:
+  an application coded chapter after chapter, using this design pattern</li>
+  <li><a href="https://gnugat.github.io/2016/03/24/ultimate-symfony-api-example.html">The Ultimate Developer Guide to Symfony</a>
+  Examples on how to create an API endpoint, a full stack web page and a console command
+  with Symfony and this design pattern</li>
+  </ul>
+</blockquote>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Towards CQRS, Command Bus]]></title>
+            <link href="/2016/05/11/towards-cqrs-command-bus.html"/>
+            <updated>2016-05-11T00:00:00+01:00</updated>
+            <id>/2016/05/11/towards-cqrs-command-bus.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>: The <code>Command Bus</code> pattern can help you get the CQRS "Command" part right.</p>
+</blockquote>
+
+<p>By following the <a href="http://martinfowler.com/bliki/CQRS.html">Command / Query Responsibility Segregation</a>
+(CQRS) principle, we separate "write" logic from "read" logic.
+This can be applied on many levels, for example on the macro one we can have a
+single "Publisher" server (write) with many "Subscribers" servers (read), and on
+a micro level we can use this principle to keep our controllers small.</p>
+
+<p>However, transitioning from a regular mindset to a CQRS one can be difficult.</p>
+
+<p>In this article, we'll explore the "Command Bus" pattern, to help us to get the
+Command (write) part right.</p>
+
+<h2 id="starting-example">Starting Example</h2>
+
+<p>Let's take the following code for our example:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Controller/ProfileCreationController.php;
+
+namespace AppBundle\Controller;
+
+use AppBundle\Entity\Profile;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationController extends Controller
+{
+    /**
+     * @Route("/api/v1/profiles")
+     * @Method({"POST"})
+     */
+    public function createProfileAction(Request $request)
+    {
+        $em = $this-&gt;get('doctrine.orm.entity_manager');
+
+        $name = $request-&gt;request-&gt;get('name');
+        if (null === $name) {
+            return new JsonResponse(array('error' =&gt; 'The "name" parameter is missing from the request\'s body'), 422);
+        }
+        if (null !== $em-&gt;getRepository('AppBundle:Profile')-&gt;findOneByName($name)) {
+            return new JsonResponse(array('error' =&gt; 'The name "'.$name.'" is already taken'), 422);
+        }
+        $createdProfile = new Profile($name);
+        $em-&gt;persist($createdProfile);
+        $em-&gt;flush();
+
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+    }
+}
+</code></pre>
+
+<p>It's an endpoint allowing us to create new "profiles". All the logic is done in
+the Controller:</p>
+
+<ul>
+<li>we get a <code>name</code> parameter from the <code>Request</code></li>
+<li>we validate it (is it missing? Does it duplicate an existing name?)</li>
+<li>we create a new <code>Profile</code> out of it</li>
+<li>we persist it</li>
+<li>we return it as JSON in the <code>Response</code></li>
+</ul>
+
+<h2 id="command-bus">Command Bus</h2>
+
+<p>The Command Bus pattern relies on 3 types of classes:</p>
+
+<ul>
+<li><code>Command</code>: encapsulate our input, does simple validation on it</li>
+<li><code>CommandHandler</code>: dedicated to a single <code>Command</code>, does the actual logic</li>
+</ul>
+
+<p>Finally there's a <code>CommandBus</code> interface allowing us to build <code>Middlewares</code>:</p>
+
+<ol>
+<li>we can have a <code>CommandBus</code> that calls the appropriate <code>CommandHandle</code> for the given <code>Command</code></li>
+<li>we can have a <code>CommandBus</code> that wraps the above one in a database transaction</li>
+<li>we can have a <code>CommandBus</code> that wraps the above ones to logs all incoming commands</li>
+<li>we can have a <code>CommandBus</code> that wraps the above ones to check permissions</li>
+<li>etc</li>
+</ol>
+
+<p><code>Middlewares</code> can do any action we want before and/or after the wrapped <code>CommandBus</code>.
+They can be nested in a specific order, allowing us a fine grained control over
+how the <code>Command</code> will be handled.</p>
+
+<h2 id="using-command-bus-in-the-controller">Using Command Bus in the controller</h2>
+
+<p>Using our previous example, we're going to create the <code>Command</code> first. It needs
+to contain all the input parameters, do a simple validation on it and have an
+intention revealing name describing the action we'd like to do:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Profile/CreateNewProfile.php;
+
+namespace AppBundle\Profile;
+
+class CreateNewProfile
+{
+    public $name;
+
+    public function __construct($name)
+    {
+        if (null === $name) {
+            throw new \DomainException('Missing required "name" parameter');
+        }
+        $this-&gt;name = (string) $name;
+    }
+}
+</code></pre>
+
+<p>Unit tests can be created for Commands, to document their input requirements:</p>
+
+<pre><code class="php">&lt;?php
+// File: tests/AppBundle/Profile/CreateNewProfileTest.php;
+
+namespace tests\AppBundle\Profile;
+
+use AppBundle\Profile\CreateNewProfile;
+
+class CreateNewProfileTest extends \PHPUnit_Framework_TestCase
+{
+    const NAME = 'Arthur Dent';
+
+    /**
+     * @test
+     */
+    public function it_has_a_name()
+    {
+        $createNewProfile = new CreateNewProfile(self::NAME);
+
+        self::assertSame(self::NAME, $createNewProfile-&gt;name);
+    }
+
+    /**
+     * @test
+     */
+    public function it_cannot_miss_a_name()
+    {
+        $this-&gt;expectException(\DomainException::class);
+        $createNewProfile = new CreateNewProfile(null);
+    }
+}
+</code></pre>
+
+<p>The second step is to create the <code>CommandHandler</code>. It needs to do more complex
+validation, and the actual logic associated to the <code>Command</code>'s intention:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Profile/CreateNewProfileHandler.php;
+
+namespace AppBundle\Profile;
+
+use AppBundle\Entity\Profile;
+use Doctrine\ORM\EntityManager;
+
+class CreateNewProfileHandler
+{
+    private $entityManager;
+
+    public function __construct(EntityManager $entityManager)
+    {
+        $this-&gt;entityManager = $entityManager;
+    }
+
+    public function handle(CreateNewProfile $createNewProfile)
+    {
+        if (null !== $this-&gt;entityManager-&gt;getRepository('AppBundle:Profile')-&gt;findOneByName($createNewProfile-&gt;name)) {
+            throw new \DomainException("Invalid \"name\" parameter: \"$name\" already exists and duplicates are not allowed");
+        }
+        $createdProfile = new Profile($name);
+        $em-&gt;persist($createdProfile);
+        $em-&gt;flush();
+
+        return $createdProfile
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: a unit test can be created for CommandHandlers, to document use cases
+  and their edge cases (happy and unhappy scenario).</p>
+</blockquote>
+
+<p>Finally we can use the Command Bus in our controller:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Controller/ProfileCreationController.php;
+
+namespace AppBundle\Controller;
+
+use AppBundle\Profile\CreateNewProfile;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+
+class ProfileCreationController extends Controller
+{
+    /**
+     * @Route("/api/v1/profiles")
+     * @Method({"POST"})
+     */
+    public function createProfileAction(Request $request)
+    {
+        try {
+            $createdProfile = $this-&gt;get('command_bus')-&gt;handle(new CreateNewProfile(
+                $request-&gt;request-&gt;get('name')
+            ));
+        } catch (\DomainException $e) {
+            return new JsonResponse(array('error' =&gt; $e-&gt;getMessage()), 422);
+        }
+
+        return new JsonResponse($createdProfile-&gt;toArray(), 201);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Exceptions could be handled in an event listener.</p>
+</blockquote>
+
+<h2 id="refactoring-the-command-handler">Refactoring the Command Handler</h2>
+
+<p>Our Command Handler is tightly coupled to Doctrine. We can <a href="/2015/10/12/decouple-from-libraries.html">decouple from libraries</a>
+by introducing interfaces:</p>
+
+<pre><code class="php">&lt;?php
+// File: src/AppBundle/Profile/CreateNewProfileHandler.php;
+
+namespace AppBundle\Profile;
+
+use AppBundle\Profile\Service\CheckProfileNameDuplicates;
+use AppBundle\Profile\Service\SaveNewProfile;
+
+class CreateNewProfileHandler
+{
+    private $checkProfileNameDuplicates;
+    private $saveNewProfile;
+
+    public function __construct(
+        CheckProfileNameDuplicates $checkProfileNameDuplicates,
+        SaveNewProfile $saveNewProfile
+    ) {
+        $this-&gt;checkProfileNameDuplicates = $checkProfileNameDuplicates;
+        $this-&gt;saveNewProfile = $saveNewProfile;
+    }
+
+    public function handle(CreateNewProfile $createNewProfile)
+    {
+        if (true !== $this-&gt;checkProfileNameDuplicates-&gt;check($createNewProfile-&gt;name)) {
+            throw new \DomainException("Invalid \"name\" parameter: \"$name\" already exists and duplicates are not allowed");
+        }
+        $newProfile = new Profile($name); // Entity moved to Profile namespace
+        $this-&gt;saveNewProfile-&gt;save($newProfile);
+
+        return $newProfile
+    }
+}
+</code></pre>
+
+<p>In this way, it becomes much easier to write a unit test:</p>
+
+<pre><code class="php">&lt;?php
+// File: tests/AppBundle/Profile/CreateNewProfileHandlerTest.php;
+
+namespace tests\AppBundle\Profile;
+
+use AppBundle\Profile\CreateNewProfile;
+use AppBundle\Profile\CreateNewProfileHandler;
+use AppBundle\Profile\Profile;
+use AppBundle\Profile\Service\CheckProfileNameDuplicates;
+use AppBundle\Profile\Service\SaveNewProfile;
+use Prophecy\Argument;
+
+class CreateNewProfileHandlerTest extends \PHPUnit_Framework_TestCase
+{
+    const NAME = 'Arthur Dent';
+
+    private $checkProfileNameDuplicates;
+    private $saveNewProfile;
+    private $createNewProfileHandler;
+
+    protected function setUp()
+    {
+        $this-&gt;checkProfileNameDuplicates = $this-&gt;prophesize(CheckProfileNameDuplicates::class);
+        $this-&gt;saveNewProfile = $this-&gt;prophesize(SaveNewProfile::class);
+
+        $this-&gt;createNewProfileHandler = new CreateNewProfileHandler(
+            $this-&gt;checkProfileNameDuplicates-&gt;reveal(),
+            $this-&gt;saveNewProfile-&gt;reveal()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_creates_new_profiles()
+    {
+        $createNewProfile = new CreateNewProfile(self::NAME);
+
+        $this-&gt;checkProfileNameDuplicates-&gt;check(self::NAME)-&gt;willReturn(false);
+        $this-&gt;saveNewProfile-&gt;save(Argument::type(Profile::class))-&gt;shouldBeCalled();
+
+        self::assertType(
+            Profile::class,
+            $this-&gt;createNewProfileHandler-&gt;handle($createNewProfile)
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_cannot_create_profiles_with_duplicated_name()
+    {
+        $createNewProfile = new CreateNewProfile(self::NAME);
+
+        $this-&gt;checkProfileNameDuplicates-&gt;check(self::NAME)-&gt;willReturn(true);
+        $this-&gt;saveNewProfile-&gt;save(Argument::type(Profile::class))-&gt;shouldNotBeCalled();
+
+        $this-&gt;expectException(\DomainException::class);
+        $this-&gt;createNewProfileHandler-&gt;handle($createNewProfile);
+    }
+}
+</code></pre>
+
+<p>Doctrine implementations are easy to write, for example <code>CheckProfileNameDuplicates</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\Profile\Bridge;
+
+use AppBundle\Profile\Service\CheckProfileNameDuplicates;
+use Doctrine\ORM\EntityManager;
+
+class DoctrineCheckProfileNameDuplicates implements CheckProfileNameDuplicates
+{
+    private $entityManager;
+
+    public function __construct($entityManager)
+    {
+        $this-&gt;entityManager = $entityManager;
+    }
+
+    public function check(name)
+    {
+        return null === $this-&gt;entityManager-&gt;getRepository('AppBundle:Profile')-&gt;findOneByName($name));
+    }
+}
+</code></pre>
+
+<h2 id="to-sum-up">To sum up</h2>
+
+<p>With the Command Bus pattern, we've reduced our controller to the following
+responsibilities:</p>
+
+<ul>
+<li>Create a Command by extracting input parameters from the Request</li>
+<li>Create a Response by using the Command Handler returned value (via the Command Bus)</li>
+</ul>
+
+<p>Our Command allows us to make explicit all input parameters and their requirements
+(thanks to its unit tests, and by doing a simple validation on them).</p>
+
+<p>Our Command Handler allows us to make explicit the actual logic with and to
+highlight its edge cases in tests.</p>
+
+<p>While refactoring our controller, we took the opportunity to use the Dependency
+Inversion Principle to decouple our code from thrid party libraries (Doctrine).
+This was simply done by introducing interfaces, which have the benefit to provide
+more explicit names.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The best way to learn how to get the Command part in CQRS right is to start using
+the Command Bus pattern. And to abuse it, by using it everywhere and returning
+values from Command Handlers.</p>
+
+<p>Once we feel more at ease with the Command Bus pattern, we can start considering
+alternative uses:</p>
+
+<ul>
+<li>do we really need a Command Bus? For example do we use any Middlewares?</li>
+<li>do we really need to return a value from the Command Handler? For example with asynchronous commands?</li>
+<li>do we really need to use it everywhere? For example in "read" endpoints?</li>
+</ul>
+
+<p>We might realize that ditching the Command Bus and keeping the Command Handler
+and the Command can still be beneficial. We also might realize that Commands don't
+solve our "read" logic...</p>
+
+<p>In the next article, we'll experiment with a "Search Engine" pattern to try to
+get the Query part of CQRS right!</p>
+
+<p>In the meantime, here's some resources related to Command Bus and CQRS:</p>
+
+<ul>
+<li><a href="http://shawnmc.cool/command-bus">CommandBus</a>
+by <a href="https://twitter.com/ShawnMcCool">Shawn McCool</a></li>
+<li><a href="https://www.reddit.com/r/PHP/comments/29a6qz/what_am_i_missing_with_this_whole_command_bus/">What am I missing with this whole command bus (reddit question)</a></li>
+<li><a href="http://php-and-symfony.matthiasnoback.nl/tags/SimpleBus/">A wave of command buses (series)</a>
+by <a href="https://twitter.com/matthiasnoback">Matthias Noback</a></li>
+<li><a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avoid the Mud (slides)</a>
+by <a href="https://twitter.com/mr_r_miller">Richard Miller</a></li>
+<li><a href="http://verraes.net/2015/01/messaging-flavours/">Messaging Flavours</a>
+and <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command, Model validation</a>
+and also <a href="http://verraes.net/2014/05/functional-foundation-for-cqrs-event-sourcing/">Functional Foundation for CQRS/ES</a>
+by <a href="https://twitter.com/mathiasverraes">Mathias Verraes</a></li>
+<li><a href="http://tactician.thephpleague.com/">Tactician</a>, a simple Command Bus library for PHP</li>
+<li><a href="http://www.udidahan.com/2009/12/09/clarified-cqrs/">Clarified CQRS</a>
+by <a href="https://twitter.com/UdiDahan">Udi Dahan</a></li>
+</ul>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Decouple from Frameworks]]></title>
+            <link href="/2015/09/30/decouple-from-frameworks.html"/>
+            <updated>2015-09-30T00:00:00+01:00</updated>
+            <id>/2015/09/30/decouple-from-frameworks.html</id>
+            <content type="html"><![CDATA[<p>Frameworks solve infrastructure problems, for example how to create a HTTP or CLI application.
+While necessary, those concerns don't add any value to your project: the business
+need will not be fulfilled by creating an empty application.</p>
+
+<p>As always, different responsibilities mean also different reasons to change: frameworks
+have a history of Backward Compatibility (BC) breaks and they do so regardless of your
+project.</p>
+
+<p>Take for example <a href="http://symfony.com/">Symfony</a>: it only started to follow <a href="http://semver.org/">Semantic Versioning</a>
+from version 2.3. The upgrade to version 3 has been made easier by allowing developers
+to know what was deprecated, but the removal of those features still means a lot of
+work in your application.
+The arrival of the <a href="http://www.php-fig.org/psr/psr-7/">new standard PSR-7</a> brings
+a lot of questions on the future of Symfony: for now it <a href="http://symfony.com/blog/psr-7-support-in-symfony-is-here">allows to choose</a>
+between <code>symfony/http-foundation</code> and <code>psr/http-message</code>, but if Symfony doesn't
+want to fall back behind (<a href="http://framework.zend.com/blog/announcing-the-zend-framework-3-roadmap.html">Zend 3 is fully based on PSR-7</a>)
+it might have to introduce another big BC break (event listeners with the Request
+and Response <a href="http://evertpot.com/psr-7-issues/">are not possible the way they are now with PSR-7</a>).</p>
+
+<p>Migrating Symfony applications (from symfony1, from symfony 2.0, etc) is so hard
+that it is a business on its own.</p>
+
+<p>Does that mean that we shouldn't use any frameworks? Should we just don't care and
+embrace fully frameworks?</p>
+
+<p>This article will explain how to avoid both extremes, by decoupling from the framework.
+It can be done by restricting the framework to its infrastructure responsibilities
+(HTTP, CLI), by only using its entry points (Controller, Command) and by using
+the Command Bus pattern.</p>
+
+<h2 id="fortune%3A-our-example">Fortune: our example</h2>
+
+<p>We're going to build part of a <a href="https://en.wikipedia.org/wiki/Fortune_%28Unix%29">fortune</a>
+application for our example, more precisely we're going to build an endpoint allowing us to
+submit quotes.</p>
+
+<p>To do so, we'll bootstrap a symfony application using the <a href="https://github.com/gnugat/symfony-empty-edition">Empty Edition</a>:</p>
+
+<pre><code>composer create-project gnugat/symfony-empty-edition fortune
+cd fortune
+</code></pre>
+
+<p>We'll need to install our test frameworks:</p>
+
+<pre><code>composer require --dev phpunit/phpunit
+composer require --dev phpspec/phpspec
+</code></pre>
+
+<p>Then add them to our test script:</p>
+
+<pre><code>#!/usr/bin/env sh
+
+# bin/test.sh
+
+echo ''
+echo '// Building test environment'
+
+rm -rf app/cache/test app/logs/*test.log
+composer --quiet --no-interaction install --optimize-autoloader  &gt; /dev/null
+php app/console --env=test --quiet cache:clear
+
+echo ''
+echo ' [OK] Test environment built'
+echo ''
+
+vendor/bin/phpspec --format=dot &amp;&amp; vendor/bin/phpunit
+</code></pre>
+
+<p>Finally we'll configure PHPUnit:</p>
+
+<pre><code class="xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+
+&lt;!-- phpunit.xml.dist --&gt;
+&lt;!-- http://phpunit.de/manual/current/en/appendixes.configuration.html --&gt;
+&lt;phpunit backupGlobals="false" colors="true" syntaxCheck="false" bootstrap="app/bootstrap.php"&gt;
+    &lt;testsuites&gt;
+        &lt;testsuite name="System Tests"&gt;
+            &lt;directory&gt;tests&lt;/directory&gt;
+        &lt;/testsuite&gt;
+    &lt;/testsuites&gt;
+&lt;/phpunit&gt;
+</code></pre>
+
+<h2 id="request-listener">Request listener</h2>
+
+<p>Our endpoint will receive JSON encoded content. PHP does not populate <code>$_POST</code> with
+this data, causing an empty <code>$request-&gt;request</code>. We can create an event listener
+to fix this issue:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/EventListener/JsonRequestListener.php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+class JsonRequestListener
+{
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        $request = $event-&gt;getRequest();
+        $hasBeenSubmited = in_array($request-&gt;getMethod(), array('PATCH', 'POST', 'PUT'), true);
+        $isJson = (1 === preg_match('#application/json#', $request-&gt;headers-&gt;get('Content-Type')));
+        if (!$hasBeenSubmited || !$isJson) {
+            return;
+        }
+        $data = json_decode($request-&gt;getContent(), true);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            $event-&gt;setResponse(new Response('{"error":"Invalid or malformed JSON"}', 400, array('Content-Type' =&gt; 'application/json')));
+        }
+        $request-&gt;request-&gt;add($data ?: array());
+    }
+}
+</code></pre>
+
+<p>This logic is infrastructure related, so it makes sense to keep it in <code>AppBundle</code>.</p>
+
+<p>To enable it, configure it in the Dependency Injection Container:</p>
+
+<pre><code># app/config/services/event_listener.yml
+
+services:
+    app.json_request_listener:
+        class: AppBundle\EventListener\JsonRequestListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+</code></pre>
+
+<p>We also need to make sure files in <code>app/config/services</code> are imported:</p>
+
+<pre><code class="php">&lt;?php
+// app/config/importer.php
+
+use Symfony\Component\Finder\Finder;
+
+$finder = new Finder();
+$files = $finder-&gt;files()-&gt;name('*.yml')-&gt;in(__DIR__.'/services');
+foreach ($files as $file) {
+    $loader-&gt;import($file-&gt;getRealpath());
+}
+</code></pre>
+
+<h2 id="controller">Controller</h2>
+
+<p>Our first step will be to describe how the endpoint should work, with a test:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Controller/QuoteControllerTest.php
+
+namespace tests\AppBundle\Controller;
+
+use AppKernel;
+use PHPUnit_Framework_TestCase;
+use Symfony\Component\HttpFoundation\Request;
+
+class QuoteControllerTest extends PHPUnit_Framework_TestCase
+{
+    private $app;
+
+    protected function setUp()
+    {
+        $this-&gt;app = new AppKernel('test', false);
+        $this-&gt;app-&gt;boot();
+    }
+
+    /**
+     * @test
+     */
+    public function it_submits_a_new_quote()
+    {
+        $headers = array('CONTENT_TYPE' =&gt; 'application/json');
+        $request = Request::create('/v1/quotes', 'POST', array(), array(), array(), $headers, json_encode(array(
+            'quote' =&gt; 'Nobody expects the spanish inquisition',
+        )));
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        self::assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Testing only the status code is called "Smoke Testing" and is a very
+  efficient way to check if the application is broken.
+  Testing the content would be tedious and would make our test fragile as it might change often.</p>
+</blockquote>
+
+<p>Let's run it:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>The tests fail because the controller doesn't exist. Let's fix that:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/QuoteController.php
+
+namespace AppBundle\Controller;
+
+use Acme\Fortune\Quote\SubmitNewQuote;
+use Acme\Fortune\Quote\SubmitNewQuoteHandler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class QuoteController
+{
+    private $submitNewQuoteHandler;
+
+    public function __construct(SubmitNewQuoteHandler $submitNewQuoteHandler)
+    {
+        $this-&gt;submitNewQuoteHandler = $submitNewQuoteHandler;
+    }
+
+    public function submitNewAction(Request $request)
+    {
+        $sumbitNewQuote = new SubmitNewQuote(
+            $request-&gt;request-&gt;get('quote')
+        );
+        $newQuote = $this-&gt;submitNewQuoteHandler-&gt;handle($sumbitNewQuote);
+
+        return new Response(json_encode($newQuote), 201, array('Content-Type' =&gt; 'application/json'));
+    }
+}
+</code></pre>
+
+<p>Now we need to configure the controller as a service:</p>
+
+<pre><code># app/config/services/controller.yml
+
+services:
+    app.quote_controller:
+        class: AppBundle\Controller\QuoteController
+        arguments:
+            - "@app.submit_new_quote_handler"
+</code></pre>
+
+<p>Then we need to configure the route:</p>
+
+<pre><code># app/config/routings/quote.yml
+
+submit_new_quote:
+    path: /v1/quotes
+    defaults:
+        _controller: app.quote_controller:submitNew
+    methods:
+        - POST
+</code></pre>
+
+<p>This file needs to be imported:</p>
+
+<pre><code># app/config/routing.yml
+
+quote:
+    resource: routings/quote.yml
+</code></pre>
+
+<p>Finally we can run the test again:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>It now fails for a different reason: <code>SubmitNewQuote</code> and its handler class don't exist.</p>
+
+<h2 id="command-from-commandbus">Command (from CommandBus)</h2>
+
+<p><code>SubmitNewQuote</code> is a Data Transfer Object (DTO): its responsibility is to wrap
+input parameters in a well named class (in this case a class that describes the action intended).
+It's also the best place to do some basic validation on the input parameters.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: In the Command Bus pattern, <code>SubmitNewQuote</code> would be a Command (different from the CLI Command).</p>
+</blockquote>
+
+<p>We'll write a test for this, but first we'll bootstrap the test class:</p>
+
+<pre><code>vendor/bin/phpspec describe 'Acme\Fortune\Quote\SubmitNewQuote'
+</code></pre>
+
+<p>Now we can decribe the different validation rules:</p>
+
+<pre><code class="php">&lt;?php
+// spec/Acme/Fortune/Quote/SubmitNewQuoteSpec.php
+
+namespace spec\Acme\Fortune\Quote;
+
+use PhpSpec\ObjectBehavior;
+
+class SubmitNewQuoteSpec extends ObjectBehavior
+{
+    const QUOTE = 'Nobody expects the spanish inquisition';
+
+    function it_fails_if_required_quote_parameter_is_missing()
+    {
+        $this-&gt;beConstructedWith(null);
+
+        $this-&gt;shouldThrow('Acme\Fortune\Exception\ValidationFailedException')-&gt;duringInstantiation();
+    }
+
+    function it_fails_if_quote_parameter_is_empty()
+    {
+        $this-&gt;beConstructedWith('');
+
+        $this-&gt;shouldThrow('Acme\Fortune\Exception\ValidationFailedException')-&gt;duringInstantiation();
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Since this class has nothing to do with Symfony, we don't put it in <code>AppBundle</code>.
+  By keeping it in its own namespace, we protect it from framework directory tree changes,
+  for example before <code>AppBundle</code> the norm was <code>Acme\FortuneBundle</code>. We also allow ourselves
+  to move it to another framework (e.g. Laravel, Zend, etc).</p>
+</blockquote>
+
+<p>Let's run the tests:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>It fails because the exception doesn't exist yet:</p>
+
+<pre><code class="php">&lt;?php
+// src/Acme/Fortune/Exception/ValidationFailedException.php
+
+namespace Acme\Fortune\Exception;
+
+class ValidationFailedException extends FortuneException
+{
+}
+</code></pre>
+
+<p>We're making it a sub type of <code>FortuneException</code>: that way we can catch all exceptions
+related to our code (all other exceptions can be considered as Internal Server Errors).</p>
+
+<pre><code class="php">&lt;?php
+// src/Acme/Fortune/Exception/FortuneException.php
+
+namespace Acme\Fortune\Exception;
+
+use DomainException;
+
+class FortuneException extends DomainException
+{
+}
+</code></pre>
+
+<p>Now we need to create the Command:</p>
+
+<pre><code class="php">&lt;?php
+// src/Acme/Fortune/Quote/SubmitNewQuote.php
+
+namespace Acme\Fortune\Quote;
+
+use Acme\Fortune\Exception\ValidationFailedException;
+
+class SubmitNewQuote
+{
+    public function __construct($quote)
+    {
+        if (null === $quote) {
+            throw new ValidationFailedException('Missing required "quote" parameter');
+        }
+        if ('' === $quote) {
+            throw new ValidationFailedException('Invalid "quote" parameter: must not be empty');
+        }
+        $this-&gt;quote = (string) $quote;
+    }
+}
+</code></pre>
+
+<p>Running the tests again:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>Everything seems fine.</p>
+
+<h2 id="exception-listener">Exception listener</h2>
+
+<p>Instead of catching exceptions in our controllers we can create an event listener:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/EventListener/FortuneExceptionListener.php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+class FortuneExceptionListener
+{
+    public function onKernelException(GetResponseForExceptionEvent $event)
+    {
+        $exception = $event-&gt;getException();
+        if (!$exception instanceof FortuneException) {
+            return;
+        }
+        $content = json_encode(array('error' =&gt; $exception-&gt;getMessage()));
+        $statusCode = Response::HTTP_UNPROCESSABLE_ENTITY;
+        $event-&gt;setResponse(new Response($content, $statusCode, array('Content-Type' =&gt; 'application/json')));
+    }
+}
+</code></pre>
+
+<p>This lowers the risk of forgetting to catch an exception and it also keeps our controller slim.</p>
+
+<p>Let's enable it in the DIC:</p>
+
+<pre><code># app/config/services/event_listener.yml
+
+services:
+    app.fortune_exception_listener:
+        class: AppBundle\EventListener\FortuneExceptionListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+
+    app.json_request_listener:
+        class: AppBundle\EventListener\JsonRequestListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+</code></pre>
+
+<h2 id="command-handler">Command Handler</h2>
+
+<p><code>SubmitNewQuoteHandler</code>'s responsibility is to validate <code>SubmitNewQuote</code> data against
+business rules (e.g. no quote duplicates, author must exist, etc) and to call the
+appropriate services to process it.
+Reading its code feels like reading the details of a use case:</p>
+
+<blockquote>
+  <p>To handle the submission of a new quote,
+  we need to generate a unique identifier
+  and then we need to save the new quote.</p>
+</blockquote>
+
+<p>Let's bootstrap its test:</p>
+
+<pre><code>vendor/bin/phpspec describe 'Acme\Fortune\Quote\SubmitNewQuoteHandler'
+</code></pre>
+
+<p>Then edit the test:</p>
+
+<pre><code class="php">&lt;?php
+// spec/Acme/Fortune/Quote/SubmitNewQuoteHandlerSpec.php
+
+namespace spec\Acme\Fortune\Quote;
+
+use Acme\Fortune\Quote\SubmitNewQuote;
+use Acme\Fortune\Quote\Service\SaveNewQuote;
+use Acme\Fortune\Quote\Service\UniqueIdentifierGenerator;
+use PhpSpec\ObjectBehavior;
+
+class SubmitNewQuoteHandlerSpec extends ObjectBehavior
+{
+    const ID = '921410e8-eb98-4f99-ba98-055d46980511';
+    const QUOTE = 'Nobody expects the spanish inquisition!';
+
+    function let(SaveNewQuote $saveNewQuote, UniqueIdentifierGenerator $uniqueIdentifierGenerator)
+    {
+        $this-&gt;beConstructedWith($saveNewQuote, $uniqueIdentifierGenerator);
+    }
+
+    function it_saves_new_quote(SaveNewQuote $saveNewQuote, UniqueIdentifierGenerator $uniqueIdentifierGenerator)
+    {
+        $submitNewQuote = new SubmitNewQuote(self::QUOTE);
+        $quote = array(
+            'id' =&gt; self::ID,
+            'quote' =&gt; self::QUOTE,
+        );
+
+        $uniqueIdentifierGenerator-&gt;generate()-&gt;willReturn(self::ID);
+        $saveNewQuote-&gt;save($quote)-&gt;shouldBeCalled();
+
+        $this-&gt;handle($submitNewQuote)-&gt;shouldBe($quote);
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>After generating interfaces for <code>SaveNewQuote</code> and <code>UniqueIdentifierGenerator</code>
+and after bootstrapping the code for <code>SubmitNewQuoteHandler</code>, the test will fail
+because we need to complete it:</p>
+
+<pre><code class="php">&lt;?php
+// src/Acme/Fortune/Quote/SubmitNewQuoteHandler.php
+
+namespace Acme\Fortune\Quote;
+
+use Acme\Fortune\Quote\Service\SaveNewQuote;
+use Acme\Fortune\Quote\Service\UniqueIdentifierGenerator;
+
+class SubmitNewQuoteHandler
+{
+    private $saveNewQuote;
+    private $uniqueIdentifierGenerator;
+
+    public function __construct(SaveNewQuote $saveNewQuote, UniqueIdentifierGenerator $uniqueIdentifierGenerator)
+    {
+        $this-&gt;saveNewQuote = $saveNewQuote;
+        $this-&gt;uniqueIdentifierGenerator = $uniqueIdentifierGenerator;
+    }
+
+    public function handle(SubmitNewQuote $sumbitNewQuote)
+    {
+        $quote = array(
+            'id' =&gt; $this-&gt;uniqueIdentifierGenerator-&gt;generate(),
+            'quote' =&gt; $sumbitNewQuote-&gt;quote,
+        );
+        $this-&gt;saveNewQuote-&gt;save($quote);
+
+        return $quote;
+    }
+}
+</code></pre>
+
+<p>Now we can configure the service:</p>
+
+<pre><code class="php"># app/config/services/quote.yml
+
+services:
+    app.submit_new_quote_handler:
+        class: Acme\Fortune\Quote\SubmitNewQuoteHandler
+        arguments:
+            - "@app.save_new_quote"
+            - "@app.unique_identifier_generator"
+</code></pre>
+
+<p>Finally can run the tests one last time:</p>
+
+<pre><code>./bin/test.sh
+</code></pre>
+
+<p>Allmost green!</p>
+
+<p>They fail because <code>app.save_new_quote</code> and <code>app.unique_identifier_generator</code> don't
+exist yet. They will be the topic of another article ;) .</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>By restricting frameworks to their entry points (Controllers, Commands, etc) and
+using the Command Bus to define our project entry points (domain boundaries) we
+are able to decouple from the framework, allowing us to restrict the impact of BC breaks.</p>
+
+<p>Of course, all projects are different and this solution might not be possible everywhere.
+RAD development is a robust solution for web agencies, especially if they are chosen
+to bootstrap a project as fast as possible and then need to pass the project over
+to their customer after a short period.</p>
+
+<p>On the other hand some companies are creating projects they will have to maintain
+for decades and those are also in need of delivering a first version early.
+Decoupling from the framework isn't something that slows down development, and there
+are ways to still release early (e.g. define Minimum Valuable Product and deliver
+small features iterations by iterations).</p>
+
+<blockquote>
+  <p><strong>Note</strong>: There are a couple of bundles that provides Symfony with a Command Bus, among them:</p>
+  
+  <ul>
+  <li><a href="/2015/09/09/tactician.html">Tactician</a></li>
+  <li><a href="/2015/08/04/simple-bus.html">SimpleBus</a></li>
+  </ul>
+</blockquote>
+
+<p>If you're interrested on the subject, here's some resources:</p>
+
+<ul>
+<li>The framework as an implementation detail
+(<a href="http://www.slideshare.net/marcello.duarte/the-framework-as-an-implementation-detail">slides</a>
+and <a href="https://www.youtube.com/watch?v=0L_9NutiJlc">video</a>),
+by <a href="http://marcelloduarte.net/">Marcello Duarte</a>
+and <a href="http://everzet.com/">Konstantin Kudryashov</a></li>
+<li><a href="https://blog.8thlight.com/uncle-bob/2014/05/11/FrameworkBound.html">Framework bound</a>,
+by <a href="https://sites.google.com/site/unclebobconsultingllc/">Robert Cecil Martin</a></li>
+<li><a href="http://kristopherwilson.com/2013/11/27/decoupling-the-framework/">Decoupling the Framework</a>,
+by <a href="https://twitter.com/mrkrstphr">Kristopher Wilson</a></li>
+</ul>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the phpspec reference article</a></p>
+</blockquote>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Tactician]]></title>
+            <link href="/2015/09/09/tactician.html"/>
+            <updated>2015-09-09T00:00:00+01:00</updated>
+            <id>/2015/09/09/tactician.html</id>
+            <content type="html"><![CDATA[<p>Just like <a href="/2015/08/04/simple-bus.html">SimpleBus</a>,
+<a href="https://tactician.thephpleague.com/">Tactician</a> is a lightweight library created by
+<a href="http://rosstuck.com/">Ross Tuck</a> allowing you to use the Command Bus design pattern
+in your applications.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Command Bus is often used to comply to [CQRS](/2015/08/25/cqrs.html, but not only.</p>
+</blockquote>
+
+<h2 id="usage-example">Usage example</h2>
+
+<p>Here's how to install Tactician:</p>
+
+<pre><code>composer require league/tactician:^0.6
+</code></pre>
+
+<p>Then we have to associate a Command to a CommandHandler:</p>
+
+<pre><code class="php">&lt;?php
+
+use League\Tactician\Setup\QuickStart;
+
+require __DIR__.'/vendor/autoload.php';
+
+$commandBus = QuickStart::create(array(
+    'Vendor\Project\Member\RegisterMember' =&gt; new Vendor\Project\Member\RegisterMemberHandler(),
+));
+</code></pre>
+
+<p>It provides many framework integrations, including one for <a href="http://symfony.com/">Symfony</a>:</p>
+
+<pre><code>composer require league/tactician-bundle:^0.3
+# Don't forget to register `League\Tactician\Bundle\TacticianBundle` in `AppKernel`
+</code></pre>
+
+<p>Then we just have to use the <code>tactician.commandBus</code> service. To register Command Handler, we
+need to tag service definitions as follow:</p>
+
+<pre><code>services:
+    register_member_handler:
+        class: Vendor\Project\Member\RegisterMemberHandler
+        tags:
+            - { name: tactician.handler, command: Vendor\Project\Member\RegisterMember }
+</code></pre>
+
+<p>Now that the configuration is settled, here's a usage example:</p>
+
+<pre><code class="php">$username = isset($argv[1]) ? $argv[1] : null;
+$commandBus-&gt;handle(new RegisterMember($username));
+</code></pre>
+
+<p>The command would look like this:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Vendor\Project\Member;
+
+class RegisterMember
+{
+    private $username;
+
+    public function __construct($username)
+    {
+        if (null === $username) {
+            throw new \InvalidArgumentException('Missing required "username" parameter');
+        }
+        $this-&gt;username = $username;
+    }
+
+    public function getUsername()
+    {
+        return $this-&gt;username;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Commands validate simple input logic (required parameters, parameter type, etc).</p>
+</blockquote>
+
+<p>The Command Handler could look like this:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Vendor\Project\Member;
+
+class RegisterMemberHandler
+{
+    private $memberRepository;
+
+    public function __construct(MemberRespository $memberRepository)
+    {
+        $this-&gt;memberRepository = $memberRepository;
+    }
+
+    public function handle(RegisterMember $registerMember)
+    {
+        $username = $registerMember-&gt;getUsername();
+        if ($memberRepository-&gt;has($username)) {
+            throw new \DomainException(sprintf('Given username "%s" already exists, and duplicates are not allowed', $username));
+        }
+        $memberRepository-&gt;register($registerMember);
+    }
+}
+</code></pre>
+
+<p>The Command Handler validates more complex logic (member username duplication, etc).</p>
+
+<p>Here's a nice reference about command validation: <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command, and Model Validation</a>.</p>
+
+<h2 id="tips">Tips</h2>
+
+<p>Here are some personal tips!</p>
+
+<p>CommandBus is able to return the value of the executed CommandHandler.
+While this isn't advised in asynchronous applications (think messaging queues, like RabbitMQ)
+it can be useful in simple applications.</p>
+
+<p>Because Commands also contain simple input validation you can write unit test for them,
+but since they're mainly DTOs it might not be too important.</p>
+
+<p>CommandHandlers on the other way are good candidates for unit tests.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Remember when people said that controllers shouldn't have any logic in it?
+With the Command Bus pattern this becomes possible.
+It also makes this kind of logic reusable and testable.</p>
+
+<p>Tactician is a nice library for this: it doesn't get in our way and allows you to choose between
+the "good" way or the "pragmatic" way (if you don't choose wisely, then shame on you).</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Simple Bus]]></title>
+            <link href="/2015/08/04/simple-bus.html"/>
+            <updated>2015-08-04T00:00:00+01:00</updated>
+            <id>/2015/08/04/simple-bus.html</id>
+            <content type="html"><![CDATA[<p><a href="http://simplebus.github.io/MessageBus/">Simple Bus</a> is a lightweight library
+created by <a href="https://twitter.com/matthiasnoback">Matthias Noback</a> allowing you to
+use the Command Bus design pattern in your applications.</p>
+
+<h2 id="command-%2F-query-responsibility-separation">Command / Query Responsibility Separation</h2>
+
+<p>The <a href="http://martinfowler.com/bliki/CQRS.html">CQRS principle</a> specifies that an
+application entry point (e.g. console command, or web controller) should only do
+an imperative command (e.g. register a member) or an interrogatory command (how many members?).</p>
+
+<p>Here's a nice reference about the different kinds of commands, by
+<a href="https://twitter.com/mathiasverraes">Mathias Verraes</a>: <a href="http://verraes.net/2015/01/messaging-flavours/">Messaging flavours</a>.</p>
+
+<p>This allows to simplify the application and the code base: those are two different
+concerns and with the <a href="http://www.objectmentor.com/resources/articles/srp.pdf">Single Responsibility Principle</a>
+we've learned that they shouldn't be mixed.</p>
+
+<p>The Command Bus pattern aims at solving the imperative command part.</p>
+
+<h2 id="command-bus">Command Bus</h2>
+
+<p>With this design pattern, we have 3 different kinds of class:</p>
+
+<ul>
+<li>Command: a Data Transfer Object (no logic) with a name describing the command (e.g. <code>RegisterMember</code>)</li>
+<li>Command Handler: the service that does the actions require by the Command (note: 1 Command =  1 Command Handler)</li>
+<li>Command Bus: given a Command, it will execute the appropriate Command Handler</li>
+</ul>
+
+<p>Our entry points would create the command using the parameters received
+(e.g. console input or request content), and then give it to the Command Bus.</p>
+
+<p>Having a Command Bus class is really nice as it allows us to execute things before and
+after every commands: for example in a test environment we could wrap SQL queries in transactions
+and roll them back.</p>
+
+<h2 id="usage-example">Usage example</h2>
+
+<p>Here's how to install Simple Bus:</p>
+
+<pre><code>composer require simple-bus/message-bus:^3.0
+</code></pre>
+
+<p>Since it allows us to choose how the Command Bus will find the Command Handler, we
+have to set it up:</p>
+
+<pre><code class="php">&lt;?php
+
+use SimpleBus\Message\Bus\Middleware\MessageBusSupportingMiddleware;
+use SimpleBus\Message\CallableResolver\CallableMap;
+use SimpleBus\Message\CallableResolver\ServiceLocatorAwareCallableResolver;
+use SimpleBus\Message\Handler\DelegatesToMessageHandlerMiddleware;
+use SimpleBus\Message\Handler\Resolver\NameBasedMessageHandlerResolver;
+use SimpleBus\Message\Name\ClassBasedNameResolver;
+
+require __DIR__.'/vendor/autoload.php';
+
+$commandHandlerMap = new CallableMap(array(
+    'Vendor\Project\Member\RegisterMember' =&gt; array('register_member_handler', 'handle'),
+), new ServiceLocatorAwareCallableResolver(function ($serviceId) {
+    if ('register_member_handler' === $serviceId) {
+        return new Vendor\Project\Member\RegisterMemberHandler();
+    }
+}));
+
+$commandBus = new MessageBusSupportingMiddleware();
+$commandBus-&gt;appendMiddleware(new DelegatesToMessageHandlerMiddleware(new NameBasedMessageHandlerResolver(
+    new ClassBasedNameResolver(),
+    $commandHandlerMap
+)));
+</code></pre>
+
+<p>This create a Command Bus that will use the given Command's Fully Qualified ClassName
+(FQCN, the class name with its full namespace) to call the associated Command Handler
+in the map. Also, the Command Handler will only be created if it is used!</p>
+
+<p>This configuration looks a bit scary, but thankfully if we use <a href="http://symfony.com/">Symfony</a>
+we can just install the bundle:</p>
+
+<pre><code>composer require simple-bus/symfony-bridge:^3.0
+# Don't forget to register `SimpleBus\SymfonyBridge\SimpleBusCommandBusBundle` in `AppKernel`
+</code></pre>
+
+<p>Then we just have to use the <code>command_bus</code> service. To register Command Handler, we
+need to tag service definitions as follow:</p>
+
+<pre><code>services:
+    register_member_handler:
+        class: Vendor\Project\Member\RegisterMemberHandler
+        tags:
+            - { name: command_handler, handles: Vendor\Project\Member\RegisterMember }
+</code></pre>
+
+<p>Now that the configuration is settled, here's a usage example:</p>
+
+<pre><code class="php">$username = isset($argv[1]) ? $argv[1] : null;
+$commandBus-&gt;handle(new RegisterMember($username));
+</code></pre>
+
+<p>The command would look like this:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Vendor\Project\Member;
+
+class RegisterMember
+{
+    public $username;
+
+    public function __construct($username)
+    {
+        if (null === $username) {
+            throw new \InvalidArgumentException('Missing required "username" parameter');
+        }
+        $this-&gt;username = $username;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Commands validate simple input logic (required parameters, parameter type, etc).</p>
+</blockquote>
+
+<p>The Command Handler could look like this:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Vendor\Project\Member;
+
+class RegisterMember
+{
+    private $memberRepository;
+
+    public function __construct(MemberRespository $memberRepository)
+    {
+        $this-&gt;memberRepository = $memberRepository;
+    }
+
+    public function handle(RegisterMember $registerMember)
+    {
+        if ($memberRepository-&gt;has($registerMember-&gt;username)) {
+            throw new \DomainException(sprintf('Given username "%s" already exists, and duplicates are not allowed', $registerMember-&gt;username));
+        }
+        $memberRepository-&gt;register($registerMember);
+    }
+}
+</code></pre>
+
+<p>The Command Handler validates more complex logic (member username duplication, etc).</p>
+
+<p>Here's a nice reference about command validation: <a href="http://verraes.net/2015/02/form-command-model-validation/">Form, Command, and Model Validation</a>.</p>
+
+<h2 id="tips">Tips</h2>
+
+<p>Here are some personal tips!</p>
+
+<p>We can reuse Command Handlers by injecting them into other Command Handlers
+(don't inject the Command Bus in a Command Handler).</p>
+
+<p>Command Handlers were not meant to return anything (think of asynchrone messages).
+But this might not always be pragmatic: in this case we can store a return value in the Command.</p>
+
+<p>We've talked about the Command part in CQRS, what about the Query part?
+I've experimented a bit with a "Query Bus", but in the end I've settled down with
+a Search Engine class, to which a Criteria is given.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Remember when people said that controllers shouldn't have any logic in it?
+With the Command Bus pattern this becomes possible.
+It also makes this kind of logic reusable and testable.</p>
+
+<p>Simple Bus is a nice library for this: it doesn't get in our way.
+For more information about it, read the series of articles published for its first release
+(caution: the public API changed a lot since): <a href="http://php-and-symfony.matthiasnoback.nl/tags/SimpleBus/">A wave of command buses</a>.</p>
+
+<p>An alternative in the PHP world would be <a href="http://tactician.thephpleague.com/">Tactician</a>.</p>
+
+<p>Here's also some nice slides by <a href="https://twitter.com/mr_r_miller">Richard Miller</a>
+about CQRS: <a href="https://speakerdeck.com/richardmiller/avoiding-the-mud">Avoiding the Mud</a>.</p>
+]]></content>
+        </entry>
+    </feed>

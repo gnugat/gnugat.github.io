@@ -1,0 +1,675 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-09-10T10:14:49+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Couscous]]></title>
+            <link href="/2016/01/20/couscous.html"/>
+            <updated>2016-01-20T00:00:00+00:00</updated>
+            <id>/2016/01/20/couscous.html</id>
+            <content type="html"><![CDATA[<p><a href="http://couscous.io">Couscous</a> is a static site generator tool for your Github projects,
+converting all markdown files into an online documentation hosted by
+<a href="https://pages.github.com/">Github Pages</a>.</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>The first step is to get the tool:</p>
+
+<pre><code>curl -OS http://couscous.io/couscous.phar
+sudo mv ./couscous.phar /usr/loal/bin/couscous
+</code></pre>
+
+<p>Then we need to create a <code>couscous.yml</code> file at the root of our Github Project:</p>
+
+<pre><code>template:
+    url: https://github.com/CouscousPHP/Template-Light.git
+
+baseUrl: http://&lt;user-name&gt;.github.io/&lt;project-name&gt;
+
+title: &lt;project-title&gt;
+subTitle: &lt;project-short-decription&gt;
+
+github:
+    user: &lt;user-name&gt;
+    repo: &lt;project-name&gt;
+
+menu:
+    items:
+        home:
+            text: Home
+            relativeUrl:
+
+        &lt;article-name&gt;:
+            text: &lt;article-title&gt;
+            relativeUrl: &lt;article-filename&gt;.html
+</code></pre>
+
+<p>Of course <code>&lt;user-name&gt;</code>, <code>&lt;project-name&gt;</code>, <code>&lt;project-title&gt;</code>, <code>&lt;project-short-decription&gt;</code>,
+<code>&lt;article-name&gt;</code>, <code>article-title</code> and <code>article-filename</code> need to be replaced accordingly.</p>
+
+<h2 id="generating-the-documentation">Generating the Documentation</h2>
+
+<p>Couscous is going to automatically use <code>*.md</code> files found in the project (e.g. <code>README.md</code>).</p>
+
+<p>The <code>menu</code> section in <code>couscous.yml</code> will generate a handy menu. Usually <code>home</code>
+as well as the rest of the documentation is listed here, for example:</p>
+
+<pre><code>menu:
+    items:
+        home:
+            text: Home
+            relativeUrl:
+
+        installation:
+            text: Installation
+            relativeUrl: doc/01-installation.html
+
+        compatibility:
+            text: Compatibility
+            relativeUrl: doc/02-compatibility.html
+
+        benchmark:
+            text: Benchmark
+            relativeUrl: doc/03-benchmark.html
+</code></pre>
+
+<p>To generate the documentation, simply run:</p>
+
+<pre><code>couscous preview
+</code></pre>
+
+<p>This will launch a local server, allowing us to preview the documentation at <code>http://localhost:8000</code>.</p>
+
+<p>Once satisfied, we can run:</p>
+
+<pre><code>couscous deploy
+</code></pre>
+
+<p>This will generate the definitive HTML, commit them in a <code>gh-page</code> branch and push
+it, making it available online.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Couscous provides the possibility to host nice documentation for Github projects,
+thanks to its simplicity.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Scuplin]]></title>
+            <link href="/2016/01/15/sculpin.html"/>
+            <updated>2016-01-15T00:00:00+00:00</updated>
+            <id>/2016/01/15/sculpin.html</id>
+            <content type="html"><![CDATA[<p>Previously using <a href="http://carew.github.io/">Carew</a>, the static website generator,
+this blog has now been migrated to <a href="http://sculpin.io">Sculpin</a>.</p>
+
+<p>Both tools are really similar:</p>
+
+<ul>
+<li>they've been written in PHP</li>
+<li>they use both <a href="http://symfony.com">Symfony</a> components and <a href="http://twig.sensiolabs.org/">Twig</a></li>
+<li>they both generate HTML pages from markdown documents</li>
+</ul>
+
+<p>However Sculpin has a better support and its author is a member PHP FIG. Let's
+see how it works</p>
+
+<h2 id="github-pages">Github Pages</h2>
+
+<p>Github provides a service allowing people to host static webistes: <a href="https://pages.github.com/">Pages</a>.
+The idea is simple:</p>
+
+<ol>
+<li>create a reporitory with a name following this pattern: <code>&lt;username&gt;.github.io</code></li>
+<li>commit HTML files at its root and push</li>
+<li>???</li>
+<li>profit</li>
+</ol>
+
+<p>We can create a <code>_sculpin</code> directory at the root of the project, install inside
+it our Sculpin application with the page sources and finally generate the HTML
+files back in the root directory.</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>Installing Scuplin is very easy as a PHAR is provided:</p>
+
+<pre><code>curl -O https://download.sculpin.io/sculpin.phar
+php sculpin.phar install
+php sculpin.phar generate --watch --server
+</code></pre>
+
+<p>The <code>generate</code> command will convert all markdown files into HTML and the <code>--server</code>
+option will launch a local web server alowing us to preview the website in the browser.</p>
+
+<h2 id="writing-articles">Writing articles</h2>
+
+<p>Articles are written in the <code>source/_posts</code> directory and their name must be
+preffixed with their publication date (e.g. <code>2016-01-25-my-article.md</code>).</p>
+
+<p>Every page starts with a front matters:</p>
+
+<pre><code>---
+layout: post
+title: My Article
+tags:
+    - essay
+---
+</code></pre>
+
+<p>The rest of the file is in standard markdown and will constitute the content of
+the page.</p>
+
+<h2 id="publishing">Publishing</h2>
+
+<p>Once happy with the changes, we can generate the final HTML:</p>
+
+<pre><code>php sculpin.phar generate --env=prod
+</code></pre>
+
+<p>The files will be located in <code>output_prod</code>. If we want to use Github Pages as
+described above, we simply need to move those files to the root directory:</p>
+
+<pre><code>cp -r output_prod/* ../
+</code></pre>
+
+<p>Then we simply need to commit all the changes and push.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Sculpin is quite simple to use: write some markdown files and let it generate HTML
+files out of it. It uses Symfony and Twig behind the scene making it really easy
+to extend.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Migrating from carew has been a simple task. In my case it required:</p>
+  
+  <ul>
+  <li>removing all <code>link</code> function usage and use instead markdown links</li>
+  <li>configure <code>permalink</code> to <code>:year/:month/:day/:filename.html</code> in <code>app/config/sculpin_kernel.yml</code> to keep URL backward compatibility</li>
+  </ul>
+</blockquote>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[phpspec: a quick tour]]></title>
+            <link href="/2014/03/11/phpspec-quick-tour.html"/>
+            <updated>2014-03-11T00:00:00+00:00</updated>
+            <id>/2014/03/11/phpspec-quick-tour.html</id>
+            <content type="html"><![CDATA[<p><a href="#conclusion">TL;DR: jump to the conclusion</a>.</p>
+
+<p>This article is part of a series on Tests in general and on how to practice
+them:</p>
+
+<ol>
+<li><a href="/2014/02/05/tests-introduction.html">Introduction</a></li>
+<li><a href="/2014/02/12/tests-tools-overview.html">Tools overview</a></li>
+<li><a href="/2014/02/19/test-driven-development.html">Test Driven Development</a></li>
+<li><a href="/2014/02/26/tdd-just-do-it.html">TDD: just do it!</a></li>
+<li><a href="/2014/03/05/spec-bdd.html">spec BDD</a></li>
+<li><a href="/2014/03/11/phpspec-quick-tour.html">phpspec: a quick tour</a></li>
+<li><a href="/2014/03/19/behavior-driven-development-story-bdd.html">Behavior Driven Development: story BDD</a></li>
+<li><a href="/2014/03/26/behat-quick-tour.html">Behat: a quick tour</a></li>
+<li><a href="/2014/04/02/tests-cheat-sheet.html">Conclusion</a></li>
+</ol>
+
+<p>The <a href="/2014/03/05/spec-bdd.md">last article</a> might have seemed
+too abstract. Fortunately, this one will be much more concrete! We'll present
+<a href="http://www.phpspec.net/">phpspec</a>, a spec BDD tool for PHP.</p>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>phpspec automates the Test Driven Development (TDD) and spec BDD process by:</p>
+
+<ul>
+<li>allowing you to generate the specification</li>
+<li>then allowing you to generate the code from it</li>
+</ul>
+
+<p>It also forces you to follow good practices:</p>
+
+<ul>
+<li>you can only test non-static public methods</li>
+<li>you cannot generate a code coverage report</li>
+</ul>
+
+<p>It also tries to be less verbose, as you'll see in the next sections.</p>
+
+<h2 id="installation">Installation</h2>
+
+<p>Simply install phpspec using <a href="https://getcomposer.org/">Composer</a>:</p>
+
+<pre><code>composer require --dev 'phpspec/phpspec:~2.0@RC'
+</code></pre>
+
+<p>At the time I write this article, phpspec is in Release Candidate, but don't
+worry: I've been using it since the beta version and I've never had any trouble.</p>
+
+<h2 id="process">Process</h2>
+
+<p>First, bootstrap and complete the specification:</p>
+
+<pre><code>phpspec describe 'Fully\Qualified\Classname'
+$EDITOR spec/Fully/Qualified/ClassnameSpec.php
+</code></pre>
+
+<p>Then bootstrap and complete the code to make the tests pass:</p>
+
+<pre><code>phpspec run
+$EDITOR src/Fully/Qualified/Classname.php
+phpspec run
+</code></pre>
+
+<p>Finally refactor, but keep the tests passing:</p>
+
+<pre><code>$EDITOR src/Fully/Qualified/Classname.php
+phpspec run
+</code></pre>
+
+<p>I've found that Marcello Duarte, the creator of phpspec, talks really well about
+it in his presentation <a href="http://www.slideshare.net/marcello.duarte/test-transform-refactor">Test, transform, refactor</a>.</p>
+
+<p>I advise you to have a look at his slides, as they explain everything you should
+now about the red, green, refactor cycle.</p>
+
+<h2 id="a-tour-of-the-documentation">A tour of the documentation</h2>
+
+<p>Surprisingly, the documentation is complete and small:</p>
+
+<ul>
+<li><a href="http://www.phpspec.net/cookbook/matchers.html">here's the complete list of assertions</a></li>
+<li><a href="http://www.phpspec.net/cookbook/templates.html">here's how to customize the specification and code tempaltes</a></li>
+<li><a href="http://www.phpspec.net/cookbook/configuration.html">here's how to configure phpspec</a></li>
+</ul>
+
+<p>There's nothing missing in these docs!</p>
+
+<h2 id="prophecy%2C-the-test-double-framework">Prophecy, the test double framework</h2>
+
+<p>Unlike PHPUnit, phpspec uses an external library for its test doubles:
+<a href="https://github.com/phpspec/prophecy">prophecy</a> (but you can still find how to
+use it in the <a href="http://www.phpspec.net/cookbook/configuration.html">documentation</a>).</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>phpspec generates specification and code boilerplates for you. It forces you to
+concentrate on the class behavior rather than on the implementation and it
+provides a non verbose API. Even its documentations is complete and small!</p>
+
+<p>I hope you enjoyed this article, be sure to
+<a href="https://twitter.com/epiloic">tweet me what you think about it</a> ;) .</p>
+
+<blockquote>
+  <p><strong>Reference</strong>: <a class="button button-reference" href="/2015/08/03/phpspec.html">see the reference article</a></p>
+</blockquote>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Bootstrap the markdown files of your FOSS project]]></title>
+            <link href="/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html"/>
+            <updated>2014-01-15T00:00:00+00:00</updated>
+            <id>/2014/01/15/bootstrap-markdown-files-of-your-FOSS-project.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: Fossil is currently unmaintained.</p>
+</blockquote>
+
+<p>The one thing that will make developers use your Free or Open Source Software
+(FOSS) project is its documentation. Without it, how can they know what it does,
+or how to install it?</p>
+
+<p>Last summer <a href="http://williamdurand.fr/2013/07/04/on-open-sourcing-libraries/">William Durand wrote an article about it</a>,
+describing the minimum files your FOSS project should have, and what they should
+contain.</p>
+
+<p>After reading his article, maybe you did the same thing as me: you took your
+courage with both hands and wrote thoroughly a decent documentation for the
+project you were working on at the time.</p>
+
+<p>Because it was tedious, you decided to copy those markdown files into your new
+projects and adapt them.</p>
+
+<p>But this too was tedious...</p>
+
+<p>To solve this problem once for all I created <strong><a href="https://github.com/gnugat/fossil">fossil</a></strong>:
+it will bootstrap the markdown files of your FOSS projects, and it will even
+create an installer for you!</p>
+
+<p>It generates the following files out of skeletons:</p>
+
+<ul>
+<li><code>CHANGELOG.md</code></li>
+<li><code>CONTRIBUTING.md</code></li>
+<li><code>LICENSE</code></li>
+<li><code>README.md</code></li>
+<li><code>VERSIONING.md</code></li>
+<li><code>bin/installer.sh</code></li>
+<li><code>doc</code> (or <code>Resources/doc</code> if the project is a bundle) directory:
+
+<ul>
+<li><code>01-introduction.md</code></li>
+<li><code>02-installation.md</code></li>
+<li><code>03-usage.md</code></li>
+<li><code>04-tests.md</code></li>
+</ul></li>
+</ul>
+
+<p>The best thing about it: you can run it on your new FOSS projects as well as
+with your existing ones! By default it does not replace existing files (if you
+want to, simply use the <code>-f</code> option).</p>
+
+<p><strong>Fossil</strong> supports different kind of projects: applications, libraries and
+Symfony2 bundles. Here's a quick usage guide.</p>
+
+<h2 id="applications">Applications</h2>
+
+<p>The <code>doc</code> command allows you to generate the markdown files of your
+applications, which can be a web application or a CLI tool just like <strong>fossil</strong>.</p>
+
+<p>As you can see in the following example, it only requires 2 arguments:</p>
+
+<pre><code>fossil doc 'acme/application' 'The ACME company'
+</code></pre>
+
+<h3 id="the-github-repository-argument">The <a href="https://github.com/">Github</a> repository argument</h3>
+
+<p>Applications are installed by cloning the github repository, which makes it as
+easy to update as to run <code>git pull</code>.</p>
+
+<p>This argument is used in the installer script as well as in the installation
+instructions.</p>
+
+<p>You don't need to write the whole github URL, simply give the username and the
+project name in the following format: <code>username/project-name</code></p>
+
+<h3 id="the-license-author-argument">The license author argument</h3>
+
+<p>While the copyright's date can be computed, you need to provide the author's
+name to generate the <code>LICENSE</code> file.</p>
+
+<p>For now it only generates MIT licenses, but pull requests are welcomed :) .</p>
+
+<h3 id="the-path-option">The path option</h3>
+
+<p>By default the files are created in the current directory, but you can target a
+specific path:</p>
+
+<pre><code>fossil doc 'acme/application' 'The ACME company' -p '/tmp/application'
+</code></pre>
+
+<h3 id="the-force-overwrite-option">The force overwrite option</h3>
+
+<p>As mentioned earlier, <strong>fossil</strong> won't replace existing files by default: for
+instance if your project already has a <code>README.md</code> and a <code>LICENSE</code> file it will
+only generate the other ones.</p>
+
+<p>But if you want to throw them away, you can use this option:</p>
+
+<pre><code>fossil doc 'acme/project' 'The ACME company' -f
+</code></pre>
+
+<h2 id="libraries">Libraries</h2>
+
+<p>The <code>doc:library</code> command has the exact same arguments and options as the <code>doc</code>
+one:</p>
+
+<pre><code>fossil doc:library 'acme/library' 'The ACME company'
+</code></pre>
+
+<p>You can use the shortcut <code>d:l</code>:</p>
+
+<pre><code>fossil d:l 'acme/library' 'The ACME company'
+</code></pre>
+
+<p>The difference between an application and a library lies in its installation:
+the library is installed using <a href="http://getcomposer.org/">composer</a>.</p>
+
+<h3 id="the-composer-package-option">The composer package option</h3>
+
+<p>By default <strong>fossil</strong> assumes the composer package's name is the same as the
+Github repository name (in the example it would be <code>acme/library</code>).
+If it's not your case, use the following option:</p>
+
+<pre><code>fossil d:l 'acme/library' 'The ACME company' -c 'acme/composer-package'
+</code></pre>
+
+<h2 id="symfony2-bundles">Symfony2 Bundles</h2>
+
+<p>The <code>doc:bundle</code> command has almost the same arguments and options as the
+<code>doc:library</code> one. It has an additional argument:</p>
+
+<pre><code>fossil doc:bundle 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle'
+</code></pre>
+
+<p>You can use the shortcut <code>d:b</code>:</p>
+
+<pre><code>fossil d:b 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle'
+</code></pre>
+
+<p>The difference between a library and a bundle is the documentation directory,
+which is in <code>Resources/doc</code> instead of <code>doc</code>.</p>
+
+<h3 id="the-fully-qualified-classname-argument">The fully qualified classname argument</h3>
+
+<p>Another difference is the installation: the bundle needs to be added in the
+application's kernel.</p>
+
+<p>This will be detailed in the documentation, but it will also be taken care of
+by the installer.</p>
+
+<p>That's right, you read it right: when developers will run the installer, not
+only will it download the bundle using composer, but it will also add its fully
+qualified classname in the <code>app/AppKernel.php</code> file! Hooray!</p>
+
+<p>The application's kernel will look like this afterwards:</p>
+
+<pre><code>&lt;?php
+// File: app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        $bundles = array(
+            // Other bundles...
+            new Acme\DemoBundle\AcmeDemoBundle(),
+        );
+
+        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
+            // Other bundles...
+        }
+
+        return $bundles;
+    }
+}
+</code></pre>
+
+<p><em>Note</em>: because of the backslashes you should escape this argument using
+quotes, just like in the example.</p>
+
+<h3 id="the-development-tool-option">The development tool option</h3>
+
+<p>By using this option, the bundle will be registered in the application only if
+it runs in development or test environment:</p>
+
+<pre><code>fossil d:b 'acme/demo-bundle' 'The ACME company' 'Acme\DemoBundle\AcmeDemoBundle' -d
+</code></pre>
+
+<p>The application's kernel will look like this afterwards:</p>
+
+<pre><code>&lt;?php
+// File: app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        $bundles = array(
+            // Other bundles...
+        );
+
+        if (in_array($this-&gt;getEnvironment(), array('dev', 'test'))) {
+            // Other bundles...
+            $bundles[] = new Acme\DemoBundle\AcmeDemoBundle();
+        }
+
+        return $bundles;
+    }
+}
+</code></pre>
+
+<h2 id="you-still-need-to-write-the-documentation">You still need to write the documentation</h2>
+
+<p>After running <strong>fossil</strong> you still need to provide some information (for
+instance the elevator pitch in <code>README.md</code>) by editing those files:</p>
+
+<ul>
+<li><code>README.md</code></li>
+<li><code>doc/01-introduction.md</code></li>
+<li><code>doc/03-usage.md</code></li>
+<li><code>doc/04-tests.md</code></li>
+</ul>
+
+<p>But is that enough? While I think <strong>fossil</strong> automates as much things as
+possible, there's still some part of your project that needs specific
+documentation.</p>
+
+<p>For example you could add recipes which describe common tasks, or a glossary
+defining technical or business terms used in your project.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Bootstrap the markdown files of your new and your old FOSS projects using
+<strong><a href="https://github.com/gnugat/fossil">fossil</a></strong>, and then complete the
+documentation so everyone can see how awesome your work is!</p>
+
+<p>Happy hacking!</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Carew, the static site generator]]></title>
+            <link href="/2014/01/01/carew-static-site-generator.html"/>
+            <updated>2014-01-01T00:00:00+00:00</updated>
+            <id>/2014/01/01/carew-static-site-generator.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Deprecated</strong>: This article has been re-written - see <a href="/2016/01/15/sculpin.html">Scuplin</a></p>
+</blockquote>
+
+<p>Frameworks are a real help when building web applications which serve business
+logic. But what about static websites?</p>
+
+<p>Those only contain pages which could be directly written in HTML. The only
+problem with this approach is that HTML isn't writter friendly compared to
+Markdown.</p>
+
+<p>Also, we could say that static websites like blogs do have some logic behind the
+scenes:</p>
+
+<ul>
+<li>posts can have a state (is it published yet?)</li>
+<li>posts can be tagged, in order to make them easier to find</li>
+</ul>
+
+<p>But still, a framework might be too much for this task.</p>
+
+<p>Static site generators are a way to solve this problem:</p>
+
+<ol>
+<li>simply write your pages in markdown</li>
+<li>launch a command to generate HTML from it</li>
+</ol>
+
+<p><a href="http://carew.github.io/">Carew</a> is one of them (among
+  <a href="http://jekyllrb.com/">Jekyll</a>,
+  <a href="http://hyde.github.io/">Hyde</a>,
+  <a href="https://github.com/obensonne/poole">Poole</a>
+  and <a href="https://github.com/spjwebster/lanyon">Lanyon</a>):
+it is written in PHP, allows you to use the template engine
+<a href="http://twig.sensiolabs.org/">Twig</a> in your markdown and it provides a theme
+using <a href="http://getbootstrap.com/2.3.2/">Bootstrap</a>.</p>
+
+<p>This blog post will focus on Carew, as
+<a href="https://github.com/gnugat/gnugat.github.io">this very blog is written with it</a>.</p>
+
+<h2 id="carew-and-github">Carew and Github</h2>
+
+<p>A common way to quickly publish static sites is to use
+<a href="http://pages.github.com/">Github Pages</a> which works as follow:</p>
+
+<ol>
+<li>create a repository, the name should follow this format: <code>&lt;username&gt;.github.io</code></li>
+<li>add, commit and push the content of the <code>web</code> directory directly at the
+root of your repo</li>
+<li>the site is now available at this address: <code>http://&lt;username&gt;.github.io</code></li>
+</ol>
+
+<p><a href="http://carew.github.io/cookbook/hosting.html">Learn more about hosting a website built with Carew on the official website</a>.</p>
+
+<h2 id="creation">Creation</h2>
+
+<p>Creating your site using Carew is very simple, just follow these steps:</p>
+
+<pre><code>$ php composer.phar create-project carew/boilerplate &lt;project&gt; -s dev
+$ cd &lt;project&gt;
+$ bin/carew build
+</code></pre>
+
+<p>Examples pages (which sources are located in <code>pages</code> and <code>posts</code>) are converted
+from markdown to HTML in the <code>web</code> directory.</p>
+
+<h2 id="customization">Customization</h2>
+
+<p>Before writing any page or post, edit the configuration wich is located inside
+the <code>config.yml</code> file.</p>
+
+<p>Then edit the <code>pages/index.md</code> and <code>pages/about.md</code> pages with your own content.</p>
+
+<p>Finally, remove the content of the <code>posts</code> folder and create your first blog
+post using this command:</p>
+
+<pre><code>$ bin/carew generate:post [--date='YYYY-MM-DD'] title
+</code></pre>
+
+<p><a href="http://carew.github.io/cookbook/configuration.html">See the configuration documentation on the official website</a>.</p>
+
+<h2 id="front-matters">Front matters</h2>
+
+<p>Each markdown file starts with a header:</p>
+
+<pre><code>---
+layout: post # no need for this line when writing a regular page
+title: Will be used by `&lt;title&gt;&lt;/title&gt;` and `&lt;h1&gt;&lt;/h1&gt;`
+tags:
+    - first tag
+    - carew
+---
+</code></pre>
+
+<p>Carew generates a page listing all existing tags. You can create a link to this
+page with the following snippet:</p>
+
+<pre><code>{{ link('tags', 'The page with all the tags') }}.
+</code></pre>
+
+<p><a href="http://carew.github.io/documentation.html#front-matter">Learn more about Front matters on the official website</a>.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Carew is really simple to use, in this article we've covered the minimum you
+should know to create pages, blog posts and tags.</p>
+
+<p>I hope you enjoyed this article and that it helped you a little.</p>
+
+<p>If you want to learn more, for example to customize its behaviour or its theme,
+please refer to <a href="http://carew.github.io/documentation.html">the official documentation</a>.</p>
+]]></content>
+        </entry>
+    </feed>

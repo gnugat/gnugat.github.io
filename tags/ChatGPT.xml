@@ -1,0 +1,1133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-09-10T10:14:49+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[ChatGPT: fluff or not? SpecBDD]]></title>
+            <link href="/2023/04/19/chat-gpt-spec-bdd.html"/>
+            <updated>2023-04-19T00:00:00+01:00</updated>
+            <id>/2023/04/19/chat-gpt-spec-bdd.html</id>
+            <content type="html"><![CDATA[<p>Now that a couple of months have passed since its over hyped launch,
+surely <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> has found some
+use cases where it could be of any actual use. Or is it all fluff? Let's find out.</p>
+
+<p>In my quest to find a use for ChatGPT in my day to day developer activity,
+I've finally found a helpful scenario!</p>
+
+<p>Let me walk you through my findings about ChatGPT and its "Spec Gen" capacity,
+so we can learn a thing or two.</p>
+
+<h2 id="spec-gen">Spec Gen</h2>
+
+<p>When tasked to write a feature, I first write a unit test that specifies the
+behaviour, for example:</p>
+
+<pre><code>&lt;?php
+
+namespace spec\Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+use Vendor\Project\File;
+use PhpSpec\ObjectBehavior;
+
+class TextEditorSpec extends ObjectBehavior
+{
+    private const FILENAME = '/tmp/file.txt';
+    private const FORCE_FILE_CREATION = true;
+
+    function let(Filesystem $filesystem): void
+    {
+        $this-&gt;beConstructedWith($filesystem);
+    }
+
+    function it_creates_new_files(File $file, Filesystem $filesystem): void
+    {
+        $filesystem-&gt;exists(self::FILENAME)-&gt;willReturn(false);
+        $filesystem-&gt;create(self::FILENAME)-&gt;willReturn($file);
+
+        $this-&gt;open(self::FILENAME, self::FORCE_FILE_CREATION)-&gt;shouldBe($file);
+    }
+}
+</code></pre>
+
+<p>When using <a href="https://phpspec.net/en/stable/">phpspec</a>,
+especially with the extension <a href="https://github.com/memio/spec-gen">spec-gen</a>,
+running the test will bootstrap for me the corresponding class:</p>
+
+<pre><code>&lt;?php
+
+namespace Vendor\Project;
+
+use Vendor\Project\Service\Filesystem;
+
+class TextEditor
+{
+    private $filesystem;
+
+    public function __construct(Filesytem $filesystem)
+    {
+        $this-&gt;filesystem = $filesystem;
+    }
+
+    public function open(string $argument1, bool $argument2)
+    {
+    }
+}
+</code></pre>
+
+<p>That's pretty good, but it could be better: what if it was able to generate the complete code?</p>
+
+<h2 id="gpt-gen">GPT Gen</h2>
+
+<p>Let's forget about phpspec and use instead <a href="https://phpunit.de/">PHPUnit</a>,
+but still with the <a href="https://github.com/phpspec/prophecy">Prophecy</a>
+Mocking framework.</p>
+
+<p>Let's ask ChatGPT. Here's the priming prompt:</p>
+
+<blockquote>
+  <p><strong>USER</strong>:
+  Act as an expert PHP developer,
+    who's been writing high quality API code for 20 years.
+  Acknowledge with "ok".</p>
+</blockquote>
+
+<p>Because ChatGPT's Large Language Model (LLM) is able to generate a wide range
+of text (conversation, essays, movie script, poetry, etc), assigning it a role
+helps it narrow down its context, hence improving its accuracy for the task we
+want it to complete: writing PHP code, on a professional level
+(persona/role prompt engineering technique).</p>
+
+<p>We also need to consider the Goldfish Memory issue of ChatGPT: it only takes
+into account the last ~4000 tokens to generate its response, so asking it to
+give us a short reply helps us save some space.</p>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>: ok</p>
+</blockquote>
+
+<p>LLMs perform better when given some examples, and indeed before asking it to
+generate code we might want to give ChatGPT some of our code samples
+(X-Shot prompt engineering technique).</p>
+
+<p>Since coding also requires some level of logic, it is also helpful to include
+reasoning steps (Chain of Thought prompt engineering technique).</p>
+
+<p>Similarly, asking the LLM to first generate some topic related knowledge,
+and then reuse that in the further prompts will also increase our success rate
+(Generated Knowledge prompt engineering technique).</p>
+
+<p>With this in mind, here's the second prompt that provides a test class example:</p>
+
+<blockquote>
+  <p><strong>USER</strong>: Here's an example of test class from the project you're working on:</p>
+</blockquote>
+
+<pre><code>&lt;?php
+
+declare(strict_types=1);
+
+namespace tests\Ssc\Btlr\Cht\Message\Templates\Prompts;
+
+use Ssc\Btlr\App\Filesystem\ReadFile;
+use Ssc\Btlr\App\Template\Replace;
+use Ssc\Btlr\Cht\Message\Logs\Type;
+use Ssc\Btlr\Cht\Message\Logs\WriteLog;
+use Ssc\Btlr\Cht\Message\Templates\Prompts\Template;
+use tests\Ssc\Btlr\AppTest\BtlrServiceTestCase;
+
+class TemplateTest extends BtlrServiceTestCase
+{
+    /**
+     * @test
+     */
+    public function it_creates_prompt_from_template(): void
+    {
+        // Fixtures
+        $thoseParameters = [
+            'last_messages' =&gt; 'USER (1968-04-02T18:40:23+00:00): Write code for me, please',
+        ];
+        $forType = Type::AUGMENTED_PROMPT;
+        $withConfig = [
+            'chunk_memory_size' =&gt; 15,
+            'llm_engine' =&gt; 'chatgpt-gpt-3.5-turbo',
+            'logs_filename' =&gt; './var/cht/logs',
+            'prompt_templates_filename' =&gt; './templates/cht/prompts',
+        ];
+
+        $template = "LAST MESSAGES:\n%last_messages%\nBTLR:\n";
+        $prompt = "LAST MESSAGES:\n{$thoseParameters['last_messages']}\nBTLR:\n";
+        $data = [
+            'entry' =&gt; $prompt,
+        ];
+
+        // Dummies
+        $readFile = $this-&gt;prophesize(ReadFile::class);
+        $replace = $this-&gt;prophesize(Replace::class);
+        $writeLog = $this-&gt;prophesize(WriteLog::class);
+
+        // Stubs &amp; Mocks
+        $readFile-&gt;in("{$withConfig['prompt_templates_filename']}/{$forType['name']}.txt")
+            -&gt;willReturn($template);
+        $replace-&gt;in($template, $thoseParameters)
+            -&gt;willReturn($prompt);
+        $writeLog-&gt;for($data, $forType, $withConfig)
+            -&gt;shouldBeCalled();
+
+        // Assertion
+        $template = new Template(
+            $readFile-&gt;reveal(),
+            $replace-&gt;reveal(),
+            $writeLog-&gt;reveal(),
+        );
+        self::assertSame($prompt, $template-&gt;replace(
+            $thoseParameters,
+            $forType,
+            $withConfig,
+        ));
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>USER</strong>:
+  Acknowledge by describing how the use of fixtures, dummies, stubs, mocks
+  and assertions allow to make sure the tested code is behaving as expected.
+  And note the use of the special BtlrServiceTestCase parent class for <code>TemplateTest</code>.</p>
+</blockquote>
+
+<p>By the way, the code is from my Super Secret Code project
+<a href="https://github.com/gnugat/ssc-btlr">Btlr</a>.</p>
+
+<p>Here's ChatGPT's response:</p>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>:
+  In this test class, fixtures are used to provide the necessary data for
+  testing the <code>Template</code> class. The parameters and configuration are defined in
+  <code>$thoseParameters</code> and <code>$withConfig</code> respectively, and the template and prompt
+  strings are defined in <code>$template</code> and <code>$prompt</code>.</p>
+  
+  <p>Dummies are used to provide the interface of the <code>ReadFile</code>, <code>Replace</code>, and
+  <code>WriteLog</code> classes, without providing any actual implementation, since these
+  classes are not the focus of the test.</p>
+  
+  <p>Stubs are used to replace the implementation of <code>ReadFile</code> and <code>Replace</code>
+  classes, by returning a fixed value when their respective methods are called.
+  This ensures that the expected values are used for testing the <code>Template</code> class.</p>
+  
+  <p>Mocks are used to verify that the <code>WriteLog</code> class is called with the expected
+  parameters. The <code>shouldBeCalled()</code> method ensures that the <code>for()</code> method of
+  <code>WriteLog</code> class is actually called during the test.</p>
+  
+  <p>Finally, the assertion compares the result returned by the <code>replace()</code> method
+  of the <code>Template</code> class with the expected prompt string.</p>
+  
+  <p>The <code>BtlrServiceTestCase</code> class is a special parent class that sets up a test
+  environment for the Btlr service, which can include initializing dependencies,
+  connecting to databases, and setting up configurations. This helps to ensure
+  that tests are run in a consistent and isolated environment, and makes it easier
+  to write tests for the Btlr service.</p>
+</blockquote>
+
+<p>ChatGPT doesn't have access to the project and its code, it only knows what we've
+provided in the conversation so far.</p>
+
+<p>So for example it took a wild guess at what <code>BtlrServiceTestCase</code> does and got
+it wrong, but for our purpose this is good enough.</p>
+
+<p>The third prompt is an example of the corresponding class:</p>
+
+<blockquote>
+  <p><strong>USER</strong>:
+  When tasked with generating the corresponding <code>Template</code> class, from the above
+  <code>TemplateTest</code> test class, here's the code you wrote:</p>
+</blockquote>
+
+<pre><code>&lt;?php
+
+declare(strict_types=1);
+
+namespace Ssc\Btlr\Cht\Message\Templates\Prompts;
+
+use Ssc\Btlr\App\Filesystem\ReadFile;
+use Ssc\Btlr\App\Template\Replace;
+use Ssc\Btlr\Cht\Message\Logs\WriteLog;
+
+class Template
+{
+    public function __construct(
+        private ReadFile $readFile,
+        private Replace $replace,
+        private WriteLog $writeLog,
+    ) {
+    }
+
+    public function replace(
+        array $thoseParameters,
+        array $forType,
+        array $withConfig,
+    ): string {
+        $template = $this-&gt;readFile-&gt;in(
+            "{$withConfig['prompt_templates_filename']}/{$forType['name']}.txt",
+        );
+        $prompt = $this-&gt;replace-&gt;in($template, $thoseParameters);
+        $this-&gt;writeLog-&gt;for([
+            'entry' =&gt; $prompt,
+        ], $forType, $withConfig);
+
+        return $prompt;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>USER</strong>: Acknowledge by describing how the test class got translated into its
+  corresponding class.</p>
+</blockquote>
+
+<p>To which ChatGPT replies:</p>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>:
+  The <code>TemplateTest</code> test class served as a guide for implementing the
+  <code>Template</code> class.</p>
+  
+  <p>First, the constructor of <code>Template</code> class takes three dependencies, which
+  are also injected in the <code>TemplateTest</code> class as dummies or mocks.</p>
+  
+  <p>Next, the <code>replace()</code> method of <code>Template</code> class has the same signature as
+  the test method <code>it_creates_prompt_from_template()</code>, with the addition of a
+  return type declaration for the prompt string.</p>
+  
+  <p>The implementation of <code>replace()</code> method in <code>Template</code> class uses the
+  injected <code>ReadFile</code> instance to read the template string from the filesystem,
+  using the <code>$forType['name']</code> parameter to construct the file path.
+  It then uses the injected <code>Replace</code> instance to replace placeholders in the
+  template with values provided in the <code>$thoseParameters</code> array, resulting in
+  a <code>$prompt</code> string.</p>
+  
+  <p>Finally, the method calls the injected <code>WriteLog</code> instance with the <code>$prompt</code>,
+  <code>$forType</code>, and <code>$withConfig</code> parameters, which logs the prompt for the given
+  type and configuration.</p>
+  
+  <p>Overall, the implementation of the <code>Template</code> class closely follows the
+  structure of the <code>TemplateTest</code> class, and the use of dependency injection
+  ensures that the class can be easily tested in isolation from its
+  dependencies.</p>
+</blockquote>
+
+<p>With ChatGPT noting that the corresponding class closely follows the structure
+of its test, it should be now ready.</p>
+
+<p>Let's give it a new test class, and ask it to generate the corresponding code:</p>
+
+<blockquote>
+  <p><strong>USER</strong>: Brilliant. Now, in the same coding style as <code>TemplateTest</code> and
+  <code>Template</code>, you are tasked to write a the corresponding code for the
+  following <code>ReplyTest</code> test class:</p>
+</blockquote>
+
+<pre><code>&lt;?php
+
+declare(strict_types=1);
+
+namespace tests\Ssc\Btlr\Cht\Message;
+
+use Ssc\Btlr\Cht\Message\Logs\Type;
+use Ssc\Btlr\Cht\Message\Logs\WriteLog;
+use Ssc\Btlr\Cht\Message\Memory\Consolidate;
+use Ssc\Btlr\Cht\Message\Reply;
+use Ssc\Btlr\Cht\Message\Reply\Augment;
+use Ssc\Btlr\Cht\Message\Reply\UsingLlm;
+use tests\Ssc\Btlr\AppTest\BtlrServiceTestCase;
+
+class ReplyTest extends BtlrServiceTestCase
+{
+    /**
+     * @test
+     */
+    public function it_replies_to_user_prompt_using_llm(): void
+    {
+        // Fixtures
+        $userPrompt = 'Write code for me, please';
+        $withConfig = [
+            'chunk_memory_size' =&gt; 15,
+            'llm_engine' =&gt; 'chatgpt-gpt-3.5-turbo',
+            'logs_filename' =&gt; './var/cht/logs',
+            'prompt_templates_filename' =&gt; './templates/cht/prompts',
+        ];
+
+        $userPromptData = [
+            'entry' =&gt; $userPrompt,
+        ];
+        $augmentedPrompt = "USER: {$userPrompt}\nBLTR:";
+        $modelCompletion = "I'm sorry, dev. I'm afraid I can't do that.";
+        $modelCompletionData = [
+            'entry' =&gt; $modelCompletion,
+            'llm_engine' =&gt; $withConfig['llm_engine'],
+        ];
+
+        // Dummies
+        $augment = $this-&gt;prophesize(Augment::class);
+        $consolidate = $this-&gt;prophesize(Consolidate::class);
+        $usingLlm = $this-&gt;prophesize(UsingLlm::class);
+        $writeLog = $this-&gt;prophesize(WriteLog::class);
+
+        // Stubs &amp; Mocks
+        $writeLog-&gt;for($userPromptData, Type::USER_PROMPT, $withConfig)
+            -&gt;shouldBeCalled();
+        $augment-&gt;the($userPrompt, $withConfig)
+            -&gt;willReturn($augmentedPrompt);
+        $usingLlm-&gt;complete($augmentedPrompt)
+            -&gt;willReturn($modelCompletion);
+        $writeLog-&gt;for($modelCompletionData, Type::MODEL_COMPLETION, $withConfig)
+            -&gt;shouldBeCalled();
+        $consolidate-&gt;memories($withConfig)
+            -&gt;shouldBeCalled();
+
+        // Assertion
+        $reply = new Reply(
+            $augment-&gt;reveal(),
+            $consolidate-&gt;reveal(),
+            $usingLlm-&gt;reveal(),
+            $writeLog-&gt;reveal(),
+        );
+        self::assertSame($modelCompletion, $reply-&gt;to(
+            $userPrompt,
+            $withConfig,
+        ));
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>USER</strong>: Acknowledge by generating the code for the <code>Reply</code> class.</p>
+</blockquote>
+
+<p>And here's what ChatGPT came up with:</p>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>: Sure thing! Here's the code for the <code>Reply</code> class based on the
+  <code>ReplyTest</code> test class:</p>
+</blockquote>
+
+<pre><code>&lt;?php
+
+declare(strict_types=1);
+
+namespace Ssc\Btlr\Cht\Message;
+
+use Ssc\Btlr\Cht\Message\Logs\Type;
+use Ssc\Btlr\Cht\Message\Logs\WriteLog;
+use Ssc\Btlr\Cht\Message\Memory\Consolidate;
+use Ssc\Btlr\Cht\Message\Reply\Augment;
+use Ssc\Btlr\Cht\Message\Reply\UsingLlm;
+
+class Reply
+{
+    public function __construct(
+        private Augment $augment,
+        private Consolidate $consolidate,
+        private UsingLlm $usingLlm,
+        private WriteLog $writeLog,
+    ) {
+    }
+
+    public function to(string $userPrompt, array $withConfig): string
+    {
+        $userPromptData = [
+            'entry' =&gt; $userPrompt,
+        ];
+
+        // Augment the user prompt
+        $augmentedPrompt = $this-&gt;augment-&gt;the($userPrompt, $withConfig);
+
+        // Use LLM to generate a model completion
+        $modelCompletion = $this-&gt;usingLlm-&gt;complete($augmentedPrompt);
+
+        // Log the user prompt and model completion
+        $this-&gt;writeLog-&gt;for($userPromptData, Type::USER_PROMPT, $withConfig);
+        $modelCompletionData = [
+            'entry' =&gt; $modelCompletion,
+            'llm_engine' =&gt; $withConfig['llm_engine'],
+        ];
+        $this-&gt;writeLog-&gt;for($modelCompletionData, Type::MODEL_COMPLETION, $withConfig);
+
+        // Consolidate the memories
+        $this-&gt;consolidate-&gt;memories($withConfig);
+
+        return $modelCompletion;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>ChatGPT</strong>: This <code>Reply</code> class has a <code>to</code> method that takes a user prompt
+  and a configuration array as input, and returns the model completion
+  generated by LLM.
+  The <code>Reply</code> class constructor takes in four dependencies: <code>Augment</code>,
+  <code>Consolidate</code>, <code>UsingLlm</code>, and <code>WriteLog</code>, and stores them as private
+  properties.
+  The <code>to</code> method then uses these dependencies to augment the user prompt,
+  generate the model completion, log both the user prompt and the model
+  completion, and consolidate the memories.</p>
+</blockquote>
+
+<p>Which is pretty much spot on.</p>
+
+<p>I'd personnally have written something slightly different (no comments, have
+ <code>writeLog</code> for the user prompt at the begining of the method, and possibly
+not have any intermediate variables).</p>
+
+<p>But I can easily apply those changes!</p>
+
+<h2 id="takeways">Takeways</h2>
+
+<p>Thanks to Prompt Engineering (with techniques such as Role / Persona priming
+prompt, X-Shot, Chain of Thought and Generated Knowledge), it is possible
+to ask ChatGPT to generate code.</p>
+
+<p>I'm personally using the following prompts to generate the corresponding code
+for a given Test Class.</p>
+
+<p>Priming Prompt:</p>
+
+<blockquote>
+  <p>Act as an expert PHP developer, who's been writing high quality API code for 20 years.
+  Acknowledge with "ok".</p>
+</blockquote>
+
+<p>Test Class example prompt:</p>
+
+<blockquote>
+  <p>Here's an example of test class from the project you're working on:</p>
+  
+  <p><code>%example_test_class_code%</code></p>
+  
+  <p>Acknowledge by describing how the use of fixtures, dummies, stubs, mocks
+  and assertions allow to make sure the tested code is behaving as expected.
+  And note the use of the special BtlrServiceTestCase parent class for
+  <code>%example_test_class_name%</code>.</p>
+</blockquote>
+
+<p>Corresponding class example prompt:</p>
+
+<blockquote>
+  <p>When tasked with generating the corresponding <code>%example_class_name%</code> class,
+  from the above <code>%%example_test_class_name</code> test class, here's the code you wrote:</p>
+  
+  <p><code>%example_class_code%</code></p>
+  
+  <p>Acknowledge by describing how the test class got translated into its
+  corresponding class.</p>
+</blockquote>
+
+<p>Code generation request from Test Class prompt:</p>
+
+<blockquote>
+  <p>Brilliant. Now, in the same coding style as <code>%example_test_class_name%</code> and
+  <code>%example_class_name%</code>, you are tasked to write a the corresponding code for
+  the following <code>%test_class_name%</code> test class:</p>
+  
+  <p><code>%test_class_code%</code></p>
+  
+  <p>Acknowledge by generating the code for the <code>%class_name%</code> class.</p>
+</blockquote>
+
+<p>Now, what if you're not practicing Test Driven Development?</p>
+
+<p>I suppose you can tweek it to get ChatGPT to generate tests for you:</p>
+
+<ul>
+<li>Use the same priming prompt</li>
+<li>Then use the class example prompt</li>
+<li>Next use the "corresponding" test example prompt</li>
+<li>Finally provide a class and ask ChatGPT to generate its corresponding test</li>
+</ul>
+
+<p>All in all, the exploration of ChatGPT's text generation potential turned out
+to be quite worthwhile, as I ended up finding a practical use case for it in my
+day to day developer activity.</p>
+
+<p>Yet I suspect there's plenty more scenarions where ChatGPT can help, so I guess
+the quest continues.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[ChatGPT: fluff or not? Goldfish Memory]]></title>
+            <link href="/2023/04/04/chat-gpt-goldfish-memory.html"/>
+            <updated>2023-04-04T00:00:00+01:00</updated>
+            <id>/2023/04/04/chat-gpt-goldfish-memory.html</id>
+            <content type="html"><![CDATA[<p>Now that a couple of months have passed since its over hyped launch,
+surely <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> has found some
+use cases where it could be of any actual use. Or is it all fluff? Let's find out.</p>
+
+<p>In my quest to find a use for ChatGPT in my day to day developer activity,
+I've stumbled upon this article:
+<a href="https://allenpike.com/2023/175b-parameter-goldfish-gpt">a 175-Billion-Parameter Goldfish</a>,
+from <a href="http://www.twitter.com/apike/">Allen Pike</a>.</p>
+
+<p>Granted, this doesn't bring me anywhere close to my goal...
+Yet, this peaked my developer interest, by opening a window on some of the
+inner workings of ChatGPT.</p>
+
+<p>Let me walk you through my findings about ChatGPT and its Goldfish Memory
+problem, so we can learn a thing or two.</p>
+
+<h2 id="the-goldfish-memory-issue">The Goldfish Memory issue</h2>
+
+<p>When using ChatGPT, have you often encountered the frustrating
+"Goldfish Memory" issue, where it forgets the early conversation's context,
+resulting in responses that appear unrelated or inappropriate?</p>
+
+<p>This problem is due to how Large Language Models (LLMs), like OpenAI's GPT,
+work.</p>
+
+<p>They fundamentally are stateless functions that accept one prompt as an input,
+and return a completion as an ouptut (I believe the output actually also
+contains the prompt).</p>
+
+<p>Consider the following first "user" prompt:</p>
+
+<pre><code>Hi, my name is Loïc
+</code></pre>
+
+<p>And its completion:</p>
+
+<pre><code>Hello Loïc, it's nice to meet you! How can I assist you today?
+</code></pre>
+
+<p>Now, if we were to send the following second user prompt:</p>
+
+<pre><code>What is my name?
+</code></pre>
+
+<p>The LLM wouldn't be able to return the expected completion <code>Your name's Loïc</code>,
+because they only accept one single prompt, and the name is missing from that
+second user prompt.</p>
+
+<h2 id="llm%2C-but-for-chats">LLM, but for chats</h2>
+
+<p>To build a chat system similar to ChatGPT, instead of sending directly the
+user prompt to the LLM, we can create an "augmented" prompt which contains all
+the previous user prompts and their completions, as well as the new user prompt,
+in a conversation format:</p>
+
+<pre><code>User: Hi, my name is Loïc
+Chatbot: Hello Loïc, it's nice to meet you! How can I assist you today?
+User: What is my name?
+Chatbot:
+</code></pre>
+
+<p>By sending this augmented prompt to the LLM, we'll now be able to get the
+expected completion <code>Your name's Loïc</code>.</p>
+
+<h2 id="prompt-size-limit">Prompt Size Limit</h2>
+
+<p>But LLMs don't support unlimited sized prompts...</p>
+
+<p>For the sake of the example, let's say the size limit is 5 lines,
+and the conversation continued as follow:</p>
+
+<pre><code>User: Hi, my name is Loïc
+Chatbot: Hello Loïc, it's nice to meet you! How can I assist you today?
+User: What is my name?
+Chatbot: Your name's Loïc
+User: I'm a Lead Developer, my tech stack is: PHP, Symfony, PostgresSQL and git
+Chatbot: Do you have any specific questions related to your tech stack?
+User: I also follow these methodologies: SCRUM, TDD and OOP
+Chatbot: Do you have any topics related to those methodologies that you'd like to discuss?
+User: What is my name?
+Chatbot:
+</code></pre>
+
+<p>Because of the 5 lines limit, the chat system needs to truncate the augmented
+prompt before sending it to the LLM. A common solution seems to only keep the
+latest messages. Which means the LLM would end up only getting the following
+prompt:</p>
+
+<pre><code>Chatbot: Do you have any specific questions related to your tech stack?
+User: I also follow these methodologies: SCRUM, TDD and OOP
+Chatbot: Do you have any topics related to those methodologies that you'd like to discuss?
+User: What is my name?
+Chatbot:
+</code></pre>
+
+<p>And this is why ChatGPT is not able to answer the expected <code>Your name's Loïc</code>.</p>
+
+<blockquote>
+  <p>Note: at the time of writing this article, ChatGPT's limit is shared between
+  the prompt and the completion:
+  * for the <code>gpt-3.5-turbo</code> model, the token limit is 4096
+  * for <code>gpt-4</code> it's 8192
+  Before being sent to the LLM, the input text is broken down into tokens:
+  <code>Hi, my name is Loïc</code> is broken down into the following dictionary
+  <code>['Hi', ',', ' my', ' name', ' is', ' Lo', 'ï', 'c']</code>, which is then converted
+  into the following tokens <code>[17250, 11, 616, 1438, 318, 6706, 26884, 66]</code>.
+  A single word might be broken down into multiple tokens, and tokenisation
+  varies between models. The rule of thumb is to consider that a token is
+  equivalent to 3/4 of a word.</p>
+</blockquote>
+
+<h2 id="how-to-enable-infinite-memory%3F">How to enable Infinite Memory?</h2>
+
+<p>So. Where do we go from here? How do we enable Infinite Memory for chatbots,
+and more broadly LLMs?</p>
+
+<p>One solution would be to periodically summarize parts of the conversation.</p>
+
+<p>The summarization task itself can be done in a separate "summarizing" prompt:</p>
+
+<pre><code>Summarize the following conversation in a short sentence, in the past tense:
+User: Hi, my name is Loïc
+Chatbot: Hello Loïc, it's nice to meet you! How can I assist you today?
+User: What is my name?
+Chatbot: Your name is Loïc
+</code></pre>
+
+<p>Which should result in a completion similar to:</p>
+
+<pre><code>The user introduced themselves as Loïc, and the chatbot confirmed their name when asked.
+</code></pre>
+
+<p>The augmented prompt would then contain the summaries of older messages,
+as well as recent ones:</p>
+
+<pre><code>Previously:
+The user introduced themselves as Loïc, and the chatbot confirmed their name when asked.
+The user discussed their tech stack (PHP, Symfony, PostgresSQL and Git) and methodologies (SCRUM, TDD and OOP) as a Lead Developer, and the chatbot asked if they have any specific questions related to them.
+User: What is my name?
+Chatbot:
+</code></pre>
+
+<p>Now the LLM should be able to give a completion equivalent to:</p>
+
+<pre><code>Your name is Loïc. Is there anything else I can help you with related to your tech stack or methodologies as a Lead Developer?
+</code></pre>
+
+<p>And that's the gist of it!</p>
+
+<h2 id="takeways">Takeways</h2>
+
+<p>Augmenting the prompt with recent messages, as well as summaries of related
+older ones, can allow LLMs to have Infinite Memory!</p>
+
+<p>And that's when the "build a pet project" part of my brain started tingling,
+sometimes I just can't resist the urge to build something to get a better
+grasp on a concept that's intriguing me...</p>
+
+<p>So I've started to code a small CLI app (with PHP and Symfony of course)
+to explore the concepts.</p>
+
+<p>There definitely are some challenges and limits to the summarization approach.</p>
+
+<p>First would be how to select the chunks of conversation to summarize...
+Do we create a new summary:</p>
+
+<ul>
+<li>every 4 messages?</li>
+<li>every hour? every day?</li>
+<li>every time the topic seems to change? How do we detect that?</li>
+</ul>
+
+<p>Next is what summary to include in the prompt:</p>
+
+<ul>
+<li>a concatenation of all summaries?</li>
+<li>a summary of all the summaries?</li>
+<li>the summaries that are somehow related to the last messages or user prompt?</li>
+</ul>
+
+<p>Which then brings another rabbit hole, namely how to search for relevant
+summaries:</p>
+
+<ul>
+<li>using semantic search?</li>
+<li>using vector database?</li>
+<li>using graph database?</li>
+</ul>
+
+<p>More on that once I've done some progress on the pet project. Anyway.</p>
+
+<p>All in all, while I haven't found a practical use case for ChatGPT in my
+day to day developer activity, it still seems worth exploring its potential
+for generating content. The quest continues.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[ChatGPT: fluff or not? Academic Prompt Engineering]]></title>
+            <link href="/2023/03/24/chat-gpt-academic-prompt-engineering.html"/>
+            <updated>2023-03-24T00:00:00+00:00</updated>
+            <id>/2023/03/24/chat-gpt-academic-prompt-engineering.html</id>
+            <content type="html"><![CDATA[<p>Now that a couple of months have passed since its over hyped launch,
+surely <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> has found some
+use cases where it could be of any actual use. Or is it all fluff? Let's find out.</p>
+
+<p>In my quest to find a use for ChatGPT in my day to day developer activity,
+I've stumbled upon this online course website:
+<a href="https://learnprompting.org/]">Learn Prompting</a>,
+an initiative lead by <a href="https://trigaten.github.io/">Sander Schulhoff</a>,
+with contributions from <a href="https://towardsai.net/">Towards AI</a>.</p>
+
+<p>Granted, this doesn't bring me anywhere close to my goal...
+Yet, this is in stark contrast to all the resources that I've found so far,
+which are usually "hey I tried this hack and it worked", with no explanations
+on why.</p>
+
+<p>Let me walk you through the different Prompt Engineering techniques,
+and why they work, with some academic backing, so we can learn a thing or two.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: It was extremely tempting to describe how ChatGPT works,
+  but I didn't want the explanations to detract from the focus of the article
+  (which is academic backed prompt engineering).
+  I recommend these short articles for a detailed explanations:
+  * <a href="https://iq.opengenus.org/gpt-3-5-model/">GPT 3.5 model</a>
+  * <a href="https://gist.github.com/veekaybee/6f8885e9906aa9c5408ebe5c7e870698">Everything I (Vicki Boykis) understand about ChatGPT</a></p>
+</blockquote>
+
+<h2 id="x-shot-prompting"><a href="https://learnprompting.org/docs/basics/standard_prompt">X-Shot Prompting</a></h2>
+
+<p>X-Shot prompting allows Large Language Models to improve their accuracy,
+on previously unseen data, without the need to update their training parameters,
+by including examples in the prompt:</p>
+
+<pre><code>Extract the brand, product name and format from this item "Magnum White Chocolate Ice Cream 8 x 110 ml":
+* brand: Magnum
+* product name: White Chocolate Ice Cream
+* format: 8 x 110 ml
+
+Extract the brand, product name and format from this item "Birds Eye Garden Peas, 375g (Frozen)":
+* brand: Birds Eye
+* product name: Garden Peas
+* format: 375g
+
+Extract the brand, product name and format from this item "PG tips 160 Original Tea Bags":
+* brand: PG tips
+* product name: Original Tea Bags
+* format: 160
+
+Extract the brand, product name and format from this item "233g, Golden Eggs Chocolate Egg, Galaxy":
+</code></pre>
+
+<p>There's a distinction between Few-Shot, One-Shot and Zero-Shot prompting
+(referring to how many examples are included in the prompt).</p>
+
+<p>Isn't Zero-Shot prompting just... Prompting? Well X-Shot isn't just about
+having examples in the prompt, it's mainly about the capability of the model
+to perform better on new data it wasn't trained on, so we're going to see
+that "Zero-Shot" term used in conjunction with other techniques.</p>
+
+<blockquote>
+  <p>See also, <a href="https://www.allabtai.com/">Kris - All About AI</a>'s article:
+  <a href="https://www.allabtai.com/prompt-engineering-tips-zero-one-and-few-shot-prompting/">X-Shot Prompting</a></p>
+</blockquote>
+
+<h2 id="chain-of-thought-prompting"><a href="https://learnprompting.org/docs/intermediate/chain_of_thought">Chain of Thought Prompting</a></h2>
+
+<p>Few-Shot Chain of Thought prompting allows Large Language Models
+to perform better on logic based tasks (such as solving arithmetic,
+commonsense, and symbolic problems) by including in the examples
+the reasoning steps:</p>
+
+<pre><code>Q: Roger has 5 tennis balls. He buys 2 more cans of tennis balls.
+Each can has 3 tennis balls. How many tennis balls does he have now?
+
+A: Roger started with 5 balls. 2 cans of 3 tennis balls each is 6 tennis balls.
+5 + 6 = 11. The answer is 11.
+
+Q: The cafeteria had 23 apples. If they use 20 to make lunch and bought 6 more,
+how many apples do they have?
+</code></pre>
+
+<p>Zero-Shot Chain of Thought prompting can also be used to get better results
+for these tasks, by including in the prompt a request to detail the reasoning
+steps:</p>
+
+<pre><code>A juggler can juggle 16 balls. Half of the balls are golf balls,
+and half of the golf balls are blue. How many blue golf balls are there?
+Let's think step by step.
+</code></pre>
+
+<p>More specifically, ending the prompt with <code>Let's think step by step</code> proved
+to provide the best results
+(claim backed in the paper <a href="https://arxiv.org/abs/2201.11903">CoT Prompting Elicits Reasoning in LLM</a>).</p>
+
+<h2 id="generated-knowledge-prompting"><a href="https://learnprompting.org/docs/intermediate/generated_knowledge">Generated Knowledge prompting</a></h2>
+
+<p>Generated Knowledge prompting allows Large Language Models to perform better
+on commonsense reasoning by having a first prompt requesting the generation
+of knowledge on a topic, and then incorporating the output in a second prompt
+that requests top perform the related commonsense task.</p>
+
+<p>Here's the first prompt asking for knowledge generation:</p>
+
+<pre><code>Write 5 facts about test driven development
+</code></pre>
+
+<p>Then the second prompt which incorporates the output for the first prompt:</p>
+
+<pre><code>Here are 5 facts about TDD:
+1. Test-driven development (TDD) is a software development process that emphasizes the creation of automated tests before any code is written. In TDD, developers write a failing test case first, then write code to pass the test, and then refactor the code to improve it.
+2. TDD helps to ensure that the code is working correctly by testing it at every step of the development process. By creating tests first, developers can also ensure that their code meets the requirements and specifications of the project.
+3. TDD can be used with a variety of programming languages and frameworks, and it is often used in agile development methodologies. It can also be used in combination with other testing techniques, such as behavior-driven development (BDD) and acceptance test-driven development (ATDD).
+4. TDD can result in improved code quality, as developers are forced to think more deeply about the design of their code and the potential edge cases that their code may encounter. TDD can also result in faster development times, as bugs are caught early in the development process and can be fixed before they cause more significant issues.
+5. TDD is not a silver bullet solution for software development and may not be suitable for all projects or teams. It can require additional time and effort upfront to write tests and ensure that they are passing, and it may require a cultural shift in the development team to fully adopt the TDD methodology.
+
+With TDD, can I first write code that fails, then write a test and finally refactor the code to make the test pass?
+</code></pre>
+
+<blockquote>
+  <p><em>Note: I've seen this as also being referred to as Chain Prompting.</em></p>
+</blockquote>
+
+<h2 id="takeways">Takeways</h2>
+
+<p>The following prompt engineering techniques are proven by studies to improve
+the output quality of Large Language Models:</p>
+
+<ul>
+<li>X-Shot: include examples in the prompt</li>
+<li>Chain of Thought: end the prompt with <code>Let's think step by step</code></li>
+<li>Knowlegde Generated:
+
+<ul>
+<li>first ask to generate facts on a topic</li>
+<li>then ask a question on the topic, including the previously generated facts</li>
+</ul></li>
+</ul>
+
+<p>All in all, while I haven't found a practical use case for ChatGPT in my day to day developer activity,
+it still seems worth exploring its potential for generating content. The quest continues.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[ChatGPT: fluff or not? Prompt Engineering]]></title>
+            <link href="/2023/03/01/chat-gpt.html"/>
+            <updated>2023-03-01T00:00:00+00:00</updated>
+            <id>/2023/03/01/chat-gpt.html</id>
+            <content type="html"><![CDATA[<p>Now that a couple of months have passed since its over hyped launch,
+surely <a href="https://openai.com/blog/chatgpt/">ChatGPT</a> has found some
+use cases where it could be of any actual use. Or is it all fluff? Let's find out.</p>
+
+<p>In my quest to find a use for ChatGPT in my day to day developer activity,
+I've stumbled upon this video:
+<a href="https://www.youtube.com/watch?v=Xs7wieu-35k]">ChatGPT Prompt Engineering: How to Write a Story</a>,
+by <a href="https://www.allabtai.com/">Kris - All About AI</a>).</p>
+
+<p>Granted, story writing is a bit irrelevant for what I'm looking for.
+Yet the way the messages sent to ChatGPT (aka "prompts") were crafted,
+proved quite interesting!</p>
+
+<p>Let me walk you through it,
+with some added references so we can learn a thing or two.</p>
+
+<h2 id="1st-prompt%3A-%22you%27re-an-expert%22">1st prompt: "You're an expert"</h2>
+
+<p>After opening a new conversation,
+the First Prompt (or user message) sent to ChatGPT is used to prime it:</p>
+
+<pre><code>You are a {Genre} author.
+Your task is to write {Genre} stories in a vivid and intriguing language.
+Answer with "..." if you acknowledge.
+Don't write anything yet.
+
+Genre = Sci-Fi
+</code></pre>
+
+<p>This is a variation of the <code>You are [job], you have been [doing thing] for 20 years</code> prompt,
+which helps ChatGPT narrow down the context that it's going to use to generate its replies.</p>
+
+<blockquote>
+  <p>Reference: "Give ChatGPT an identity" section from
+  <a href="https://wgmimedia.com/how-to-use-chatgpt-advanced-prompt-engineering/">How To Use ChatGPT: Advanced Prompt Engineering</a></p>
+</blockquote>
+
+<p>Interestingly, it uses a placeholder (<code>{Genre}</code>) and sets its value (<code>Genre = Sci-Fi</code>).</p>
+
+<p>It also makes sure that ChatGPT doesn't generate any reply.</p>
+
+<p>Could this be because ChatGPT will base its next replies
+on any text it will have already generated in the conversation?</p>
+
+<h2 id="2nd-prompt%3A-%22templates-within-templates%22">2nd prompt: "Templates within Templates"</h2>
+
+<p>The Second Prompt is used to specify more context for chatGPT:</p>
+
+<pre><code>Title: [Insert story title here]
+Setting: [Insert setting details here, including time period, location, and any relevant background information]
+Protagonist: [Insert protagonist's name, age, and occupation, as well as a brief description of their personality and motivations]
+Fill out the template above for a {Genre} story
+Genre = Sci-Fi
+</code></pre>
+
+<p>The brilliance of this one is that it uses a second kind of placeholder (<code>[Insert story title here]</code>),
+one that is intended for ChatGPT to replace (<code>Fill out template above</code>).</p>
+
+<p>If ChatGPT is indeed going to base its next reply
+on whatever it has already generated earlier in the conversation,
+then having it repeat the instructions with the added details is simply genius.</p>
+
+<p>The list format might also not be trivial,
+as I've seen claims that usage of colons (<code>Title: [insert story title here]</code>)
+is supposed to help ChatGPT be more specific in its replies too.</p>
+
+<blockquote>
+  <p>Reference: "Prompt 2" chapter from
+  <a href="https://youtu.be/HGDxu3kPErs">Advanced ChatGPT Prompt Tutorial</a></p>
+</blockquote>
+
+<h2 id="3rd-%26-4th-prompts%3A-%22now%2C-do-your-job%22">3rd &amp; 4th prompts: "Now, do your job"</h2>
+
+<p>While the First and Second prompts were about setting the context,
+the Third and Fourth ones are finally the calls to action.</p>
+
+<p>Here's the Third Prompt:</p>
+
+<pre><code>Build a story outlines from the factors above:
+</code></pre>
+
+<p>ChatGPT is going to generate an ordered list based on the context previously given.</p>
+
+<p>Then the Fourth Prompt:</p>
+
+<pre><code>Great, now create story chapters from the outlines above:
+</code></pre>
+
+<p>ChatGPT is going to reuse its reply for the Third Prompt, and expand on it.</p>
+
+<p>I'm taking note of the use of the word <code>Great</code>,
+could its purpose be to give some positive feedback to ChatGPT?</p>
+
+<p>Another thing worth mentioning is the use of the word <code>now</code>,
+which I see a lot from prompt engineers,
+and I'm not sure if it's delibarate to improve ChatGPT replies.</p>
+
+<p>But most importantly,
+I'm wondering how <code>from the factors above</code> is intepreted by ChatGPT:
+is it going to consider every messages sent in the current conversation,
+or is it going to focus on the immediately prior message.</p>
+
+<p>I've personally got a feeling that ChatGPT will focus mainly on its own
+replies from the conversation.</p>
+
+<p>The usage of a final colon <code>:</code> is especially noteworthy,
+I'd be curious to know if this is another hack to help ChatGPT write more focused replies.</p>
+
+<h2 id="5th-prompt%3A-%22use-given-style%22">5th prompt: "Use given style"</h2>
+
+<p>The Fifth Prompt is yet another call to action:</p>
+
+<pre><code>Write Chapter 1 in depth and in great detail, in a intriguing writing style:
+</code></pre>
+
+<p>It asks ChatGPT to reuse its previous reply and expand on it,
+but this time only a section of it by referencing the chapter number
+(<code>Write Chapter 1</code>)!</p>
+
+<p>The rest of the prompt is a variation of
+<code>Write a [length] [content type] on [topic] in the style of [style]</code>.</p>
+
+<p>Specifying some constraints such as these helps ChatGPT avoid irrelevant output.</p>
+
+<blockquote>
+  <p>Reference: "Be specific, descriptive and as detailed as possible about
+  the desired context, outcome, length, format, style, etc " section from
+  <a href="https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-openai-api">Best practices for prompt engineering with OpenAI API</a></p>
+</blockquote>
+
+<h2 id="5th-prompt-bis%3A-prompt-editing%21">5th prompt (bis): Prompt Editing!</h2>
+
+<p>In my opinion, the most important piece of advice from that video
+comes in play when writing the second to tenth chapters:</p>
+
+<pre><code>Write Chapter 2 in depth and in great detail, in a intriguing writing style:
+</code></pre>
+
+<p>Instead of copying the prompt, pasting it in the input message box,
+changing the chapter number and then sending it as the Sixth Prompt,
+the advice we're given is to <strong>edit the Fifth Prompt</strong> (through ChatGPT's UI),
+change the number and submit it!</p>
+
+<p>ChatGPT's UI will still allow you to check the previous versions of the prompt,
+as well as their generated replies, so you don't lose anything here.</p>
+
+<p>But this ties in with the idea that ChatGPT performs better with its immediately prior message,
+than asking it to expand on a reply it wrote 10 messages earlier.</p>
+
+<h2 id="takeways">Takeways</h2>
+
+<p>While the purpose of the video was to write a Sci-Fi story,
+it helped learn a lot of Prompt Engineering techniques
+(the art of crafting messages that will improve ChatGPT replies).</p>
+
+<p>The First Prompt needs to prime ChatGPT for the targeted domain,
+and make sure that it doesn't reply anything:</p>
+
+<pre><code>You're [JOB].
+You have been [DOING JOB] for 20 years.
+Your task is now to [TASK].
+Answer with "..." if you acknowledge.
+Don't write anything yet.
+</code></pre>
+
+<p>It seems to me that ChatGPT bases its reply on its own immediately prior message,
+so the Second Prompt needs to make ChatGPT repeat it in its reply,
+to set up the context for the Third Prompt's reply.</p>
+
+<p>The usage of colons (<code>:</code>) helps ChatGPT to be more specific in its replies,
+and it's possible to use placeholders that are going to be replaced
+with generated content in ChatGPT reply:</p>
+
+<pre><code>Title: [Insert title]
+Setting: [Insert setting details here]
+Fill out the template above for a Sci-Fi story
+</code></pre>
+
+<p>If the prompt is intended to be copy pasted and used in different scenarios,
+it's possible to use placeholders that act as variables,
+and to which the value is set further down the prompt:</p>
+
+<pre><code>You are a {Genre} author.
+Your task is to write {Genre} stories
+
+Genre = Sci-Fi
+</code></pre>
+
+<p>The Third Prompt is going to be a call to action,
+that's going to use the Second Prompt's reply for context.</p>
+
+<pre><code>Now, write [length] [content type] on [topic] in the style of [style], using [context] from above:
+</code></pre>
+
+<p>While we're on the topic of length it's very important to bear in mind that
+<em>shared between the prompt you write and the reply it generates,
+<strong>ChatGPT can only handle 4000 tokens</strong></em>, which is approximately 3000 words
+(when it uses the <a href="https://platform.openai.com/docs/models/gpt-3">text-davinci-003 model</a>).</p>
+
+<p>So for example, if your prompt contains 3000 tokens,
+it only leaves ChatGPT with a 1000 token left for its reply!</p>
+
+<blockquote>
+  <p>Reference: "Important: Prompt Size Matters" chapter from
+  <a href="https://www.youtube.com/watch?v=EYjG6i53-xk">This Will Make You Better than 99% ChatGPT Users</a></p>
+</blockquote>
+
+<p>The Fourth Prompt is going to be a call to action,
+that's going to use the Third Prompt's reply for context, and so on.</p>
+
+<p>If for some reason the Fifth Prompt needs to use the Third Prompt's reply for context,
+then we should instead edit directly the Third Prompt, make the required changes, and submit them.</p>
+
+<p>All in all, while I haven't found a practical use case for ChatGPT in my day to day developer activity,
+it still seems worth exploring its potential for generating content. The quest continues.</p>
+]]></content>
+        </entry>
+    </feed>

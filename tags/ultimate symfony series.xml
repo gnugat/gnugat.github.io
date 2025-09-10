@@ -1,0 +1,4647 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2025-09-10T10:14:49+01:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - CLI Example]]></title>
+            <link href="/2016/04/06/ultimate-symfony-cli-example.html"/>
+            <updated>2016-04-06T00:00:00+01:00</updated>
+            <id>/2016/04/06/ultimate-symfony-cli-example.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: Practice makes Better.</p>
+</blockquote>
+
+<p>In this guide we've explored the main standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+<li><a href="/2016/03/02/ultimate-symfony-console.html">Console</a></li>
+</ul>
+
+<p>We've also seen how HttpKernel enabled reusable code with <a href="/2016/03/09/ultimate-symfony-bundle.html">Bundles</a>,
+and the different ways to organize our application <a href="/2016/03/16/ultimate-symfony-skeleton.html">tree directory</a>.</p>
+
+<p>Finally we've started to put all this knowledge in practice by creating a
+"fortune" project with:</p>
+
+<ul>
+<li><a href="/2016/03/24/ultimate-symfony-api-example.html">an endpoint that allows us to submit new fortunes</a>.</li>
+<li><a href="/2016/03/30/ultimate-symfony-web-example.html">a page that lists all fortunes</a>.</li>
+</ul>
+
+<p>In this article, we're going to continue the "fortune" project by creating a
+command that prints the last fortune.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: To start with the same code, use the following repository:</p>
+
+<pre><code>git clone https://github.com/gnugat-examples/fortune.git
+cd fortune
+composer install -o --ignore-platform-reqs
+git checkout web-example
+git checkout -b cli-example
+</code></pre>
+</blockquote>
+
+<h2 id="create-the-command">Create the Command</h2>
+
+<p>The CLI equivalent of a web Controller is a Command. We're first going to create
+a functional test:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Command/PrintLastFortuneCommandTest.php
+
+namespace Tests\AppBundle\Command;
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Tester\ApplicationTester;
+
+class PrintLastFortuneCommandTest extends \PHPUnit_Framework_TestCase
+{
+    private $app;
+
+    protected function setUp()
+    {
+        $kernel = new \AppKernel('test', false);
+        $application = new Application($kernel);
+        $application-&gt;setAutoExit(false);
+        $this-&gt;app = new ApplicationTester($application);
+    }
+
+    /**
+     * @test
+     */
+    public function it_prints_last_fortune()
+    {
+        $input = array(
+            'print-last-fortune',
+        );
+
+        $exitCode = $this-&gt;app-&gt;run($input);
+
+        self::assertSame(0, $exitCode, $this-&gt;app-&gt;getDisplay());
+    }
+}
+</code></pre>
+
+<p>Successful commands always return <code>0</code> as an exit code, which is what we're going
+to check in this test. Let's run the suite:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They fail, telling us to create the actual code for the command:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Command/PrintLastFortuneCommand.php
+
+namespace AppBundle\Command;
+
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class PrintLastFortuneCommand extends Command
+{
+    protected function configure()
+    {
+        $this-&gt;setName('print-last-fortune');
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+    }
+}
+</code></pre>
+
+<p>Since Symfony looks automatically for classes that extend <code>Command</code> in the
+<code>Command</code> directory of each registered bundle, our command is now available:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>The test suite is now green. We can run it using the console:</p>
+
+<pre><code>bin/console print-last-fortune
+</code></pre>
+
+<p>We should successfully get an empty line.</p>
+
+<h2 id="create-the-logic">Create the logic</h2>
+
+<p>In order to get something else than an empty line, we need to create a new use
+case. It's purpose will be to convey intent (print the last fortune) and
+to validate the input parameters:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Service/PrintLastFortuneTest.php
+
+namespace Tests\AppBundle\Service;
+
+use AppBundle\Service\PrintLastFortune;
+
+class PrintLastFortuneTest extends \PHPUnit_Framework_TestCase
+{
+    /**
+     * @test
+     */
+    public function it_has_no_parameters()
+    {
+        $printLastFortune = new PrintLastFortune();
+    }
+}
+</code></pre>
+
+<p>Well, currently we don't have any input parameters. But if we get a new requirement
+that does need input parameters, we'll be ready to validate them. For now we can
+run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They fail because we need to create the actual class:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/PrintLastFortune.php
+
+namespace AppBundle\Service;
+
+class PrintLastFortune
+{
+}
+</code></pre>
+
+<p>This should fix the issue:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Now let's create Handler that will list all fortunes:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Service/PrintLastFortuneHandlerTest.php
+
+namespace Tests\AppBundle\Service;
+
+use AppBundle\Service\FindLastFortune;
+use AppBundle\Service\PrintLastFortune;
+use AppBundle\Service\PrintLastFortuneHandler;
+
+class PrintLastFortuneHandlerTest extends \PHPUnit_Framework_TestCase
+{
+    const CONTENT = 'Why do witches burn?';
+
+    private $findLastFortune;
+    private $printLastFortuneHandler;
+
+    protected function setUp()
+    {
+        $this-&gt;findLastFortune = $this-&gt;prophesize(FindLastFortune::class);
+        $this-&gt;printLastFortuneHandler = new PrintLastFortuneHandler(
+            $this-&gt;findLastFortune-&gt;reveal()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_prints_last_fortune()
+    {
+        $printLastFortune = new PrintLastFortune();
+        $lastFortune = array(
+            'content' =&gt; self::CONTENT,
+        );
+
+        $this-&gt;findLastFortune-&gt;findLast()-&gt;willReturn($lastFortune);
+
+        self::assertSame($lastFortune, $this-&gt;printLastFortuneHandler-&gt;handle($printLastFortune));
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They're telling us to create <code>PrintLastFortuneHandler</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/PrintLastFortuneHandler.php
+
+namespace AppBundle\Service;
+
+class PrintLastFortuneHandler
+{
+    private $findLastFortune;
+
+    public function __construct(FindLastFortune $findLastFortune)
+    {
+        $this-&gt;findLastFortune = $findLastFortune;
+    }
+
+    public function handle(PrintLastFortune $printLastFortune)
+    {
+        return $this-&gt;findLastFortune-&gt;findLast();
+    }
+}
+</code></pre>
+
+<p>This should fix this specific error:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Now our tests are telling us to create <code>FindLastFortune</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/FindLastFortune.php
+
+namespace AppBundle\Service;
+
+interface FindLastFortune
+{
+    public function findLast();
+}
+</code></pre>
+
+<p>Let's see if it did the trick:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Yes it did! To sum up what we've done in this section:</p>
+
+<ul>
+<li>we've created a <code>PrintLastFortune</code> use case which could be validating input parameter,
+for now it's empty and only serve us to convey intention (use case: print last fortunes)</li>
+<li>we've create a <code>PrintLastFortuneHandler</code> class that calls services which will
+do the actual logic</li>
+<li>we've created a <code>FindLastFortune</code> interface, its implementations will find the
+last fortune</li>
+</ul>
+
+<h2 id="wiring">Wiring</h2>
+
+<p>We're going to use Doctrine DBAL to actually find all fortunes from a database.
+This can be done by creating an implementation of <code>FindLastFortune</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/Bridge/DoctrineDbalFindLastFortune.php
+
+namespace AppBundle\Service\Bridge;
+
+use AppBundle\Service\FindLastFortune;
+use Doctrine\DBAL\Driver\Connection;
+
+class DoctrineDbalFindLastFortune implements FindLastFortune
+{
+    private $connection;
+
+    public function __construct(Connection $connection)
+    {
+        $this-&gt;connection = $connection;
+    }
+
+    public function findLast()
+    {
+        $queryBuilder = $this-&gt;connection-&gt;createQueryBuilder();
+        $queryBuilder-&gt;select('*');
+        $queryBuilder-&gt;from('fortune');
+        $queryBuilder-&gt;orderBy('id', 'DESC');
+        $queryBuilder-&gt;setMaxResults(1);
+        $sql = $queryBuilder-&gt;getSql();
+        $parameters = $queryBuilder-&gt;getParameters();
+        $statement = $this-&gt;connection-&gt;prepare($sql);
+        $statement-&gt;execute($parameters);
+
+        return $statement-&gt;fetch();
+    }
+}
+</code></pre>
+
+<p>This was the last class we needed to write. We can now use <code>PrintLastFortune</code>
+in our command:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Command/PrintLastFortuneCommand.php
+
+namespace AppBundle\Command;
+
+use AppBundle\Service\PrintLastFortune;
+use AppBundle\Service\PrintLastFortuneHandler;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class PrintLastFortuneCommand extends Command
+{
+    private $printLastFortuneHandler;
+
+    public function __construct(PrintLastFortuneHandler $printLastFortuneHandler)
+    {
+        $this-&gt;printLastFortuneHandler = $printLastFortuneHandler;
+
+        parent::__construct();
+    }
+
+    protected function configure()
+    {
+        $this-&gt;setName('print-last-fortune');
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+        $printLastFortune = new PrintLastFortune();
+
+        $lastFortune = $this-&gt;printLastFortuneHandler-&gt;handle($printLastFortune);
+
+        $output-&gt;writeln($lastFortune['content']);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: In the command, we extract Input parameters and options to put them
+  in <code>PrintLastFortune</code> which is going to validate them. We then simply call
+  <code>PrintLastFortuneHandler</code> to take care of the logic associated to <code>PrintLastFortune</code>.</p>
+</blockquote>
+
+<p>Now all that's left to do is wire everything together using Dependency Injection:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    # Commands
+    app.print_last_fortune_command:
+        class: 'AppBundle\Command\PrintLastFortuneCommand'
+        arguments:
+            - '@app.print_last_fortune_handler'
+        tags:
+            - { name: console.command }
+
+    # Controllers
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.fortune_controller:
+        class: 'AppBundle\Controller\FortuneController'
+        arguments:
+            - '@app.list_all_fortunes_handler'
+            - '@twig'
+
+    # Handlers
+    app.list_all_fortunes_handler:
+        class: 'AppBundle\Service\ListAllFortunesHandler'
+        arguments:
+            - '@app.find_all_fortunes'
+
+    app.print_last_fortune_handler:
+        class: 'AppBundle\Service\PrintLastFortuneHandler'
+        arguments:
+            - '@app.find_last_fortune'
+
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    # Services
+    app.find_all_fortunes:
+        alias: app.bridge.doctrine_dbal_find_all_fortunes
+
+    app.bridge.doctrine_dbal_find_all_fortunes:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalFindAllFortunes'
+        arguments:
+            - '@database_connection'
+
+    app.find_last_fortune:
+        alias: app.bridge.doctrine_dbal_find_last_fortune
+
+    app.bridge.doctrine_dbal_find_last_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalFindLastFortune'
+        arguments:
+            - '@database_connection'
+
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+
+    # Listeners
+    app.json_request_content_listener:
+        class: 'AppBundle\EventListener\JsonRequestContentListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    app.exception_listener:
+        class: 'AppBundle\EventListener\ExceptionListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>rm -rf var/cache/*
+./bin/console doctrine:database:drop --force
+./bin/console doctrine:database:create
+bin/console doctrine:query:sql 'CREATE TABLE fortune (id SERIAL, content TEXT);'
+vendor/bin/phpunit
+</code></pre>
+
+<p>All green! Let's add some fortunes:</p>
+
+<pre><code>php -S localhost:2501 -t web
+curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"I am sorry to have kept you waiting, but I am afraid my walk has become rather sillier recently"}'
+curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"Well you cannot expect to wield supreme executive power just because some watery tart threw a sword at you."}'
+curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"All right... all right... but apart from better sanitation, the medicine, education, wine, public order, irrigation, roads, a fresh water system, and public health ... what have the Romans ever done for us?"}'
+</code></pre>
+
+<p>We can now check our command:</p>
+
+<pre><code>bin/console print-last-fortune
+</code></pre>
+
+<p>This time instead of an empty line, we do get the last fortune.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>To create a new command, we need to:</p>
+
+<ul>
+<li>create a Command class</li>
+<li>register the command as a service, with a <code>console.command</code> tag</li>
+</ul>
+
+<p>The command's logic is then up to us, it doesn't have to be done in a "Symfony"
+way. For example we can:</p>
+
+<ul>
+<li>extract Input parameters and put them in a class that validates them</li>
+<li>pass the class to a handler that will call services to do the actual logic</li>
+<li>define our services as interfaces, and then create implementations to integrate
+them with third party libraries</li>
+</ul>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Web Example]]></title>
+            <link href="/2016/03/30/ultimate-symfony-web-example.html"/>
+            <updated>2016-03-30T00:00:00+01:00</updated>
+            <id>/2016/03/30/ultimate-symfony-web-example.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: Practice makes Better.</p>
+</blockquote>
+
+<p>In this guide we've explored the main standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+<li><a href="/2016/03/02/ultimate-symfony-console.html">Console</a></li>
+</ul>
+
+<p>We've also seen how HttpKernel enabled reusable code with <a href="/2016/03/09/ultimate-symfony-bundle.html">Bundles</a>,
+and the different ways to organize our application <a href="/2016/03/16/ultimate-symfony-skeleton.html">tree directory</a>.</p>
+
+<p>Finally we've started to put all this knowledge in practice by creating a
+"fortune" project with <a href="/2016/03/24/ultimate-symfony-api-example.html">an endpoint that allows us to submit new fortunes</a>.</p>
+
+<p>In this article, we're going to continue the "fortune" project by creating a page
+that lists all fortunes.</p>
+
+<p>In the next article we'll also create for this application <a href="/2016/04/06/ultimate-symfony-cli-example.html">a command that prints the last fortune</a>.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: To start with the same code, use the following repository:</p>
+
+<pre><code>git clone https://github.com/gnugat-examples/fortune.git
+cd fortune
+composer install -o --ignore-platform-reqs
+git checkout api-example
+git chekcout -b web-example
+</code></pre>
+</blockquote>
+
+<h2 id="create-the-controller">Create the Controller</h2>
+
+<p>We'll first start by writing a functional test for our new endpoint:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Controller/FortuneControllerTest.php
+
+namespace Tests\AppBundle\Controller;
+
+use Symfony\Component\HttpFoundation\Request;
+
+class FortuneControllerTest extends \PHPUnit_Framework_TestCase
+{
+    private $app;
+
+    protected function setUp()
+    {
+        $this-&gt;app = new \AppKernel('test', false);
+    }
+
+    /**
+     * @test
+     */
+    public function it_lists_all_fortunes()
+    {
+        $request = Request::create('/');
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        self::assertSame(200, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+}
+</code></pre>
+
+<p>Just like for our endpoint, we're only interested in checking the status code
+of the response (<code>200</code> is successful response).</p>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They fail, with a <code>404 NOT FOUND</code> response. That's because we don't have any
+controllers, so let's fix that:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/FortuneController.php
+
+namespace AppBundle\Controller;
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class FortuneController
+{
+    public function listAll(Request $request)
+    {
+        return new Response('', 200);
+    }
+}
+</code></pre>
+
+<p>After creating a controller, the next step is to configure its route:</p>
+
+<pre><code># app/config/routing.yml
+
+submit_new_fortunes_endpoint:
+    path: /api/v1/fortunes
+    defaults:
+        _controller: app.api.fortune_controller:submit
+    methods:
+        - POST
+
+list_all_fortunes_page:
+    path: /
+    defaults:
+        _controller: app.fortune_controller:listAll
+    methods:
+        - GET
+</code></pre>
+
+<p>In this configuration, <code>_controller</code> is set to call the <code>listAll</code> method of the
+<code>app.fortune_controller</code> service. Here's how to define this service:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    # Controllers
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.fortune_controller:
+        class: 'AppBundle\Controller\FortuneController'
+
+    # Handlers
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    # Services
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+
+    # Listeners
+    app.json_request_content_listener:
+        class: 'AppBundle\EventListener\JsonRequestContentListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    app.exception_listener:
+        class: 'AppBundle\EventListener\ExceptionListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+</code></pre>
+
+<p>Now let's try again our tests:</p>
+
+<pre><code>rm -rf var/cache/test
+vendor/bin/phpunit
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Everytime the configuration changes, we need to remove the cache.</p>
+</blockquote>
+
+<p>The test suite is now green. Let's start the server:</p>
+
+<pre><code>rm -rf var/cache/prod
+php -S localhost:2501 -t web
+</code></pre>
+
+<p>We can now visit our page: <a href="http://localhost:2501/app.php/">http://localhost:2501/app.php/</a></p>
+
+<p>We should successfully get a blank page.</p>
+
+<h2 id="create-the-logic">Create the logic</h2>
+
+<p>So now we have an empty page. Let's fix it by creating a use case to list all
+fortunes:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Service/ListAllFortunesTest.php
+
+namespace Tests\AppBundle\Service;
+
+use AppBundle\Service\ListAllFortunes;
+
+class ListAllFortunesTest extends \PHPUnit_Framework_TestCase
+{
+    /**
+     * @test
+     */
+    public function it_has_no_parameters()
+    {
+        $listAllFortunes = new ListAllFortunes();
+    }
+}
+</code></pre>
+
+<p>We can now run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They fail because we need to create the actual class:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/ListAllFortunes.php
+
+namespace AppBundle\Service;
+
+class ListAllFortunes
+{
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Currently the use case class has no parameters to validate.
+  If new requirements come up with the need for some parameters, we're going
+  to be able to check them here.</p>
+</blockquote>
+
+<p>This should fix the issue:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Now let's create Handler that will list all fortunes:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Service/ListAllFortunesHandlerTest.php
+
+namespace Tests\AppBundle\Service;
+
+use AppBundle\Service\FindAllFortunes;
+use AppBundle\Service\ListAllFortunes;
+use AppBundle\Service\ListAllFortunesHandler;
+
+class ListAllFortunesHandlerTest extends \PHPUnit_Framework_TestCase
+{
+    const CONTENT = "It's just a flesh wound.";
+
+    private $listAllFortunesHandler;
+    private $findAllFortunes;
+
+    protected function setUp()
+    {
+        $this-&gt;findAllFortunes = $this-&gt;prophesize(FindAllFortunes::class);
+        $this-&gt;listAllFortunesHandler = new ListAllFortunesHandler(
+            $this-&gt;findAllFortunes-&gt;reveal()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_submits_new_fortunes()
+    {
+        $listAllFortunes = new ListAllFortunes();
+
+        $this-&gt;findAllFortunes-&gt;findAll()-&gt;shouldBeCalled();
+
+        $this-&gt;listAllFortunesHandler-&gt;handle($listAllFortunes);
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They're telling us to create <code>ListAllFortunesHandler</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/ListAllFortunesHandler.php
+
+namespace AppBundle\Service;
+
+class ListAllFortunesHandler
+{
+    private $findAllFortunes;
+
+    public function __construct(FindAllFortunes $findAllFortunes)
+    {
+        $this-&gt;findAllFortunes = $findAllFortunes;
+    }
+
+    public function handle(ListAllFortunes $listAllFortunes)
+    {
+        return $this-&gt;findAllFortunes-&gt;findAll();
+    }
+}
+</code></pre>
+
+<p>This should fix this specific error:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Now our tests are telling us to create <code>FindAllFortunes</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/FindAllFortunes.php
+
+namespace AppBundle\Service;
+
+interface FindAllFortunes
+{
+    public function findAll();
+}
+</code></pre>
+
+<p>Let's see if it did the trick:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Yes it did! To sum up what we've done in this section:</p>
+
+<ul>
+<li>we've created a <code>ListAllFortunes</code> use case which could be validating input parameter,
+for now it's empty and only serve us to convey intention (use case: list all fortunes)</li>
+<li>we've create a <code>ListAllFortunesHandler</code> class that call services which will
+do the actual logic</li>
+<li>we've created a <code>FindAllFortunes</code> interface, its implementations will find all
+fortunes</li>
+</ul>
+
+<h2 id="wiring">Wiring</h2>
+
+<p>We're going to use Doctrine DBAL to actually find all fortunes from a database.
+This can be done by creating an implementation of <code>FindAllFortunes</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/Bridge/DoctrineDbalFindAllFortunes.php
+
+namespace AppBundle\Service\Bridge;
+
+use AppBundle\Service\FindAllFortunes;
+use Doctrine\DBAL\Driver\Connection;
+
+class DoctrineDbalFindAllFortunes implements FindAllFortunes
+{
+    private $connection;
+
+    public function __construct(Connection $connection)
+    {
+        $this-&gt;connection = $connection;
+    }
+
+    public function findAll()
+    {
+        $queryBuilder = $this-&gt;connection-&gt;createQueryBuilder();
+        $queryBuilder-&gt;select('*');
+        $queryBuilder-&gt;from('fortune');
+        $sql = $queryBuilder-&gt;getSql();
+        $parameters = $queryBuilder-&gt;getParameters();
+        $statement = $this-&gt;connection-&gt;prepare($sql);
+        $statement-&gt;execute($parameters);
+
+        return $statement-&gt;fetchAll();
+    }
+}
+</code></pre>
+
+<p>This was the last class we needed to write. We can now use <code>ListAllFortunes</code>
+in our controller:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/FortuneController.php
+
+namespace AppBundle\Controller;
+
+use AppBundle\Service\ListAllFortunes;
+use AppBundle\Service\ListAllFortunesHandler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class FortuneController
+{
+    private $listAllFortunesHandler;
+
+    public function __construct(ListAllFortunesHandler $listAllFortunesHandler)
+    {
+        $this-&gt;listAllFortunesHandler = $listAllFortunesHandler;
+    }
+
+    public function listAll(Request $request)
+    {
+        $listAllFortunes = new ListAllFortunes(
+        );
+        $fortunes = $this-&gt;listAllFortunesHandler-&gt;handle($listAllFortunes);
+
+        return new Response('', 200);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: In the controller, we extract Request (input) parameters and put them
+  in <code>ListAllFortunes</code> which is going to validate them. We then simply call
+  <code>ListAllFortunesHandler</code> to take care of the logic associated to <code>ListAllFortunes</code>.</p>
+</blockquote>
+
+<p>Now all that's left to do is wire everything together using Dependency Injection:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    # Controllers
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.fortune_controller:
+        class: 'AppBundle\Controller\FortuneController'
+        arguments:
+            - '@app.list_all_fortunes_handler'
+
+    # Handlers
+    app.list_all_fortunes_handler:
+        class: 'AppBundle\Service\ListAllFortunesHandler'
+        arguments:
+            - '@app.find_all_fortunes'
+
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    # Services
+    app.find_all_fortunes:
+        alias: app.bridge.doctrine_dbal_find_all_fortunes
+
+    app.bridge.doctrine_dbal_find_all_fortunes:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalFindAllFortunes'
+        arguments:
+            - '@database_connection'
+
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+
+    # Listeners
+    app.json_request_content_listener:
+        class: 'AppBundle\EventListener\JsonRequestContentListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    app.exception_listener:
+        class: 'AppBundle\EventListener\ExceptionListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>./bin/console doctrine:database:drop --force
+./bin/console doctrine:database:create
+bin/console doctrine:query:sql 'CREATE TABLE fortune (content TEXT);'
+rm -rf var/cache/test
+vendor/bin/phpunit
+</code></pre>
+
+<p>All green!</p>
+
+<h2 id="view">View</h2>
+
+<p>If we start the server and check the page, it's going to be blank. That's because
+in our controlller we create a Response with empty content. Let's improve this situation:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/FortuneController.php
+
+namespace AppBundle\Controller;
+
+use AppBundle\Service\ListAllFortunes;
+use AppBundle\Service\ListAllFortunesHandler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class FortuneController
+{
+    private $listAllFortunesHandler;
+
+    public function __construct(ListAllFortunesHandler $listAllFortunesHandler)
+    {
+        $this-&gt;listAllFortunesHandler = $listAllFortunesHandler;
+    }
+
+    public function listAll(Request $request)
+    {
+        $listAllFortunes = new ListAllFortunes(
+        );
+        $fortunes = $this-&gt;listAllFortunesHandler-&gt;handle($listAllFortunes);
+        $fortunesHtml = '';
+        foreach ($fortunes as $fortune) {
+            $fortunesHtml .= "&lt;li&gt;{$fortune['content']}&lt;/li&gt;\n";
+        }
+        $html =&lt;&lt;&lt;HTML
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;title&gt;Fortunes&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;ul&gt;
+        $fortunesHtml
+    &lt;/ul&gt;
+&lt;/body&gt;
+HTML
+        ;
+
+        return new Response($html, 200);
+    }
+}
+</code></pre>
+
+<p>Let's start the server:</p>
+
+<pre><code>rm -rf var/cache/prod
+php -S localhost:2501 -t web
+</code></pre>
+
+<p>In order to see a list of fortunes, we first need to submit some! We can use our
+endpoint for this purpose:</p>
+
+<pre><code>curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"I came here to have an argument!"}'
+curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"Has not got as much spam in it as spam egg sausage and spam, has it?"}'
+curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"The Castle of aaarrrrggh"}'
+</code></pre>
+
+<p>We can now visit our page: <a href="http://localhost:2501/app.php/">http://localhost:2501/app.php/</a></p>
+
+<p>While it seems a bit plain (a bit of CSS, javascript and more HTML wouldn't be
+too much), we do see a list of all fortunes.</p>
+
+<p>Controllers shouldn't contain any "view" logic, let's push it to a template using
+<a href="http://twig.sensiolabs.org/">Twig</a>:</p>
+
+<p></p>
+
+<pre><code>{# app/Resources/views/list-all-fortunes.html.twig #}
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;title&gt;Fortunes&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;ul&gt;
+        {% for fortune in fortunes %}
+        &lt;li&gt;{{ fortune.content }}&lt;/li&gt;
+        {% endfor %}
+    &lt;/ul&gt;
+&lt;/body&gt;
+</code></pre>
+
+<p></p>
+
+<p>We now need to use Twig in the controller:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/FortuneController.php
+
+namespace AppBundle\Controller;
+
+use AppBundle\Service\ListAllFortunes;
+use AppBundle\Service\ListAllFortunesHandler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class FortuneController
+{
+    private $listAllFortunesHandler;
+    private $twig;
+
+    public function __construct(
+        ListAllFortunesHandler $listAllFortunesHandler,
+        \Twig_Environment $twig
+    ) {
+        $this-&gt;listAllFortunesHandler = $listAllFortunesHandler;
+        $this-&gt;twig = $twig;
+    }
+
+    public function listAll(Request $request)
+    {
+        $listAllFortunes = new ListAllFortunes(
+        );
+        $fortunes = $this-&gt;listAllFortunesHandler-&gt;handle($listAllFortunes);
+        $html = $this-&gt;twig-&gt;render('::list-all-fortunes.html.twig', array(
+            'fortunes' =&gt; $fortunes,
+        ));
+
+        return new Response($html, 200);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: The first argument of <code>render</code> is the "path" to the view. This path
+  contains 3 parts, separated by colons (<code>:</code>):</p>
+  
+  <ul>
+  <li>the first part is the bundle name (by default it's <code>AppBundle</code> so we don't need to provide it)</li>
+  <li>the second one is the directory from <code>Resources/views</code> (in our case it's at the root so we don't need to provide it)</li>
+  <li>the template file name</li>
+  </ul>
+  
+  <p>Some other path example: <code>FortuneBundle:Fortunes/List:all.html.twig</code>, etc.</p>
+  
+  <p>The second argument is an array which associates Twig variable names to their values,
+  in our case we're going to have access to a <code>fortunes</code> variable in our template,
+  which is going to be the content of the <code>$fortunes</code> variable from our controller.</p>
+</blockquote>
+
+<p>In order to get Twig injected in our controller, we'll update it's service configuration:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    # Controllers
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.fortune_controller:
+        class: 'AppBundle\Controller\FortuneController'
+        arguments:
+            - '@app.list_all_fortunes_handler'
+            - '@twig'
+
+    # Handlers
+    app.list_all_fortunes_handler:
+        class: 'AppBundle\Service\ListAllFortunesHandler'
+        arguments:
+            - '@app.find_all_fortunes'
+
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    # Services
+    app.find_all_fortunes:
+        alias: app.bridge.doctrine_dbal_find_all_fortunes
+
+    app.bridge.doctrine_dbal_find_all_fortunes:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalFindAllFortunes'
+        arguments:
+            - '@database_connection'
+
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+
+    # Listeners
+    app.json_request_content_listener:
+        class: 'AppBundle\EventListener\JsonRequestContentListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    app.exception_listener:
+        class: 'AppBundle\EventListener\ExceptionListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+</code></pre>
+
+<p>Since we changed the configuration, we'll need to clear the cache:</p>
+
+<pre><code>rm -rf var/cache/prod
+</code></pre>
+
+<p>Finally we can visit again our page: <a href="http://localhost:2501/app.php/">http://localhost:2501/app.php/</a>.</p>
+
+<p>Let's run our test suite one last time:</p>
+
+<pre><code>rm -rf var/cache/test
+vendor/bin/phpunit
+</code></pre>
+
+<p>Everything is still green!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>To create a new page, we need to:</p>
+
+<ul>
+<li>create a Controller class</li>
+<li>configure its routing</li>
+<li>register the controller as a service</li>
+</ul>
+
+<p>The page's logic is then up to us, it doesn't have to be done in a "Symfony"
+way. For example we can:</p>
+
+<ul>
+<li>extract Request parameters and put them in a class that validates them</li>
+<li>pass the class to a handler that will call services to do the actual logic</li>
+<li>define our services as interfaces, and then create implementations to integrate
+them with third party libraries</li>
+</ul>
+
+<p>Finally to display the result we need to create a template file and call a
+templating engine, such as Twig, from our controller.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - API Example]]></title>
+            <link href="/2016/03/24/ultimate-symfony-api-example.html"/>
+            <updated>2016-03-24T00:00:00+00:00</updated>
+            <id>/2016/03/24/ultimate-symfony-api-example.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: Practice makes Better.</p>
+</blockquote>
+
+<p>In this guide we've explored the main standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+<li><a href="/2016/03/02/ultimate-symfony-console.html">Console</a></li>
+</ul>
+
+<p>We've also seen how HttpKernel enabled reusable code with <a href="/2016/03/09/ultimate-symfony-bundle.html">Bundles</a>,
+and the different ways to organize our application <a href="/2016/03/16/ultimate-symfony-skeleton.html">tree directory</a>.</p>
+
+<p>In this article, we're going to put all this knowledge in practice by creating a
+"fortune" project with an endpoint that allows us to submit new fortunes.</p>
+
+<p>In the next articles we'll also create for this application:</p>
+
+<ul>
+<li><a href="/2016/03/30/ultimate-symfony-web-example.html">a page that lists all fortunes</a></li>
+<li><a href="/2016/04/06/ultimate-symfony-cli-example.html">a command that prints the last fortune</a></li>
+</ul>
+
+<h2 id="create-the-project">Create the project</h2>
+
+<p>The first step is to create our project. For this example we'll use the
+<a href="https://github.com/symfony/symfony-standard">Standard Edition</a>:</p>
+
+<pre><code>composer create-project symfony/framework-standard-edition fortune
+</code></pre>
+
+<p>This will ask us some configuration questions (e.g. database credentials), allowing
+us to set up everything in one step.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Nothing prevents us from adding new libraries (e.g. <a href="https://github.com/beberlei/assert">Assert</a>),
+  replacing the ones provided by default (e.g. replacing <a href="http://www.doctrine-project.org/projects/orm.html">Doctrine</a>
+  with <a href="http://www.pomm-project.org/">Pomm</a>) or remove the ones we don't need
+  (e.g. <a href="http://swiftmailer.org/">Swiftmailer</a> if we don't need emailing).</p>
+</blockquote>
+
+<p>To begin with a clean slate we'll need to remove some things:</p>
+
+<pre><code>cd fortune
+echo '' &gt;&gt; app/config/routing.yml
+rm -rf src/AppBundle/Controller/* tests/AppBundle/Controller/* app/Resources/views/*
+</code></pre>
+
+<p>Then we're going to install PHPUnit locally:</p>
+
+<pre><code>composer require --dev phpunit/phpunit:5.2 --ignore-platform-reqs
+</code></pre>
+
+<p>We're now ready to begin.</p>
+
+<h2 id="create-the-controller">Create the Controller</h2>
+
+<p>We'll first start by writing a functional test for our new endpoint:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Controller/Api/FortuneControllerTest.php
+
+namespace Tests\AppBundle\Controller\Api;
+
+use Symfony\Component\HttpFoundation\Request;
+
+class FortuneControllerTest extends \PHPUnit_Framework_TestCase
+{
+    private $app;
+
+    protected function setUp()
+    {
+        $this-&gt;app = new \AppKernel('test', false);
+    }
+
+    /**
+     * @test
+     */
+    public function it_cannot_submit_fortunes_without_content()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+        );
+        $request = Request::create('/api/v1/fortunes', 'POST', array(), array(), array(), $headers, json_encode(array(
+        )));
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        self::assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+
+    /**
+     * @test
+     */
+    public function it_cannot_submit_fortunes_with_non_string_content()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+        );
+        $request = Request::create('/api/v1/fortunes', 'POST', array(), array(), array(), $headers, json_encode(array(
+            'content' =&gt; 42,
+        )));
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        self::assertSame(422, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+
+    /**
+     * @test
+     */
+    public function it_submits_new_fortunes()
+    {
+        $headers = array(
+            'CONTENT_TYPE' =&gt; 'application/json',
+        );
+        $request = Request::create('/api/v1/fortunes', 'POST', array(), array(), array(), $headers, json_encode(array(
+            'content' =&gt; 'Hello',
+        )));
+
+        $response = $this-&gt;app-&gt;handle($request);
+
+        self::assertSame(201, $response-&gt;getStatusCode(), $response-&gt;getContent());
+    }
+}
+</code></pre>
+
+<p>With functional tests, we're only interested in making sure all components play
+well together, so checking the response status code (<code>201</code> is succesfully created,
+<code>422</code> is a validation error) is sufficient.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: <code>400 BAD REQUEST</code> is only used if there's a syntax error in the Request
+  (e.g. invalid JSON).</p>
+</blockquote>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They fail, with a <code>404 NOT FOUND</code> response. That's because we don't have any
+controllers, so let's fix that:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/Api/FortuneController.php
+
+namespace AppBundle\Controller\Api;
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class FortuneController
+{
+    public function submit(Request $request)
+    {
+        return new Response('', 201);
+    }
+}
+</code></pre>
+
+<p>Having a controller is no good without routing configuration:</p>
+
+<pre><code># app/config/routing.yml
+
+submit_new_fortunes_endpoint:
+    path: /api/v1/fortunes
+    defaults:
+        _controller: app.api.fortune_controller:submit
+    methods:
+        - POST
+</code></pre>
+
+<p>In this configuration, <code>_controller</code> is set to call the <code>submit</code> method of the
+<code>app.api.fortune_controller</code> service. Here's how to define this service:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+</code></pre>
+
+<p>Now let's try again our tests:</p>
+
+<pre><code>rm -rf var/cache/test
+vendor/bin/phpunit
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: We need to remove the cache to take into account the new configuration.</p>
+</blockquote>
+
+<p>The last test (happy scenario) pass! We'll have to fix the first two ones (unhappy
+scenario) later.</p>
+
+<p>We can now call directly our endpoint:</p>
+
+<pre><code>php -S localhost:2501 -t web &amp;
+curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"Nobody expects the spanish inquisition!"}'
+killall -9 php
+</code></pre>
+
+<p>We should successfully get a <code>201 CREATED</code>.</p>
+
+<h2 id="create-the-logic">Create the logic</h2>
+
+<p>So now we have an endpoint that does nothing. Let's fix it by creating the logic.
+Our first step will be to write a unit test for a class that will do a basic
+validation of the input:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Service/SubmitNewFortuneTest.php
+
+namespace Tests\AppBundle\Service;
+
+use AppBundle\Service\SubmitNewFortune;
+
+class SubmitNewFortuneTest extends \PHPUnit_Framework_TestCase
+{
+    const CONTENT = "Look, matey, I know a dead parrot when I see one, and I'm looking at one right now.";
+
+    /**
+     * @test
+     */
+    public function it_has_a_content()
+    {
+        $submitNewFortune = new SubmitNewFortune(self::CONTENT);
+
+        self::assertSame(self::CONTENT, $submitNewFortune-&gt;content);
+    }
+
+    /**
+     * @test
+     */
+    public function it_fails_if_the_content_is_missing()
+    {
+        $this-&gt;expectException(\DomainException::class);
+
+        new SubmitNewFortune(null);
+    }
+
+    /**
+     * @test
+     */
+    public function it_fails_if_the_content_is_not_a_string()
+    {
+        $this-&gt;expectException(\DomainException::class);
+
+        new SubmitNewFortune(42);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: You need PHPUnit 5.2 to be able to use <code>expectException</code>.</p>
+</blockquote>
+
+<p>Our <code>SubmitNewFortune</code> will check that we submitted a stringy content. Let's run
+the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: If we had used <a href="/2015/08/03/phpspec.html">phpspec</a> to write our unit
+  tests, it would have created an empty <code>SubmitNewFortune</code> class for us.
+  There's nothing wrong with using <a href="/2015/09/23/phpunit-with-phpspec.html">both PHPUnit and phpspec</a>,
+  (the first for functional tests and the second for unit tests).</p>
+</blockquote>
+
+<p>The tests fail because the actual class doesn't exist yet. We need to write it:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/SubmitNewFortune.php
+
+namespace AppBundle\Service;
+
+class SubmitNewFortune
+{
+    public $content;
+
+    public function __construct($content)
+    {
+        if (null === $content) {
+            throw new \DomainException('Missing required "content" parameter', 422);
+        }
+        if (false === is_string($content)) {
+            throw new \DomainException('Invalid "content" parameter: it must be a string', 422);
+        }
+        $this-&gt;content = $content;
+    }
+}
+</code></pre>
+
+<p>Let's run the tests again:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>This time they pass.</p>
+
+<p>Validating the input parameters isn't enough, we now need to execute some logic
+to actually submit new quotes. This can be done in a class that handles <code>SubmitNewFortune</code>:</p>
+
+<pre><code class="php">&lt;?php
+// tests/AppBundle/Service/SubmitNewFortuneHandlerTest.php
+
+namespace Tests\AppBundle\Service;
+
+use AppBundle\Service\SaveNewFortune;
+use AppBundle\Service\SubmitNewFortune;
+use AppBundle\Service\SubmitNewFortuneHandler;
+
+class SubmitNewFortuneHandlerTest extends \PHPUnit_Framework_TestCase
+{
+    const CONTENT = "It's just a flesh wound.";
+
+    private $submitNewFortuneHandler;
+    private $saveNewFortune;
+
+    protected function setUp()
+    {
+        $this-&gt;saveNewFortune = $this-&gt;prophesize(SaveNewFortune::class);
+        $this-&gt;submitNewFortuneHandler = new SubmitNewFortuneHandler(
+            $this-&gt;saveNewFortune-&gt;reveal()
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function it_submits_new_fortunes()
+    {
+        $submitNewFortune = new SubmitNewFortune(self::CONTENT);
+
+        $this-&gt;saveNewFortune-&gt;save(array(
+            'content' =&gt; self::CONTENT
+        ))-&gt;shouldBeCalled();
+
+        $this-&gt;submitNewFortuneHandler-&gt;handle($submitNewFortune);
+    }
+}
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>They're telling us to create <code>SubmitNewFortuneHandler</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/SubmitNewFortuneHandler.php
+
+namespace AppBundle\Service;
+
+class SubmitNewFortuneHandler
+{
+    private $saveNewFortune;
+
+    public function __construct(SaveNewFortune $saveNewFortune)
+    {
+        $this-&gt;saveNewFortune = $saveNewFortune;
+    }
+
+    public function handle(SubmitNewFortune $submitNewFortune)
+    {
+        $newFortune = array(
+            'content' =&gt; $submitNewFortune-&gt;content,
+        );
+
+        $this-&gt;saveNewFortune-&gt;save($newFortune);
+    }
+}
+</code></pre>
+
+<p>This should fix this specific error:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Now our tests are telling us to create <code>SaveNewFortune</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/SaveNewFortune.php
+
+namespace AppBundle\Service;
+
+interface SaveNewFortune
+{
+    public function save(array $newFortune);
+}
+</code></pre>
+
+<p>Let's see if it did the trick:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Yes it did! To sum up what we've done in this section:</p>
+
+<ul>
+<li>we've created a <code>SubmitNewFortune</code> class that contains all input parameters
+to submit a new fortune, and it validates them</li>
+<li>we've create a <code>SubmitNewFortuneHandler</code> class that uses parameters from
+<code>SubmitNewFortune</code> to call services which will do the actual logic</li>
+<li>we've created a <code>SaveNewFortune</code> interface, its implementations will save new
+fortunes</li>
+</ul>
+
+<h2 id="wiring">Wiring</h2>
+
+<p>We're going to use Doctrine DBAL to actually save new fortunes in a database.
+This can be done by creating an implementation of <code>SaveNewFortune</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Service/Bridge/DoctrineDbalSaveNewFortune.php
+
+namespace AppBundle\Service\Bridge;
+
+use AppBundle\Service\SaveNewFortune;
+use Doctrine\DBAL\Driver\Connection;
+
+class DoctrineDbalSaveNewFortune implements SaveNewFortune
+{
+    private $connection;
+
+    public function __construct(Connection $connection)
+    {
+        $this-&gt;connection = $connection;
+    }
+
+    public function save(array $newFortune)
+    {
+        $queryBuilder = $this-&gt;connection-&gt;createQueryBuilder();
+        $queryBuilder-&gt;insert('fortune');
+        $queryBuilder-&gt;setValue('content', '?');
+        $queryBuilder-&gt;setParameter(0, $newFortune['content']);
+        $sql = $queryBuilder-&gt;getSql();
+        $parameters = $queryBuilder-&gt;getParameters();
+        $statement = $this-&gt;connection-&gt;prepare($sql);
+        $statement-&gt;execute($parameters);
+    }
+}
+</code></pre>
+
+<p>This was the last class we needed to write. We can now use <code>SubmitNewFortune</code>
+in our controller:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/Controller/Api/FortuneController.php
+
+namespace AppBundle\Controller\Api;
+
+use AppBundle\Service\SubmitNewFortune;
+use AppBundle\Service\SubmitNewFortuneHandler;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class FortuneController
+{
+    private $submitNewFortuneHandler;
+
+    public function __construct(SubmitNewFortuneHandler $submitNewFortuneHandler)
+    {
+        $this-&gt;submitNewFortuneHandler = $submitNewFortuneHandler;
+    }
+
+    public function submit(Request $request)
+    {
+        $submitNewFortune = new SubmitNewFortune(
+            $request-&gt;request-&gt;get('content')
+        );
+        $this-&gt;submitNewFortuneHandler-&gt;handle($submitNewFortune);
+
+        return new Response('', 201);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: In the controller, we extract Request (input) parameters and put them
+  in <code>SubmitNewFortune</code> which is going to validate them. We then simply call
+  <code>SubmitNewFortuneHandler</code> to take care of the logic associated to <code>SubmitNewFortune</code>.</p>
+</blockquote>
+
+<p>Now all that's left to do is wire everything together using Dependency Injection:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+</code></pre>
+
+<p>Let's run the tests:</p>
+
+<pre><code>rm -rf var/cache/test
+vendor/bin/phpunit
+</code></pre>
+
+<p>They currently fail with <code>500 INTERNAL SERVER ERROR</code>. To get an idea of what's
+going on, we need to have a look at our logs:</p>
+
+<pre><code>grep CRITICAL var/logs/test.log | tail -n 1 # Get the last line containing "CRITICAL", which is often cause by 500
+</code></pre>
+
+<p>This is what we got:</p>
+
+<pre><code>[2016-03-24 19:31:32] request.CRITICAL: Uncaught PHP Exception DomainException: "Missing required "content" parameter" at /home/foobar/fortune/src/AppBundle/Service/SubmitNewFortune.php line 13 {"exception":"[object] (DomainException(code: 422): Missing required \"content\" parameter at /home/foobar/fortune/src/AppBundle/Service/SubmitNewFortune.php:13)"} []
+</code></pre>
+
+<p>It looks like we don't get any data in the <code>request</code> attribute from <code>Request</code>.
+That's because PHP doesn't populate <code>$_POST</code> when we send JSON data. We can fix
+it by creating an <code>EventListener</code> that will prepare the Request for us:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/EventListener/JsonRequestContentListener.php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+/**
+ * PHP does not populate $_POST with the data submitted via a JSON Request,
+ * causing an empty $request-&gt;request.
+ *
+ * This listener fixes this.
+ */
+class JsonRequestContentListener
+{
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        $request = $event-&gt;getRequest();
+        $hasBeenSubmited = in_array($request-&gt;getMethod(), array('PATCH', 'POST', 'PUT'), true);
+        $isJson = (1 === preg_match('#application/json#', $request-&gt;headers-&gt;get('Content-Type')));
+        if (!$hasBeenSubmited || !$isJson) {
+            return;
+        }
+        $data = json_decode($request-&gt;getContent(), true);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            $event-&gt;setResponse(new Response('{"error":"Invalid or malformed JSON"}', 400, array('Content-Type' =&gt; 'application/json')));
+        }
+        $request-&gt;request-&gt;add($data ?: array());
+    }
+}
+</code></pre>
+
+<p>Our listener needs to be registered in the Dependency Injection Container:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+
+    app.json_request_content_listener:
+        class: 'AppBundle\EventListener\JsonRequestContentListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+</code></pre>
+
+<p>This should fix our error:</p>
+
+<pre><code>rm -rf var/cache/test
+vendor/bin/phpunit
+grep CRITICAL var/logs/test.log | tail -n 1
+</code></pre>
+
+<p>We still get a <code>500</code>, but this time for the following reason:</p>
+
+<pre><code>[2016-03-24 19:36:09] request.CRITICAL: Uncaught PHP Exception Doctrine\DBAL\Exception\ConnectionException: "An exception occured in driver: SQLSTATE[08006] [7] FATAL:  database "fortune" does not exist" at /home/foobar/fortune/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/AbstractPostgreSQLDriver.php line 85 {"exception":"[object] (Doctrine\\DBAL\\Exception\\ConnectionException(code: 0): An exception occured in driver: SQLSTATE[08006] [7] FATAL:  database \"fortune\" does not exist at /home/foobar/fortune/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/AbstractPostgreSQLDriver.php:85, Doctrine\\DBAL\\Driver\\PDOException(code: 7): SQLSTATE[08006] [7] FATAL:  database \"fortune\" does not exist at /home/foobar/fortune/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/PDOConnection.php:47, PDOException(code: 7): SQLSTATE[08006] [7] FATAL:  database \"fortune\" does not exist at /home/foobar/fortune/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/PDOConnection.php:43)"} []
+</code></pre>
+
+<p>The database doesn't exist. It can be created with the following command, provided by Doctrine:</p>
+
+<pre><code>bin/console doctrine:database:create
+</code></pre>
+
+<p>Let's take this opportunity to also create the table:</p>
+
+<pre><code>bin/console doctrine:query:sql 'CREATE TABLE fortune (content TEXT);'
+</code></pre>
+
+<p>Let's re-run the tests:</p>
+
+<pre><code>vendor/bin/phpunit
+</code></pre>
+
+<p>Hooray! We can now submit new fortunes by calling our endpoint:</p>
+
+<pre><code>rm -rf var/cache/prod
+php -S localhost:2501 -t web &amp;
+curl -i -X POST localhost:2501/app.php/api/v1/fortunes -H 'Content-Type: application/json' -d '{"content":"What... is the air-speed velocity of an unladen swallow?"}'
+killall -9 php
+</code></pre>
+
+<p>We can see our fortunes in the database:</p>
+
+<pre><code>bin/console doctrine:query:sql 'SELECT * FROM fortune;'
+</code></pre>
+
+<p>We still have two failing tests though. That's because we don't catch our <code>DomainExceptions</code>.
+This can be fixed in an <code>EventListener</code>:</p>
+
+<pre><code class="php">&lt;?php
+// src/AppBundle/EventListener/ExceptionListener.php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
+
+class ExceptionListener
+{
+    public function onKernelException(GetResponseForExceptionEvent $event)
+    {
+        $exception = $event-&gt;getException();
+        if (!$exception instanceof \DomainException) {
+            return;
+        }
+        $event-&gt;setResponse(new Response(json_encode(array(
+            'error' =&gt; $exception-&gt;getMessage(),
+        )), $exception-&gt;getCode(), array('Content-Type' =&gt; 'application/json')));
+    }
+}
+</code></pre>
+
+<p>It then needs to be registered as a service:</p>
+
+<pre><code># app/config/services.yml
+
+services:
+    app.api.fortune_controller:
+        class: 'AppBundle\Controller\Api\FortuneController'
+        arguments:
+            - '@app.submit_new_fortune_handler'
+
+    app.submit_new_fortune_handler:
+        class: 'AppBundle\Service\SubmitNewFortuneHandler'
+        arguments:
+            - '@app.save_new_fortune'
+
+    app.save_new_fortune:
+        alias: app.bridge.doctrine_dbal_save_new_fortune
+
+    app.bridge.doctrine_dbal_save_new_fortune:
+        class: 'AppBundle\Service\Bridge\DoctrineDbalSaveNewFortune'
+        arguments:
+            - '@database_connection'
+
+    app.json_request_content_listener:
+        class: 'AppBundle\EventListener\JsonRequestContentListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest }
+
+    app.exception_listener:
+        class: 'AppBundle\EventListener\ExceptionListener'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception, method: onKernelException }
+</code></pre>
+
+<p>Finally we run the tests:</p>
+
+<pre><code>rm -rf var/cache/test
+vendor/bin/phpunit
+</code></pre>
+
+<p>All green!</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>To create a new endpoint, we need to:</p>
+
+<ul>
+<li>create a Controller class</li>
+<li>configure its routing</li>
+<li>register the controller as a service</li>
+</ul>
+
+<p>We might need to create some event listeners (to populate <code>$request-&gt;request</code>
+when receiving JSON content, or to convert exceptions to responses).</p>
+
+<p>The endpoint's logic is then up to us, it doesn't have to be done in a "Symfony"
+way. For example we can:</p>
+
+<ul>
+<li>extract Request parameters and put them in a class that validates them</li>
+<li>pass the class to a handler that will call services to do the actual logic</li>
+<li>define our services as interfaces, and then create implementations to integrate
+them with third party libraries</li>
+</ul>
+
+<p>You can find the code on Github: <a href="https://github.com/gnugat-examples/fortune/tree/api-example">Fortune - API example</a></p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Skeleton]]></title>
+            <link href="/2016/03/16/ultimate-symfony-skeleton.html"/>
+            <updated>2016-03-16T00:00:00+00:00</updated>
+            <id>/2016/03/16/ultimate-symfony-skeleton.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: Start by putting everything in <code>AppBundle</code> until we have a better
+  idea of what the project looks like and how to organize it.</p>
+</blockquote>
+
+<p>In this guide we've explored the main standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+<li><a href="/2016/03/02/ultimate-symfony-console.html">Console</a></li>
+</ul>
+
+<p>We've also seen how HttpKernel enabled reusable code with <a href="/2016/03/09/ultimate-symfony-bundle.html">Bundles</a>.</p>
+
+<p>In this article, we're going to have a closer look at how to organise our applications
+directory tree.</p>
+
+<p>Finally in the next articles we'll finish by putting all this knowledge in practice by creating a
+"fortune" project with:</p>
+
+<ul>
+<li><a href="/2016/03/24/ultimate-symfony-api-example.html">an endpoint that allows us to submit new fortunes</a></li>
+<li><a href="/2016/03/30/ultimate-symfony-web-example.html">a page that lists all fortunes</a></li>
+<li><a href="/2016/04/06/ultimate-symfony-cli-example.html">a command that prints the last fortune</a></li>
+</ul>
+
+<h2 id="editions">Editions</h2>
+
+<p>Deciding how our project directory is organized is up to us, but for consistency
+and convenience we usually use "Editions" to bootstrap new projects:</p>
+
+<pre><code>composer create-project gnugat/symfony-empty-edition our-project
+cd our-project
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Here we've decided to use the <a href="https://github.com/gnugat/symfony-empty-edition">Symfony Empty Edition</a>
+  which follows the "add what you need" philosophy (it only contains the strict minimum).</p>
+  
+  <p>If we're rather fond of the "solve 80% of use cases" philosophy we can go for
+  <a href="https://github.com/symfony/symfony-standard">Standard Edition</a>
+  which includes many tools commonly used to build full-stack websites.</p>
+  
+  <p>To find more distributions, <a href="http://symfony.com/distributions">check the official website</a>.</p>
+</blockquote>
+
+<p>The directory tree looks like this:</p>
+
+<pre><code>.
+├── app
+│   ├── AppKernel.php
+│   ├── autoload.php
+│   └── config
+│       ├── config_dev.yml
+│       ├── config_prod.yml
+│       ├── config_test.yml
+│       ├── config.yml
+│       └── parameters.yml.dist
+├── bin
+│   └── console
+├── composer.json
+├── src
+│   └── AppBundle
+│       └── AppBundle.php
+├── var
+│   ├── cache
+│   └── logs
+└── web
+    ├── app.php
+    ├── favicon.ico
+    └── robots.txt
+</code></pre>
+
+<p>Each folder in the root directory has a purpose:</p>
+
+<ul>
+<li><code>app</code>: configuration</li>
+<li><code>bin</code>: scripts, binaries</li>
+<li><code>src</code>: our code</li>
+<li><code>var</code>: temporary files</li>
+<li><code>web</code>: public directory exposed via the web server (<code>app.php</code> is the front controller)</li>
+</ul>
+
+<blockquote>
+  <p><strong>Note</strong>: Classes that wouldn't be used in production can be put outside of
+  <code>src</code> (e.g. tests could be put in <code>tests</code>, fixtures in <code>fixtures</code>, etc). They
+  should be configured in <code>composer.json</code> as follow:</p>
+
+<pre><code>{
+    "autoload-dev": {
+        "psr-4": {
+            "Gnugat\\Toasty\\Fixtures\\": "fixtures",
+            "Gnugat\\Toasty\\Tests\\": "tests"
+        }
+    }
+}
+</code></pre>
+  
+  <p>This way, when running Composer's <code>install</code> command in development we get our
+  tests/fixtures classes autoloaded, and when running the same command with <code>--no-dev</code>
+  option in production we don't.</p>
+</blockquote>
+
+<h2 id="appbundle">AppBundle</h2>
+
+<p>Once we have an empty skeleton, we can start organizing our code by puting all
+new classes in <code>src/AppBundle</code>, as advised by the <a href="http://symfony.com/doc/current/best_practices/business-logic.html">official best practice</a>.</p>
+
+<p>Symfony specific classes can be put in the following directories:</p>
+
+<ul>
+<li><code>src/AppBundle/Command</code>, for Console Commands</li>
+<li><code>src/AppBundle/Controller</code> for HttpKernel Controllers</li>
+<li><code>src/AppBundle/DependencyInjection</code>, for <code>CompilerPassInterface</code> and <code>ExtensionInterface</code> implementations</li>
+<li><code>src/AppBundle/EventListener</code>, for EventDispatcher Listeners</li>
+</ul>
+
+<p>Our project specific classes can be put the <code>src/AppBundle/Service</code> directory.</p>
+
+<p>The number of classes in will grow overtime, at some point we'll have an itch to
+organize them in a better way: we can group them by entity.</p>
+
+<p>Regarding configuration, we can organize it this way:</p>
+
+<ul>
+<li><code>app/config/routings/</code>, contains Router configuration</li>
+<li><code>app/config/services/</code>, contains Dependency Injection configuration</li>
+</ul>
+
+<p>The directory tree looks like this:</p>
+
+<pre><code>.
+├── app
+│   ├── AppKernel.php
+│   ├── autoload.php
+│   └── config
+│       ├── config_dev.yml
+│       ├── config_prod.yml
+│       ├── config_test.yml
+│       ├── config.yml
+│       ├── parameters.yml.dist
+│       ├── routings
+│       └── services
+├── bin
+│   └── console
+├── composer.json
+├── composer.lock
+├── src
+│   └── AppBundle
+│       ├── AppBundle.php
+│       ├── Command
+│       ├── Controller
+│       ├── DependencyInjection
+│       │   └── CompilerPass
+│       ├── EventListener
+│       └── Service
+├── var
+│   ├── cache
+│   └── logs
+└── web
+    ├── app.php
+    ├── favicon.ico
+    └── robots.txt
+</code></pre>
+
+<h2 id="decoupling-from-framework">Decoupling from framework</h2>
+
+<p>Starting by putting everything in <code>AppBundle</code> is fine until we have a better idea
+of what the project looks like and how to organize it.</p>
+
+<p>As suggested in the <a href="http://symfony.com/doc/current/best_practices/business-logic.html">official best practice</a>,
+we can move our "business logic" (everything in <code>src/AppBundle/Service</code>) to a new
+<code>src/&lt;vendor&gt;/&lt;project&gt;</code> directory.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Replace <code>&lt;vendor&gt;</code> by the organization/author (e.g. <code>Gnugat</code>)
+  and <code>&lt;project&gt;</code> by the project name (e.g. <code>Toasty</code>).</p>
+</blockquote>
+
+<p>The directory tree looks like this:</p>
+
+<pre><code>.
+├── app
+│   ├── AppKernel.php
+│   ├── autoload.php
+│   └── config
+│       ├── config_dev.yml
+│       ├── config_prod.yml
+│       ├── config_test.yml
+│       ├── config.yml
+│       ├── parameters.yml.dist
+│       ├── routings
+│       └── services
+├── bin
+│   └── console
+├── composer.json
+├── composer.lock
+├── src
+│   ├── AppBundle
+│   │   ├── AppBundle.php
+│   │   ├── Command
+│   │   ├── Controller
+│   │   ├── DependencyInjection
+│   │   │   └── CompilerPass
+│   │   └── EventListener
+│   └── &lt;vendor&gt;
+│       └── &lt;project&gt;
+├── var
+│   ├── cache
+│   └── logs
+└── web
+    ├── app.php
+    ├── favicon.ico
+    └── robots.txt
+</code></pre>
+
+<p>By leaving Symfony related classes in <code>src/AppBundle</code> and our "business logic"
+in <code>src/&lt;vendor&gt;/&lt;project&gt;</code>, it becomes easier to <a href="/2015/09/30/decouple-from-frameworks.html">decouple from the framework</a>.</p>
+
+<h2 id="decouple-from-libraries">Decouple from libraries</h2>
+
+<p>Building on "decoupling from frameworks", we might also want to <a href="http://localhost:8000/2015/10/12/decouple-from-libraries.html">decouple from libraires</a>.
+To do so our "business logic" classes should rely on interfaces, and their implementation
+would use libraries.</p>
+
+<p>At this point we can get three different categories of classes:</p>
+
+<ul>
+<li><code>Domain</code> ones, classes that reflect our business logic</li>
+<li><code>Component</code> ones, classes that don't have a direct link to our project and could be reused as libraries</li>
+<li><code>Bridge</code> ones, classes that map our Domain to Component (or third party libraries)</li>
+</ul>
+
+<p>By organizing our directory tree with those categories, it could looks like this:</p>
+
+<pre><code>.
+├── app
+│   ├── AppKernel.php
+│   ├── autoload.php
+│   └── config
+│       ├── config_dev.yml
+│       ├── config_prod.yml
+│       ├── config_test.yml
+│       ├── config.yml
+│       ├── parameters.yml.dist
+│       ├── routings
+│       └── services
+├── bin
+│   └── console
+├── composer.json
+├── composer.lock
+├── src
+│   ├── AppBundle
+│   │   ├── AppBundle.php
+│   │   ├── Command
+│   │   ├── Controller
+│   │   ├── DependencyInjection
+│   │   │   └── CompilerPass
+│   │   └── EventListener
+│   └── &lt;vendor&gt;
+│       └── &lt;project&gt;
+│           ├── Bridge
+│           ├── Component
+│           └── Domain
+├── var
+│   ├── cache
+│   └── logs
+└── web
+    ├── app.php
+    ├── favicon.ico
+    └── robots.txt
+</code></pre>
+
+<p>The issue with the previous organization is that classes in <code>Bridge</code> are now away
+from their interface. Wouldn't it better to keep related classes close?</p>
+
+<p>Here's an alternative organization, where we move <code>Bridge</code> to be in <code>Domain</code>:</p>
+
+<pre><code>.
+├── app
+│   ├── AppKernel.php
+│   ├── autoload.php
+│   └── config
+│       ├── config_dev.yml
+│       ├── config_prod.yml
+│       ├── config_test.yml
+│       ├── config.yml
+│       ├── parameters.yml.dist
+│       ├── routings
+│       └── services
+├── bin
+│   └── console
+├── composer.json
+├── composer.lock
+├── src
+│   ├── AppBundle
+│   │   ├── AppBundle.php
+│   │   ├── Command
+│   │   ├── Controller
+│   │   ├── DependencyInjection
+│   │   │   └── CompilerPass
+│   │   └── EventListener
+│   └── &lt;vendor&gt;
+│       └── &lt;project&gt;
+│           ├── Component
+│           └── Domain
+│               └── Bridge
+├── var
+│   ├── cache
+│   └── logs
+└── web
+    ├── app.php
+    ├── favicon.ico
+    └── robots.txt
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: <code>Components</code> could also need their own bridges. Also, a "Bundle" is
+  a kind of bridge: it maps a library to Symfony.</p>
+</blockquote>
+
+<h2 id="monolithic-repository">Monolithic Repository</h2>
+
+<p>There's a possibility that our application grows out of proportion and we decide
+it'd be better to split it into smaller applications.</p>
+
+<p>For example if we have an application that creates resources through a backend
+and then provides them through an API for other applications, we could split it
+in two: <code>backend</code> (note that <code>backend</code> could also be split in two:
+<code>backend-api</code> and <code>backend-ui</code>) and <code>api</code>.</p>
+
+<p>The problem is that those two applications would share a lot of logic, so splitting
+them in different repositories could become cumbersome to maintain. A good indicator
+to know if they need to be in the same repository: when we create a new version,
+do we need to release them together?</p>
+
+<p>In that case it might be worth keeping those two applications in the same repository,
+this practice being called "Monolithic Repository".</p>
+
+<p>For our project, it would mean:</p>
+
+<ul>
+<li>creating an <code>apps</code> directory where we would put small symfony applications,
+similar to the first directory tree we've seen</li>
+<li>creating a <code>packages</code> directory where we would put the previous content of <code>src/&lt;vendor&gt;/&lt;project&gt;</code>,
+with each component in their own directory (to enable us to use them selectively in each apps)</li>
+</ul>
+
+<p>Here's an overview:</p>
+
+<pre><code>.
+├── apps
+│   └── &lt;app&gt;
+│       ├── app
+│       │   ├── AppKernel.php
+│       │   ├── autoload.php
+│       │   └── config
+│       │       ├── config_dev.yml
+│       │       ├── config_prod.yml
+│       │       ├── config_test.yml
+│       │       ├── config.yml
+│       │       ├── parameters.yml.dist
+│       │       ├── routings
+│       │       └── services
+│       ├── bin
+│       │   └── console
+│       ├── composer.json
+│       ├── composer.lock
+│       ├── src
+│       │   └── AppBundle
+│       │       ├── AppBundle.php
+│       │       ├── Command
+│       │       ├── Controller
+│       │       ├── DependencyInjection
+│       │       │   └── CompilerPass
+│       │       └── EventListener
+│       ├── var
+│       │   ├── cache
+│       │   └── logs
+│       └── web
+│           ├── app.php
+│           ├── favicon.ico
+│           └── robots.txt
+└── packages
+    └── &lt;package&gt;
+        ├── composer.json
+        └── src
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: More information about Monolithic Repository:</p>
+  
+  <ul>
+  <li><a href="http://gregoryszorc.com/blog/2014/09/09/on-monolithic-repositories/">On monolithic repositories</a></li>
+  <li><a href="http://danluu.com/monorepo/">Advantages of monolithic version control</a></li>
+  <li><a href="http://sroze.io/2015/09/14/managing-monolith-repositories-with-composers-path-repository/">Managing monolithic repositories with composer’s path repository</a></li>
+  <li><a href="https://qafoo.com/talks/15_10_symfony_live_berlin_monorepos.pdf">Working with a single, big, scary version control repository</a></li>
+  <li><a href="http://www.whitewashing.de/2015/04/11/monolithic_repositories_with_php_and_composer.html">Monolithic Repositories with PHP and Composer</a></li>
+  <li><a href="http://tech.mybuilder.com/why-we-created-conductor/">Conductor: A return to monolith</a></li>
+  </ul>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>There are many ways to organize our application directory tree, and it's difficult
+to pick one when we don't have a clear idea on their impact or on what our project
+should look like.</p>
+
+<p>The best way to tackle this is to first start small (everything in <code>src/AppBundle</code>),
+and then move gradually files around. It's also important to make sure that change
+is possible.</p>
+
+<p>Here are some alternative ways of organizing the project directory tree:</p>
+
+<ul>
+<li><a href="http://programmingarehard.com/2015/03/04/structing-my-application.html/">Structuring my application</a>
+by <a href="http://twitter.com/dadamssg">David Adams</a></li>
+<li><a href="http://verraes.net/2011/10/code-folder-structure/">Code Folder Structure</a>
+by <a href="http://twitter.com/mathiasverraes">Mathias Verraes</a></li>
+<li><a href="http://williamdurand.fr/2013/08/07/ddd-with-symfony2-folder-structure-and-code-first/">DDD with Symfony2: Folder Structure And Code First</a>
+by <a href="http://williamdurand.fr/">William Durand</a></li>
+</ul>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Bundle]]></title>
+            <link href="/2016/03/09/ultimate-symfony-bundle.html"/>
+            <updated>2016-03-09T00:00:00+00:00</updated>
+            <id>/2016/03/09/ultimate-symfony-bundle.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: Configure services from a third party library in a Bundle.</p>
+</blockquote>
+
+<p>In this guide we've explored the main standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+<li><a href="/2016/03/02/ultimate-symfony-console.html">Console</a></li>
+</ul>
+
+<p>In this article, we're going to have a closer look at how HttpKernel enables reusable code.</p>
+
+<p>Then in the next article we'll see the different ways to organize our application
+<a href="/2016/03/16/ultimate-symfony-skeleton.html">tree directory</a>.</p>
+
+<p>Finally we'll finish by putting all this knowledge in practice by creating a
+"fortune" project with:</p>
+
+<ul>
+<li><a href="/2016/03/24/ultimate-symfony-api-example.html">an endpoint that allows us to submit new fortunes</a></li>
+<li><a href="/2016/03/30/ultimate-symfony-web-example.html">a page that lists all fortunes</a></li>
+<li><a href="/2016/04/06/ultimate-symfony-cli-example.html">a command that prints the last fortune</a></li>
+</ul>
+
+<h2 id="httpkernel-vs-kernel">HttpKernel vs Kernel</h2>
+
+<p>The HttpKernel component provides two implementations for <code>HttpKernelInterface</code>.</p>
+
+<p>The first one, <code>HttpKernel</code>, relies on Event Dispatcher and Routing to execute
+the appropriate controller for the given Request.</p>
+
+<p>And the second one, <code>Kernel</code>, relies on Dependency Injection and <code>HttpKernel</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\HttpKernel;
+
+use Symfony\Component\HttpFoundation\Request;
+
+class Kernel implements HttpKernelInterface
+{
+    public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = true)
+    {
+        if (false === $this-&gt;booted) {
+            $this-&gt;boot();
+        }
+
+        return $this-&gt;container-&gt;get('http_kernel')-&gt;handle($request, $type, $catch);
+    }
+
+    public function boot()
+    {
+        // Initializes the container
+    }
+
+    abstract public function registerBundles();
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: For brevity's sake, <code>Kernel</code> has been heavily truncated.</p>
+</blockquote>
+
+<p>Initialization of the container includes:</p>
+
+<ol>
+<li>retrieving all "bundles"</li>
+<li>creating a <code>ContainerBuilder</code></li>
+<li>for each bundles:
+
+<ol>
+<li>registering its <code>ExtensionInterface</code> implementations in the container</li>
+<li>registering its <code>CompilerPassInterface</code> implementations in the container</li>
+</ol></li>
+<li>dumping the container in an optimized implementation</li>
+</ol>
+
+<p>Once the container is initialized, <code>Kernel</code> expects it to contain a <code>http_kernel</code>
+service to which it will delegate the actual HTTP work.</p>
+
+<h2 id="bundle">Bundle</h2>
+
+<p>A bundle is a package that contains <code>ExtensionInterface</code> and <code>CompilerPassInterface</code>
+implementations, to configure a Dependency Injection container. It can be summed
+up by this interface:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\HttpKernel\Bundle;
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+
+interface BundleInterface
+{
+    // Adds CompilerPassInterface implementations to the container
+    public function build(ContainerBuilder $container);
+
+    // Returs an ExtensionInterface implementation, which will be registered in the container
+    public function getContainerExtension();
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Once again, this interface has been truncated for brevity's sake.</p>
+</blockquote>
+
+<p>Bundles are usually created for one of the following purposes:</p>
+
+<ul>
+<li>define a third party library's classes as Dependency Injection services (e.g.
+<a href="https://github.com/thephpleague/tactician-bundle">TacticianBundle</a>
+for <a href="https://tactician.thephpleague.com/">Tactician</a>
+which provides a <a href="http://shawnmc.cool/command-bus">CommandBus</a>,
+<a href="https://github.com/symfony/monolog-bundle">MonologBundle</a>
+for <a href="https://github.com/Seldaek/monolog">Monolog</a>
+which provides a <a href="http://www.php-fig.org/psr/psr-3/">PSR-3</a> compliant logger,
+etc)</li>
+<li>define an application's classes as Dependency Injection services (usually named AppBundle)</li>
+<li>create a framework (e.g.
+user management with <a href="https://github.com/FriendsOfSymfony/FOSUserBundle">FOSUserBundle</a>,
+admin generator with <a href="https://sonata-project.org/bundles/admin/2-3/doc/index.html">SonataAdminBundle</a>,
+etc)</li>
+</ul>
+
+<blockquote>
+  <p><strong>Note</strong>: the last category is considered bad practice, as explained in the
+  following, articles:</p>
+  
+  <ul>
+  <li><a href="http://jolicode.com/blog/do-not-use-fosuserbundle">composer require technical-debt-bundle</a>.</li>
+  <li><a href="http://elnur.pro/use-only-infrastructural-bundles-in-symfony/">Use only infrastructural bundles in Symfony2, by Elnur Abdurrakhimov</a></li>
+  <li><a href="http://stackoverflow.com/questions/9999433/should-everything-really-be-a-bundle-in-symfony-2-x/10001019#10001019">Should everything really be a bundle in Symfony2?</a></li>
+  <li><a href="http://danielribeiro.org/blog/yes-you-can-have-low-coupling-in-a-symfony-standard-edition-application/">Yes, you can have low coupling in a Symfony2 application</a></li>
+  <li><a href="http://elnur.pro/symfony-without-bundles/">Symfony2 without bundles, by Elnur Abdurrakhimov, by Daniel Ribeiro</a></li>
+  <li><a href="http://php-and-symfony.matthiasnoback.nl/2013/10/symfony2-some-things-i-dont-like-about-bundles/">Symfony2 some things I dont like about bundles, by Matthias Noback</a></li>
+  <li><a href="http://php-and-symfony.matthiasnoback.nl/2013/10/symfony2-console-commands-as-services-why/">Symfony2 console commands as services why, by Matthias Noback</a></li>
+  <li><a href="http://www.slideshare.net/matthiasnoback/high-quality-symfony-bundles-tutorial-dutch-php-conference-2014">Naked bundles, slides by Matthias Noback</a></li>
+  </ul>
+</blockquote>
+
+<p>Bundles follow <a href="http://symfony.com/doc/current/cookbook/bundles/best_practices.html">by convention</a>
+the following directory tree:</p>
+
+<pre><code>.
+├── Command
+├── Controller
+├── DependencyInjection
+│   └── CompilerPass
+├── EventListener
+├── Resources
+│   └── config
+│       └── services
+│           └── some_definitions.yml
+├── Tests
+└── VendorProjectBundle.php
+</code></pre>
+
+<h2 id="nanoframeworkbundle-example">NanoFrameworkBundle example</h2>
+
+<p>Since HttpKernel component is a third party library, we're going to create a
+bundle to provide its classes as Dependency Injection services. This is also a
+good opportunity to have a look at how a Symfony application works behind the hood.</p>
+
+<p>NanoFrameworkBundle's purpose is to provides a <code>http_kernel</code> service that can be
+used by <code>Kernel</code>. First let's create a directory:</p>
+
+<pre><code>mkdir nano-framework-bundle
+cd nano-framework-bundle
+</code></pre>
+
+<p>Then we can create an implementation of <code>BundleInterface</code>:</p>
+
+<pre><code class="php">&lt;?php
+// VendorNanoFrameworkBundle.php
+
+namespace Vendor\NanoFrameworkBundle;
+
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+
+class VendorNanoFrameworkBundle extends Bundle
+{
+}
+</code></pre>
+
+<h3 id="bundle-extension">Bundle extension</h3>
+
+<p>To be able to load Dependency Injection configuration, we'll create an
+implementation of <code>ExtensionInterface</code>:</p>
+
+<pre><code class="php">&lt;?php
+// DependencyInjection/VendorNanoFrameworkExtension.php
+
+namespace Vendor\NanoFrameworkBundle\DependencyInjection;
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Config\Loader\LoaderResolver;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\DirectoryLoader;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+
+class VendorNanoFrameworkExtension extends Extension
+{
+    public function load(array $configs, ContainerBuilder $container)
+    {
+        $fileLocator = new FileLocator(__DIR__.'/../Resources/config');
+        $loader = new DirectoryLoader($container, $fileLocator);
+        $loader-&gt;setResolver(new LoaderResolver(array(
+            new YamlFileLoader($container, $fileLocator),
+            $loader,
+        )));
+        $loader-&gt;load('services/');
+    }
+}
+</code></pre>
+
+<p>Once done, we can create the configuration:</p>
+
+<pre><code># Resources/config/services/http_kernel.yml
+services:
+    http_kernel:
+        class: Symfony\Component\HttpKernel\HttpKernel
+        arguments:
+            - "@event_dispatcher"
+            - "@controller_resolver"
+            - "@request_stack"
+
+    event_dispatcher:
+        class: Symfony\Component\EventDispatcher\EventDispatcher
+
+    controller_resolver:
+        class: Symfony\Component\HttpKernel\Controller\ControllerResolver
+        public: false
+
+    request_stack:
+        class: Symfony\Component\HttpFoundation\RequestStack
+</code></pre>
+
+<h3 id="bundle-compiler-pass">Bundle compiler pass</h3>
+
+<p>In order to register event listeners in EventDispatcher in a way that doesn't
+require us to edit <code>Resources/config/services/http_kernel.yml</code>, we're going to
+create an implementation of <code>CompilerInterface</code>:</p>
+
+<pre><code class="php">&lt;?php
+// DependencyInjection/CompilerPass/AddListenersPass.php
+
+namespace Vendor\NanoFrameworkBundle\DependencyInjection;
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\Reference;
+
+class AddListenersPass implements CompilerPassInterface
+{
+    public function process(ContainerBuilder $container)
+    {
+        $eventDispatcher = $container-&gt;findDefinition('event_dispatcher');
+        $eventListeners = $container-&gt;findTaggedServiceIds('kernel.event_listener');
+        foreach ($eventListeners as $id =&gt; $events) {
+            foreach ($events as $event) {
+                $eventDispatcher-&gt;addMethodCall('addListener', array(
+                    $event['event'],
+                    array(new Reference($id), $event['method']),
+                    isset($event['priority']) ? $event['priority'] : 0;
+                ));
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>With this, we only need to add a tag with:</p>
+
+<ul>
+<li>a <code>kernel.event_listener</code> name</li>
+<li>an event to listen to (e.g. <code>kernel.request</code>)</li>
+<li>a method to call (e.g. <code>onKernelRequest</code>)</li>
+<li>optionally a priority (default to <code>0</code>, the greater the sooner it will be executed)</li>
+</ul>
+
+<p>To complete the step, we need to register it in our bundle:</p>
+
+<pre><code class="php">&lt;?php
+// VendorNanoFrameworkBundle.php
+
+namespace Vendor\NanoFrameworkBundle;
+
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+use Vendor\NanoFrameworkBundle\DependencyInjection\CompilerPass\AddListenersPass;
+
+class VendorNanoFrameworkBundle extends Bundle
+{
+    public function build(ContainerBuilder $container)
+    {
+        parent::build($container);
+
+        $container-&gt;addCompilerPass(new AddListenersPass());
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: While <code>CompilerPassInterface</code> implementations need to be registered
+  explicitly, there is no need to do anything for <code>ExtensionInterface</code> implementations
+  as <code>Bundle</code> contains a method able to locate it, based on the following conventions:</p>
+  
+  <ul>
+  <li>it needs to be in <code>DependencyInjection</code> directory</li>
+  <li>it needs to be named after the bundle name (replace <code>Bundle</code> suffix by <code>Extension</code>)</li>
+  <li>it needs to implement <code>ExtensionInterface</code></li>
+  </ul>
+</blockquote>
+
+<h3 id="more-configuration">More configuration</h3>
+
+<p>HttpKernel relies on event listeners for the routing, in order to enable it we
+need to add the following configuration:</p>
+
+<pre><code># Resources/config/services/routing.yml
+services:
+    router_listener:
+        class: Symfony\Component\HttpKernel\EventListener\RouterListener
+        arguments:
+            - "@router"
+            - "@request_stack"
+            - "@router.request_context"
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest, priority: 32 }
+
+    router:
+        class: Symfony\Component\Routing\Router
+        public: false
+        arguments:
+            - "@routing.loader"
+            - "%kernel.root_dir%/config/routings"
+            - "%router.options%"
+            - "@router.request_context"
+        calls:
+            - [setConfigCacheFactory, ["@config_cache_factory"]]
+
+    routing.loader:
+        class: Symfony\Component\Config\Loader\DelegatingLoader
+        public: false
+        arguments:
+            - "@routing.resolver"
+
+    routing.resolver:
+        class: Symfony\Component\Config\Loader\LoaderResolver
+        public: false
+        calls:
+            - [addLoader, ["@routing.loader.yml"]]
+
+    router.request_context:
+        class: Symfony\Component\Routing\RequestContext
+        public: false
+
+    config_cache_factory:
+        class: Symfony\Component\Config\ResourceCheckerConfigCacheFactory
+        public: false
+
+    routing.loader.yml:
+        class: Symfony\Component\Routing\Loader\YamlFileLoader
+        public: false
+        arguments:
+            - "@file_locator"
+</code></pre>
+
+<h2 id="usage">Usage</h2>
+
+<p>Since <code>Kernel</code> is an abstract class, we need to create an implementation (usually
+called AppKernel):</p>
+
+<pre><code class="php">&lt;?php
+// Tests/app/AppKernel.php
+
+use Symfony\Component\HttpKernel\Kernel;
+
+class AppKernel extends Kernel
+{
+    public function registerBundles()
+    {
+        return array(
+            new Vendor\NanoFrameworkBundle\VendorNanoFrameworkBundle(),
+        );
+    }
+
+    public function getRootDir()
+    {
+        return __DIR__;
+    }
+
+    public function getCacheDir()
+    {
+        return dirname(__DIR__).'/var/cache/'.$this-&gt;getEnvironment();
+    }
+
+    public function getLogDir()
+    {
+        return dirname(__DIR__).'/var/logs';
+    }
+}
+</code></pre>
+
+<p>Finally we need to create a "Front Controller" (a fancy name for <code>index.php</code>):</p>
+
+<pre><code class="php">&lt;?php
+// Tests/web/index.php
+
+&lt;?php
+
+use Symfony\Component\HttpFoundation\Request;
+
+$kernel = new AppKernel('prod', false);
+$request = Request::createFromGlobals();
+$response = $kernel-&gt;handle($request);
+$response-&gt;send();
+$kernel-&gt;terminate($request, $response);
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Bundles enable us to define classes as Dependency Injection services, for our
+applications and third part libraries in a reusable way.</p>
+
+<p>In the example above we've created a bundle that provides a <code>http_kernel</code> service,
+which can then be used to create Symfony applications. Here are some existing
+bundles that do it for us:</p>
+
+<ul>
+<li><a href="https://github.com/symfony/framework-bundle">FrameworkBundle</a>, the official one
+provided by Symfony. It comes with many services out of the box, mainly targeted
+at full stack applications (it follows a "solve 80% of use cases" philosohpy)</li>
+<li><a href="http://gnugat.github.io/micro-framework-bundle/">MicroFrameworkBundle</a>, an unofficial
+one. It comes with the bare minimum (it follows a "add what you need" philosohpy)</li>
+</ul>
+
+<p>There are many bundles available, you can find them by checking
+<a href="https://packagist.org/search/?q=symfony-bundle">symfony-bundle in Packagist</a>.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Console]]></title>
+            <link href="/2016/03/02/ultimate-symfony-console.html"/>
+            <updated>2016-03-02T00:00:00+00:00</updated>
+            <id>/2016/03/02/ultimate-symfony-console.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: <code>$statusCode = $application-&gt;run($input);</code></p>
+</blockquote>
+
+<p>In this guide we explore the standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications.</p>
+
+<p>We've already seen:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+</ul>
+
+<p>We're now about to check the last one: Console.</p>
+
+<p>In the next articles we'll also see how HttpKernel enables reusable code with <a href="/2016/03/09/ultimate-symfony-bundle.html">Bundles</a>,
+and the different ways to organize our application <a href="/2016/03/16/ultimate-symfony-skeleton.html">tree directory</a>.</p>
+
+<p>Finally we'll finish by putting all this knowledge in practice by creating a
+"fortune" project with:</p>
+
+<ul>
+<li><a href="/2016/03/24/ultimate-symfony-api-example.html">an endpoint that allows us to submit new fortunes</a></li>
+<li><a href="/2016/03/30/ultimate-symfony-web-example.html">a page that lists all fortunes</a></li>
+<li><a href="/2016/04/06/ultimate-symfony-cli-example.html">a command that prints the last fortune</a></li>
+</ul>
+
+<h2 id="application">Application</h2>
+
+<p>Symfony provides a <a href="http://symfony.com/doc/current/components/console/introduction.html">Console component</a>
+which allows us to create CLI commands. Its main class is <code>Application</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\Console;
+
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Command\Command;
+
+class Application
+{
+    public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN');
+
+    public function add(Command $command);
+    public function setDefaultCommand($commandName);
+    public function run(InputInterface $input = null, OutputInterface $output = null);
+
+    public function setAutoExit($boolean);
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: This snippet is a truncated version. Please note that <code>Application</code>
+  is (unfortunately) not an interface.</p>
+</blockquote>
+
+<p>We can create it as follow:</p>
+
+<pre><code class="php">&lt;?php
+// /tmp/console.php
+
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+
+$application = new Application('My Application', 'v4.2.3');
+$application-&gt;add($command);
+$application-&gt;setDefaultCommand($command-&gt;getName());
+
+$application-&gt;run(new ArgvInput());
+</code></pre>
+
+<p>Which can then be used as follow:</p>
+
+<pre><code>php /tmp/console.php
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: After running the command, <code>Application</code> will automatically stop
+  using <code>exit</code>.
+  As it can sometimes be inconvenient (for example in tests), we can disable it
+  with this line: <code>$application-&gt;setAutoExit(false);</code></p>
+</blockquote>
+
+<p>Out of the box, <code>Application</code> has two commands:</p>
+
+<ul>
+<li><code>list</code>, list all available commands (it's the default command if <code>setDefaultCommand</code> hasn't been used)</li>
+<li><code>help</code>, displays a description with available arguments and options for the current command</li>
+</ul>
+
+<h2 id="command">Command</h2>
+
+<p>In order for <code>Application</code> to be useful, we need to create commands. This can be
+done by extending <code>Command</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\Console\Command;
+
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+
+class Command
+{
+    public function run(InputInterface $input, OutputInterface $output);
+    // Called by run
+    protected function execute(InputInterface $input, OutputInterface $output);
+    protected function interact(InputInterface $input, OutputInterface $output);
+
+    protected function configure();
+    // To be called in configure
+    public function setName($name);
+    public function addArgument($name, $mode = null, $description = '', $default = null);
+    public function addOption($name, $shortcut = null, $mode = null, $description = '', $default = null);
+    public function setDescription($description);
+    public function setHelp($help);
+    public function setAliases($aliases);
+}
+</code></pre>
+
+<p>We can configure the command (name, arguments, options, description, etc) in the
+<code>configure</code> method, we can define more options to be asked interractively in
+the <code>interact</code> method (e.g. <code>Are you sure? (Y/n)</code>) and finally we can write the
+command logic in the <code>execute</code> method.</p>
+
+<p>Commands are to Console what Controllers are to HttpKernel: their responsibility
+is to extract input parameters, pass them to a service and then put the service's
+returned value in the output.</p>
+
+<h2 id="input">Input</h2>
+
+<p>Input parameters are wrapped in the following interface:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\Console\Input;
+
+interface InputInterface
+{
+    public function getArgument($name);
+    public function getOption($name);
+}
+</code></pre>
+
+<p>Out of the box we have the following implementations:</p>
+
+<ul>
+<li><code>ArgvInput</code>: wraps CLI arguments comming from <code>$_SERVER['argv']</code></li>
+<li><code>ArrayInput</code>: define arguments using an array, which is useful for tests</li>
+</ul>
+
+<p><code>Application</code> will take care of validating <code>InputInterface</code> parameters against
+the <code>Command</code> configuration (e.g. if required arguments present).</p>
+
+<h2 id="output">Output</h2>
+
+<p>While <code>InputInterface</code> can be seen as a value object, <code>OutputInterface</code> should
+be seen as a service able to send informations to a stream:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\Console\Output;
+
+abstract class Output implements OutputInterface
+{
+    public function writeln($messages, $type = self::OUTPUT_NORMAL);
+}
+</code></pre>
+
+<p>The <code>writeln</code> method allows us to write a new line (with a newline character at
+the end). If the given message is an array, it will print each elements on a new
+line.</p>
+
+<p>The given message can contain tags (e.g. <code>Arthur &lt;info&gt;Dent&lt;/info&gt;</code>), which can
+be used to format it. Out of the box it will color the followings:</p>
+
+<ul>
+<li>green text for informative messages (usage example: <code>&lt;info&gt;Arthur Dent&lt;/info&gt;</code>)</li>
+<li>yellow text for comments (usage example: <code>&lt;comment&gt;Tricia McMillan&lt;/comment&gt;</code>)</li>
+<li>black text on a cyan background for questions (usage example: <code>&lt;question&gt;Ford Prefect&lt;/question&gt;</code>)</li>
+<li>white text on a red background for errors (usage example: <code>&lt;error&gt;Marvin&lt;/error&gt;</code>)</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The Console component allows us to create CLI applications. Its Commands are a
+thin layer which gathers the input and call services. Those services can then
+output messages to the user.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Since Symfony follows a <a href="https://github.com/symfony/symfony-docs/issues/4265">Console Output Formating Style Guide</a>,
+  the Console component provides the following helper class:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\Console\Style;
+
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
+
+class SymfonyStyle
+{
+    public function __construct(InputInterface $input, OutputInterface $output);
+
+    public function block($messages, $type = null, $style = null, $prefix = ' ', $padding = false);
+    public function title($message);
+    public function section($message);
+    public function listing(array $elements);
+    public function text($message);
+
+    public function comment($message);
+    public function success($message);
+    public function error($message);
+    public function warning($message);
+    public function note($message);
+    public function caution($message);
+
+    public function table(array $headers, array $rows);
+
+    public function ask($question, $default = null, $validator = null);
+    public function askHidden($question, $validator = null);
+    public function confirm($question, $default = true);
+    public function choice($question, array $choices, $default = null);
+    public function askQuestion(Question $question);
+
+    public function progressStart($max = 0);
+    public function progressAdvance($step = 1);
+    public function progressFinish();
+    public function createProgressBar($max = 0);
+
+    public function writeln($messages, $type = self::OUTPUT_NORMAL);
+    public function write($messages, $newline = false, $type = self::OUTPUT_NORMAL);
+    public function newLine($count = 1);
+}
+</code></pre>
+</blockquote>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Dependency Injection]]></title>
+            <link href="/2016/02/24/ultimate-symfony-dependency-injection.html"/>
+            <updated>2016-02-24T00:00:00+00:00</updated>
+            <id>/2016/02/24/ultimate-symfony-dependency-injection.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: Make Dependency Injection easy by moving class construction in
+  configuration files.</p>
+</blockquote>
+
+<p>In this guide we explore the standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications.</p>
+
+<p>We've already seen:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+</ul>
+
+<p>We're now about to check Dependency Injection, then the next article we'll have
+a look at <a href="/2016/03/02/ultimate-symfony-console.html">Console</a>.</p>
+
+<p>We'll also see how HttpKernel enables reusable code with <a href="/2016/03/09/ultimate-symfony-bundle.html">Bundles</a>,
+and the different ways to organize our application <a href="/2016/03/16/ultimate-symfony-skeleton.html">tree directory</a>.</p>
+
+<p>Finally we'll finish by putting all this knowledge in practice by creating a
+"fortune" project with:</p>
+
+<ul>
+<li><a href="/2016/03/24/ultimate-symfony-api-example.html">an endpoint that allows us to submit new fortunes</a></li>
+<li><a href="/2016/03/30/ultimate-symfony-web-example.html">a page that lists all fortunes</a></li>
+<li><a href="/2016/04/06/ultimate-symfony-cli-example.html">a command that prints the last fortune</a></li>
+</ul>
+
+<h2 id="introduction-to-the-design-pattern">Introduction to the design pattern</h2>
+
+<p>When first creating a class, we tend to keep it small and tidy. Then overtime it
+can grow out of control and the next thing we know it became this multi thousand
+line monster:</p>
+
+<pre><code class="php">&lt;?php
+
+class CheckApiStatus
+{
+    public function check($url)
+    {
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CUROPT_RETURNTRANSFER =&gt; true,
+            CURLOPT_HEADER =&gt; true,
+            CUROPT_URL =&gt; $url,
+        ));
+        $response = curl_exec($curl);
+        $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+        $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+        $headers = array_map(function($line) {
+            return explode(': ', trim($line));
+        }, explode("\n", substr($response, 0, $size)));
+        array_pop($headers);array_pop($headers);array_shift($headers);
+        $body = substr($response, $headerSize);
+
+        return 200 &gt;= $statusCode &amp;&amp; $statusCode &lt; 400;
+    }
+}
+</code></pre>
+
+<p>A nice way to shrink it back to an acceptable level is to identify the many
+"responsibilities" it bears and split those in sub classes. This process is called
+refactoring:</p>
+
+<pre><code class="php">&lt;?php
+
+class Request
+{
+    private $uri;
+
+    public function __construct($uri)
+    {
+        $this-&gt;uri;
+    }
+
+    public function getUri()
+    {
+        return $this-&gt;uri;
+    }
+}
+
+class Response
+{
+    private $statusCode;
+    private $headers;
+    private $body;
+
+    public function __construct($statusCode, $headers, $body)
+    {
+        $this-&gt;statusCode = $statusCode;
+        $this-&gt;headers = $headers;
+        $this-&gt;body = $body;
+    }
+
+    public function getStatusCode()
+    {
+        return $this-&gt;statusCode;
+    }
+
+    public function getHeaders()
+    {
+        return $this-&gt;headers;
+    }
+
+    public function getBody()
+    {
+        return $this-&gt;body;
+    }
+}
+
+interface HttpClient
+{
+    /**
+     * @return Response
+     */
+    public function sendRequest(Request $request);
+}
+
+class CurlHttpClient implements HttpClient
+{
+    public function sendRequest(Request $request)
+    {
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CUROPT_RETURNTRANSFER =&gt; true,
+            CURLOPT_HEADER =&gt; true,
+            CUROPT_URL =&gt; $request-&gt;getUri(),
+        ));
+        $response = curl_exec($curl);
+        $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+        $statusCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+        $headers = array_map(function($line) {
+            return explode(': ', trim($line));
+        }, explode("\n", substr($response, 0, $size)));
+        array_pop($headers);array_pop($headers);array_shift($headers);
+        $body = substr($response, $headerSize);
+        $body = substr($response, $headerSize);
+
+        return new Response($statusCode, $headers, $body);
+    }
+}
+
+class CheckApiStatus
+{
+    public function check($url)
+    {
+        $httpClient = new CurlHttpClient();
+        $statusCode = $httpClient-&gt;sendRequest(new Request($url))-&gt;getStatusCode();
+
+        return 200 &gt;= $statusCode &amp;&amp; $statusCode &lt; 400;
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: for more refactoring examples, check:</p>
+  
+  <ul>
+  <li><a href="http://martinfowler.com/articles/refactoring-external-service.html">Refactoring external service</a> by Martin Fowler</li>
+  <li><a href="http://verraes.net/2013/09/extract-till-you-drop/">Extract till you drop</a> by Mathias Verreas</li>
+  <li>Refactoring the cat API
+  <a href="http://php-and-symfony.matthiasnoback.nl/2015/07/refactoring-the-cat-api-client-part-1/">part 1</a>
+  <a href="http://php-and-symfony.matthiasnoback.nl/2015/07/refactoring-the-cat-api-client-part-2/">part 2</a>
+  <a href="http://php-and-symfony.matthiasnoback.nl/2015/07/refactoring-the-cat-api-client-part-3/">part 3</a>
+  by Matthias Noback</li>
+  </ul>
+</blockquote>
+
+<p>Our original class then has to call those sub classes to "delegate" the work. But
+how does it access those sub classes? Should it instantiate them in its methods?
+A better place could be the constructor, where the instances are stored in the class
+properties so it can be shared between two calls.</p>
+
+<p>Or even better we can instantiate them out of the class, and then pass them as
+arguments to the original class constructor, so we can share it with other classes:</p>
+
+<pre><code class="php">&lt;?php
+
+class CheckApiStatus
+{
+    private $httpClient;
+
+    public function __construct(HttpClient $httpClient)
+    {
+        $this-&gt;httpClient = $httpClient;
+    }
+
+    public function check($url)
+    {
+        $statusCode = $this-&gt;httpClient-&gt;sendRequest(new Request($url))-&gt;getStatusCode();
+
+        return 200 &gt;= $statusCode &amp;&amp; $statusCode &lt; 400;
+    }
+}
+
+$httpClient = new CurlHttpClient();
+$checkApiStatus = new CheckApiStatus($httpClient);
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Now <code>CheckApiStatus</code> is decoupled from the remote request logic.</p>
+  
+  <p>The refactoring steps might seem like producing more code just for the "beauty"
+  of principles, but it actually enables us to completly remove it: by using <a href="http://www.php-fig.org/psr/psr-7/">PSR-7</a>
+  interfaces instead of our own we can easily switch to <a href="http://docs.guzzlephp.org/en/latest/">Guzzle</a>
+  or any HTTP client library.</p>
+</blockquote>
+
+<p>And that's what <a href="http://www.martinfowler.com/articles/injection.html">Dependency Injection</a>
+is all about: taking parameters (also known as dependencies) our class (also known as service)
+needs and pass them as arguments (also known as injection), to allow more decoupling.</p>
+
+<p>The downside of this design pattern is that we now have a cascade of instantiations.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Classes can be shared if they are stateless which means calling a method
+  shouldn't change their attributes.</p>
+</blockquote>
+
+<h2 id="the-component">The component</h2>
+
+<p>Symfony provides a <a href="http://symfony.com/doc/current/components/dependency-injection/introduction.html">Dependency Injection component</a>
+which allows us to set up how our classes are constructed:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Reference;
+
+$container = new ContainerBuilder();
+
+$container
+    -&gt;register('http_client','CurlHttpClient')
+;
+$container
+    -&gt;register('check_api_status', 'CheckApiStatus')
+    -&gt;addArgument(new Reference('http_client'))
+;
+
+$checkApiStatus = $container-&gt;get('check_api_status');
+</code></pre>
+
+<p>It can even be set up using configuration:</p>
+
+<pre><code># /tmp/services/api.yml
+services:
+    http_client:
+        class: CurlHttpClient
+
+    check_api_status:
+        class: CheckApiStatus
+        arguments:
+            - '@http_client'
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Some string values must be escaped using single quotes because YAML
+  has a list of <a href="http://stackoverflow.com/a/22235064">reserved characters</a>, including:
+  <code>@</code>, <code>%</code>, <code>\</code>, <code>-</code>, <code>:</code> <code>[</code>, <code>]</code>, <code>{</code> and <code>}</code>.</p>
+</blockquote>
+
+<p>Here's how we can load this configuration:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Config\Loader\LoaderResolver;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\DirectoryLoader;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+
+$container = new ContainerBuilder();
+
+// Load recursively all YAML configuration files in services directories
+$fileLocator = new FileLocator(__DIR__);
+$loader = new DirectoryLoader($container, $fileLocator);
+$loader-&gt;setResolver(new LoaderResolver(array(
+    new YamlFileLoader($container, $fileLocator),
+    $loader,
+)));
+$loader-&gt;load('/services/');
+
+$checkApiStatus = $container-&gt;get('check_api_status');
+</code></pre>
+
+<p>Calling methods on a created service to complete its initialization is possible:</p>
+
+<pre><code>services:
+    my_event_listener:
+        class: MyEventListener
+
+    event_dispatcher:
+        class: 'Symfony\Component\EventDispatcher\EventDispatcher'
+        calls:
+            - [ addListener, [ kernel.request, '@my_event_listener', 42 ] ]
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: There's a better way to add listeners to the EventDispatcher, keep
+  reading to find out how.</p>
+</blockquote>
+
+<p>Finally it might be useful to create aliases:</p>
+
+<pre><code>services:
+    http_client:
+        alias: curl_http_client
+
+    curl_http_client:
+        class: CurlHttpClient
+
+    check_api_status:
+        class: checkApiStatus
+        arguments:
+            - "@http_client"
+</code></pre>
+
+<p>In the example above <code>http_client</code> is set to be <code>curl_http_client</code>, it could be
+changed later to use another implementation of <code>HttpClient</code>.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<p>In addition to class instances, we can also inject parameters:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Parameter;
+use Symfony\Component\DependencyInjection\Reference;
+
+$container = new ContainerBuilder();
+
+$container-&gt;setParameter('username', 'arthur.dent@example.com');
+$container-&gt;setParameter('password', 42);
+
+$container
+    -&gt;register('http_client','CurlHttpClient')
+;
+$container
+    -&gt;register('check_api_status', 'CheckApiStatus')
+    -&gt;addArgument(new Reference('http_client'))
+    -&gt;addArgument(new Parameter('username'))
+    -&gt;addArgument(new Parameter('password'))
+;
+
+$checkApiStatus = $container-&gt;get('check_api_status');
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: For the example's sake we're pretending that <code>CheckApiStatus</code>'s constructor
+  now takes 3 arguments.</p>
+</blockquote>
+
+<p>Here's the equivalent in YAML:</p>
+
+<pre><code># /tmp/services/api.yml
+parameters:
+    username: 'arthur.dent@example.com'
+    password: 42
+
+services:
+    http_client:
+        class: CurlHttpClient
+
+    check_api_status:
+        class: CheckApiStatus
+        arguments:
+            - '@http_client'
+            - '%username%'
+            - '%password%'
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: services are prefixed with <code>@</code>, and parameters are surrounded with <code>%</code>.</p>
+</blockquote>
+
+<p>The value of a parameter can be anything:</p>
+
+<ul>
+<li>null (<code>~</code>)</li>
+<li>a boolean (<code>true</code> or <code>false</code>)</li>
+<li>an integer (e.g. <code>42</code>)</li>
+<li>a float (e.g. <code>44.23</code>)</li>
+<li>a string (e.g. <code>hello world</code>, or escaped <code>'arthur.dent@example.com'</code>)</li>
+<li>an array (e.g. <code>[ apples, oranges ]</code>)</li>
+<li>an associative array (e.g. <code>{ first_name: Arthur, last_name: Dent }</code>)</li>
+</ul>
+
+<blockquote>
+  <p><strong>Note</strong>: The examples above for arrays are inline ones. They could also be on many lines:</p>
+
+<pre><code>parameters:
+    fruits:
+        - apples
+        - oranges
+
+    identity:
+        first_name: Arthur
+        last_name: Dent
+
+    # We can even have multi dimension arrays:
+    five_a_day:
+        -
+            - apples
+            - oranges
+        -
+            - carrots
+</code></pre>
+</blockquote>
+
+<h2 id="extension">Extension</h2>
+
+<p>By creating a class that extends <code>Extension</code>, we can provide reusable Dependency
+Injection configuration:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Config\Loader\LoaderResolver;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\DirectoryLoader;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+
+class AppExtension extends Extension
+{
+    public function load(array $configs, ContainerBuilder $container)
+    {
+        $fileLocator = new FileLocator(__DIR__);
+        $loader = new DirectoryLoader($container, $fileLocator);
+        $loader-&gt;setResolver(new LoaderResolver(array(
+            new YamlFileLoader($container, $fileLocator),
+            $loader,
+        )));
+        $loader-&gt;load('/services/');
+    }
+}
+
+$container = new ContainerBuilder();
+$appExtension = new AppExtension();
+$appExtension-&gt;load(array(), $container);
+
+$checkApiStatus = $container-&gt;get('check_api_status');
+</code></pre>
+
+<h2 id="compilerpass-and-tags">CompilerPass and tags</h2>
+
+<p>The <code>Container</code> implementation provides a <code>compile</code> method that resolves parameters
+(replace <code>%parameter%</code> placeholders by the parameter value) and freezes them
+(calling <code>setParameter</code> will result in an exception).</p>
+
+<p>The <code>ContainerBuilder</code> implementations also has a <code>compile</code> method which is going
+to execute all registered <code>CompilerPassInterface</code> implementations.</p>
+
+<p>For example, we can retrieve all services "tagged" <code>kernel.event_listener</code> and
+add them to the <code>EventDispatcher</code> with the following one:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\Reference;
+
+class EventListenerCompilerPass implements CompilerPassInterface
+{
+    public function process(ContainerBuilder $container)
+    {
+        if (false === $container-&gt;hasDefinition('event_dispatcher')) {
+            return;
+        }
+        $eventDispatcher = $container-&gt;getDefinition('event_dispatcher');
+        $taggedServices = $container-&gt;findTaggedServiceIds('kernel.event_listener');
+        foreach ($taggedServices as $id =&gt; $attributes) {
+            $eventDispatcher-&gt;addMethodCall('addListener', array(
+                $attributes['event'],
+                array(new Reference($id), $attributes['method']),
+                $attributes['priority'],
+            ));
+        }
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: The EventDispatcher component already provides a <code>RegisterListenersPass</code>.</p>
+</blockquote>
+
+<p>The configuration for a "tagged" service looks like this:</p>
+
+<pre><code>services:
+    my_event_listener:
+        class MyEventListener
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: onKernelRequest, priority: 42 }
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: With this, it is no longer required to call <code>addListener</code> in <code>event_dispatcher</code>'s
+  configuration.</p>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>By providing a configurable way to define service construction, the DependencyInjection
+component allows us to use the design pattern of the same name in our projects.</p>
+
+<p>The HttpKernel component provides two <code>HttpKernelInterface</code> implementations:</p>
+
+<ul>
+<li><code>HttpKernel</code> which does the HTTP logic</li>
+<li><code>Kernel</code> which sets up a DependencyInjection container and then use <code>HttpKernel</code></li>
+</ul>
+
+<p>Just like for the Routing component, there's a <code>PhpDumper</code> which can generate an
+implementation of <code>ContainerInterface</code> with all configuration in an optimized way.
+It might look like this:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
+use Symfony\Component\DependencyInjection\Exception\RuntimeException;
+use Symfony\Component\DependencyInjection\ParameterBag\FrozenParameterBag;
+
+class appDevDebugProjectContainer extends Container
+{
+    private $parameters;
+    private $targetDirs = array();
+
+    public function __construct()
+    {
+        $dir = __DIR__;
+        for ($i = 1; $i &lt;= 5; ++$i) {
+            $this-&gt;targetDirs[$i] = $dir = dirname($dir);
+        }
+        $this-&gt;parameters = $this-&gt;getDefaultParameters();
+
+        $this-&gt;services = array();
+        $this-&gt;methodMap = array(
+            'http_client' =&gt; 'getHttpClientService',
+            'check_api_status' =&gt; 'getCheckApiStatusService',
+        );
+        $this-&gt;aliases = array(
+        );
+    }
+
+    public function compile()
+    {
+        throw new LogicException('You cannot compile a dumped frozen container.');
+    }
+
+    protected function getHttpClientService()
+    {
+        return $this-&gt;services['http_client'] = new \CurlHttpClient();
+    }
+
+    protected function getCheckApiStatusService()
+    {
+        return $this-&gt;services['check_api_status'] = new \CheckApiStatus($this-&gt;get('http_client'), 'arthur.dent@example.com', 42);
+    }
+
+    public function getParameter($name)
+    {
+        $name = strtolower($name);
+        if (!(isset($this-&gt;parameters[$name]) || array_key_exists($name, $this-&gt;parameters))) {
+            throw new InvalidArgumentException(sprintf('The parameter "%s" must be defined.', $name));
+        }
+
+        return $this-&gt;parameters[$name];
+    }
+
+    public function hasParameter($name)
+    {
+        $name = strtolower($name);
+
+        return isset($this-&gt;parameters[$name]) || array_key_exists($name, $this-&gt;parameters);
+    }
+
+    public function setParameter($name, $value)
+    {
+        throw new LogicException('Impossible to call set() on a frozen ParameterBag.');
+    }
+
+    public function getParameterBag()
+    {
+        if (null === $this-&gt;parameterBag) {
+            $this-&gt;parameterBag = new FrozenParameterBag($this-&gt;parameters);
+        }
+
+        return $this-&gt;parameterBag;
+    }
+
+    protected function getDefaultParameters()
+    {
+        return array(
+            'username' =&gt; 'arthur.dent@example.com',
+            'password' =&gt; 42,
+        );
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Dependencies that are used by only one service can be marked as "private"
+  they'll be hard coded in the service instantiation (but they won't be available
+  anymore from <code>$container-&gt;get()</code>).</p>
+  
+  <p>In our example we could mark <code>http_client</code> as private, so the dumped Container
+  wouldn't have a <code>getHttpClientService</code> method:</p>
+
+<pre><code>service:
+    http_client:
+        class: CurlHttpClient
+        public: false
+</code></pre>
+</blockquote>
+
+<p>It is also worth noting that services are by default only initialized once and on demand,
+so the number of services doesn't impact the performances of the application.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Routing]]></title>
+            <link href="/2016/02/17/ultimate-symfony-routing.html"/>
+            <updated>2016-02-17T00:00:00+00:00</updated>
+            <id>/2016/02/17/ultimate-symfony-routing.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>:</p>
+
+<pre><code class="php">$parameters = $urlMatcher-&gt;match($request-&gt;getPathInfo());
+
+$request-&gt;attributes-&gt;add(array('_controller' =&gt; $parameters['_controller']);
+$request-&gt;attributes-&gt;add(array('_route' =&gt; $parameters['_route']);
+unset($parameters['_controller'], $parameters['_route']);
+$request-&gt;attributes-&gt;add(array('_route_params' =&gt; $parameters);
+</code></pre>
+</blockquote>
+
+<p>In this guide we explore the standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications.</p>
+
+<p>We've already seen:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+</ul>
+
+<p>We're now about to check Routing and YAML, then in the next articles we'll have a look at:</p>
+
+<ul>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+<li><a href="/2016/03/02/ultimate-symfony-console.html">Console</a></li>
+</ul>
+
+<p>We'll also see how HttpKernel enables reusable code with <a href="/2016/03/09/ultimate-symfony-bundle.html">Bundles</a>,
+and the different ways to organize our application <a href="/2016/03/16/ultimate-symfony-skeleton.html">tree directory</a>.</p>
+
+<p>Finally we'll finish by putting all this knowledge in practice by creating a
+"fortune" project with:</p>
+
+<ul>
+<li><a href="/2016/03/24/ultimate-symfony-api-example.html">an endpoint that allows us to submit new fortunes</a></li>
+<li><a href="/2016/03/30/ultimate-symfony-web-example.html">a page that lists all fortunes</a></li>
+<li><a href="/2016/04/06/ultimate-symfony-cli-example.html">a command that prints the last fortune</a></li>
+</ul>
+
+<h2 id="routing">Routing</h2>
+
+<p>Symfony provides a <a href="http://symfony.com/doc/current/components/routing/introduction.html">Routing component</a>
+which allows us, for a HTTP request/URL, to execute a specific function (also known as "Controller").</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Controllers must be a <a href="http://php.net/manual/en/language.types.callable.php">callable</a>,
+  for example:</p>
+  
+  <ul>
+  <li>an anonymous function: <code>$controller = function (Request $request) { return new Response() };</code>.</li>
+  <li>an array with an instance of a class and a method name:
+  <code>$controller = array($controller, 'searchArticles');</code>.</li>
+  <li>a fully qualified classname with a static method name:
+  <code>$controller = 'Vendor\Project\Controller\ArticleController::searchArticles'</code>.</li>
+  </ul>
+  
+  <p>Controllers can take a Request argument and should return a Response instance.</p>
+</blockquote>
+
+<p>It revolves around the following interface:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\Routing\Matcher;
+
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\Routing\Exception\MethodNotAllowedException;
+
+interface UrlMatcherInterface
+{
+    /**
+     * @param string $pathinfo
+     *
+     * @return array Route parameters (also contains `_route`)
+     *
+     * @throws ResourceNotFoundException
+     * @throws MethodNotAllowedException
+     */
+    public function match($pathinfo);
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: For brevity the interface has been stripped from <code>RequestContextAwareInterface</code>.</p>
+</blockquote>
+
+<p>In actual applications we don't need to implement it as the component provides
+a nice implementation that works with <code>RouteCollection</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Routing\RouteCollection;
+use Symfony\Component\Routing\Route;
+
+$collection = new RouteCollection();
+$collection-&gt;add('search_articles', new Route('/v1/articles', array(
+    '_controller' =&gt; 'Vendor\Project\Controller\ArticleController::search',
+), array(), array(), '', array(), array('GET', 'HEAD')));
+
+$collection-&gt;add('edit_article', new Route('/v1/articles/{id}', array(
+    '_controller' =&gt; 'Vendor\Project\Controller\ArticleController::edit',
+), array(), array(), '', array(), array('PUT')));
+</code></pre>
+
+<p><code>RouteCollection</code> allows us to configure which Request will match our controllers:
+via URL patterns and Request method. It also allows us to specify parts of the URLs
+as URI parameters (e.g. <code>id</code> in the above snippet).</p>
+
+<p>Building route configuration by interacting with PHP code can be tedious, so the
+Routing component supports alternative configuration formats: annotations, XML, YAML, etc.</p>
+
+<blockquote>
+  <p><strong>Tip</strong>: have a look at <code>Symfony\Component\Routing\Loader\YamlFileLoader</code>.</p>
+</blockquote>
+
+<h2 id="yaml">YAML</h2>
+
+<p>Symfony provides a <a href="http://symfony.com/doc/current/components/yaml/introduction.html">YAML component</a>
+which allows us to convert YAML configuration into PHP arrays (and vice versa).</p>
+
+<p>For example the following YAML file:</p>
+
+<pre><code># /tmp/routing.yml
+search_articles:
+    path: /api/articles
+    defaults:
+        _controller: 'Vendor\Project\Controller\ArticleController::search'
+    methods:
+        - GET
+        - HEAD
+
+edit_article:
+    path: '/api/articles/{id}'
+    defaults:
+        _controller: 'Vendor\Project\Controller\ArticleController::edit'
+    methods:
+        - PUT
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Some string values must be escaped using single quotes because the YAML
+  has a list of <a href="http://stackoverflow.com/a/22235064">reserved characters</a>, including:
+  <code>@</code>, <code>%</code>, <code>\</code>, <code>-</code>, <code>:</code> <code>[</code>, <code>]</code>, <code>{</code> and <code>}</code>.</p>
+</blockquote>
+
+<p>Can be converted using:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Yaml\Yaml;
+
+$routing = Yaml::parse(file_get_contents('/tmp/routing.yml'));
+</code></pre>
+
+<p>This will result in the equivalent of the following array:</p>
+
+<pre><code class="php">&lt;?php
+
+$routing = array(
+    'search_articles' =&gt; array(
+        'path' =&gt; '/api/articles',
+        'defaults' =&gt; array(
+            '_controller' =&gt; 'Vendor\Project\Controller\ArticleController::search',
+        ),
+        'methods' =&gt; array(
+            'GET',
+            'HEAD',
+        ),
+    ),
+    'edit_article' =&gt; array(
+        'path' =&gt; '/api/articles/{id}',
+        'defaults' =&gt; array(
+            '_controller' =&gt; 'Vendor\Project\Controller\ArticleController::edit',
+        ),
+        'methods' =&gt; array(
+            'PUT',
+        ),
+    ),
+);
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: the Routing component uses another component to then build <code>RouteCollection</code>
+  from this array: the <a href="http://symfony.com/doc/current/components/config/introduction.html">Config component</a>
+  which is out of the scope of this guide.</p>
+</blockquote>
+
+<p>There's also <code>$yaml = Yaml::dump($array);</code> that converts a PHP array into a YAML
+string.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The Routing component allows us to define which Controllers should be executed
+for the given Request, and the Yaml component allows us to configure it in a simple way.</p>
+
+<p>HttpKernel provides a <code>RouterListener</code> which makes use of <code>UrlMatcher</code> when the
+Request is received to find a corresponding controller.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: <code>Request-&gt;attributes</code> is used to store information about the current
+  Request such as the matched route, the controller, etc. It's used internally
+  by Symfony but we could also store our own values in it.</p>
+</blockquote>
+
+<p>Some might be concerned with performance: reading the configuration from the
+filesystem may slow down the application.</p>
+
+<p>Don't panic! There's a <code>PhpMatcherDumper</code> class which can generate an implementation
+of <code>UrlMatcherInterface</code> with all configuration in an optimized way. It might look
+like this:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\Routing\Exception\MethodNotAllowedException;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\Routing\RequestContext;
+
+class appDevUrlMatcher extends Symfony\Bundle\FrameworkBundle\Routing\RedirectableUrlMatcher
+{
+    public function __construct(RequestContext $context)
+    {
+        $this-&gt;context = $context;
+    }
+
+    public function match($pathinfo)
+    {
+        $allow = array();
+        $pathinfo = rawurldecode($pathinfo);
+        $context = $this-&gt;context;
+
+        // edit_article
+        if (preg_match('#^/v1/articles/(?P&lt;id&gt;[^/]++)$#s', $pathinfo, $matches)) {
+            if ($this-&gt;context-&gt;getMethod() != 'PUT') {
+                $allow[] = 'PUT';
+                goto not_edit_article;
+            }
+
+            return $this-&gt;mergeDefaults(array_replace($matches, array('_route' =&gt; 'edit_article')), array (  '_controller' =&gt; 'Vendor\Project\Controller\ArticleController::edit',));
+        }
+        not_edit_article:
+
+        // search_articles
+        if ($pathinfo === '/v1/articles') {
+            if (!in_array($this-&gt;context-&gt;getMethod(), array('GET', 'HEAD'))) {
+                $allow = array_merge($allow, array('GET', 'HEAD'));
+                goto not_search_articles;
+            }
+
+            return array (  '_controller' =&gt; 'app.article_controller:search',  '_route' =&gt; 'Vendor\Project\Controller\ArticleController::search',);
+        }
+        not_search_articles:
+
+        throw 0 &lt; count($allow) ? new MethodNotAllowedException(array_unique($allow)) : new ResourceNotFoundException();
+    }
+}
+</code></pre>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - Event Dispatcher]]></title>
+            <link href="/2016/02/10/ultimate-symfony-event-dispatcher.html"/>
+            <updated>2016-02-10T00:00:00+00:00</updated>
+            <id>/2016/02/10/ultimate-symfony-event-dispatcher.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>:</p>
+
+<pre><code class="php">$eventDispatcher-&gt;addListener($eventName, $listener1, $priority);
+$eventDispatcher-&gt;addListener($eventName, $listener2, $priority - 1);
+$eventDispatcher-&gt;dispatch($eventName); // Calls $listener1, then $listener2
+</code></pre>
+</blockquote>
+
+<p>In this guide we explore the standalone libraries (also known as "Components")
+provided by <a href="http://symfony.com">Symfony</a> to help us build applications.</p>
+
+<p>We've already seen:</p>
+
+<ul>
+<li><a href="/2016/02/03/ultimate-symfony-http-kernel.html">HTTP Kernel and HTTP Foundation</a></li>
+</ul>
+
+<p>We're now about to check Event Dispatcher, then in the next articles we'll have a look at:</p>
+
+<ul>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+<li><a href="/2016/03/02/ultimate-symfony-console.html">Console</a></li>
+</ul>
+
+<p>We'll also see how HttpKernel enables reusable code with <a href="/2016/03/09/ultimate-symfony-bundle.html">Bundles</a>,
+and the different ways to organize our application <a href="/2016/03/16/ultimate-symfony-skeleton.html">tree directory</a>.</p>
+
+<p>Finally we'll finish by putting all this knowledge in practice by creating a
+"fortune" project with:</p>
+
+<ul>
+<li><a href="/2016/03/24/ultimate-symfony-api-example.html">an endpoint that allows us to submit new fortunes</a></li>
+<li><a href="/2016/03/30/ultimate-symfony-web-example.html">a page that lists all fortunes</a></li>
+<li><a href="/2016/04/06/ultimate-symfony-cli-example.html">a command that prints the last fortune</a></li>
+</ul>
+
+<h2 id="event-dispatcher">Event Dispatcher</h2>
+
+<p>Symfony provides an <a href="http://symfony.com/doc/current/components/event_dispatcher/introduction.html">EventDispatcher component</a>
+which allows the execution of registered function at key points in our applications.</p>
+
+<p>It revolves around the following interface:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\EventDispatcher;
+
+interface EventDispatcherInterface
+{
+    /**
+     * @param string   $eventName
+     * @param callable $listener
+     * @param int      $priority  High priority listeners will be executed first
+     */
+    public function addListener($eventName, $listener, $priority = 0);
+
+    /**
+     * @param string $eventName
+     * @param Event  $event
+     */
+    public function dispatch($eventName, Event $event = null);
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: This snippet is a truncated version, the actual interface has methods
+  to add/remove/get/check listeners and subscribers (which are "auto-configured" listeners).</p>
+</blockquote>
+
+<p>An implementation is provided out of the box and can be used as follow:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\EventDispatcher\EventDispatcher;
+
+$eventDispatcher = new EventDispatcher();
+
+$eventDispatcher-&gt;addListener('something_happened', function () {
+    echo "Log it\n";
+}, 1);
+$eventDispatcher-&gt;addListener('something_happened', function () {
+    echo "Save it\n";
+}, 2);
+
+$eventDispatcher-&gt;dispatch('something_happened');
+</code></pre>
+
+<p>This will output:</p>
+
+<pre><code>Save it
+Log it
+</code></pre>
+
+<p>Since the second listener had a higher priority, it got executed first.</p>
+
+<blockquote>
+  <p><strong>Note</strong>: Listeners must be a <a href="http://php.net/manual/en/language.types.callable.php">callable</a>,
+  for example:</p>
+  
+  <ul>
+  <li>an anonymous function: <code>$listener = function (Event $event) {};</code>.</li>
+  <li>an array with an instance of a class and a method name:
+  <code>$listener = array($service, 'method');</code>.</li>
+  <li>a fully qualified classname with a static method name:
+  <code>$listener = 'Vendor\Project\Service::staticMethod'</code>.</li>
+  </ul>
+</blockquote>
+
+<p>If we want to provide some context to the listeners (parameters, etc) we can
+create a sub-class of <code>Event</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\EventDispatcher\Event;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+
+class SomethingHappenedEvent extends Event
+{
+    private $who;
+    private $what;
+    private $when;
+
+    public function __construct($who, $what)
+    {
+        $this-&gt;who = $who;
+        $this-&gt;what = $what;
+        $this-&gt;when = new \DateTime();
+    }
+
+    public function who()
+    {
+        return $this-&gt;who;
+    }
+
+    public function what()
+    {
+        return $this-&gt;what;
+    }
+
+    public function when()
+    {
+        return $this-&gt;when;
+    }
+}
+
+$eventDispatcher = new EventDispatcher();
+
+$eventDispatcher-&gt;addListener('something_happened', function (SomethingHappenedEvent $event) {
+    echo "{$event-&gt;who()} was {$event-&gt;what()} at {$event-&gt;when()-&gt;format('Y/m/d H:i:s')}\n";
+});
+
+$eventDispatcher-&gt;dispatch('something_happened', new SomethingHappenedEvent('Arthur', 'hitchhiking'));
+</code></pre>
+
+<h2 id="httpkernel-example">HttpKernel example</h2>
+
+<p>The HttpKernel component we've seen in <a href="/2016/02/03/ultimate-symfony-http-kernel.html">the previous article</a>
+provides a <code>Kernel</code> abstract class that heavily relies on EventDispatcher.</p>
+
+<p>For each key steps of its execution, it dispatches the following events:</p>
+
+<ol>
+<li><code>kernel.request</code>: gets a <code>Request</code></li>
+<li><code>kernel.controller</code>: executes a callable (also known as "Controller")</li>
+<li><code>kernel.view</code>: converts the Controller's returned value into a <code>Response</code> (if necessary)</li>
+<li><code>kernel.response</code>: returns a <code>Response</code></li>
+</ol>
+
+<p>And in case of error:</p>
+
+<ul>
+<li><code>kernel.exception</code>: handles errors</li>
+</ul>
+
+<p>Just before returning the <code>Response</code>, <code>HttpKernel</code> dispatches one last event:</p>
+
+<ul>
+<li><code>kernel.finish_request</code>: clean ups, sending emails, etc</li>
+</ul>
+
+<p>After the <code>Response</code> has been displayed, we can dispatch:</p>
+
+<ul>
+<li><code>kernel.terminate</code>: same as <code>kernel.finish_request</code>, except it won't slow down
+the rendering of request if FastCGI is enabled</li>
+</ul>
+
+<h3 id="kernel-request">Kernel Request</h3>
+
+<p>Listeners that registered for <code>kernel.request</code> can modify the Request object.</p>
+
+<p>Out of the box there's a <code>RouterListener</code> registered which sets the following
+parameters in <code>Request-&gt;attributes</code>:</p>
+
+<ul>
+<li><code>_route</code>: the route name that matched the Request</li>
+<li><code>_controller</code>: a callable that will handle the Request and return a Response</li>
+<li><code>_route_parameters</code>: query parameters extracted from the Request</li>
+</ul>
+
+<p>An example of a custom Listener could be one that decodes JSON content and sets
+it in <code>Request-&gt;request</code>:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\EventListener;
+
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+/**
+ * PHP does not populate $_POST with the data submitted via a JSON Request,
+ * causing an empty $request-&gt;request.
+ *
+ * This listener fixes this.
+ */
+class JsonRequestContentListener
+{
+    /**
+     * @param GetResponseEvent $event
+     */
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        $request = $event-&gt;getRequest();
+        $hasBeenSubmited = in_array($request-&gt;getMethod(), array('PATCH', 'POST', 'PUT'), true);
+        $isJson = (1 === preg_match('#application/json#', $request-&gt;headers-&gt;get('Content-Type')));
+        if (!$hasBeenSubmited || !$isJson) {
+            return;
+        }
+        $data = json_decode($request-&gt;getContent(), true);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            $event-&gt;setResponse(new Response('{"error":"Invalid or malformed JSON"}', 400, array('Content-Type' =&gt; 'application/json')));
+        }
+        $request-&gt;request-&gt;add($data ?: array());
+    }
+}
+</code></pre>
+
+<p>Another example would be to start a database transaction:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\EventListener;
+
+use PommProject\Foundation\QueryManager\QueryManagerInterface;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+
+class StartTransactionListener
+{
+    /**
+     * @var QueryManagerInterface
+     */
+    private $queryManager;
+
+    /**
+     * @param QueryManagerInterface $queryManager
+     */
+    public function __construct(QueryManagerInterface $queryManager)
+    {
+        $this-&gt;queryManager = $queryManager;
+    }
+
+    /**
+     * @param GetResponseEvent $event
+     */
+    public function onKernelRequest(GetResponseEvent $event)
+    {
+        $this-&gt;queryManager-&gt;query('START TRANSACTION');
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: <a href="http://pomm-project.org">Pomm</a> is used here as an example.</p>
+</blockquote>
+
+<h3 id="kernel-controller">Kernel Controller</h3>
+
+<p>Listeners that registered for <code>kernel.controller</code> can modify the Request object.</p>
+
+<p>This can be useful when we'd like to change the Controller.</p>
+
+<p>For example <code>SensioFrameworkExtraBundle</code> has a <code>ControllerListener</code> that parses
+the controller annotations at this point.</p>
+
+<h3 id="kernel-view">Kernel View</h3>
+
+<p>Listeners that registered for <code>kernel.view</code> can modify the Response object.</p>
+
+<p>For example <code>SensioFrameworkExtraBundle</code> has a <code>TemplateListener</code> that uses <code>@Template</code>
+annotation: controllers only need to return an array and the listener will create
+a response using <a href="http://twig.sensiolabs.org/">Twig</a> (it will pass the array as
+Twig parameters).</p>
+
+<h3 id="kernel-response">Kernel Response</h3>
+
+<p>Listeners that registered for <code>kernel.response</code> can modify the Response object.</p>
+
+<p>Out of the box there's a <code>ResponseListener</code> regitered which sets some Response
+headers according to the Request's one.</p>
+
+<h3 id="kernel-terminate">Kernel Terminate</h3>
+
+<p>Listeners that registered for <code>kernel.terminate</code> can execute actions after the
+Response has been served (if our web server uses FastCGI).</p>
+
+<p>An example of a custom Listener could be one that rollsback a database transaction,
+when running in test environment:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\EventListener\Pomm;
+
+use PommProject\Foundation\QueryManager\QueryManagerInterface;
+use Symfony\Component\HttpKernel\Event\PostResponseEvent;
+
+class RollbackListener
+{
+    /**
+     * @var QueryManagerInterface
+     */
+    private $queryManager;
+
+    /**
+     * @param QueryManagerInterface $queryManager
+     */
+    public function __construct(QueryManagerInterface $queryManager)
+    {
+        $this-&gt;queryManager = $queryManager;
+    }
+
+    /**
+     * @param PostResponseEvent $event
+     */
+    public function onKernelTerminate(PostResponseEvent $event)
+    {
+        $this-&gt;queryManager-&gt;query('ROLLBACK');
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: We'll se later how to register this listener only for test environment.</p>
+</blockquote>
+
+<h3 id="kernel-exception">Kernel Exception</h3>
+
+<p>Listeners that registered for <code>kernel.exception</code> can catch an exception and generate
+an appropriate Response object.</p>
+
+<p>An example of a custom Listener could be one that logs debug information and generates
+a 500 Response:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace AppBundle\EventListener;
+
+use Psr\Log\LoggerInterface;
+use Ramsey\Uuid\Uuid;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
+
+class ExceptionListener
+{
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function __construct(LoggerInterface $logger)
+    {
+        $this-&gt;logger = $logger;
+    }
+
+    /**
+     * @param GetResponseForExceptionEvent $event
+     */
+    public function onKernelException(GetResponseForExceptionEvent $event)
+    {
+        $exception = $event-&gt;getException();
+        $token = Uuid::uuid4()-&gt;toString();
+        $this-&gt;logger-&gt;critical(
+            'Caught PHP Exception {class}: "{message}" at {file} line {line}',
+            array(
+                'class' =&gt; get_class($exception),
+                'message' =&gt; $exception-&gt;getMessage(),
+                'file' =&gt; $exception-&gt;getFile(),
+                'line' =&gt; $exception-&gt;getLine()
+                'exception' =&gt; $exception,
+                'token' =&gt; $token
+            )
+        );
+        $event-&gt;setResponse(new Response(
+            json_encode(array(
+                'error' =&gt; 'An error occured, if it keeps happening please contact an administrator and provide the following token: '.$token,
+            )),
+            500,
+            array('Content-Type' =&gt; 'application/json'))
+        );
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: <a href="https://benramsey.com/projects/ramsey-uuid/">Ramsey UUID</a> is used
+  here to provide a unique token that can be referred to.</p>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>EventDispatcher is another example of a simple yet powerful Symfony component.
+HttpKernel uses it to configure a standard "Symfony application", but also to
+allow us to change its behaviour.</p>
+
+<p>In this article we've seen the basics and how it works behind the hood when used
+by HttpKernel, but we could create our own event and dispatch it to make our
+own code "Open for extension, but Close to modification"
+(<a href="https://blog.8thlight.com/uncle-bob/2014/05/12/TheOpenClosedPrinciple.html">Open/Close principle</a>).</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[The Ultimate Developer Guide to Symfony - HTTP Kernel]]></title>
+            <link href="/2016/02/03/ultimate-symfony-http-kernel.html"/>
+            <updated>2016-02-03T00:00:00+00:00</updated>
+            <id>/2016/02/03/ultimate-symfony-http-kernel.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Reference</strong>: This article is intended to be as complete as possible and is
+  kept up to date.</p>
+  
+  <p><strong>TL;DR</strong>: <code>$response = $httpKernel-&gt;handle($request);</code></p>
+</blockquote>
+
+<p><a href="http://symfony.com">Symfony</a> provides many standalone libraries (also known as
+"Components") that help us build applications.</p>
+
+<p>In this guide we'll see the main ones that allow us to build an application:</p>
+
+<ul>
+<li>HTTP Kernel and HTTP Foundation</li>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24/ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+<li><a href="/2016/03/02/ultimate-symfony-console.html">Console</a></li>
+</ul>
+
+<p>We'll also see how HttpKernel enables reusable code with <a href="/2016/03/09/ultimate-symfony-bundle.html">Bundles</a>,
+and the different ways to organize our application <a href="/2016/03/16/ultimate-symfony-skeleton.html">tree directory</a>.</p>
+
+<p>Finally we'll finish by putting all this knowledge in practice by creating a
+"fortune" project with:</p>
+
+<ul>
+<li><a href="/2016/03/24/ultimate-symfony-api-example.html">an endpoint that allows us to submit new fortunes</a></li>
+<li><a href="/2016/03/30/ultimate-symfony-web-example.html">a page that lists all fortunes</a></li>
+<li><a href="/2016/04/06/ultimate-symfony-cli-example.html">a command that prints the last fortune</a></li>
+</ul>
+
+<h2 id="http-kernel">HTTP kernel</h2>
+
+<p>Symfony provides a <a href="http://symfony.com/doc/current/components/http_kernel/introduction.html">HttpKernel component</a>
+which follows the HTTP protocol: it converts a <code>Request</code> into a <code>Response</code>.</p>
+
+<p>It all revolves around the following interface:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Symfony\Component\HttpKernel;
+
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+interface HttpKernelInterface
+{
+    const MASTER_REQUEST = 1;
+    const SUB_REQUEST = 2;
+
+    /**
+     * @param Request $request
+     * @param int     $type
+     * @param bool    $catch   Whether to catch exceptions or not
+     *
+     * @return Response
+     */
+    public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = true);
+}
+</code></pre>
+
+<h2 id="httpfoundation">HttpFoundation</h2>
+
+<p>HttpKernel relies on the <a href="http://symfony.com/doc/current/components/http_foundation/introduction.html">HttpFoundation component</a>
+which mainly provides:</p>
+
+<ul>
+<li><code>Request</code>: wraps <code>$_GET</code>, <code>$_POST</code>, <code>$_COOKIE</code>, <code>$_FILES</code> and <code>$_SERVER</code></li>
+<li><code>Response</code>: wraps <code>header()</code> and <code>setcookie()</code>, but also displays the content</li>
+</ul>
+
+<blockquote>
+  <p><strong>Note</strong>: Global variables have the drawback to be possibly accessed by many
+  functions, causing their state to be unpredictable (hence bugs happen and they
+  are hard to find/understand).</p>
+  
+  <p>With HttpFoundation, <a href="http://php.net/manual/en/language.variables.superglobals.php">PHP super globals</a>
+  shouldn't be accessed directly, but rather via the objects that wraps them
+  (e.g. <code>Request</code>) which are passed around (those objects are not global).</p>
+</blockquote>
+
+<p>Here's a typical usage:</p>
+
+<pre><code class="php">$request = Request::createFromGlobals();
+$response = $httpKernel-&gt;handle($request);
+$reponse-&gt;send();
+</code></pre>
+
+<p>In the above example, <code>Request</code> will be initialized using PHP super globals.
+Sometimes it can be useful to build it with our own provided values (e.g. for tests):</p>
+
+<pre><code class="php">$uri = '/v1/items';
+$method = 'POST';
+$parameters = array(); // GET or POST parameters, usually left unused (use uri and content instead)
+$cookies = array();
+$files = array();
+$headers = array('CONTENT_TYPE' =&gt; 'application/json');
+$content = json_encode(array('name' =&gt; 'Arthur Dent'));
+
+$request = Request::create($uri, $method, $getOrPostParameters, $cookies, $files, $headers, $content);
+</code></pre>
+
+<p>In our application, we'll mainly extract its parameters:</p>
+
+<pre><code class="php">$getParameter = $request-&gt;query-&gt;get('description'); // e.g. from URI `/?description=hitchhicker`
+$postParameter = $request-&gt;request-&gt;get('name'); // e.g. from content `name=Arthur`
+$header = $request-&gt;headers-&gt;get('Content-Type'); // e.g. from headers `Content-Type: application/x-www-form-urlencoded`
+
+$customParameter = $request-&gt;attributes-&gt;get('_route'); // We'll see more about it in the next article
+</code></pre>
+
+<blockquote>
+  <p><strong>Note</strong>: Those public properties are instances of <code>Symfony\Component\HttpFoundation\ParameterBag</code>,
+  except <code>headers</code> which is an instance of <code>Symfony\Component\HttpFoundation\HeaderBag</code>.</p>
+</blockquote>
+
+<p>In our application we'll mainly build <code>Response</code>:</p>
+
+<pre><code class="php">$content = json_encode(array('name' =&gt; 'Arthur Dent'));
+$status = 201;
+$headers = array('Content-Type' =&gt; 'application/json');
+
+$response = new Reponse($content, $status, $headers);
+</code></pre>
+
+<p>HttpFoundation also wraps <code>$_SESSION</code> in a convenient <code>Session</code> object. This one
+is however out of the scope of this series, to find more about it have a look at
+<a href="/2014/04/23/sf2-sessions-introduction.html">Symfony Session Introduction</a>.</p>
+
+<h2 id="example">Example</h2>
+
+<p>Let's create a small Hello World example:</p>
+
+<pre><code class="php">&lt;?php
+
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class HelloWorldHttpKernel implements HttpKernelInterface
+{
+    public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = true)
+    {
+        $name = $request-&gt;query-&gt;get('name', 'World');
+
+        return new Response("Hello $name!", 200);
+    }
+}
+
+$httpKernel = new HelloWorldHttpKernel();
+
+$request = Request::createFromGlobals();
+$response = $httpKernel-&gt;handle($request);
+$response-&gt;send();
+</code></pre>
+
+<p>So we can get the following:</p>
+
+<ul>
+<li>for <code>/</code> URL, we get <code>Hello World!</code></li>
+<li>for <code>/?name=Arthur</code> URL, we get <code>Hello Arthur!</code></li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Symfony provides a simple yet powerful component allowing us to follow the HTTP
+protocol.</p>
+
+<p>In this article we've seen the basics and how it works behind the hood, but in
+an actual application we don't necessarily need to create our own implementation
+of <code>HttpKernelInterface</code>.</p>
+
+<p>Indeed there's a <code>Symfony\Component\HttpKernel\Kernel</code> abstract class that can
+be used out of the box. It provides many features that we'll explore in the next
+articles:</p>
+
+<ul>
+<li><a href="/2016/02/10/ultimate-symfony-event-dispatcher.html">Event Dispatcher</a></li>
+<li><a href="/2016/02/17/ultimate-symfony-routing.html">Routing and YAML</a></li>
+<li><a href="/2016/02/24.ultimate-symfony-dependency-injection.html">Dependency Injection</a></li>
+</ul>
+]]></content>
+        </entry>
+    </feed>

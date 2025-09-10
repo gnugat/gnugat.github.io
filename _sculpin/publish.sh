@@ -1,13 +1,10 @@
 #!/bin/bash
 
-# Replace "sculpin generate" with "php sculpin.phar generate" if sculpin.phar
-# was downloaded and placed in this directory instead of sculpin having been
-# installed globally.
-
 ./vendor/bin/sculpin generate --env=prod
-if [ $? -ne 0 ]; then echo "Could not generate the site"; exit 1; fi
-
-# Add --delete right before "output_prod" to have rsync remove files that are
-# deleted locally from the destination too. See README.md for an example.
 cp -r output_prod/* ../
-if [ $? -ne 0 ]; then echo "Could not publish the site"; exit 1; fi
+
+_BLOG_LATEST_ARTICLE=$(ls -1 -t source/_posts/*.md | head -n 1)
+_BLOG_LATEST_ARTICLE_TITLE=$(grep '^title:' "${_BLOG_LATEST_ARTICLE}" | sed 's/^title: *"*//' | sed 's/"*$//')
+git add -A
+git commit -m "Published \"${_BLOG_LATEST_ARTICLE_TITLE}\""
+git push
