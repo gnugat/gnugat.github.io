@@ -1,6 +1,6 @@
 ---
 layout: post
-title: eXtreme Legacy 1: Dockerizing a 2005 LAMP app
+title: "eXtreme Legacy 1: Dockerizing a 2005 LAMP app"
 tags:
     - docker
     - extreme-legacy
@@ -16,13 +16,17 @@ to the Site du Zero (SdZ), which is now known as [Open Classrooms](https://openc
 I also used to play a web-browser game, similar to [OGame](https://fr.wikipedia.org/wiki/OGame),
 called BisouLand (SkySwoon). Turns out its creator also built it through SdZ tutorials!
 
-Fast forward 20 years later (today), after receiving a message on LinkedIn from
-a CTO asking me if I were "willing to work with **eXtreme Legacy** code on occasion?",
+Fast forward 20 years later (today),
+I received a message on LinkedIn from a CTO asking me the following:
+
+> 💬 "Are you willing to work with **eXtreme Legacy** code on occasion?"
+
 I wondered to myself: what is eXtreme Legacy code? And I immediately remembered BisouLand.
 
-You see, back in 2011, its creator had made it Open Source on github and made me code collaborator.
+You see, back in 2011,
+its creator had made it Open Source on github and made me code collaborator...
 
-So I have access to a 2005 LAMP stack website,
+So I _do_ have access to a 2005 LAMP stack website,
 cobbled together by someone learning stuff on the go from the internet.
 
 What would it take, in 2025, to get an eXtreme Legacy app up and running?
@@ -310,7 +314,7 @@ Docker Composer automatically reads from `.env` and sets the environment variabl
 then PHP will copy these into the `$_ENV` array super global,
 so we can get the values like so in `web/phpincludes/bd.php`:
 
-```
+```php
 <?php
 
 function bd_connect()
@@ -333,12 +337,20 @@ Last but not least, I'm adding a `Makefile`, to avoid having to type long
 
 ## Conclusion
 
-Now, I can type:
+> 💻 Source code:
+> * [Before our changes](https://github.com/pyricau/bisouland/tree/4.0.0)
+> * [After containerisation](https://github.com/pyricau/bisouland/tree/4.0.6)
+
+<img alt="BisouLand screenshot" src="/images/xl-1-bisouland-screenshot.png" width="100%" />
+
+And we did it! now by typing:
 
 ```console
 make build; make up
 ```
 
-And BisouLand is now live, 20 years after its conception. You can visit it there: http://localhost:8080/accueil.html.
+We get BisouLand running live, 20 years after its conception.
 
-_What do you mean? It works on my machine!_
+You can visit it there: http://localhost:8080/accueil.html.
+
+> ⁉️ _What do you mean it doesn't work? It works on my machine!_
