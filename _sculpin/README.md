@@ -64,3 +64,11 @@ git push
 
 The website [gnugat.github.io](https://gnugat.github.io) should take a few
 minutes before being updated.
+
+## Bonus
+
+Some scripts are available to ease things:
+
+* `bootstrap.sh`: bootstraps the next article
+* `prepare.sh`: prepares last article for publication
+* `publish.sh`: publishes an article
