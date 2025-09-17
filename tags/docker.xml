@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-09-10T10:14:49+01:00</updated>
+    <updated>2025-09-17T07:14:59+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -347,9 +347,12 @@ function bd_connect()
 <h2 id="conclusion">Conclusion</h2>
 
 <blockquote>
-  <p>💻 Source code:
-  * <a href="https://github.com/pyricau/bisouland/tree/4.0.0">Before our changes</a>
-  * <a href="https://github.com/pyricau/bisouland/tree/4.0.6">After containerisation</a></p>
+  <p>💻 <strong>Source code</strong>:</p>
+  
+  <ul>
+  <li><a href="https://github.com/pyricau/bisouland/tree/4.0.0">Before our changes</a></li>
+  <li><a href="https://github.com/pyricau/bisouland/tree/4.0.5">After containerisation</a></li>
+  </ul>
 </blockquote>
 
 <p><img alt="BisouLand screenshot" src="/images/xl-1-bisouland-screenshot.png" width="100%" /></p>
@@ -364,7 +367,7 @@ function bd_connect()
 <p>You can visit it there: http://localhost:8080/accueil.html.</p>
 
 <blockquote>
-  <p>⁉️ <em>What do you mean it doesn't work? It works on my machine!</em></p>
+  <p>⁉️ <em>What do you mean, "it doesn't work"?? It works on my machine!</em></p>
 </blockquote>
 ]]></content>
         </entry>

@@ -3,11 +3,532 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-09-10T10:14:49+01:00</updated>
+    <updated>2025-09-17T07:14:59+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[eXtreme Legacy 2: Smoke Tests]]></title>
+            <link href="/2025/09/17/xl-2-smoke-tests.html"/>
+            <updated>2025-09-17T00:00:00+01:00</updated>
+            <id>/2025/09/17/xl-2-smoke-tests.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p>🤘 The Quality Avenger emerges from the burning forges of Coding Standards,
+  smelting the ores of Static Analysis into the moulds of Automated Testing. 🔥</p>
+</blockquote>
+
+<p>In this series, we're dealing with BisouLand, an eXtreme Legacy application
+(2005 LAMP spaghetti code base). So far, we have:</p>
+
+<ol>
+<li><a href="/2025/09/10/xl-1-dockerizing-2005-lamp-app.html">🐋 got it to run in a local container</a></li>
+</ol>
+
+<p>This means we can access it (http://localhost:8080/) and manually check it.
+Unfortunately looking at the <a href="https://github.com/pyricau/bisouland/tree/4.0.1">code</a>,
+it's obvious we cannot launch it to production as is:</p>
+
+<ul>
+<li>Encoding Issues</li>
+<li>Broken Authentication and Session Management</li>
+<li>Cross-Site Scripting (XSS) Flaws</li>
+<li>Injection Flaws, including SQL injection</li>
+<li>Improper Error Handling</li>
+<li>Non Compliance with GDPR requirements</li>
+</ul>
+
+<p>But how do we know we're not breaking anything when fixing these?
+As things currently stand, we don't even know what features BisouLand has.</p>
+
+<p>So, we're going to need to write tests, which will be today's second article focus.</p>
+
+<ul>
+<li><a href="#qa-app">QA app</a></li>
+<li><a href="#smoke-tests">Smoke Tests</a></li>
+<li><a href="#custom-assertions">Custom Assurance</a></li>
+<li><a href="#scenarios">Scenarios</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="qa-app">QA app</h2>
+
+<p>The first plan of action is to move the current app into the <code>./apps/monolith</code>
+sub-folder, and to create a new QA one in <code>./apps/qa</code>.</p>
+
+<p>This approach will allow us to isolate the legacy code from any tooling we might
+need to bring it up to standards.</p>
+
+<p>The QA application has the following tree directory:</p>
+
+<pre><code>apps/qa/
+├── composer.json
+├── composer.lock
+├── compose.yaml
+├── Dockerfile
+├── Makefile
+├── phpstan-baseline.neon
+├── phpstan.neon.dist
+├── phpunit.xml.dist
+├── README.md
+└── tests/
+</code></pre>
+
+<p>As you can see, it has its own <code>Dockerfile</code>:</p>
+
+<pre><code># syntax=docker/dockerfile:1
+
+###
+# PHP Dev Container
+# Utility Tools: PHP, bash, Composer
+###
+FROM php:8.4-cli-alpine AS php_dev_container
+
+# Composer environment variables:
+# * default user is superuser (root), so allow them
+# * put cache directory in a readable/writable location
+# _Note_: When running `composer` in container, use `--no-cache` option
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_CACHE_DIR=/tmp/.composer/cache
+
+# Install dependencies:
+# * bash for shell access and scripting
+# * zip for composer packages that use ZIP archives
+# _Note (Alpine)_: `--no-cache` includes `--update` and keeps image size minimal
+#
+# Then install PHP extensions
+#
+# _Note (Hadolint)_: No version locking, since Alpine only ever provides one version
+# hadolint ignore=DL3018
+RUN apk add --update --no-cache \
+        bash \
+        libzip-dev \
+        zip \
+    &amp;&amp; docker-php-ext-install \
+        bcmath \
+        pdo \
+        pdo_mysql \
+        zip
+
+# Copy Composer binary from composer image
+# _Note (Hadolint)_: False positive as `COPY` works with images too
+# See: https://github.com/hadolint/hadolint/issues/197#issuecomment-1016595425
+# hadolint ignore=DL3022
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /apps/qa
+
+# Caching `composer install`, as long as composer.{json,lock} don't change.
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-cache \
+    --no-interaction \
+    --no-plugins \
+    --no-scripts \
+    --optimize-autoloader
+
+# Copy the remaining application files (excluding those listed in .dockerignore)
+COPY . .
+</code></pre>
+
+<p>And <code>compose.yaml</code>:</p>
+
+<pre><code class="yaml">name: skyswoon-qa
+
+services:
+  app:
+    build: .
+    command: php -S 0.0.0.0:8081
+    volumes:
+      # Mount current directory into container for QA tools and configs
+      - .:/apps/qa
+      # Mount the monolith source code for analysis
+      - ../monolith:/apps/monolith
+    networks:
+      - default
+      - skyswoon-monolith_default
+
+networks:
+  skyswoon-monolith_default:
+    external: true
+</code></pre>
+
+<p>This allows us to have QA in its own container (with PHP 8.4),
+but it can still communicate with the monolith container,
+so we can issue curl requets or query the MySQL database.</p>
+
+<p>It also allows access to the monolith source files,
+so we can run toolings on them like phpstan, rector, PHP CS Fixer, etc.</p>
+
+<h2 id="smoke-tests">Smoke Tests</h2>
+
+<p>There are two kinds of tests that I hate
+(this is coming from a Test Driven Development practitioner, btw!)
+and one of them is Smoke Tests.</p>
+
+<p>Those basically issue a curl request,
+and only check the bare minimum such as the status code is <code>200</code>.</p>
+
+<p>I don't like these because they are slow (remote requests),
+unreliable (errors like form validation, page not found, etc will still return <code>200</code>),
+and overall don't provide much value at all.</p>
+
+<p>However in this specific case I still think Smoke Tests can help us,
+notably to make a list of what pages the website has,
+and also differentiate the ones that are public,
+and the ones that should only be accessed by logged in players.</p>
+
+<p>This will be valuable knowledge,
+and once we have better test coverage <strong>we can get rid of those</strong>.</p>
+
+<p>After manually navigating the website, checking the <code>pages.php</code> file,
+and overall getting familiar with the app,
+I've documented my findings in a data provider in the following Smoke Test,
+which checks if all private pages are accessible to logged in players,
+but not for logged out visitors:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+namespace Bl\Qa\Tests\Smoke;
+
+use Bl\Qa\Tests\Infrastructure\Scenario\GetLoggedInPlayer;
+use Bl\Qa\Tests\Infrastructure\TestKernelSingleton;
+use Bl\Qa\Tests\Smoke\Assertion\Assert;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Large;
+use PHPUnit\Framework\Attributes\TestDox;
+use PHPUnit\Framework\TestCase;
+
+#[CoversNothing]
+#[Large]
+final class PlayerPagesTest extends TestCase
+{
+    #[TestDox('it blocks $pageName page (`$url`) for visitors')]
+    #[DataProvider('playerPagesProvider')]
+    public function test_it_blocks_player_page_for_visitors(string $url, string $pageName): void
+    {
+        $httpClient = TestKernelSingleton::get()-&gt;httpClient();
+
+        $response = $httpClient-&gt;request('GET', $url);
+
+        Assert::blocksPageForLoggedOutVisitors($response);
+    }
+
+    #[TestDox('it loads $pageName page (`$url`) for logged in players')]
+    #[DataProvider('playerPagesProvider')]
+    public function test_it_loads_player_page_for_logged_in_players(string $url, string $pageName): void
+    {
+        $httpClient = TestKernelSingleton::get()-&gt;httpClient();
+
+        $loggedInPlayer = GetLoggedInPlayer::run();
+
+        $response = $httpClient-&gt;request('GET', $url, [
+            'headers' =&gt; [
+                'Cookie' =&gt; $loggedInPlayer-&gt;sessionCookie,
+            ],
+        ]);
+
+        Assert::loadsPageForLoggedInPlayers($response);
+    }
+
+    /**
+     * @return array&lt;array{string, string}&gt;
+     */
+    public static function playerPagesProvider(): array
+    {
+        return [
+            ['/connected.html', 'account'],
+            ['/action.html', 'blow kisses'],
+            ['/cerveau.html', 'brain'],
+            ['/changepass.html', 'change password'],
+            ['/nuage.html', 'clouds'],
+            ['/yeux.html', 'eyes'],
+            ['/boite.html', 'inbox'],
+            ['/bisous.html', 'kisses'],
+            ['/construction.html', 'organs'],
+            ['/infos.html', 'reference'],
+            ['/techno.html', 'techniques'],
+            ['/lire.html', 'view message'],
+        ];
+    }
+}
+</code></pre>
+
+<p>Running this test <em>should</em> output the following:</p>
+
+<pre><code class="console">&gt; make test arg='--testdox --filter PlayerPages'
+PHPUnit 12.3.2 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.11
+Configuration: /apps/qa/phpunit.xml.dist
+
+........................                                          24 / 24 (100%)
+
+Time: 00:00.606, Memory: 18.00 MB
+
+Player Pages (Bl\Qa\Tests\Smoke\PlayerPages)
+ ✔ it blocks organs page (`/construction.html`) for visitors
+ ✔ it blocks account page (`/connected.html`) for visitors
+ ✔ it blocks reference page (`/infos.html`) for visitors
+ ✔ it blocks kisses page (`/bisous.html`) for visitors
+ ✔ it blocks brain page (`/cerveau.html`) for visitors
+ ✔ it blocks change·password page (`/changepass.html`) for visitors
+ ✔ it blocks eyes page (`/yeux.html`) for visitors
+ ✔ it blocks view·message page (`/lire.html`) for visitors
+ ✔ it blocks clouds page (`/nuage.html`) for visitors
+ ✔ it blocks inbox page (`/boite.html`) for visitors
+ ✔ it blocks techniques page (`/techno.html`) for visitors
+ ✔ it blocks blow·kisses page (`/action.html`) for visitors
+ ✔ it loads view·message page (`/lire.html`) for logged in players
+ ✔ it loads eyes page (`/yeux.html`) for logged in players
+ ✔ it loads brain page (`/cerveau.html`) for logged in players
+ ✔ it loads change·password page (`/changepass.html`) for logged in players
+ ✔ it loads techniques page (`/techno.html`) for logged in players
+ ✔ it loads account page (`/connected.html`) for logged in players
+ ✔ it loads reference page (`/infos.html`) for logged in players
+ ✔ it loads inbox page (`/boite.html`) for logged in players
+ ✔ it loads kisses page (`/bisous.html`) for logged in players
+ ✔ it loads organs page (`/construction.html`) for logged in players
+ ✔ it loads clouds page (`/nuage.html`) for logged in players
+ ✔ it loads blow·kisses page (`/action.html`) for logged in players
+
+OK (24 tests, 24 assertions)
+</code></pre>
+
+<blockquote>
+  <p><em>🔗 Check</em>: <a href="/2025/07/31/phpunit-best-practices.html">PHPUnit Best Practices</a></p>
+</blockquote>
+
+<p>The test is structured as follow:</p>
+
+<ol>
+<li>get an instance of HttpClient through TestKernelSingleton</li>
+<li>optionally run some setup scenario such as <code>SignUpNewPlayer</code>, <code>LogInPlayer</code>, etc</li>
+<li>send the remote request, and get the HTTP response</li>
+<li>check that the HTTP Response satisfies our expectations</li>
+</ol>
+
+<h2 id="custom-assertions">Custom Assertions</h2>
+
+<p>To be able to see if a page is blocked for a non logged in visitor,
+we cannot just rely on the HTTP Status (it will always be 200),
+so we have to instead check for error messages contained in the page.</p>
+
+<p>Through my search, I've discovered that various messages get displayed when a
+logged out visitor tries to access a private page,
+I've documented this in the following custom assertion:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+namespace Bl\Qa\Tests\Smoke\Assertion;
+
+use PHPUnit\Framework\Assert as PHPUnitAssert;
+use Symfony\Contracts\HttpClient\ResponseInterface;
+
+final readonly class Assert
+{
+    private const array NOT_LOGGED_IN_MESSAGES = [
+        // Warning: side bar contains `Tu n'es pas connect&amp;eacute;.`
+        'standard' =&gt; 'es pas connecté !!',
+        'variant 1 (inbox)' =&gt; 'es pas connect&amp;eacute; !!',
+        'variant 2 (kisses, organs, techniques, account)' =&gt; 'Veuillez vous connecter.',
+        'variant 3 (reference)' =&gt; 'Erreur... et vouaip !! :D',
+    ];
+
+    public static function blocksPageForLoggedOutVisitors(ResponseInterface $response): void
+    {
+        $content = (string) $response-&gt;getContent();
+
+        foreach (self::NOT_LOGGED_IN_MESSAGES as $message) {
+            if (str_contains($content, $message)) {
+                PHPUnitAssert::assertSame(200, $response-&gt;getStatusCode(), $content);
+
+                return;
+            }
+        }
+
+        PHPUnitAssert::fail('Failed asserting that Page is blocked for logged out visitors');
+    }
+
+    public static function loadsPageForLoggedInPlayers(ResponseInterface $response): void
+    {
+        $content = (string) $response-&gt;getContent();
+
+        foreach (self::NOT_LOGGED_IN_MESSAGES as $message) {
+            if (str_contains($content, $message)) {
+                PHPUnitAssert::fail('Failed asserting that Page loads for logged in players');
+            }
+        }
+
+        PHPUnitAssert::assertSame(200, $response-&gt;getStatusCode(), $content);
+    }
+}
+</code></pre>
+
+<h2 id="scenarios">Scenarios</h2>
+
+<p>For some of our tests, we need to have a visitor to first sign up as a player,
+which I've done through the following "Scenario" class:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+namespace Bl\Qa\Tests\Infrastructure\Scenario;
+
+use Bl\Qa\Tests\Infrastructure\TestKernelSingleton;
+
+final readonly class SignUpNewPlayer
+{
+    public static function run(
+        string $username = 'BisouTest',
+        string $password = 'password',
+        string $passwordConfirmation = 'password',
+    ): Player {
+        $httpClient = TestKernelSingleton::get()-&gt;httpClient();
+
+        if ('BisouTest' === $username) {
+            $username = substr('BisouTest_'.uniqid(), 0, 15);
+        }
+
+        $httpClient-&gt;request('POST', '/inscription.html', [
+            'body' =&gt; [
+                'Ipseudo' =&gt; $username,
+                'Imdp' =&gt; $password,
+                'Imdp2' =&gt; $passwordConfirmation,
+                'inscription' =&gt; "S'inscrire",
+            ],
+            'headers' =&gt; [
+                'Content-Type' =&gt; 'application/x-www-form-urlencoded',
+            ],
+        ]);
+
+        return new Player($username, $password);
+    }
+}
+</code></pre>
+
+<p>Here we do an HTTP request that will simulate posting the HTML form,
+alternatives for this would have been doing a SQL query to directly
+create the player in the database, but we risk missing other insertions
+that might be required.</p>
+
+<p>The advantage of the current approach is that it also smoke tests the signup form.</p>
+
+<p>We also need the player to be logged in:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+namespace Bl\Qa\Tests\Infrastructure\Scenario;
+
+use Bl\Qa\Tests\Infrastructure\TestKernelSingleton;
+use Symfony\Component\HttpClient\Exception\RedirectionException;
+
+final readonly class LogInPlayer
+{
+    public static function run(Player $player): string
+    {
+        $httpClient = TestKernelSingleton::get()-&gt;httpClient();
+
+        try {
+            $response = $httpClient-&gt;request('POST', '/redirect.php', [
+                'body' =&gt; [
+                    'pseudo' =&gt; $player-&gt;username,
+                    'mdp' =&gt; $player-&gt;password,
+                    'connexion' =&gt; 'Se connecter',
+                ],
+                'headers' =&gt; [
+                    'Content-Type' =&gt; 'application/x-www-form-urlencoded',
+                ],
+                'max_redirects' =&gt; 0,
+            ]);
+        } catch (RedirectionException $e) { // @phpstan-ignore catch.neverThrown
+            // With max_redirects=0, HttpClient throws an exception when we get a 302
+            // This is expected on successful login
+            $response = $e-&gt;getResponse();
+        }
+
+        $headers = $response-&gt;getHeaders(false);
+        $cookies = $headers['set-cookie'] ?? $headers['Set-Cookie'] ?? [];
+        foreach ($cookies as $cookie) {
+            if (str_starts_with($cookie, 'PHPSESSID=')) {
+                return $cookie;
+            }
+        }
+
+        $content = $response-&gt;getContent(false);
+        $allCookies = implode(', ', $cookies);
+
+        throw new \RuntimeException("Login failed: PHPSESSID cookie not found. Cookies: [{$allCookies}], Content: {$content}");
+    }
+}
+</code></pre>
+
+<p>Similarly to the <code>SignUpNewPlayer</code> scenario,
+<code>LogInPlayer</code> posts a HTTP request that simulates the log in form.</p>
+
+<p>To be abe to then act as the logged in player, we need their Session Cookie string,
+so we make sure to return it.</p>
+
+<p>Finally the <code>GetLoggedInPlayer</code> scenario will sign up and login a player once,
+and always return it to save us some overhead in the test suite:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+namespace Bl\Qa\Tests\Infrastructure\Scenario;
+
+final class GetLoggedInPlayer
+{
+    private static ?LoggedInPlayer $loggedInPlayer = null;
+
+    public static function run(): LoggedInPlayer
+    {
+        if (null === self::$loggedInPlayer) {
+            $player = SignUpNewPlayer::run();
+            $sessionCookie = LogInPlayer::run($player);
+
+            self::$loggedInPlayer = new LoggedInPlayer($player-&gt;username, $player-&gt;password, $sessionCookie);
+        }
+
+        return self::$loggedInPlayer;
+    }
+}
+</code></pre>
+
+<p>These scenarios will come in handy when we start writing other kinds of tests.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<blockquote>
+  <p>💻 <strong>Source code</strong>:</p>
+  
+  <ul>
+  <li><a href="https://github.com/pyricau/bisouland/tree/4.0.5">Before our changes</a></li>
+  <li><a href="https://github.com/pyricau/bisouland/tree/4.0.6">After Smoke Tests</a></li>
+  </ul>
+</blockquote>
+
+<p>Now we can type:</p>
+
+<pre><code class="console">make test arg='--testdox --filter PlayerPages'
+</code></pre>
+
+<p>And get the list of all public and private pages.</p>
+
+<blockquote>
+  <p>⁉️ <em>What do you mean,"tests are failing"??</em></p>
+</blockquote>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[eXtreme Legacy 1: Dockerizing a 2005 LAMP app]]></title>
             <link href="/2025/09/10/xl-1-dockerizing-2005-lamp-app.html"/>
@@ -347,9 +868,12 @@ function bd_connect()
 <h2 id="conclusion">Conclusion</h2>
 
 <blockquote>
-  <p>💻 Source code:
-  * <a href="https://github.com/pyricau/bisouland/tree/4.0.0">Before our changes</a>
-  * <a href="https://github.com/pyricau/bisouland/tree/4.0.6">After containerisation</a></p>
+  <p>💻 <strong>Source code</strong>:</p>
+  
+  <ul>
+  <li><a href="https://github.com/pyricau/bisouland/tree/4.0.0">Before our changes</a></li>
+  <li><a href="https://github.com/pyricau/bisouland/tree/4.0.5">After containerisation</a></li>
+  </ul>
 </blockquote>
 
 <p><img alt="BisouLand screenshot" src="/images/xl-1-bisouland-screenshot.png" width="100%" /></p>
@@ -364,7 +888,7 @@ function bd_connect()
 <p>You can visit it there: http://localhost:8080/accueil.html.</p>
 
 <blockquote>
-  <p>⁉️ <em>What do you mean it doesn't work? It works on my machine!</em></p>
+  <p>⁉️ <em>What do you mean, "it doesn't work"?? It works on my machine!</em></p>
 </blockquote>
 ]]></content>
         </entry>

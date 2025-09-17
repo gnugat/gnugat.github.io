@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc></loc>
-    <lastmod>2025-09-10T10:14:49+01:00</lastmod>
+    <lastmod>2025-09-17T07:14:59+01:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>/about</loc>
-    <lastmod>2025-09-10T10:14:49+01:00</lastmod>
+    <lastmod>2025-09-17T07:14:59+01:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>/2025/09/17/xl-2-smoke-tests.html</loc>
+    <lastmod>2025-09-17T00:00:00+01:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>/2025/09/10/xl-1-dockerizing-2005-lamp-app.html</loc>
