@@ -337,9 +337,10 @@ Last but not least, I'm adding a `Makefile`, to avoid having to type long
 
 ## Conclusion
 
-> 💻 Source code:
+> 💻 **Source code**:
+>
 > * [Before our changes](https://github.com/pyricau/bisouland/tree/4.0.0)
-> * [After containerisation](https://github.com/pyricau/bisouland/tree/4.0.6)
+> * [After containerisation](https://github.com/pyricau/bisouland/tree/4.0.5)
 
 <img alt="BisouLand screenshot" src="/images/xl-1-bisouland-screenshot.png" width="100%" />
 
@@ -353,4 +354,4 @@ We get BisouLand running live, 20 years after its conception.
 
 You can visit it there: http://localhost:8080/accueil.html.
 
-> ⁉️ _What do you mean it doesn't work? It works on my machine!_
+> ⁉️ _What do you mean, "it doesn't work"?? It works on my machine!_
