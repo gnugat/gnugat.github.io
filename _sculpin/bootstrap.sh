@@ -1,4 +1,20 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# File: /_sculpin/bootstrap.sh
+# ──────────────────────────────────────────────────────────────────────────────
+# Bootstraps the next article:
+# * finds the date of the next wednesday
+# * creates an empty article on that date
+#
+# > _Note_: file will need to be renamed with propre slugged title 
+#
+# Usage:
+#
+# ```shell
+# bootstrap.sh
+# ```
+# ──────────────────────────────────────────────────────────────────────────────
+
+echo "  // Bootstraping next article"
 
 _BLOG_LATEST_ARTICLE=$(ls source/_posts/*.md | sort | tail -n 1)
 _BLOG_LATEST_ARTICLE_DATE=$(basename "${_BLOG_LATEST_ARTICLE}" | cut -d'-' -f1-3)
@@ -19,4 +35,6 @@ tags:
 
 EOF
 
-echo "  [OK] Created ${_BLOG_NEXT_ARTICLE_FILENAME}"
+echo ''
+echo "  [OK] Bootstrapped ${_BLOG_NEXT_ARTICLE_FILENAME}"
+echo ''
