@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-09-24T09:09:06+01:00</updated>
+    <updated>2025-10-01T13:55:52+01:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -24,7 +24,7 @@
 
 <ol>
 <li><a href="/2025/09/10/xl-1-dockerizing-2005-lamp-app.html">🐋 got it to run in a local container</a></li>
-<li><a href="/2025/09/17/xl-2-smoke-tests.html">💨 wrote Smoke Tests</a></li>
+<li><a href="/2025/09/17/xl-2-smoke-tests.html">💨 written Smoke Tests</a></li>
 </ol>
 
 <p>This means we can run it locally (http://localhost:8080/),
