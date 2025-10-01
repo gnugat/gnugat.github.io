@@ -14,7 +14,7 @@ In this series, we're dealing with BisouLand, an eXtreme Legacy application
 (2005 LAMP spaghetti code base). So far, we have:
 
 1. [🐋 got it to run in a local container](/2025/09/10/xl-1-dockerizing-2005-lamp-app.html)
-2. [💨 wrote Smoke Tests](/2025/09/17/xl-2-smoke-tests.html)
+2. [💨 written Smoke Tests](/2025/09/17/xl-2-smoke-tests.html)
 
 This means we can run it locally (http://localhost:8080/),
 and have some level of automated tests.
