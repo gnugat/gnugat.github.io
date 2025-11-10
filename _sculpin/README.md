@@ -49,7 +49,7 @@ To be able to preview the changes, generate the static files:
 sh preview.sh
 ```
 
-Changes can then be seen in the browser [at the following link](http://localhost:8000/).
+Changes can then be seen in the browser [at the following link](http://localhost:42999/).
 
 ## 3. Publishing changes
 
