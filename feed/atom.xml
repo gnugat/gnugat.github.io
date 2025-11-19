@@ -3,11 +3,351 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2025-10-23T07:37:26+01:00</updated>
+    <updated>2025-11-19T06:39:53+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[eXtreme Legacy 6: From PHP 5 to PHP 8]]></title>
+            <link href="/2025/11/19/xl-6-php-8.html"/>
+            <updated>2025-11-19T00:00:00+00:00</updated>
+            <id>/2025/11/19/xl-6-php-8.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p>🤘 The Migration Warlord breaks the rusted shackles of PHP 5.6,
+  leading the great exodus through the valleys of breaking changes,
+  into the promised land of PHP 8.4 where type hints
+  and constructor property promotion await in glory! 🔥</p>
+</blockquote>
+
+<p>In this series, we're dealing with BisouLand, an eXtreme Legacy application
+(2005 LAMP spaghetti code base). So far, we have:</p>
+
+<ol>
+<li><a href="/2025/09/10/xl-1-dockerizing-2005-lamp-app.html">🐋 got it to run in a local container</a></li>
+<li><a href="/2025/09/17/xl-2-smoke-tests.html">💨 written Smoke Tests</a></li>
+<li><a href="/2025/09/24/xl-3-end-to-end-tests.html">🎯 written End to End Tests</a></li>
+<li><a href="/2025/10/01/xl-4-coding-standards.html">🧹 created and applied Coding Standards</a></li>
+<li><a href="/2025/10/22/xl-5-pdo.html">⛃ migrated to PDO</a></li>
+</ol>
+
+<p>This means we can run it locally (http://localhost:43000/),
+and have some level of automated tests.</p>
+
+<p>But it's still stuck in the past with PHP 5.6,
+so let's upgrade it to PHP 8.4!</p>
+
+<ul>
+<li><a href="#docker">Docker</a></li>
+<li><a href="#rector">Rector</a></li>
+<li><a href="#php-cs-fixer">PHP CS Fixer</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="docker">Docker</h2>
+
+<p>With the migration from the deprecated MySQL extension to PDO,
+BisouLand's codebase is technically compatible with the latest PHP version.</p>
+
+<p>At least that's what Claude tells me.</p>
+
+<p>If that's true, then upgrading it is as simple as modifying the monolith's Dockerfile:</p>
+
+<pre><code class="diff">- # Uses PHP 5.6 with PDO MySQL driver
++ # Uses PHP 8.4 with PDO MySQL driver
+
+- FROM php:5.6-apache
+- 
+- # Update sources.list to use archive repositories for Debian Stretch
+- RUN sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list \
+-     &amp;&amp; sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list \
+-     &amp;&amp; sed -i '/stretch-updates/d' /etc/apt/sources.list
++ FROM php:8.4-apache
+</code></pre>
+
+<p>We can now build the new image:</p>
+
+<pre><code class="console">cd apps/monolith
+make app-init # docker down, docker build, docker up 
+</code></pre>
+
+<p>And that's it, welcome to the future!</p>
+
+<h2 id="rector">Rector</h2>
+
+<p>Your eXtreme Legacy application might not be as lucky as BisouLand,
+and might require more work for an upgrade.</p>
+
+<p>One way to do so is to use <a href="https://getrector.com/">Rector</a>,
+an automated refactoring tool that uses the power of AST to make sure the
+changes it makes are safe (i.e. non breaking) to do. Let's install it:</p>
+
+<pre><code class="console">cd apps/qa
+make composer arg='require --dev rector/rector'
+</code></pre>
+
+<p>We then need to configure it by creating the <code>rector.php</code> file:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+use Rector\Caching\ValueObject\Storage\FileCacheStorage;
+use Rector\Config\RectorConfig;
+use Rector\Set\ValueObject\SetList;
+
+return RectorConfig::configure()
+    -&gt;withCache(
+        // CI compatible temporary paths for cach
+        cacheDirectory: '/tmp/rector',
+        cacheClass: FileCacheStorage::class,
+    )
+    -&gt;withPaths([
+        __DIR__,
+        __DIR__.'/../monolith',
+    ])
+    -&gt;withSkip([
+        // —— Excluded paths ———————————————————————————————————————————————————
+        // [qa]
+        __DIR__.'/vendor',
+        // [monolith]
+        __DIR__.'/../monolith/vendor',
+    ])
+    -&gt;withSets([
+        // —— PHP ——————————————————————————————————————————————————————————————
+        SetList::PHP_56,
+    ]);
+</code></pre>
+
+<p>We can then run it as follow:</p>
+
+<pre><code class="console">make rector # ./vendor/bin/rector
+</code></pre>
+
+<p>This initial run will ensure both the Monolith and QA apps are PHP 5.6 compliant,
+which they are so no changes done.</p>
+
+<p>We can be bold and brave and change Rector's config straight from <code>SetList::PHP_56</code>
+to <code>SetList::PHP_84</code>, which will then make all the necessary upgrades from PHP 5.6 to 8.4,
+but incremental steps are safer so we'll start with PHP 7.0:</p>
+
+<pre><code class="console">sed -i -e 's/PHP_56/PHP_70/g' ./rector.php
+# 🍏 On Mac: sed -i '' -e 's/PHP_56/PHP_70/g' ./rector.php
+</code></pre>
+
+<p>Running it (<code>make rector</code>) will spot one change that needs to be done:
+replace <code>rand()</code> with <code>random_int()</code>:</p>
+
+<pre><code class="diff">              // Si les bisous du défenseurs sont présent, donc qu'il n'attaque pas.
+              if (0 == $DefBloque) {
+-                 $DefSmack = floor($DefSmack * (1 - 1 / rand(2, 10)));
+-                 $DefBaiser = floor($DefBaiser * (1 - 1 / rand(2, 10)));
+-                 $DefPelle = floor($DefPelle * (1 - 1 / rand(2, 10)));
++                 $DefSmack = floor($DefSmack * (1 - 1 / random_int(2, 10)));
++                 $DefBaiser = floor($DefBaiser * (1 - 1 / random_int(2, 10)));
++                 $DefPelle = floor($DefPelle * (1 - 1 / random_int(2, 10)));
+              }
+</code></pre>
+
+<p>Technically <code>rand</code> is still supported in PHP 8,
+but it does not generate cryptographically secure digits,
+so <code>random_int</code> is recommended instead.</p>
+
+<p>Next step is to upgrade to PHP 7.1, which detects no changes,
+so we're safe to upgrade to PHP 7.2, which detects no changes,
+so we're safe to upgrade to PHP 7.3, which detects some changes!</p>
+
+<p>The function <code>setcookie</code> can take an array of options as a third parameter
+(and yes, we store the password in the cookie. This will need to be fixed later):</p>
+
+<pre><code class="diff">                      if (isset($_POST['auto'])) {
+                          $timestamp_expire = time() + 30 * 24 * 3600;
+-                         setcookie('pseudo', $pseudo, $timestamp_expire);
+-                         setcookie('mdp', $mdp, $timestamp_expire);
++                         setcookie('pseudo', $pseudo, ['expires' =&gt; $timestamp_expire]);
++                         setcookie('mdp', $mdp, ['expires' =&gt; $timestamp_expire]);
+                      }
+</code></pre>
+
+<p>Next step is to upgrade to PHP 7.4, which detects no changes,
+so we're safe to upgrade to PHP 8.0, which detects no changes,
+so we're safe to upgrade to PHP 8.1, which detects some changes!</p>
+
+<p>This is an interesting one, as it enforces the type of variables for function
+calls that expect for example a string but might receive <code>null</code>:</p>
+
+<pre><code class="diff">      $pdo = bd_connect();
+      if (isset($_POST['action'])) {
+          $cout = 0;
+-         $nuageCible = htmlentities($_POST['nuage']);
+-         $positionCible = htmlentities($_POST['position']);
++         $nuageCible = htmlentities((string) $_POST['nuage']);
++         $positionCible = htmlentities((string) $_POST['position']);
+</code></pre>
+
+<p>Next step is to upgrade to PHP 8.1, which detects no changes,
+so we're safe to upgrade to PHP 8.2, which detects no changes,
+so we're safe to upgrade to PHP 8.3, which detects no changes,
+so we're safe to upgrade to PHP 8.4, which detects some changes!</p>
+
+<p>This one is for the QA app, it removes the now unnecessary parenthesis around
+object instantiation:</p>
+
+<pre><code class="diff">-         (new Dotenv())-&gt;load(__DIR__.'/../../../monolith/.env');
++         new Dotenv()-&gt;load(__DIR__.'/../../../monolith/.env');
+</code></pre>
+
+<p>And that's it.</p>
+
+<h2 id="php-cs-fixer">PHP CS Fixer</h2>
+
+<p>With the latest version of PHP,
+we can change or Coding Style in <code>.php-cc-fixer.dist.php</code>
+to take into account new changes:</p>
+
+<pre><code class="diff">-         // —— Disabed rules due to PHP version compatibility ———————————————————
+- 
+-         // [PER-CS2.0] Partially disabled due to PHP version constraints.
+-         'trailing_comma_in_multiline' =&gt; [
+-             'after_heredoc' =&gt; true,
+-             'elements' =&gt; [
+-                 // 'arguments', For PHP 7.3+
+-                 // 'array_destructuring', For PHP 7.1+
+-                 'arrays',
+-                 // 'match', For PHP 8.0+
+-                 // 'parameters', For PHP 8.0+
+-             ],
+-         ],
++         // —— Overriden rules ——————————————————————————————————————————————————
++ 
++         // [Symfony] Adding `['elements']['parameters']` (Symfony doesn't have it)
++         'trailing_comma_in_multiline' =&gt; [
++             'after_heredoc' =&gt; true,
++             'elements' =&gt; [
++                 'arguments',
++                 'array_destructuring',
++                 'arrays',
++                 'match',
++                 'parameters',
++             ],
++         ] ,
+</code></pre>
+
+<p>But that's not all. PHP CS Fixer also has rule set to help us migrate the style
+from old PHP versions to new ones, which we'll do incrementally.</p>
+
+<p>First we enable the rule sets:</p>
+
+<pre><code class="diff">          // —— CS Rule Sets —————————————————————————————————————————————————————
+          '@Symfony' =&gt; true,
+          '@Symfony:risky' =&gt; true,
++         '@PHP7x0Migration' =&gt; true,
++         '@PHP7x0Migration:risky' =&gt; true,
+</code></pre>
+
+<p>And we run it with <code>make cs-fix</code>. It's detected some changes:
+replacing <code>mt_rand</code> which is also not cryptographically secure with <code>random_int</code>:</p>
+
+<pre><code class="diff">          // On choisi une valeur au hasard.
+
+-         $FinalPos = $FreePos[mt_rand(0, $nbLibre - 1)];
++         $FinalPos = $FreePos[random_int(0, $nbLibre - 1)];
+</code></pre>
+
+<p>Next step we upgrade the rule set to PHP 7.1</p>
+
+<pre><code class="console">sed -i -e 's/PHP7x0/PHP7x1/g' ./.php-cs-fixer.dist.php
+# 🍏 On Mac: sed -i '' -e 's/PHP7x0/PHP7x1/g' ./php-cs-fixer.dist.php
+</code></pre>
+
+<p>Running it, we get <code>void</code> return type hints:</p>
+
+<pre><code class="diff">- function GiveNewPosition($idJoueur)
++ function GiveNewPosition($idJoueur): void
+  {
+      $pdo = bd_connect();
+      $sql_info = $pdo-&gt;query('SELECT nombre FROM nuage WHERE id=1');
+</code></pre>
+
+<p>Next step is to upgrade to PHP 7.2, which detects no changes,
+so we're safe to upgrade to PHP 7.3, which detects some changes!</p>
+
+<p>This one is related to HEREDOC indentation.</p>
+
+<p>I'm gonna be brief now, as after that, upgrading all the way to PHP 8.4,
+there were no changes.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>With a modern version of PHP, not only do we get security patches,
+exciting new feature (typed code, constructor property promotion, readonly final classes, etc),
+as well as access to many modern tools and libraries (composer, Symfony components, etc),
+but we also get a boost in performance.</p>
+
+<p>Let's back up that last claim by running some vanity benchmarks as follow:</p>
+
+<ol>
+<li>start a fresh Monolith container</li>
+<li>sign up and log in a temporary account</li>
+<li>test load the homepage, as a visitor (not logged in)</li>
+<li>test load the Brain page (logged in)</li>
+</ol>
+
+<pre><code class="console"># Start fresh
+cd apps/monolith
+make app-init
+
+BENCH_USER="BisouTest_bench"
+BENCH_PASS="SuperSecret123"
+
+# Sign up
+curl -X POST 'http://localhost:43000/inscription.html' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d "Ipseudo=${BENCH_USER}&amp;Imdp=${BENCH_PASS}&amp;Imdp2=${BENCH_PASS}&amp;inscription=S%27inscrire"
+
+# Log in
+BENCH_COOKIE=$(curl -X POST 'http://localhost:43000/redirect.php' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d "pseudo=${BENCH_USER}&amp;mdp=${BENCH_PASS}&amp;connexion=Se+connecter" \
+  -i -s | grep -i 'set-cookie: PHPSESSID' | sed 's/.*PHPSESSID=\([^;]*\).*/\1/' | tr -d '\r')
+
+# Test load homepage (not signed in)
+ab -l -q -k -c 50 -n 10000 http://localhost:43000/ \
+    | grep -E "Complete requests|Failed requests|Exception|Requests per second|Time per request.*across"
+
+# Test load Brain page (signed in)
+ab -l -q -k -c 50 -n 10000 -C "PHPSESSID=$BENCH_COOKIE" http://localhost:43000/cerveau.html \
+    | grep -E "Complete requests|Failed requests|Exception|Requests per second|Time per request.*across"
+</code></pre>
+
+<p>On my MacBook M4 (with Docker), the results are as follow:</p>
+
+<ul>
+<li>Homepage: <code>+8.9%</code> improvement
+
+<ul>
+<li>Requests per second (mean):
+from <code>545.67</code> to <code>594.49</code></li>
+<li>Time per request (ms, mean, across all concurrent requests):
+from <code>1.833</code> to <code>1.682</code></li>
+</ul></li>
+<li>Brain Page: <code>+30.2%</code> improvement
+
+<ul>
+<li>Requests per second (mean):
+from <code>313.88</code> to <code>408.78</code></li>
+<li>Time per request (ms, mean, across all concurrent requests):
+from <code>3.186</code> to <code>2.446</code></li>
+</ul></li>
+</ul>
+
+<p>Surely with such almighty gains we won't need to rewrite BisouLand in go / rust.</p>
+
+<blockquote>
+  <p>⁉️ What do you mean, "the code is still unrefactorable"?</p>
+</blockquote>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[eXtreme Legacy 5: PDO]]></title>
             <link href="/2025/10/22/xl-5-pdo.html"/>
