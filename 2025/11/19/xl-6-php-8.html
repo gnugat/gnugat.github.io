@@ -48,7 +48,7 @@
                 <blockquote>
   <p>🤘 The Migration Warlord breaks the rusted shackles of PHP 5.6,
   leading the great exodus through the valleys of breaking changes,
-  into the promised land of PHP 8.4 where type hints
+  into the promised land of PHP 8.5 where type hints
   and constructor property promotion await in glory! 🔥</p>
 </blockquote>
 
@@ -67,7 +67,7 @@
 and have some level of automated tests.</p>
 
 <p>But it's still stuck in the past with PHP 5.6,
-so let's upgrade it to PHP 8.4!</p>
+so let's upgrade it to PHP 8.5!</p>
 
 <ul>
 <li><a href="#docker">Docker</a></li>
@@ -86,7 +86,7 @@ BisouLand's codebase is technically compatible with the latest PHP version.</p>
 <p>If that's true, then upgrading it is as simple as modifying the monolith's Dockerfile:</p>
 
 <pre><code class="diff">- # Uses PHP 5.6 with PDO MySQL driver
-+ # Uses PHP 8.4 with PDO MySQL driver
++ # Uses PHP 8.5 with PDO MySQL driver
 
 - FROM php:5.6-apache
 - 
@@ -94,7 +94,7 @@ BisouLand's codebase is technically compatible with the latest PHP version.</p>
 - RUN sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list \
 -     &amp;&amp; sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list \
 -     &amp;&amp; sed -i '/stretch-updates/d' /etc/apt/sources.list
-+ FROM php:8.4-apache
++ FROM php:8.5-apache
 </code></pre>
 
 <p>We can now build the new image:</p>
@@ -160,7 +160,7 @@ return RectorConfig::configure()
 which they are so no changes done.</p>
 
 <p>We can be bold and brave and change Rector's config straight from <code>SetList::PHP_56</code>
-to <code>SetList::PHP_84</code>, which will then make all the necessary upgrades from PHP 5.6 to 8.4,
+to <code>SetList::PHP_84</code>, which will then make all the necessary upgrades from PHP 5.6 to 8.5,
 but incremental steps are safer so we'll start with PHP 7.0:</p>
 
 <pre><code class="console">sed -i -e 's/PHP_56/PHP_70/g' ./rector.php
@@ -306,7 +306,7 @@ so we're safe to upgrade to PHP 7.3, which detects some changes!</p>
 
 <p>This one is related to HEREDOC indentation.</p>
 
-<p>I'm gonna be brief now, as after that, upgrading all the way to PHP 8.4,
+<p>I'm gonna be brief now, as after that, upgrading all the way to PHP 8.5,
 there were no changes.</p>
 
 <h2 id="conclusion">Conclusion</h2>
