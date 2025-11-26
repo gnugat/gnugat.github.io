@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>eXtreme Legacy 7: Rector &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2025/11/26/xl-7-rector.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/github-dark.min.css">
+    <link rel="stylesheet" href="/css/catppuccin-macchiato.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+            
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/main/_sculpin">Sources</a>
+            </nav>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    eXtreme Legacy 7: Rector
+    <span class="sub-title">26/11/2025</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="/tags/extreme-legacy">extreme-legacy</a>
+                    </nav>
+                </header>
+
+                <blockquote>
+  <p>🤘 Behold Rector, the Metamorphosis Overlord,
+  wielding the dark grimoire of AST manipulation to transmute ancient incantations of PHP 5.6
+  into the blazing runes of PHP 8.x through unholy automated rituals! 🔥</p>
+</blockquote>
+
+<p>In this series, we're dealing with BisouLand, an eXtreme Legacy application
+(2005 LAMP spaghetti code base). So far, we have:</p>
+
+<ol>
+<li><a href="/2025/09/10/xl-1-dockerizing-2005-lamp-app.html">🐋 got it to run in a local container</a></li>
+<li><a href="/2025/09/17/xl-2-smoke-tests.html">💨 written Smoke Tests</a></li>
+<li><a href="/2025/09/24/xl-3-end-to-end-tests.html">🎯 written End to End Tests</a></li>
+<li><a href="/2025/10/01/xl-4-coding-standards.html">🧹 created and applied Coding Standards</a></li>
+<li><a href="/2025/10/22/xl-5-pdo.html">⛃ migrated to PDO</a></li>
+<li><a href="/2025/11/19/xl-6-php-8.html">🐘 upgraded PHP 5 to PHP 8</a></li>
+</ol>
+
+<p>This means we can run it locally (http://localhost:43000/),
+and have some level of automated tests.</p>
+
+<p>But even with a modern PHP version,
+we still have an eXtreme Legacy spaghetti code...</p>
+
+<p>So let's use Rector to apply some automated refactorings</p>
+
+<ul>
+<li><a href="#what-is-the-difference-with-php-cs-fixer">What is the difference with PHP CS Fixer</a></li>
+<li><a href="#what-is-rector">What is Rector</a></li>
+<li><a href="#early-return">Early Return</a></li>
+<li><a href="#code-quality">Code Quality</a></li>
+<li><a href="#type-declaration">Type Declaration</a></li>
+<li><a href="#dead-code">Dead Code</a></li>
+<li><a href="#cherry-pick-your-rules">Cherry Pick your rules</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="what-is-the-difference-with-php-cs-fixer">What is the difference with PHP CS Fixer</h2>
+
+<p>A question I often get asked is: what's the difference between rector and PHP CS Fixer?</p>
+
+<p>PHP CS Fixer was initially created to automatically fix coding style issues,
+such as "indentation: 4 spaces vs 1 tab",
+or "opening curly brace: one the same line vs on a new line", etc.</p>
+
+<p>With time it grew to do more than just fixing coding style issues,
+like replacing deprecated function calls to their modern counterparts.</p>
+
+<p>But it is a token-based parsing tool (using PHP's <code>token_get_all()</code>),
+meaning it looks at the code as a series of keywords (<code>class</code>), whitespaces (<code></code>),
+identifiers (<code>MyClass</code>), punctuations (<code>{</code>), etc,
+it's very much a flat array.</p>
+
+<p>This means that there's a limit to how much it can know and understand about the code,
+and therefore how (and when) to modify it.</p>
+
+<p>For all intent and purposes we should treat PHP CS Fixer as a Coding Style enforcer,
+even if it can do more than that.</p>
+
+<h2 id="what-is-rector">What is Rector</h2>
+
+<p>Rector was created to automatically refactor code,
+such as adding type declarations, simplifying complex control flow,
+or removing dead code.</p>
+
+<p>With time it grew to do more than just refactoring code,
+like fixing coding style.</p>
+
+<p>So there is some overlap with PHP CS Fixer,
+but Rector is an Abstract Syntax Tree (AST) tool (using <a href="https://github.com/nikic/PHP-Parser">PHP Parser</a>),
+meaning it holds an structured model of the code (<code>Class</code> object,
+with <code>identifier</code> attribute set to <code>MyClass</code>,
+collection of <code>Property</code> objects each having a <code>visibility</code>, <code>type</code> and <code>identifier</code> attributes, etc).</p>
+
+<p>This means it can have a deep understanding of the code and therefore how
+to modify it in a way that is safe (for example it won't add a <code>string</code> typehint
+to a function argument if somewhere in the code a <code>bool</code> is passed to it
+or if it's used as an integer inside the function).</p>
+
+<p>Some people know it as the "one off automatic upgrade tool", because it can:</p>
+
+<ul>
+<li>upgrade your PHP app to newer versions (as we did in the previous article)</li>
+<li>upgrade your PHPUnit testsuite to newer versions (e.g. replace PHPdoc <code>@test</code> annotation with <code>#[Test]</code> attributes)</li>
+<li>upgrade your Symfony app to newer version</li>
+</ul>
+
+<p>But is is more useful as a "linting" tool that is run on every change made (for example in the CI):
+once all the deprecated function calls have been replaced with their modern counterparts,
+you don't want someone reintroducing a deprecated function call by accident.</p>
+
+<p>But coding style and upgrades are secondary features of Rector,
+its main one is to allow you to define Code Quality rules that are going to be automatically
+enforced as part of your CI workflow.</p>
+
+<p>Out of the box, rector provides you with Rules as well as rule Sets,
+let's have a look at what they can do for us.</p>
+
+<h2 id="early-return">Early Return</h2>
+
+<p>The <a href="https://getrector.com/find-rule?rectorSet=core-early-return&amp;activeRectorSetGroup=core">Early Return</a>
+set is a collection of rules that will check if your code can be simplified with earlier return:</p>
+
+<ul>
+<li><a href="https://getrector.com/rule-detail/prepared-value-to-early-return-rector">PreparedValueToEarlyReturnRector</a></li>
+<li><a href="https://getrector.com/rule-detail/return-binary-or-to-early-return-rector">ReturnBinaryOrToEarlyReturnRector</a></li>
+<li><a href="https://getrector.com/rule-detail/return-early-if-variable-rector">ReturnEarlyIfVariableRector</a></li>
+<li><a href="https://getrector.com/rule-detail/change-nested-ifs-to-early-return-rector">ChangeNestedIfsToEarlyReturnRector</a></li>
+<li><a href="https://getrector.com/rule-detail/remove-always-else-rector">RemoveAlwaysElseRector</a></li>
+<li><a href="https://getrector.com/rule-detail/change-if-else-value-assign-to-early-return-rector">ChangeIfElseValueAssignToEarlyReturnRector</a></li>
+<li><a href="https://getrector.com/rule-detail/change-or-if-continue-to-multi-continue-rector">ChangeOrIfContinueToMultiContinueRector</a></li>
+<li><a href="https://getrector.com/rule-detail/change-nested-foreach-ifs-to-early-continue-rector">ChangeNestedForeachIfsToEarlyContinueRector</a></li>
+</ul>
+
+<p>Let's enable it in the <code>rector.php</code> config file:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+use Rector\Caching\ValueObject\Storage\FileCacheStorage;
+use Rector\Config\RectorConfig;
+use Rector\Set\ValueObject\SetList;
+
+return RectorConfig::configure()
+    -&gt;withCache(
+        cacheDirectory: '/tmp/rector',
+        cacheClass: FileCacheStorage::class,
+    )
+    -&gt;withPaths([
+        __DIR__,
+        __DIR__.'/../monolith',
+    ])
+    -&gt;withSkip([
+        // —— Excluded paths ———————————————————————————————————————————————————
+        // [qa]
+        __DIR__.'/vendor',
+        // [monolith]
+        __DIR__.'/../monolith/vendor',
+    ])
+    -&gt;withSets([
+        // —— PHP ——————————————————————————————————————————————————————————————
+        SetList::PHP_84,
+
+        // —— Core —————————————————————————————————————————————————————————————
+        SetList::EARLY_RETURN,
+    ])
+    -&gt;withRules([
+    ]);
+</code></pre>
+
+<p>Now let's run it using:</p>
+
+<pre><code class="console">make rector # ./vendor/bin/rector process
+</code></pre>
+
+<p>In the BisouLand codebase, this applies the <code>ReturnEarlyIfVariableRector</code> rule:</p>
+
+<pre><code class="diff">  function calculterAmour($CalAmour, $timeDiff, $LvlCoeur, $nb1, $nb2, $nb3)
+  {
+      $CalAmour = calculerGenAmour($CalAmour, $timeDiff, $LvlCoeur, $nb1, $nb2, $nb3);
+      // Cette fonction ajoute un frein sur le minima.
+      if ($CalAmour &lt; 0) {
+-         $CalAmour = 0;
++         return 0;
+      }
+
+      return $CalAmour;
+  }
+</code></pre>
+
+<p>As well as the <code>RemoveAlwaysElseRector</code> rule:</p>
+
+<pre><code class="diff">  // Permet de convertir un timestamp en chaine sous la forme heure:minutes:secondes.
+  function strTemps($s): string
+  {
+      $m = 0;
+      $h = 0;
+      if ($s &lt; 0) {
+          return '0:00:00';
+-     } else {
+-       if ($s &gt; 59) {
+-           $m = floor($s / 60);
+-           $s = $s - $m * 60;
+-       }
+-       if ($m &gt; 59) {
+-           $h = floor($m / 60);
+-           $m = $m - $h * 60;
+-       }
+-       $ts = $s;
+-       $tm = $m;
+-       if ($s &lt; 10) {
+-           $ts = '0'.$s;
+-       }
+-       if ($m &lt; 10) {
+-           $tm = '0'.$m;
+-       }
+-       if ($h &gt; 24) {
+-           $d = floor($h / 24);
+-           $h = $h - $d * 24;
+-           $h = $d.' jours '.$h;
+-       }
+- 
+-       return $h.' h '.$tm.' min '.$ts.' sec';
++     }
++ 
++     if ($s &gt; 59) {
++         $m = floor($s / 60);
++         $s = $s - $m * 60;
++     }
++ 
++     if ($m &gt; 59) {
++         $h = floor($m / 60);
++         $m = $m - $h * 60;
++     }
++ 
++     $ts = $s;
++     $tm = $m;
++     if ($s &lt; 10) {
++         $ts = '0'.$s;
++     }
++ 
++     if ($m &lt; 10) {
++         $tm = '0'.$m;
++     }
++ 
++     if ($h &gt; 24) {
++         $d = floor($h / 24);
++         $h = $h - $d * 24;
++         $h = $d.' jours '.$h;
++     }
++ 
++     return $h.' h '.$tm.' min '.$ts.' sec';
+  }
+</code></pre>
+
+<h2 id="code-quality">Code Quality</h2>
+
+<p>The <a href="https://getrector.com/find-rule?rectorSet=core-code-quality&amp;activeRectorSetGroup=core">Code Quality</a>
+rule set includes a whopping 78 rules. I've enabled it as follow:</p>
+
+<pre><code class="php">// Extract from file: rector.php
+// [...]
+
+        // —— Core —————————————————————————————————————————————————————————————
+        SetList::CODE_QUALITY,
+        SetList::EARLY_RETURN,
+</code></pre>
+
+<p>And after running it on the BisouLand codebase,
+out of the 78 the following 8 have been applied:</p>
+
+<ul>
+<li><a href="https://getrector.com/rule-detail/use-identical-over-equal-with-same-type-rector">UseIdenticalOverEqualWithSameTypeRector</a></li>
+<li><a href="https://getrector.com/rule-detail/simplify-bool-identical-true-rector">SimplifyBoolIdenticalTrueRector</a></li>
+<li><a href="https://getrector.com/rule-detail/combine-if-rector">CombineIfRector</a></li>
+<li><a href="https://getrector.com/rule-detail/shorten-else-if-rector">ShortenElseIfRector</a></li>
+<li><a href="https://getrector.com/rule-detail/simplify-if-else-to-ternary-rector">SimplifyIfElseToTernaryRector</a></li>
+<li><a href="https://getrector.com/rule-detail/absolutize-require-and-include-path-rector">AbsolutizeRequireAndIncludePathRector</a></li>
+<li><a href="https://getrector.com/rule-detail/switch-negated-ternary-rector">SwitchNegatedTernaryRector</a></li>
+<li><a href="https://getrector.com/rule-detail/combine-if-rector">CombineIfRector</a></li>
+</ul>
+
+<p>Now let's focus on <strong>UseIdenticalOverEqualWithSameTypeRector</strong>,
+"Use <code>===</code> / <code>!==</code> over <code>==</code> / <code>!=</code>, if values have the same type".</p>
+
+<p>There is similar rule in PHP CS Fixer,
+<a href="https://cs.symfony.com/doc/rules/strict/strict_comparison.html">strict_comparison</a>,
+but if we configure that it'll change <strong>ALL</strong> comparisons in the codebase to strict,
+whether it's safe to do so or not.</p>
+
+<p>Rector is able to detect the type of variables, so it'll only apply it if it's safe to do so,
+for example in <code>nuage.php</code>:</p>
+
+<pre><code class="diff">              $sautPossible = 0;
+              // Au moins saut niveau 1.
+              if ($nbE[2][3] &gt; 0) {
+                  $distance = abs(16 * ($nuageL - $nuageSource) + $i - $positionSource);
+                  // On prend en compte les jambes, et le niveau de saut.
+                  $distMax2 = distanceMax($nbE[0][4], $nbE[2][3]);
+                  if ($distance &lt;= $distMax2) {
+                      $sautPossible = 1;
+                  }
+              }
+-             if (1 == $sautPossible) {
++             if (1 === $sautPossible) {
+</code></pre>
+
+<p><code>$sautPossible</code> was defined with an integer (should really be a boolean, but whatever),
+is potentially (in a if) set to another integer value, so it's safe to strictly
+compare it to an integer.</p>
+
+<h2 id="type-declaration">Type Declaration</h2>
+
+<p>In addition to value assignments (<code>$sautPossible = 0</code>), Rector can know the type
+of a variable from the Type Hints of functions they are passed in or that return them.</p>
+
+<p>In eXtreme Legacy applications like BisouLand, we do not have such type Hints,
+but Rector can add them for us (again only if it knows it's safe to do so),
+thanks to the 63 rules in the set
+<a href="https://getrector.com/find-rule?rectorSet=core-type-declaration&amp;activeRectorSetGroup=core">Type Declaration</a>.</p>
+
+<p>For example <a href="https://getrector.com/rule-detail/numeric-return-type-from-strict-scalar-returns-rector">NumericReturnTypeFromStrictScalarReturnsRector</a>:</p>
+
+<pre><code class="diff">  // Fonction qui retourne 0 si joueurAutre est meme niveau, 1 s'il est intouchable parce que trop faible, 2 s'il est intouchable parce que trop fort.
+- function voirNiveau($scoreJoueur, $scoreAutre)
++ function voirNiveau($scoreJoueur, $scoreAutre): int
+  {
+      if ($scoreJoueur &lt; 50) {
+          return 2;
+      }
+      if ($scoreAutre &lt; 50) {
+          return 1;
+      }
+      if ($scoreJoueur &gt; 2000 &amp;&amp; $scoreAutre &gt; 2000) {
+          return 0;
+      }
+      if (abs($scoreAutre - $scoreJoueur) &lt;= 200) {
+          return 0;
+      }
+      if ($scoreJoueur - $scoreAutre &gt; 200) {
+          return 1;
+      }
+
+      return 2;
+  }
+</code></pre>
+
+<p>The advantage of keeping Rector as part of your CI means that as you improve the codebase,
+some previous rules will be able to be automatically applied again, such as <strong>UseIdenticalOverEqualWithSameTypeRector</strong>!</p>
+
+<p>Previously in <code>nuage.php</code>, <code>$Niveau</code>'s type was considered as <code>mixed</code>, but thanks to the return type hint
+Rector now knows it's an integer, and so that it's safe to use strict type comparison:</p>
+
+<pre><code class="diff">                  $Niveau = voirNiveau($scoreSource, $score);
+-                 if (1 == $Niveau) {
++                 if (1 === $Niveau) {
+                      if ($score &gt;= 50) {
+                          echo '&lt;a class="bulle" style="cursor: default;color:blue;" onclick="return false;" href=""&gt;&lt;strong&gt;',$donnees_info['pseudo'],'&lt;/strong&gt;&lt;span style="color:blue;"&gt;Joueur trop faible&lt;/span&gt;';
+                      } else {
+                          echo '&lt;a class="bulle" style="cursor: default;color:teal;" onclick="return false;" href=""&gt;&lt;strong&gt;',$donnees_info['pseudo'],'&lt;/strong&gt;&lt;span style="color:teal;"&gt;Joueur ayant moins de 50 points&lt;/span&gt;';
+                      }
+-                 } elseif (0 == $Niveau) {
++                 } elseif (0 === $Niveau) {
+                      echo '&lt;a class="bulle" style="cursor: default;color:red;" onclick="return false;" href=""&gt;&lt;strong&gt;',$donnees_info['pseudo'],'&lt;/strong&gt;&lt;span style="color:red;"&gt;Ce joueur a ton niveau&lt;/span&gt;';
+</code></pre>
+
+<h2 id="dead-code">Dead Code</h2>
+
+<p>Another powerful rule set is <a href="https://getrector.com/find-rule?activeRectorSetGroup=core&amp;rectorSet=core-dead-code">Dead Code</a>
+and its 55 rules.</p>
+
+<p>For example in <a href="https://getrector.com/rule-detail/remove-always-true-if-condition-rector">RemoveAlwaysTrueIfConditionRector</a>,
+Rector is able to detect conditions that would always evaluate to <code>true</code>,
+and therefore remove the condition check altogether.</p>
+
+<p>In the following snippet, Rector detects that <code>$resultat</code> is always set
+because every single code path assigns it a value,
+making the <code>isset($resultat)</code> check redundant:</p>
+
+<pre><code class="diff">      if (isset($_GET['Dnuage'], $_GET['Dpos']) &amp;&amp; !empty($_GET['Dnuage']) &amp;&amp; !empty($_GET['Dpos'])) {
+          $Dnuage = htmlentities((string) $_GET['Dnuage']);
+          $Dpos = htmlentities((string) $_GET['Dpos']);
+          if ($nbE[0][5] &gt; 0) {
+              $stmt = $pdo-&gt;prepare('SELECT id, oeil, score, pseudo FROM membres WHERE nuage = :nuage AND position = :position');
+              $stmt-&gt;execute(['nuage' =&gt; $Dnuage, 'position' =&gt; $Dpos]);
+              if ($donnees = $stmt-&gt;fetch()) {
+                  // [...]
+                  if (0 == $Niveau) {
+                      if ($amour &gt;= $cout) {
+                          $resultat = "Tu as dévisagé {$pseudoCible}";
+                          // [...]
+                      } else {
+                          $resultat = "Tu n'as pas assez de Points d'Amour";
+                      }
+                  } else {
+                      $resultat = "Tu n'as pas le même niveau que ce joueur";
+                  }
+              } else {
+                  $resultat = "Il n'y a plus de joueur a cette position";
+              }
+          } else {
+              $resultat = 'Il te faut des yeux niveau 1 pour dévisager un joueur';
+          }
+          ?&gt;
+  &lt;h1&gt;Dévisager&lt;/h1&gt;
+  &lt;br /&gt;
+  &lt;a href="&lt;?php echo $Dnuage; ?&gt;.nuage.html"&gt;Retourner sur le nuage en cours&lt;/a&gt;&lt;br /&gt;
+  &lt;br /&gt;
+  &lt;?php
+-             if (isset($resultat)) {
+-                 echo '&lt;span class="info"&gt;[ '.$resultat.' ]&lt;/span&gt;&lt;br /&gt;&lt;br /&gt;';
+-             }
++             echo '&lt;span class="info"&gt;[ '.$resultat.' ]&lt;/span&gt;&lt;br /&gt;&lt;br /&gt;';
+</code></pre>
+
+<h2 id="cherry-pick-your-rules">Cherry Pick your rules</h2>
+
+<p>There are more rule sets, here are the ones that have been configured for BisouLand:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+use Rector\Caching\ValueObject\Storage\FileCacheStorage;
+use Rector\CodingStyle\Rector\Closure\StaticClosureRector;
+use Rector\CodingStyle\Rector\FuncCall\ArraySpreadInsteadOfArrayMergeRector;
+use Rector\Config\RectorConfig;
+use Rector\PHPUnit\Set\PHPUnitSetList;
+use Rector\Set\ValueObject\SetList;
+use Rector\TypeDeclarationDocblocks\Rector\Class_\AddReturnDocblockDataProviderRector;
+use Rector\TypeDeclarationDocblocks\Rector\Class_\ClassMethodArrayDocblockParamFromLocalCallsRector;
+use Rector\TypeDeclarationDocblocks\Rector\Class_\DocblockVarArrayFromGetterReturnRector;
+use Rector\TypeDeclarationDocblocks\Rector\Class_\DocblockVarArrayFromPropertyDefaultsRector;
+use Rector\TypeDeclarationDocblocks\Rector\Class_\DocblockVarFromParamDocblockInConstructorRector;
+use Rector\TypeDeclarationDocblocks\Rector\ClassMethod\AddParamArrayDocblockBasedOnArrayMapRector;
+use Rector\TypeDeclarationDocblocks\Rector\ClassMethod\AddParamArrayDocblockFromAssignsParamToParamReferenceRector;
+use Rector\TypeDeclarationDocblocks\Rector\ClassMethod\AddParamArrayDocblockFromDataProviderRector;
+use Rector\TypeDeclarationDocblocks\Rector\ClassMethod\AddParamArrayDocblockFromDimFetchAccessRector;
+use Rector\TypeDeclarationDocblocks\Rector\ClassMethod\AddReturnDocblockForArrayDimAssignedObjectRector;
+use Rector\TypeDeclarationDocblocks\Rector\ClassMethod\AddReturnDocblockForCommonObjectDenominatorRector;
+use Rector\TypeDeclarationDocblocks\Rector\ClassMethod\AddReturnDocblockForJsonArrayRector;
+use Rector\TypeDeclarationDocblocks\Rector\ClassMethod\DocblockGetterReturnArrayFromPropertyDocblockVarRector;
+use Rector\TypeDeclarationDocblocks\Rector\ClassMethod\DocblockReturnArrayFromDirectArrayInstanceRector;
+use Rector\Visibility\Rector\ClassConst\ChangeConstantVisibilityRector;
+use Rector\Visibility\Rector\ClassMethod\ChangeMethodVisibilityRector;
+
+return RectorConfig::configure()
+    -&gt;withCache(
+        cacheDirectory: '/tmp/rector',
+        cacheClass: FileCacheStorage::class,
+    )
+    -&gt;withPaths([
+        __DIR__,
+        __DIR__.'/../monolith',
+    ])
+    -&gt;withSkip([
+        // —— Excluded paths ———————————————————————————————————————————————————
+        // Excluded folders
+        // [qa]
+        __DIR__.'/vendor',
+        // [monolith]
+        __DIR__.'/../monolith/vendor',
+
+        // —— Excluded rules ———————————————————————————————————————————————————
+        // [CODE_QUALITY]
+        Rector\CodeQuality\Rector\Assign\CombinedAssignRector::class,
+        // [CODING_STYLE]
+        Rector\CodingStyle\Rector\Encapsed\EncapsedStringsToSprintfRector::class,
+    ])
+    -&gt;withSets([
+        // —— PHP ——————————————————————————————————————————————————————————————
+        SetList::PHP_84,
+
+        // —— Core —————————————————————————————————————————————————————————————
+        SetList::CODE_QUALITY,
+        SetList::CODING_STYLE,
+        SetList::DEAD_CODE,
+        SetList::EARLY_RETURN,
+        SetList::INSTANCEOF,
+        SetList::NAMING,
+        SetList::PRIVATIZATION,
+        SetList::STRICT_BOOLEANS,
+        SetList::TYPE_DECLARATION,
+
+        // —— PHPUnit ——————————————————————————————————————————————————————————
+        PHPUnitSetList::PHPUNIT_CODE_QUALITY,
+        PHPUnitSetList::PHPUNIT_120,
+    ])
+    -&gt;withRules([
+        // —— Core —————————————————————————————————————————————————————————————
+        // PHPdoc array types
+        AddParamArrayDocblockBasedOnArrayMapRector::class,
+        AddParamArrayDocblockFromAssignsParamToParamReferenceRector::class,
+        AddParamArrayDocblockFromDataProviderRector::class,
+        AddParamArrayDocblockFromDimFetchAccessRector::class,
+        AddReturnDocblockDataProviderRector::class,
+        AddReturnDocblockForArrayDimAssignedObjectRector::class,
+        AddReturnDocblockForCommonObjectDenominatorRector::class,
+        AddReturnDocblockForJsonArrayRector::class,
+        ClassMethodArrayDocblockParamFromLocalCallsRector::class,
+        DocblockGetterReturnArrayFromPropertyDocblockVarRector::class,
+        DocblockReturnArrayFromDirectArrayInstanceRector::class,
+        DocblockVarArrayFromGetterReturnRector::class,
+        DocblockVarArrayFromPropertyDefaultsRector::class,
+        DocblockVarFromParamDocblockInConstructorRector::class,
+
+        // Inherit parent visibility
+        ChangeConstantVisibilityRector::class,
+        ChangeMethodVisibilityRector::class,
+
+        // More Coding Style
+        ArraySpreadInsteadOfArrayMergeRector::class,
+        StaticClosureRector::class,
+    ]);
+</code></pre>
+
+<p>Not all rule sets have been added, for example we are missing:</p>
+
+<ul>
+<li><a href="https://getrector.com/find-rule?activeRectorSetGroup=core&amp;rectorSet=core-datetime-to-carbon">DateTime to Carbon</a></li>
+<li><a href="https://getrector.com/find-rule?activeRectorSetGroup=core&amp;rectorSet=core-gmagick-to-imagick">Gmagick to imagick</a></li>
+</ul>
+
+<p>There are also some rules from added rulesets that we have decided to exclude:</p>
+
+<ul>
+<li><a href="https://getrector.com/rule-detail/combined-assign-rector">CombinedAssignRector</a>
+Simplify <code>$value = $value + 5;</code> assignments to <code>$value += 5;</code></li>
+<li><a href="https://getrector.com/rule-detail/encapsed-strings-to-sprintf-rector">EncapsedStringsToSprintfRector</a>
+Convert <code>"{$value}"</code> to <code>sprintf('%s', $value)</code> or <code>''.$value</code></li>
+</ul>
+
+<p>Finally, there are some rules that are not part of <a href="https://getrector.com/find-rule?activeRectorSetGroup=core&amp;rectorSet=%3Anot-in-set">any rule set</a>,
+which we have added one by one.</p>
+
+<p>My advice to select only the rule set and rules you like, by first trying them all.</p>
+
+<p>You can run Rector in "check only" mode for that purpose:</p>
+
+<pre><code class="php">./vendor/bin/rector process --dry-run
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Rector is a powerful tool that goes way beyond simple one-off upgrades.</p>
+
+<p>By integrating it into your CI workflow, you can enforce Code Quality rules
+that continuously improve your codebase as it evolves.</p>
+
+<p>The key difference with PHP CS Fixer is that Rector understands your code's
+structure and types through AST parsing, which means it can make safe refactoring
+decisions that a token-based tool simply cannot.</p>
+
+<p>For BisouLand, we've seen Rector automatically:</p>
+
+<ul>
+<li>simplify control flow with early returns</li>
+<li>enforce strict type comparisons where safe</li>
+<li>add type declarations to functions</li>
+<li>remove dead code and unnecessary conditions</li>
+</ul>
+
+<p>And as the codebase improves (more type hints, better structure),
+Rector becomes even more effective at applying additional rules automatically.</p>
+
+<p>My recommendation is to start with the rule sets that make sense for your project,
+run them in <code>--dry-run</code> mode to review the changes,
+and gradually build up your configuration by cherry-picking the rules you like.</p>
+
+<p>Then keep Rector running in your CI to prevent regressions and maintain
+the code quality improvements you've worked so hard to achieve.</p>
+
+<p>Now with our almost not spaghetti code, we truly are in the future.</p>
+
+<blockquote>
+  <p>⁉️ What do you mean, "still using old MySQL database"?</p>
+</blockquote>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2025/11/19/xl-6-php-8.html" title="eXtreme Legacy 6: From PHP 5 to PHP 8">Previous &lt; eXtreme Legacy 6: From PHP 5 to PHP 8</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/main/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight.min.js"></script>
+    <script type="text/javascript">hljs.highlightAll();</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9V6KYH7PW"></script>
+    <script type="text/javascript">
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-Q9V6KYH7PW');
+    </script>
+</body>
+</html>

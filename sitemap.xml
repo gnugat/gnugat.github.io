@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc></loc>
-    <lastmod>2025-11-19T06:39:53+00:00</lastmod>
+    <lastmod>2025-11-26T06:54:47+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>/about</loc>
-    <lastmod>2025-11-19T06:39:53+00:00</lastmod>
+    <lastmod>2025-11-26T06:54:47+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>/2025/11/26/xl-7-rector.html</loc>
+    <lastmod>2025-11-26T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>/2025/11/19/xl-6-php-8.html</loc>
