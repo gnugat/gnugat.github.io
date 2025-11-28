@@ -24,6 +24,8 @@ Article file names should follow this standard:
 * hyphened short title
 * `.md` suffix
 
+> *Note*: you can use `sh 00-bootstrap.sh` to create a new empty article.
+
 Each article file need to start with the following header:
 
 ```
@@ -56,10 +58,11 @@ Changes can then be seen in the browser [at the following link](http://localhost
 To publish the changes, commit them and push them:
 
 ```
-sh publish.sh
-git add -A
-git commit -m 'New content!'
-git push
+sh 01-commit.sh
+git checkout main
+git merge --no-ff <article-branch>
+git branch -d <article-branch>
+sh 02-publish.sh
 ```
 
 The website [gnugat.github.io](https://gnugat.github.io) should take a few
@@ -69,6 +72,6 @@ minutes before being updated.
 
 Some scripts are available to ease things:
 
-* `bootstrap.sh`: bootstraps the next article
-* `prepare.sh`: prepares last article for publication
-* `publish.sh`: publishes an article
+* `00-bootstrap.sh`: bootstraps the next article
+* `01-commit.sh`: creates commit for newest article
+* `02-publish.sh`: publishes latest changes

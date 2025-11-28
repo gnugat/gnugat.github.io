@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# File: /_sculpin/bootstrap.sh
+# File: /_sculpin/00-bootstrap.sh
 # ──────────────────────────────────────────────────────────────────────────────
 # Bootstraps the next article:
 # * finds the date of the next wednesday
@@ -10,7 +10,7 @@
 # Usage:
 #
 # ```shell
-# bootstrap.sh
+# 00-bootstrap.sh
 # ```
 # ──────────────────────────────────────────────────────────────────────────────
 
