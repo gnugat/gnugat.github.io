@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>eXtreme Legacy 8: From MySQL to PostgreSQL &mdash; Loïc Faugeron &mdash; Technical Blog</title>
+    <meta name="description" content="Technical articles about Symfony and TDD">
+    <meta name="author" content="Loïc Faugeron">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="canonical" href="/2025/12/03/xl-8-postgresql.html"/>
+        <link rel="alternate" href="/feed/atom.xml" type="application/atom+xml" title="Loïc Faugeron"/>
+    
+    <link rel="stylesheet" href="/css/normalize.css">
+    <link rel="stylesheet" href="/css/skeleton.css">
+    <link rel="stylesheet" href="/css/dop-dop-dop.css">
+    <link rel="stylesheet" href="/css/github-dark.min.css">
+    <link rel="stylesheet" href="/css/catppuccin-macchiato.css">
+</head>
+<body>
+    <div class="container">
+        <header class="title">
+            <h1>
+                <a href="/">Loïc Faugeron</a>
+                <span class="sub-title">Technical Blog</span>
+            </h1>
+            
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/main/_sculpin">Sources</a>
+            </nav>
+        </header>
+
+        <article>
+            <header>
+                <h2>
+    eXtreme Legacy 8: From MySQL to PostgreSQL
+    <span class="sub-title">03/12/2025</span>
+</h2>
+                            <nav>
+                                                            <a class="button " href="/tags/extreme-legacy">extreme-legacy</a>
+                    </nav>
+                </header>
+
+                <blockquote>
+  <p>🤘 The Legacy Executioner casts MySQL into the void of deprecated technologies,
+  summoning PostgreSQL from the northern lands
+  to claim dominion over schemas with its superior type system and extension arsenal! 🔥</p>
+</blockquote>
+
+<p>In this series, we're dealing with BisouLand, an eXtreme Legacy application
+(2005 LAMP spaghetti code base). So far, we have:</p>
+
+<ol>
+<li><a href="/2025/09/10/xl-1-dockerizing-2005-lamp-app.html">🐋 got it to run in a local container</a></li>
+<li><a href="/2025/09/17/xl-2-smoke-tests.html">💨 written Smoke Tests</a></li>
+<li><a href="/2025/09/24/xl-3-end-to-end-tests.html">🎯 written End to End Tests</a></li>
+<li><a href="/2025/10/01/xl-4-coding-standards.html">🧹 created and applied Coding Standards</a></li>
+<li><a href="/2025/10/22/xl-5-pdo.html">⛃ migrated to PDO</a></li>
+<li><a href="/2025/11/19/xl-6-php-8.html">🐘 upgraded PHP 5 to PHP 8</a></li>
+<li><a href="/2025/11/26/xl-7-rector.html">🏡 applied automated refactorings using Rector</a></li>
+</ol>
+
+<p>This means we can run it locally (http://localhost:43000/),
+and have some level of automated tests.</p>
+
+<p>But it's still using the <strong>M</strong> in LAMP: MySQL.</p>
+
+<p>Let's migrate to PostgreSQL instead,
+which provides native support for some interesting types
+(BOOLEAN, UUID and JSONB):</p>
+
+<ul>
+<li><a href="#docker">Docker</a></li>
+<li><a href="#sql-syntax">SQL Syntax</a></li>
+<li><a href="#boolean">Boolean</a></li>
+<li><a href="#timestamp">Timestamp</a></li>
+<li><a href="#uuid">UUID</a></li>
+<li><a href="#vanity-benchmark">Vanity Benchmark</a></li>
+<li><a href="#database-reset">Database Reset</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+</ul>
+
+<h2 id="docker">Docker</h2>
+
+<p>Let's start by changing the <code>pdo_mysql</code> PHP extension to <code>pdo_pgsql</code> in <code>Dockerfile</code>:</p>
+
+<pre><code># syntax=docker/dockerfile:1
+
+###
+# PHP Dev Container
+# Utility Tools: Apache, PHP-FPM, bash, Composer
+###
+FROM php:8.5-fpm-alpine AS php_dev_container
+
+# Composer environment variables:
+# * default user is superuser (root), so allow them
+# * put cache directory in a readable/writable location
+# _Note_: When running `composer` in container, use `--no-cache` option
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_CACHE_DIR=/tmp/.composer/cache
+
+# Install dependencies:
+# * apache: for the webserver
+# * bash: for shell access and scripting
+# * postgresql: for PDO's SQL queries
+# * libzip-dev: for composer packages that use ZIP archives
+# _Note (Alpine)_: `--no-cache` includes `--update` and keeps image size minimal
+#
+# Then install PHP extensions
+#
+# _Note (Hadolint)_: No version locking, since Alpine only ever provides one version
+# hadolint ignore=DL3018
+RUN apk add --update --no-cache \
+        apache2 \
+        apache2-proxy \
+        apache2-ssl \
+        bash \
+        libzip-dev \
+        postgresql-dev \
+    &amp;&amp; sed -i 's/^#LoadModule rewrite_module/LoadModule rewrite_module/' /etc/apache2/httpd.conf \
+    &amp;&amp; docker-php-ext-install \
+        pdo_pgsql
+
+# Copy Composer binary from composer image
+# _Note (Hadolint)_: False positive as `COPY` works with images too
+# See: https://github.com/hadolint/hadolint/issues/197#issuecomment-1016595425
+# hadolint ignore=DL3022
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /apps/monolith
+
+# Caching `composer install`, as long as composer.{json,lock} don't change.
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-cache \
+    --no-interaction \
+    --no-plugins \
+    --no-scripts \
+    --optimize-autoloader \
+    &amp;&amp; chmod -R o+rX vendor/
+
+# Copy Apache configuration
+COPY apache-site.conf /etc/apache2/conf.d/bisouland.conf
+
+# Copy the remaining application files (excluding those listed in .dockerignore)
+COPY . .
+
+# Configure Apache proxy modules for PHP-FPM
+RUN sed -i 's|^#LoadModule proxy_module|LoadModule proxy_module|' /etc/apache2/httpd.conf \
+    &amp;&amp; sed -i 's|^#LoadModule proxy_fcgi_module|LoadModule proxy_fcgi_module|' /etc/apache2/httpd.conf
+
+# Create startup script to run both PHP-FPM and Apache
+RUN echo '#!/bin/sh' &gt; /start.sh \
+    &amp;&amp; echo 'php-fpm -D' &gt;&gt; /start.sh \
+    &amp;&amp; echo 'exec httpd -D FOREGROUND' &gt;&gt; /start.sh \
+    &amp;&amp; chmod +x /start.sh
+
+EXPOSE 80
+
+CMD ["/start.sh"]
+</code></pre>
+
+<p>Next, we change the image from <code>mysql</code> to <code>postgresql</code> in <code>compose.yaml</code>:</p>
+
+<pre><code class="yaml">name: bisouland-monolith
+
+services:
+  web:
+    build: .
+    ports:
+      - "43000:80"
+    volumes:
+      - .:/apps/monolith
+      - vendor:/apps/monolith/vendor
+    depends_on:
+      - db
+    environment:
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_NAME: ${DATABASE_NAME}
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    platform: linux/amd64
+    environment:
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:43001:5432"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  vendor:
+</code></pre>
+
+<p>The <code>.env</code> file remains unchanged (we just remove the <code>MYSQL_ROOT_PASSWORD</code> envvar):</p>
+
+<pre><code class="bash"># Database
+DATABASE_HOST=db
+DATABASE_PORT=5432
+DATABASE_USER=bisouland
+DATABASE_PASSWORD=bisouland_pass
+DATABASE_NAME=bisouland
+</code></pre>
+
+<h2 id="different-sql">Different SQL</h2>
+
+<p>MySQL and PostgreSQL vary in their SQL types and syntax,
+so a first pass needs to be done to convert the SQL queries,
+following this table:</p>
+
+<table>
+<thead>
+<tr>
+  <th>PostgreSQL</th>
+  <th>MySQL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Data Types</strong></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>SERIAL PRIMARY KEY</code></td>
+  <td><code>INT PRIMARY KEY AUTO_INCREMENT</code></td>
+</tr>
+<tr>
+  <td><code>INTEGER</code></td>
+  <td><code>INT</code></td>
+</tr>
+<tr>
+  <td><code>SMALLINT</code></td>
+  <td><code>TINYINT(1)</code></td>
+</tr>
+<tr>
+  <td><strong>SQL Syntax</strong></td>
+  <td></td>
+</tr>
+<tr>
+  <td><code>LIMIT 5 OFFSET 0</code></td>
+  <td><code>LIMIT 0, 5</code></td>
+</tr>
+<tr>
+  <td><code>ON CONFLICT (id) DO UPDATE</code></td>
+  <td><code>ON DUPLICATE KEY UPDATE</code></td>
+</tr>
+<tr>
+  <td><code>extract(epoch from now())::integer</code></td>
+  <td><code>UNIX_TIMESTAMP()</code></td>
+</tr>
+</tbody>
+</table>
+
+<p>For example in <code>evo.php</code>:</p>
+
+<pre><code class="diff">  // On passe à une nouvelle construction si disponible.
+- $stmt = $pdo-&gt;prepare('SELECT id, duree, type, cout FROM liste WHERE auteur = :auteur AND classe = :classe ORDER BY id LIMIT 0,1');
++ $stmt = $pdo-&gt;prepare('SELECT id, duree, type, cout FROM liste WHERE auteur = :auteur AND classe = :classe ORDER BY id LIMIT 1 OFFSET 0');
+  $stmt-&gt;execute(['auteur' =&gt; $id, 'classe' =&gt; $classeCancel]);
+</code></pre>
+
+<p>And in <code>schema.sql</code>:</p>
+
+<pre><code class="diff">  -- Messages table
+  -- Field order MUST match INSERT statements in fctIndex.php::AdminMP()
+  CREATE TABLE IF NOT EXISTS messages (
+-     id INT PRIMARY KEY AUTO_INCREMENT,  -- Auto-increment
+-     posteur INT NOT NULL,               -- Matches $source/$expediteur from INSERT
+-     destin INT NOT NULL,                -- Matches $cible from INSERT
++     id SERIAL PRIMARY KEY,              -- Auto-increment
++     posteur INTEGER NOT NULL,           -- Matches $source/$expediteur from INSERT
++     destin INTEGER NOT NULL,            -- Matches $cible from INSERT
+      message TEXT NOT NULL,              -- Matches $message from INSERT
+-     timestamp INT NOT NULL,             -- Matches $timer/time() from INSERT
+-     statut TINYINT(1) DEFAULT 0,        -- Matches '0'/$lu from INSERT
++     timestamp INTEGER NOT NULL,         -- Matches $timer/time() from INSERT
++     statut SMALLINT DEFAULT 0,          -- Matches '0'/$lu from INSERT
+      titre VARCHAR(100) NOT NULL         -- Matches $titre/$objet from INSERT
+  );
+</code></pre>
+
+<p>But PostgreSQL is much more interesting than that.</p>
+
+<h2 id="boolean">Boolean</h2>
+
+<p>Some of the MySQL <code>TINYINT</code> actually were boolean, and as it turns out,
+PostgreSQL does have a <code>BOOLEAN</code> type:</p>
+
+<pre><code class="diff">  -- Messages table
+  -- Field order MUST match INSERT statements in fctIndex.php::AdminMP()
+  CREATE TABLE IF NOT EXISTS messages (
+      id SERIAL PRIMARY KEY,              -- Auto-increment
+      posteur INTEGER NOT NULL,           -- Matches $source/$expediteur from INSERT
+      destin INTEGER NOT NULL,            -- Matches $cible from INSERT
+      message TEXT NOT NULL,              -- Matches $message from INSERT
+      timestamp INTEGER NOT NULL,         -- Matches $timer/time() from INSERT
+-     statut SMALLINT DEFAULT 0,          -- Matches '0'/$lu from INSERT
++     statut BOOLEAN DEFAULT FALSE,       -- (FALSE=unread, TRUE=read)
+      titre VARCHAR(100) NOT NULL         -- Matches $titre/$objet from INSERT
+  );
+</code></pre>
+
+<p>Which means we get a PHP <code>bool</code> upon selecting these:</p>
+
+<pre><code class="diff">- &lt;td&gt;&lt;?php if (0 == $donnees['statut']) {
++ &lt;td&gt;&lt;?php if (false === $donnees['statut']) {
+      echo '&lt;a class="bulle" style="cursor: default;" onclick="return false;" href=""&gt;&lt;img src="images/newmess.png" alt="Message non lu" title="" /&gt;&lt;span&gt;Message &gt;
+  }?&gt;&lt;/td&gt;
+</code></pre>
+
+<p>But there is a catch:
+when constructing a query, PDO will not convert PHP bool to PostgreSQL BOOLEAN!</p>
+
+<p>We have to do the PHP bool to PHP string conversion ourselves:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Bl\Infrastructure\Pg;
+
+class CastToPgBoolean
+{
+    /**
+     * PostgreSQL's BOOLEAN fields are strings with for values:
+     * - `true`, `t`, `TRUE`
+     * - `false`, `f`, `FALSE`
+     */
+    public function from(bool $value): string
+    {
+        return $value ? 'TRUE' : 'FALSE';
+    }
+}
+</code></pre>
+
+<p>And do that before calling PDO:</p>
+
+<pre><code class="diff">  $stmt = $pdo-&gt;prepare(
+      'INSERT INTO membres (pseudo, mdp, confirmation, timestamp, lastconnect, amour)'
+      .' VALUES (:pseudo, :mdp, :confirmation, :timestamp, :lastconnect, :amour)',
+  );
+- $stmt-&gt;execute(['pseudo' =&gt; $pseudo, 'mdp' =&gt; $hmdp, 'confirmation' =&gt; 1, 'timestamp' =&gt; time(), 'lastconnect' =&gt; time(), 'amour' =&gt; 300]);
++ $stmt-&gt;execute(['pseudo' =&gt; $pseudo, 'mdp' =&gt; $hmdp, 'confirmation' =&gt; $castToPgBoolean-&gt;from(true), 'amour' =&gt; 300]);
+</code></pre>
+
+<p>If we are not binding parameters, but instead using plain SQL queries, then we can use <code>TRUE</code> and <code>FALSE</code> as follow:</p>
+
+<pre><code class="diff">  // On supprime les unités.
+- $stmt = $pdo-&gt;prepare('UPDATE membres SET smack = :smack, baiser = :baiser, pelle = :pelle, bloque = 0 WHERE id = :id');
++ $stmt = $pdo-&gt;prepare('UPDATE membres SET smack = :smack, baiser = :baiser, pelle = :pelle, bloque = FALSE WHERE id = :id');
+  $stmt-&gt;execute(['smack' =&gt; $AttSmack, 'baiser' =&gt; $AttBaiser, 'pelle' =&gt; $AttPelle, 'id' =&gt; $idAuteur]);
+</code></pre>
+
+<h2 id="timestamp">Timestamp</h2>
+
+<p>In BisouLand, time and intervals are an essential component of the game:
+when blowing a kiss, these kisses will take some time to travel to the target,
+and then as much time to come back.</p>
+
+<p>In 2005 eXtreme Legacy fashion, time was handled as a UNIX timestamp,
+the number of seconds since January the 1st 1970.</p>
+
+<p>Since PostgreSQL has a <code>TIMESTAMPTZ</code>, which is an actual ISO 8601 date string,
+with timezone information, we can take the opportunity to modernise the code:</p>
+
+<pre><code class="diff">  -- Attack log table
+  -- Logs completed attacks for rate limiting, INSERT in attaque.php:16, checked in action.php:74
+  CREATE TABLE IF NOT EXISTS logatt (
+      id SERIAL PRIMARY KEY,              -- Log entry ID
+      auteur INTEGER NOT NULL,            -- Attacker user ID, checked for rate limiting
+      cible INTEGER NOT NULL,             -- Target user ID
+-     timestamp INTEGER NOT NULL          -- Attack completion time, used for 12-hour limit check
++     timestamp TIMESTAMPTZ NOT NULL      -- Attack completion time, used for 12-hour limit check
+  );
+</code></pre>
+
+<p>We take the opportunity to use PostgreSQL <code>CURRENT_TIMESTAMP</code> function when possible,
+and even do INTERVAL calculations:</p>
+
+<pre><code class="diff">- $stmt = $pdo-&gt;prepare('SELECT COUNT(*) AS nb_att FROM logatt WHERE auteur = :auteur AND cible = :cible AND timestamp &gt;= :timestamp');
+- $stmt-&gt;execute(['auteur' =&gt; $id, 'cible' =&gt; $cible, 'timestamp' =&gt; time() - 43200]);
++ $stmt = $pdo-&gt;prepare("SELECT COUNT(*) AS nb_att FROM logatt WHERE auteur = :auteur AND cible = :cible AND timestamp &gt;= CURRENT_TIMESTAMP - INTERVAL '12 hours'");
++ $stmt-&gt;execute(['auteur' =&gt; $id, 'cible' =&gt; $cible]);
+</code></pre>
+
+<p>I gotta admit, I'm not ready yet to convert all the UNIX timestamp in the code to <code>DateTime</code> objects,
+so we'll have to convert them from PHP int to PHP string in ISO 8601 format:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Bl\Infrastructure\Pg;
+
+class CastToPgTimestamptz
+{
+    /**
+     * PostgreSQL's TIMESTAMPTZ fields are strings in (sort of) ISO 8601 date format:
+     * - '2025-11-20T16:45:03.336548+00:00' (fully ISO 8601 compliant)
+     * - '2025-11-20 16:45:03+00'
+     * - '2025-11-20 16:45:03+00:00'
+     * - '2025-11-20 16:45:03.336548+00'
+     * - '2025-11-20 16:45:03.336548+00:00'
+     */
+    public function fromUnixTimestamp(int $unixTimestamp): string
+    {
+        return new \DateTimeImmutable("@{$unixTimestamp}")-&gt;format('Y-m-d\TH:i:s.uP');
+    }
+}
+</code></pre>
+
+<p>And:</p>
+
+<pre><code class="php">&lt;?php
+
+namespace Bl\Infrastructure\Pg;
+
+class CastToUnixTimestamp
+{
+    /**
+     * PostgreSQL's TIMESTAMPTZ fields are strings in (sort of) ISO 8601 date format:
+     * - '2025-11-20T16:45:03.336548+00:00' (fully ISO 8601 compliant)
+     * - '2025-11-20 16:45:03+00'
+     * - '2025-11-20 16:45:03+00:00'
+     * - '2025-11-20 16:45:03.336548+00'
+     * - '2025-11-20 16:45:03.336548+00:00'
+     */
+    public function fromPgTimestamptz(string $timestamptz): int
+    {
+        return new \DateTimeImmutable($timestamptz)-&gt;getTimestamp();
+    }
+}
+</code></pre>
+
+<p>So when interracting with PDO, we do:</p>
+
+<pre><code class="diff">- $stmt = $pdo-&gt;prepare('INSERT INTO attaque VALUES (:auteur, :cible, :finaller, :finretour, 0)');
+- $stmt-&gt;execute(['auteur' =&gt; $id, 'cible' =&gt; $cible, 'finaller' =&gt; time() + $duree, 'finretour' =&gt; time() + 2 * $duree]);
++ $stmt = $pdo-&gt;prepare('INSERT INTO attaque (auteur, cible, finaller, finretour, etat) VALUES (:auteur, :cible, :finaller, :finretour, 0)');
++ $stmt-&gt;execute(['auteur' =&gt; $id, 'cible' =&gt; $cible, 'finaller' =&gt; $castToPgTimestamptz-&gt;fromUnixTimestamp(time() + $duree), 'finretour' =&gt; $castToPgTimestamptz-&gt;fromUnixTimestamp(time() + 2 * $duree)]);
+</code></pre>
+
+<h2 id="uuid">UUID</h2>
+
+<p>I love UUIDs. Don't ask me why, I just do.</p>
+
+<p>So it made total sense for me to add something I loved in the love game that is BisouLand:</p>
+
+<pre><code class="diff">  -- Evolution/construction queue
+  -- Active construction tasks, INSERT in index.php:427, SELECT/DELETE in index.php:392-409
+  CREATE TABLE IF NOT EXISTS evolution (
+-     id SERIAL PRIMARY KEY,              -- Task ID for deletion when complete
++     id UUID PRIMARY KEY,                -- Task ID (UUIDv7) for deletion when complete
+      timestamp TIMESTAMPTZ NOT NULL,     -- Completion time, checked against time() in index.php:392
+      classe INTEGER NOT NULL,            -- Object class/category for construction
+      type INTEGER NOT NULL,              -- Specific object type within class
+-     auteur INTEGER NOT NULL,            -- User ID who initiated construction, from $id2
++     auteur UUID NOT NULL,               -- User ID (foreign key to membres.id) who initiated construction
+      cout BIGINT NOT NULL                -- Cost of the construction task
+  );
+</code></pre>
+
+<p>I've been using UUID v4 for a while, which are random generated,
+but there's a new kid in town: v7, which is still random,
+but storable by their creation time as the first 48 bits are a UNIX Epoch timestamp.</p>
+
+<p>Of course, I want the client to generate the UUID, not the database,
+and this can be done thanks to the <a href="https://symfony.com/doc/current/components/uid.html">Symfony Uid component</a>:</p>
+
+<pre><code class="diff">+ use Symfony\Uid\Uuid;
+
+  // On indique que l'attaque a eu lieu.
+- $stmt = $pdo-&gt;prepare('INSERT INTO logatt VALUES(:auteur, :cible, :timestamp)');
+- $stmt-&gt;execute(['auteur' =&gt; $idAuteur, 'cible' =&gt; $idCible, 'timestamp' =&gt; $finaller]);
++ $stmt = $pdo-&gt;prepare('INSERT INTO logatt (id, auteur, cible, timestamp) VALUES(:id, :auteur, :cible, :timestamp)');
++ $stmt-&gt;execute(['id' =&gt; Uuid::v7(), 'auteur' =&gt; $idAuteur, 'cible' =&gt; $idCible, 'timestamp' =&gt; $finaller]);
+</code></pre>
+
+<p>Oh but hang on, how did we get a Symfony 8 feature in a 2005 LAMP app you ask?</p>
+
+<p>Well it required some tricks, such as renaming <code>index.php</code> to <code>app.php</code>,
+and in <code>index.php</code> create the following front controller:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+require __DIR__.'/../vendor/autoload.php';
+
+try {
+    require __DIR__.'/../phpincludes/app.php';
+} catch (Throwable $throwable) {
+    http_response_code(500);
+    error_log($throwable-&gt;getMessage());
+    echo 'An error occurred';
+}
+</code></pre>
+
+<p>With that, we can now use composer to get third party libraries, see the <code>composer.json</code>:</p>
+
+<pre><code class="json">{
+    "name": "bl/monolith",
+    "description": "The original BisouLand codebase",
+    "type": "project",
+    "license": "Apache-2.0",
+    "require": {
+        "php": "&gt;=8.5",
+        "ext-curl": "*",
+        "symfony/uid": "^8.0@rc"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bl\\": "src/"
+        },
+        "files": [
+            "phpincludes/bd.php",
+            "phpincludes/cast_to_pg_boolean.php",
+            "phpincludes/cast_to_unix_timestamp.php",
+            "phpincludes/cast_to_pg_timestamptz.php",
+            "phpincludes/fctIndex.php"
+        ]
+    },
+    "config": {
+        "bump-after-update": true,
+        "sort-packages": true
+    }
+}
+</code></pre>
+
+<h2 id="vanity-benchmark">Vanity Benchmark</h2>
+
+<p>Surely, switching from MySQL to PostgreSQL will bring us massive performance boosts, right? Right??</p>
+
+<p>Let's find out with some vanity benchmarks:</p>
+
+<pre><code class="bash"># Start fresh
+cd apps/monolith
+make app-init
+
+BENCH_USER="BisouTest_bench"
+BENCH_PASS="SuperSecret123"
+
+# Sign up
+curl -X POST 'http://localhost:43000/inscription.html' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d "Ipseudo=${BENCH_USER}&amp;Imdp=${BENCH_PASS}&amp;Imdp2=${BENCH_PASS}&amp;inscription=S%27inscrire"
+
+# Log in
+BENCH_COOKIE=$(curl -X POST 'http://localhost:43000/redirect.php' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d "pseudo=${BENCH_USER}&amp;mdp=${BENCH_PASS}&amp;connexion=Se+connecter" \
+  -i -s | grep -i 'set-cookie: PHPSESSID' | sed 's/.*PHPSESSID=\([^;]*\).*/\1/' | tr -d '\r')
+
+# Test load homepage (not signed in)
+ab -l -q -k -c 50 -n 10000 http://localhost:43000/ \
+    | grep -E "Complete requests|Failed requests|Exception|Requests per second|Time per request.*across"
+
+# Test load Brain page (signed in)
+ab -l -q -k -c 50 -n 10000 -C "PHPSESSID=$BENCH_COOKIE" http://localhost:43000/cerveau.html \
+    | grep -E "Complete requests|Failed requests|Exception|Requests per second|Time per request.*across"
+</code></pre>
+
+<p>We execute this before the migration (I've kindly upgraded to MySQL 8),
+and after the migration to PostgreSQL.</p>
+
+<p>On my MacBook M4 (with Docker), the results are as follow:</p>
+
+<ul>
+<li>Homepage (Visitor - Not Logged In):
+
+<ul>
+<li>Requests per second (mean): from <code>1503</code> to <code>100</code></li>
+<li>Time per request (ms, mean, across all concurrent requests): from <code>0.665</code> to <code>9.943</code></li>
+</ul></li>
+<li>Brain Page (Logged In User):
+
+<ul>
+<li>Requests per second (mean): from <code>1133</code> to <code>96</code></li>
+<li>Time per request (ms, mean, across all concurrent requests): from <code>0.883</code> to <code>10.348</code></li>
+</ul></li>
+</ul>
+
+<p><strong>🚨 Performance degradation: 90% slower than MySQL 🙀</strong></p>
+
+<p>How is that possible?? My core beliefs are now completly shattered!!!!111oneoneeleven</p>
+
+<p>Unless... Unless we've missed one important configuration step:</p>
+
+<pre><code class="php">&lt;?php
+
+function bd_connect()
+{
+    static $pdo = null;
+
+    if (null === $pdo) {
+        $dsn = 'pgsql:host='.DATABASE_HOST.';port='.DATABASE_PORT.';dbname='.DATABASE_NAME;
+        $options = [
+            PDO::ATTR_ERRMODE =&gt; PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE =&gt; PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES =&gt; false,
+            // Don't forget to set persistent connections!
+            PDO::ATTR_PERSISTENT =&gt; true,
+        ];
+        $pdo = new PDO($dsn, DATABASE_USER, DATABASE_PASSWORD, $options);
+    }
+
+    return $pdo;
+}
+</code></pre>
+
+<p>And indeed, we had forgotten to enable persistent connections.</p>
+
+<p>As it turns out, the overhead of setting a new connection with PostgreSQL is quite consequential.</p>
+
+<p>Let's re-run our tests (we make sure MySQL also gets persistent connection):</p>
+
+<ul>
+<li>Homepage (Visitor - Not Logged In):
+
+<ul>
+<li>Requests per second (mean): from <code>1683.86</code> to <code>1905.43</code></li>
+<li>Time per request (ms, mean, across all concurrent requests): from <code>0.594</code> to <code>0.525</code></li>
+</ul></li>
+<li>Brain Page (Logged In User):
+
+<ul>
+<li>Requests per second (mean): from <code>1309.55</code> to <code>1828.19</code></li>
+<li>Time per request (ms, mean, across all concurrent requests): from <code>0.764</code> to <code>0.547</code></li>
+</ul></li>
+</ul>
+
+<p>Phew, my mid-life crisis is postponed 😌. PostgreSQL <strong>is</strong> after all faster than MySQL:</p>
+
+<ul>
+<li>Homepage: +13.1% improvement</li>
+<li>Brain Page: +39.6% improvement</li>
+</ul>
+
+<p>It's great to see that now on the logged in pages,
+we get the same speed as on on the not logged in ones.</p>
+
+<h2 id="database-reset">Database Reset</h2>
+
+<p>With the persistent connection, it's going to be harder to drop the database,
+to recreate it. We'll need to first terminate active connections.</p>
+
+<p>Once the database has been dropped, created and the schema loaded,
+we also need to restart PostgreSQL to clear the connection pool:</p>
+
+<pre><code class="bash">#!/usr/bin/env bash
+# File: /apps/monolith/bin/db-reset.sh
+# ──────────────────────────────────────────────────────────────────────────────
+# Database reset:
+# * drops the database
+# * then recreates it
+# * and finally loads the schema
+#
+# Intended for development and testing purposes.
+# ──────────────────────────────────────────────────────────────────────────────
+
+_BIN_DIR="$(dirname "$(readlink -f "${BASH_SOURCE[0]:-$0}")")"
+_ROOT_DIR="$(realpath "${_BIN_DIR}/..")"
+cd "${_ROOT_DIR}"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Loading database config through environment variables.
+# `set -a` enables exportation of env vars, while `set +a` disables it.
+# Passing PostgreSQL password via command line arguments is insecure,
+# so using `PGPASSWORD` instead.
+# ──────────────────────────────────────────────────────────────────────────────
+set -a; source .env; set +a
+
+export PGPASSWORD="${DATABASE_PASSWORD}"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Reset the database, through Docker containers.
+# ──────────────────────────────────────────────────────────────────────────────
+echo '  // 🔌 Terminating active connections...'
+echo ''
+docker compose exec -e PGPASSWORD db psql \
+    -U ${DATABASE_USER} \
+    -d postgres \
+    -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${DATABASE_NAME}' AND pid &lt;&gt; pg_backend_pid();" \
+    &gt; /dev/null 2&gt;&amp;1
+
+echo '  // 🗑️ Dropping database...'
+echo ''
+docker compose exec -e PGPASSWORD db psql \
+    -U ${DATABASE_USER} \
+    -d postgres \
+    -c "DROP DATABASE IF EXISTS ${DATABASE_NAME};" \
+    &gt; /dev/null 2&gt;&amp;1
+
+echo '  // 🆕 Creating database...'
+echo ''
+docker compose exec -e PGPASSWORD db psql \
+    -U ${DATABASE_USER} \
+    -d postgres \
+    -c "CREATE DATABASE ${DATABASE_NAME};" \
+    &gt; /dev/null 2&gt;&amp;1
+
+echo '  // 📋 Loading schema.sql...'
+echo ''
+docker compose exec -T -e PGPASSWORD db psql \
+    -U ${DATABASE_USER} \
+    -d ${DATABASE_NAME} \
+    &gt; /dev/null 2&gt;&amp;1 \
+    &lt; schema.sql
+
+echo '  // 🔄 Restarting web container to clear connection pool...'
+echo ''
+docker compose restart web &gt; /dev/null 2&gt;&amp;1
+
+echo '  [OK] Database reset'
+</code></pre>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>There are actually some other types I've taken advantage of,
+like INET and ENUM. But there's not much to say about those apart from
+"look, I've replaced <code>attaque.etat SMALLINT (0,1,2)</code> with
+<code>attack_state ENUM ('going_to_target', 'coming_back', 'cancelled')</code>":</p>
+
+<pre><code class="diff">+ -- Blown kiss state ENUM type
++ CREATE TYPE blown_kiss_state AS ENUM ('EnRoute', 'ComingBack', 'CalledOff');
+
+  -- Attack table
+  -- Active attacks in progress, managed throughout attaque.php and action.php
+  CREATE TABLE IF NOT EXISTS attaque (
+      auteur UUID NOT NULL,               -- Attacker user ID (foreign key to membres.id), set bloque=1 during attack
+      cible UUID NOT NULL,                -- Target user ID (foreign key to membres.id)
+      finaller TIMESTAMPTZ NOT NULL,      -- Attack arrival timestamp (when units reach target)
+      finretour TIMESTAMPTZ NOT NULL,     -- Return timestamp (when units return home)
+-     etat SMALLINT NOT NULL DEFAULT 0,   -- Attack state: 0=going_to_target, 1=coming_back, 2=cancelled
++     state blown_kiss_state NOT NULL DEFAULT 'EnRoute',  -- Blown kiss state ENUM
+      butin BIGINT DEFAULT 0              -- Loot gained from attack, set after battle
+  );
+</code></pre>
+
+<p>I've taken the ENUM opportunity to also introduce a PHP enum:</p>
+
+<pre><code class="php">&lt;?php
+
+declare(strict_types=1);
+
+namespace Bl\Domain\KissBlowing;
+
+/**
+ * Blown kiss state enum matching PostgreSQL blown_kiss_state type.
+ *
+ * Represents the three possible states of a blown kiss mission:
+ * - EnRoute: Kiss units are traveling to the target
+ * - ComingBack: Mission completed, units returning with loot
+ * - CalledOff: Mission was cancelled by the player
+ */
+enum BlownKissState: string
+{
+    case EnRoute = 'EnRoute';
+    case ComingBack = 'ComingBack';
+    case CalledOff = 'CalledOff';
+}
+</code></pre>
+
+<p>Which made some conditions easier to understand:</p>
+
+<pre><code class="diff">  // // On récupère les infos sur le joueur que l'on attaque.
+- $stmt = $pdo-&gt;prepare('SELECT cible, finaller, finretour, butin, etat FROM attaque WHERE auteur = :auteur');
++ $stmt = $pdo-&gt;prepare('SELECT cible, finaller, finretour, butin, state FROM attaque WHERE auteur = :auteur');
+  $stmt-&gt;execute(['auteur' =&gt; $id]);
+
+  if ($donnees_info = $stmt-&gt;fetch()) {
+      $stmt2 = $pdo-&gt;prepare('SELECT pseudo, nuage, position FROM membres WHERE id = :id');
+      $stmt2-&gt;execute(['id' =&gt; $donnees_info['cible']]);
+      $donnees_info2 = $stmt2-&gt;fetch();
+      $pseudoCible = $donnees_info2['pseudo'];
+      $nuageCible = $donnees_info2['nuage'];
+      $positionCible = $donnees_info2['position'];
+      $finAll = $castToUnixTimestamp-&gt;fromPgTimestamptz($donnees_info['finaller']);
+      $finRet = $castToUnixTimestamp-&gt;fromPgTimestamptz($donnees_info['finretour']);
+      $butinPris = $donnees_info['butin'];
+-     $etat = $donnees_info['etat'];
++     $state = BlownKissState::from($donnees_info['state']);
+
+-     if (isset($_POST['cancelAttaque']) &amp;&amp; 0 === $etat) {  
++     if (isset($_POST['cancelAttaque']) &amp;&amp; BlownKissState::EnRoute === $state) {
+          $finRet = (2 * time() + $finRet - 2 * $finAll);
+          $stmt3 = $pdo-&gt;prepare("UPDATE attaque SET state = 'CalledOff', finretour = :finretour WHERE auteur = :auteur");
+          $stmt3-&gt;execute(['finretour' =&gt; $castToPgTimestamptz-&gt;fromUnixTimestamp($finRet), 'auteur' =&gt; $id]);
+          AdminMP($donnees_info['cible'], 'Attaque annulée', "{$pseudo} a annulé son attaque.
+                          Tu n'es plus en danger.");
+-         $etat = 2; // Update local variable to reflect the change
++         $state = BlownKissState::CalledOff; // Update local variable to reflect the change
+      }
+
+-     if (0 === $etat) {  
++     if (BlownKissState::EnRoute === $state) {
+  ?&gt;
+  Tu vas tenter d'embrasser &lt;strong&gt;&lt;?php echo $pseudoCible; ?&gt;&lt;/strong&gt; sur le nuage &lt;strong&gt;&lt;?php echo $nuageCible; ?&gt;&lt;/strong&gt;
+</code></pre>
+
+<p>So yeah. There it is.</p>
+
+<p>The eXtreme Legacy (2005 LAMP) app is now migrated from MySQL to PostgreSQL.</p>
+
+<p>It takes advantages of the native PostgreSQL types, such as BOOLEAN, ENUM, INET,
+TIMESTAMPTZ and UUID, as well as getting a 13% performance boost in the process.</p>
+
+<p>I guess it's time to stop calling it a LAMP app (how about a LAPP app?).</p>
+
+<blockquote>
+  <p>⁉️ What do you mean, "there's a big security vulnerability"?</p>
+</blockquote>
+
+
+            <footer>
+                            <nav class="row">
+                            <a class="button six columns" href="/2025/11/26/xl-7-rector.html" title="eXtreme Legacy 7: Rector">Previous &lt; eXtreme Legacy 7: Rector</a>
+                                </nav>
+                    <hr />
+            </footer>
+        </article>
+
+        <footer>
+            <nav class="row">
+                <a class="button two columns" href="/about">About</a>
+                <a class="button two columns" href="/">Articles</a>
+                <a class="button three columns" href="/best-articles">Best Articles</a>
+                <a class="button two columns" href="/feed/atom.xml">RSS</a>
+                <a class="button two columns" href="https://github.com/gnugat/gnugat.github.io/tree/main/_sculpin">Sources</a>
+            </nav>
+        </footer>
+    </div>
+
+    <script src="/js/highlight.min.js"></script>
+    <script type="text/javascript">hljs.highlightAll();</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q9V6KYH7PW"></script>
+    <script type="text/javascript">
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-Q9V6KYH7PW');
+    </script>
+</body>
+</html>
