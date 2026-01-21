@@ -76,12 +76,23 @@ which provides native support for some interesting types
 <ul>
 <li><a href="#docker">Docker</a></li>
 <li><a href="#sql-syntax">SQL Syntax</a></li>
+<li><a href="#types">Types</a>
+
+<ul>
 <li><a href="#boolean">Boolean</a></li>
 <li><a href="#timestamp">Timestamp</a></li>
 <li><a href="#uuid">UUID</a></li>
+</ul></li>
 <li><a href="#vanity-benchmark">Vanity Benchmark</a></li>
 <li><a href="#database-reset">Database Reset</a></li>
 <li><a href="#conclusion">Conclusion</a></li>
+<li><a href="#bonus-improvements">Bonus Improvements</a>
+
+<ul>
+<li><a href="#filter%3A-one-query%2C-multiple-count">FILTER: One query, multiple COUNT</a></li>
+<li><a href="#returning%3A-one-query%2C-a-select-and-an-update">RETURNING: One query, a select and an update</a></li>
+<li><a href="#on-conflict%3A-one-query%2C-insert-or-update">ON CONFLICT: One query, insert or update</a></li>
+</ul></li>
 </ul>
 
 <h2 id="docker">Docker</h2>
@@ -214,7 +225,7 @@ DATABASE_PASSWORD=bisouland_pass
 DATABASE_NAME=bisouland
 </code></pre>
 
-<h2 id="different-sql">Different SQL</h2>
+<h2 id="sql-syntax">SQL Syntax</h2>
 
 <p>MySQL and PostgreSQL vary in their SQL types and syntax,
 so a first pass needs to be done to convert the SQL queries,
@@ -293,7 +304,9 @@ following this table:</p>
 
 <p>But PostgreSQL is much more interesting than that.</p>
 
-<h2 id="boolean">Boolean</h2>
+<h2 id="types">Types</h2>
+
+<h3 id="boolean">Boolean</h3>
 
 <p>Some of the MySQL <code>TINYINT</code> actually were boolean, and as it turns out,
 PostgreSQL does have a <code>BOOLEAN</code> type:</p>
@@ -361,7 +374,7 @@ class CastToPgBoolean
   $stmt-&gt;execute(['smack' =&gt; $AttSmack, 'baiser' =&gt; $AttBaiser, 'pelle' =&gt; $AttPelle, 'id' =&gt; $idAuteur]);
 </code></pre>
 
-<h2 id="timestamp">Timestamp</h2>
+<h3 id="timestamp">Timestamp</h3>
 
 <p>In BisouLand, time and intervals are an essential component of the game:
 when blowing a kiss, these kisses will take some time to travel to the target,
@@ -448,7 +461,7 @@ class CastToUnixTimestamp
 + $stmt-&gt;execute(['auteur' =&gt; $id, 'cible' =&gt; $cible, 'finaller' =&gt; $castToPgTimestamptz-&gt;fromUnixTimestamp(time() + $duree), 'finretour' =&gt; $castToPgTimestamptz-&gt;fromUnixTimestamp(time() + 2 * $duree)]);
 </code></pre>
 
-<h2 id="uuid">UUID</h2>
+<h3 id="uuid">UUID</h3>
 
 <p>I love UUIDs. Don't ask me why, I just do.</p>
 
@@ -819,11 +832,149 @@ TIMESTAMPTZ and UUID, as well as getting a 13% performance boost in the process.
   <p>⁉️ What do you mean, "there's a big security vulnerability"?</p>
 </blockquote>
 
+<h2 id="bonus-improvements">Bonus Improvements</h2>
+
+<p>Still not convinced PostgreSQL is the superior database? Let me change your mind.</p>
+
+<p>FYI, this is after doing the vanity benchmarks, so expect further speed gains.</p>
+
+<h3 id="filter%3A-one-query%2C-multiple-count">FILTER: One query, multiple COUNT</h3>
+
+<p>BisouLand has a Statistics page proudly displaying how many players it has:</p>
+
+<pre><code class="php">$retour = $pdo-&gt;query('SELECT SUM( amour ) AS nb FROM membres WHERE confirmation = TRUE');
+$pointsAmourTotal = $retour-&gt;fetchColumn();
+$retour = $pdo-&gt;query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '5 minutes'");
+$connectCinq = $retour-&gt;fetchColumn();
+$retour = $pdo-&gt;query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '1 hour'");
+$connectHeure = $retour-&gt;fetchColumn();
+$retour = $pdo-&gt;query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '12 hours'");
+$connectMid = $retour-&gt;fetchColumn();
+$retour = $pdo-&gt;query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '24 hours'");
+$connectJour = $retour-&gt;fetchColumn();
+$retour = $pdo-&gt;query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '48 hours'");
+$connect2Jour = $retour-&gt;fetchColumn();
+$retour = $pdo-&gt;query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '7 days'");
+$connectSemaine = $retour-&gt;fetchColumn();
+$retour = $pdo-&gt;query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '30 days'");
+$connectMois = $retour-&gt;fetchColumn();
+$retour = $pdo-&gt;query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '1 year'");
+$connectAn = $retour-&gt;fetchColumn();
+</code></pre>
+
+<p>We see 9 separate queries. Turns out PostgreSQL can merge them into a single query,
+with <code>FILTER</code>:</p>
+
+<pre><code class="php">$stmt = $pdo-&gt;query(&lt;&lt;&lt;'SQL'
+    SELECT
+        SUM(amour) AS total_love_points,
+        COUNT(*) FILTER (WHERE lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '5 minutes') AS last_5_min,
+        COUNT(*) FILTER (WHERE lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '1 hour') AS last_hour,
+        COUNT(*) FILTER (WHERE lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '12 hours') AS last_12h,
+        COUNT(*) FILTER (WHERE lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '24 hours') AS last_24h,
+        COUNT(*) FILTER (WHERE lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '48 hours') AS last_48h,
+        COUNT(*) FILTER (WHERE lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '7 days') AS last_week,
+        COUNT(*) FILTER (WHERE lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '30 days') AS last_month,
+        COUNT(*) FILTER (WHERE lastconnect &gt;= CURRENT_TIMESTAMP - INTERVAL '1 year') AS last_year
+    FROM membres
+    WHERE confirmation = TRUE
+SQL);
+/**
+ * @var array{
+ *     total_love_points: int|null,
+ *     last_5_min: int,
+ *     last_hour: int,
+ *     last_12h: int,
+ *     last_24h: int,
+ *     last_48h: int,
+ *     last_week: int,
+ *     last_month: int,
+ *     last_year: int,
+ * } $result
+ */
+$result = $stmt-&gt;fetch();
+</code></pre>
+
+<h3 id="returning%3A-one-query%2C-a-select-and-an-update">RETURNING: One query, a select and an update</h3>
+
+<p>In the following code snippet, we:</p>
+
+<ol>
+<li>select an Upgradable Item level (e.g. the Heart level), store it in a variable</li>
+<li>increment the variable</li>
+<li>update in the database the Upgradable Item level</li>
+</ol>
+
+<pre><code class="php">    // On effectue la tache dans la table membre.
+    $stmt2 = $pdo-&gt;prepare('SELECT '.$Obj[$classe][$type].', amour FROM membres WHERE id = :id');
+    $stmt2-&gt;execute(['id' =&gt; $id2]);
+    $donnees_info = $stmt2-&gt;fetch();
+    $amourConstructeur = $donnees_info['amour'];
+    // On récupère l'ancienne valeur.
+    $nbObjEvol = $donnees_info[$Obj[$classe][$type]];
+    // On augmente d'un.
+    ++$nbObjEvol;
+    // On met a jour la table.
+    $stmt2 = $pdo-&gt;prepare('UPDATE membres SET '.$Obj[$classe][$type].' = :nb WHERE id = :id');
+    $stmt2-&gt;execute(['nb' =&gt; $nbObjEvol, 'id' =&gt; $id2]);
+</code></pre>
+
+<p>With <code>RETURNING</code> it's possible to directly increment the value in the database and return it:</p>
+
+<pre><code class="php">    // On effectue la tache dans la table membre.
+    $stmt2 = $pdo-&gt;prepare(&lt;&lt;&lt;SQL
+        UPDATE membres
+        SET {$upgradableItem} = {$upgradableItem} + 1
+        WHERE id = :account_id
+        RETURNING amour, {$upgradableItem}
+    SQL);
+    $stmt2-&gt;execute([
+        'account_id' =&gt; $upgrade['account_id'],
+    ]);
+    /** @var array&lt;string, int&gt;|false $player */
+    $player = $stmt2-&gt;fetch();
+    $amourConstructeur = $player['amour'];
+    // On récupère l'ancienne valeur.
+    $nbObjEvol = $player[$upgradableItem];
+</code></pre>
+
+<h3 id="on-conflict%3A-one-query%2C-insert-or-update">ON CONFLICT: One query, insert or update</h3>
+
+<p>Sometimes we want to either create a new resource, or modify it,
+which means an extra query to check the existence:</p>
+
+<pre><code class="php">    $stmt = $pdo-&gt;prepare('SELECT COUNT(*) AS nbre_entrees FROM connectbisous WHERE ip = :ip');
+    $stmt-&gt;execute(['ip' =&gt; $_SERVER['REMOTE_ADDR']]);
+    $donnees = $stmt-&gt;fetch();
+    if (0 == $donnees['nbre_entrees']) { // L'ip ne se trouve pas dans la table, on va l'ajouter
+        $stmt = $pdo-&gt;prepare('INSERT INTO connectbisous VALUES(:ip, :timestamp, 2)');
+        $stmt-&gt;execute(['ip' =&gt; $_SERVER['REMOTE_ADDR'], 'timestamp' =&gt; time()]);
+    } else { // L'ip se trouve déjà dans la table, on met juste à jour le timestamp
+        $stmt = $pdo-&gt;prepare('UPDATE connectbisous SET timestamp = :timestamp WHERE ip = :ip');
+        $stmt-&gt;execute(['timestamp' =&gt; time(), 'ip' =&gt; $_SERVER['REMOTE_ADDR']]);
+    }
+</code></pre>
+
+<p>With "UPSERT" (UPdate + inSERT, also possible with MySQL, but different syntax),
+it's possible to do all this in one single query:</p>
+
+<pre><code class="php">    $stmt = $pdo-&gt;prepare(&lt;&lt;&lt;'SQL'
+        INSERT INTO connectbisous (ip, timestamp, type)
+        VALUES (:ip, CURRENT_TIMESTAMP, 2)
+        ON CONFLICT (ip) DO UPDATE
+        SET timestamp = CURRENT_TIMESTAMP
+    SQL);
+    $stmt-&gt;execute([
+        'ip' =&gt; $_SERVER['REMOTE_ADDR'],
+    ]);
+</code></pre>
+
 
             <footer>
                             <nav class="row">
                             <a class="button six columns" href="/2025/11/26/xl-7-rector.html" title="eXtreme Legacy 7: Rector">Previous &lt; eXtreme Legacy 7: Rector</a>
-                                </nav>
+                                        <a class="button six columns" href="/2026/01/21/xl-9-xss-vulnerability.html" title="eXtreme Legacy 9: XSS Vulnerability">Next &gt; eXtreme Legacy 9: XSS Vulnerability</a>
+                    </nav>
                     <hr />
             </footer>
         </article>
