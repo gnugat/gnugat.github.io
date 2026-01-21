@@ -43,35 +43,17 @@ The tags can be anything, however the following tags have a special meaning:
 * `deprecated`: will be flagged in red, article should be ignored by readers
 * `reference`: will be flagged in green, article should be kept up to date by authors
 
-## 2. Generating static files
-
-To be able to preview the changes, generate the static files:
-
-```
-sh preview.sh
-```
-
-Changes can then be seen in the browser [at the following link](http://localhost:42999/).
-
-## 3. Publishing changes
-
-To publish the changes, commit them and push them:
-
-```
-sh 01-commit.sh
-git checkout main
-git merge --no-ff <article-branch>
-git branch -d <article-branch>
-sh 02-publish.sh
-```
-
-The website [gnugat.github.io](https://gnugat.github.io) should take a few
-minutes before being updated.
-
-## Bonus
+## Helpful scripts
 
 Some scripts are available to ease things:
 
 * `00-bootstrap.sh`: bootstraps the next article
-* `01-commit.sh`: creates commit for newest article
-* `02-publish.sh`: publishes latest changes
+* `01-preview.sh`: provides a way to preview the changes at http://localhost:42999
+* `02-delay.sh`: bumps the date of the newest article (when the original deadline couldn't be met)
+* `03-commit.sh`: creates commit for newest article
+* `04-merge.sh`: merges the newest article branch back in main
+* `05-publish.sh`: publishes latest changes
+
+After running the `05-publish.sh` script, the website
+[gnugat.github.io](https://gnugat.github.io) should take a few minutes
+before being updated.

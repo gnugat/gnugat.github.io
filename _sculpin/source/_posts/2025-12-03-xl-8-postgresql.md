@@ -31,12 +31,17 @@ which provides native support for some interesting types
 
 * [Docker](#docker)
 * [SQL Syntax](#sql-syntax)
-* [Boolean](#boolean)
-* [Timestamp](#timestamp)
-* [UUID](#uuid)
+* [Types](#types)
+    * [Boolean](#boolean)
+    * [Timestamp](#timestamp)
+    * [UUID](#uuid)
 * [Vanity Benchmark](#vanity-benchmark)
 * [Database Reset](#database-reset)
 * [Conclusion](#conclusion)
+* [Bonus Improvements](#bonus-improvements)
+    * [FILTER: One query, multiple COUNT](#filter%3A-one-query%2C-multiple-count)
+    * [RETURNING: One query, a select and an update](#returning%3A-one-query%2C-a-select-and-an-update)
+    * [ON CONFLICT: One query, insert or update](#on-conflict%3A-one-query%2C-insert-or-update)
 
 ## Docker
 
@@ -171,7 +176,7 @@ DATABASE_PASSWORD=bisouland_pass
 DATABASE_NAME=bisouland
 ```
 
-## Different SQL
+## SQL Syntax
 
 MySQL and PostgreSQL vary in their SQL types and syntax,
 so a first pass needs to be done to convert the SQL queries,
@@ -220,7 +225,9 @@ And in `schema.sql`:
 
 But PostgreSQL is much more interesting than that.
 
-## Boolean
+## Types
+
+### Boolean
 
 Some of the MySQL `TINYINT` actually were boolean, and as it turns out,
 PostgreSQL does have a `BOOLEAN` type:
@@ -293,7 +300,7 @@ If we are not binding parameters, but instead using plain SQL queries, then we c
   $stmt->execute(['smack' => $AttSmack, 'baiser' => $AttBaiser, 'pelle' => $AttPelle, 'id' => $idAuteur]);
 ```
 
-## Timestamp
+### Timestamp
 
 In BisouLand, time and intervals are an essential component of the game:
 when blowing a kiss, these kisses will take some time to travel to the target,
@@ -385,7 +392,7 @@ So when interracting with PDO, we do:
 + $stmt->execute(['auteur' => $id, 'cible' => $cible, 'finaller' => $castToPgTimestamptz->fromUnixTimestamp(time() + $duree), 'finretour' => $castToPgTimestamptz->fromUnixTimestamp(time() + 2 * $duree)]);
 ```
 
-## UUID
+### UUID
 
 I love UUIDs. Don't ask me why, I just do.
 
@@ -745,3 +752,144 @@ TIMESTAMPTZ and UUID, as well as getting a 13% performance boost in the process.
 I guess it's time to stop calling it a LAMP app (how about a LAPP app?).
 
 > ⁉️ What do you mean, "there's a big security vulnerability"?
+
+## Bonus Improvements
+
+Still not convinced PostgreSQL is the superior database? Let me change your mind.
+
+FYI, this is after doing the vanity benchmarks, so expect further speed gains.
+
+### FILTER: One query, multiple COUNT
+
+BisouLand has a Statistics page proudly displaying how many players it has:
+
+```php
+$retour = $pdo->query('SELECT SUM( amour ) AS nb FROM membres WHERE confirmation = TRUE');
+$pointsAmourTotal = $retour->fetchColumn();
+$retour = $pdo->query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect >= CURRENT_TIMESTAMP - INTERVAL '5 minutes'");
+$connectCinq = $retour->fetchColumn();
+$retour = $pdo->query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect >= CURRENT_TIMESTAMP - INTERVAL '1 hour'");
+$connectHeure = $retour->fetchColumn();
+$retour = $pdo->query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect >= CURRENT_TIMESTAMP - INTERVAL '12 hours'");
+$connectMid = $retour->fetchColumn();
+$retour = $pdo->query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect >= CURRENT_TIMESTAMP - INTERVAL '24 hours'");
+$connectJour = $retour->fetchColumn();
+$retour = $pdo->query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect >= CURRENT_TIMESTAMP - INTERVAL '48 hours'");
+$connect2Jour = $retour->fetchColumn();
+$retour = $pdo->query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect >= CURRENT_TIMESTAMP - INTERVAL '7 days'");
+$connectSemaine = $retour->fetchColumn();
+$retour = $pdo->query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect >= CURRENT_TIMESTAMP - INTERVAL '30 days'");
+$connectMois = $retour->fetchColumn();
+$retour = $pdo->query("SELECT COUNT(*) AS nb FROM membres WHERE confirmation=TRUE AND lastconnect >= CURRENT_TIMESTAMP - INTERVAL '1 year'");
+$connectAn = $retour->fetchColumn();
+```
+
+We see 9 separate queries. Turns out PostgreSQL can merge them into a single query,
+with `FILTER`:
+
+```php
+$stmt = $pdo->query(<<<'SQL'
+    SELECT
+        SUM(amour) AS total_love_points,
+        COUNT(*) FILTER (WHERE lastconnect >= CURRENT_TIMESTAMP - INTERVAL '5 minutes') AS last_5_min,
+        COUNT(*) FILTER (WHERE lastconnect >= CURRENT_TIMESTAMP - INTERVAL '1 hour') AS last_hour,
+        COUNT(*) FILTER (WHERE lastconnect >= CURRENT_TIMESTAMP - INTERVAL '12 hours') AS last_12h,
+        COUNT(*) FILTER (WHERE lastconnect >= CURRENT_TIMESTAMP - INTERVAL '24 hours') AS last_24h,
+        COUNT(*) FILTER (WHERE lastconnect >= CURRENT_TIMESTAMP - INTERVAL '48 hours') AS last_48h,
+        COUNT(*) FILTER (WHERE lastconnect >= CURRENT_TIMESTAMP - INTERVAL '7 days') AS last_week,
+        COUNT(*) FILTER (WHERE lastconnect >= CURRENT_TIMESTAMP - INTERVAL '30 days') AS last_month,
+        COUNT(*) FILTER (WHERE lastconnect >= CURRENT_TIMESTAMP - INTERVAL '1 year') AS last_year
+    FROM membres
+    WHERE confirmation = TRUE
+SQL);
+/**
+ * @var array{
+ *     total_love_points: int|null,
+ *     last_5_min: int,
+ *     last_hour: int,
+ *     last_12h: int,
+ *     last_24h: int,
+ *     last_48h: int,
+ *     last_week: int,
+ *     last_month: int,
+ *     last_year: int,
+ * } $result
+ */
+$result = $stmt->fetch();
+```
+
+### RETURNING: One query, a select and an update
+
+In the following code snippet, we:
+
+1. select an Upgradable Item level (e.g. the Heart level), store it in a variable
+2. increment the variable
+3. update in the database the Upgradable Item level
+
+```php
+    // On effectue la tache dans la table membre.
+    $stmt2 = $pdo->prepare('SELECT '.$Obj[$classe][$type].', amour FROM membres WHERE id = :id');
+    $stmt2->execute(['id' => $id2]);
+    $donnees_info = $stmt2->fetch();
+    $amourConstructeur = $donnees_info['amour'];
+    // On récupère l'ancienne valeur.
+    $nbObjEvol = $donnees_info[$Obj[$classe][$type]];
+    // On augmente d'un.
+    ++$nbObjEvol;
+    // On met a jour la table.
+    $stmt2 = $pdo->prepare('UPDATE membres SET '.$Obj[$classe][$type].' = :nb WHERE id = :id');
+    $stmt2->execute(['nb' => $nbObjEvol, 'id' => $id2]);
+```
+
+With `RETURNING` it's possible to directly increment the value in the database and return it:
+
+```php
+    // On effectue la tache dans la table membre.
+    $stmt2 = $pdo->prepare(<<<SQL
+        UPDATE membres
+        SET {$upgradableItem} = {$upgradableItem} + 1
+        WHERE id = :account_id
+        RETURNING amour, {$upgradableItem}
+    SQL);
+    $stmt2->execute([
+        'account_id' => $upgrade['account_id'],
+    ]);
+    /** @var array<string, int>|false $player */
+    $player = $stmt2->fetch();
+    $amourConstructeur = $player['amour'];
+    // On récupère l'ancienne valeur.
+    $nbObjEvol = $player[$upgradableItem];
+```
+
+### ON CONFLICT: One query, insert or update 
+
+Sometimes we want to either create a new resource, or modify it,
+which means an extra query to check the existence:
+
+```php
+    $stmt = $pdo->prepare('SELECT COUNT(*) AS nbre_entrees FROM connectbisous WHERE ip = :ip');
+    $stmt->execute(['ip' => $_SERVER['REMOTE_ADDR']]);
+    $donnees = $stmt->fetch();
+    if (0 == $donnees['nbre_entrees']) { // L'ip ne se trouve pas dans la table, on va l'ajouter
+        $stmt = $pdo->prepare('INSERT INTO connectbisous VALUES(:ip, :timestamp, 2)');
+        $stmt->execute(['ip' => $_SERVER['REMOTE_ADDR'], 'timestamp' => time()]);
+    } else { // L'ip se trouve déjà dans la table, on met juste à jour le timestamp
+        $stmt = $pdo->prepare('UPDATE connectbisous SET timestamp = :timestamp WHERE ip = :ip');
+        $stmt->execute(['timestamp' => time(), 'ip' => $_SERVER['REMOTE_ADDR']]);
+    }
+```
+
+With "UPSERT" (UPdate + inSERT, also possible with MySQL, but different syntax),
+it's possible to do all this in one single query:
+
+```php
+    $stmt = $pdo->prepare(<<<'SQL'
+        INSERT INTO connectbisous (ip, timestamp, type)
+        VALUES (:ip, CURRENT_TIMESTAMP, 2)
+        ON CONFLICT (ip) DO UPDATE
+        SET timestamp = CURRENT_TIMESTAMP
+    SQL);
+    $stmt->execute([
+        'ip' => $_SERVER['REMOTE_ADDR'],
+    ]);
+```

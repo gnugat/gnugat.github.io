@@ -1,25 +1,30 @@
 #!/usr/bin/env bash
-# File: /_sculpin/01-commit.sh
+# File: /_sculpin/05-publish.sh
 # ──────────────────────────────────────────────────────────────────────────────
-# Creates a commit for the newest article:
+# Publishes an article:
+# * generates HTML from md files
 # * adds unstaged changes
-# * commits with a `Prepared "<title>"` message
+# * commits with a `Published "<title>"` message
+# * pushes the changes
 #
 # Usage:
 #
 # ```shell
-# 01-commit.sh
+# 05-pubish.sh
 # ```
 # ──────────────────────────────────────────────────────────────────────────────
 
-echo "  // Creating commit for new article"
+echo "  // Publishing newest article"
+
+./vendor/bin/sculpin generate --env=prod
+cp -r output_prod/* ../
 
 _BLOG_LATEST_ARTICLE=$(ls source/_posts/*.md | sort | tail -n 1)
 _BLOG_LATEST_ARTICLE_TITLE=$(grep '^title:' "${_BLOG_LATEST_ARTICLE}" | sed 's/^title: *"*//' | sed 's/"*$//')
-_BLOG_LATEST_ARTICLE_BRANCH=$(git branch --show-current)
 git add -A
-git commit -m "Prepared \"${_BLOG_LATEST_ARTICLE_TITLE}\""
+git commit -m "Published \"${_BLOG_LATEST_ARTICLE_TITLE}\""
+git push
 
 echo ''
-echo "  [OK] Commit created: Prepared ${_BLOG_LATEST_ARTICLE_TITLE}"
+echo "  [OK] Published ${_BLOG_LATEST_ARTICLE_TITLE}"
 echo ''
