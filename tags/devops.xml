@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2026-01-21T07:08:18+00:00</updated>
+    <updated>2026-02-25T07:18:15+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -13,28 +13,29 @@
             <link href="/2025/08/13/my-symfony-makefile.html"/>
             <updated>2025-08-13T00:00:00+01:00</updated>
             <id>/2025/08/13/my-symfony-makefile.html</id>
-            <content type="html"><![CDATA[<p>Command your codebase with the crown of steel: <a href="https://www.gnu.org/software/make/">Make</a>,
-the eternal overlord of task runners.</p>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>Note</strong>: Updated on 2026-02-23.</p>
+</blockquote>
 
-<p>For a Docker-based Symfony project, typing mundane commands like running tests
-can quickly become cumbersome:</p>
+<p>For a Docker-based Symfony project, without <a href="https://www.gnu.org/software/make/">Make</a>,
+typing commands like running tests can quickly become cumbersome:</p>
 
-<pre><code class="console">docker compose exec app symfony php vendor/bin/phpunit --testdoc
+<pre><code class="console">docker compose exec app php vendor/bin/phpunit --testdox
 </code></pre>
 
 <p><strong>Make</strong> allows you to define a list of "rules" that provide:</p>
 
 <ul>
-<li>simple commands (eg <code>make test</code>)</li>
+<li>simple commands (eg <code>make phpunit</code>)</li>
 <li>environment abstraction (eg <code>make console env=prod</code>)</li>
 <li>built-in documentation (run <code>make</code> to list available rules)</li>
 <li>combining multiple rules into a single one
-(eg <code>make qa</code> is equivalent to <code>make cs-check; make static-analysis; make test</code>)</li>
+(eg <code>make app-qa</code> is equivalent to <code>make composer-dump; make cs-check; make phpstan; make rector-check; make phpunit</code>)</li>
 </ul>
 
 <p>With Make, the previous example becomes:</p>
 
-<pre><code class="console">make test arg=--testdox
+<pre><code class="console">make phpunit arg=--testdox
 </code></pre>
 
 <ul>
@@ -57,24 +58,21 @@ can quickly become cumbersome:</p>
 <p>Here are the rules I usually define:</p>
 
 <pre><code class="console"># 🐳 Docker related rules
-## Build the Docker image
-make build
-
-## Start the services (eg database, message queue, etc)
-make up
+## Build the Docker images and start the services
+make docker-init
 
 ## Check the services logs
-make logs
+make docker-compose arg='logs --tail=0 --follow'
 
 ## Stop the services
-make down
+make docker-down
 
 ## Open interactive shell in container
-make bash
+make docker-bash
 
 # 🐘 Project related rules
 ## Install composer dependencies
-make composer arg='install --optimize-autoloader'
+make composer-install
 
 ## Run the Symfony console
 make console arg='cache:clear'
@@ -83,28 +81,28 @@ make console arg='cache:clear'
 make console env=prod arg='cache:clear'
 
 # 🛂 Quality Assurance related rules
-## Run phpstan, php-cs-fixer (check) and phpunit
-make qa
+## Run composer-dump, phpstan, php-cs-fixer (check), rector (check) and phpunit
+make app-qa
 
 ## To just run phpstan
-make static-analysis
+make phpstan-analyze
 
 ## To just run php-cs-fixer check
 make cs-check
 
 ## To just run phpunit
-make test
+make phpunit
 
 ### To display technical specifications:
-make test arg='--testdox'
+make phpunit arg='--testdox'
 
 ### To just run Integration tests:
-make test arg='./tests/Integration'
+make phpunit arg='./tests/Integration'
 
 ### To just run Unit tests:
-make test arg='./tests/Unit'
+make phpunit arg='./tests/Unit'
 
-# Run php-cs-fixer fix
+# Run php-cs-fixer fix (with Swiss Knife for namespaces)
 make cs-fix
 
 # Discover everything you can do
@@ -122,21 +120,17 @@ make
 arg ?=
 env ?= test
 
-# Executables (local)
-DOCKER_RUN = docker run -it -v "$(PWD)":/app --user $(shell id -u):$(shell id -g)
-
 # Docker containers
 PHP_SERVICE = app
-PHP_CONT = $(DOCKER_RUN) $(PHP_SERVICE)
 
 # Executables
-PHP = docker compose exec $(PHP_SERVICE) symfony php
-COMPOSER = docker compose exec $(PHP_SERVICE) symfony composer
-CONSOLE = docker compose exec -e APP_ENV=$(env) $(PHP_SERVICE) symfony console
-PHINX = docker compose exec -e APP_ENV=$(env) $(PHP_SERVICE) symfony php vendor/bin/phinx
-PHPUNIT = docker compose exec $(PHP_SERVICE) symfony php vendor/bin/phpunit
-PHP_CS_FIXER = docker compose exec $(PHP_SERVICE) symfony php vendor/bin/php-cs-fixer
-PHPSTAN = docker compose exec $(PHP_SERVICE) symfony php vendor/bin/phpstan
+COMPOSER = docker compose exec $(PHP_SERVICE) composer
+CONSOLE = docker compose exec -e APP_ENV=$(env) $(PHP_SERVICE) php bin/console
+PHPUNIT = docker compose exec $(PHP_SERVICE) php vendor/bin/phpunit
+PHP_CS_FIXER = docker compose exec $(PHP_SERVICE) php vendor/bin/php-cs-fixer
+PHPSTAN = docker compose exec $(PHP_SERVICE) php vendor/bin/phpstan --memory-limit=256M
+RECTOR = docker compose exec $(PHP_SERVICE) php vendor/bin/rector
+SWISS_KNIFE = docker compose exec $(PHP_SERVICE) php vendor/bin/swiss-knife
 
 # Misc
 .DEFAULT_GOAL = help
@@ -149,60 +143,152 @@ PHPSTAN = docker compose exec $(PHP_SERVICE) symfony php vendor/bin/phpstan
 ## (env) denotes the possibility to pass "env=" parameter to the target
 ##     this allows to set APP_ENV environment variable (default: test), example: make console env='prod' arg='cache:warmup'
 help: ## Outputs this help screen
-    @grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
+    @grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) \
+        | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}' \
+        | sed -e 's/\[32m##/[33m/'
 
 ## —— Docker 🐳 ————————————————————————————————————————————————————————————————
-build: ## Builds the Docker images
-    @docker compose build --pull
+docker: ## Runs Docker (arg, eg `arg='compose logs --tail=0 --follow'`)
+    @docker $(arg)
 
-up: ## Starts Docker Compose services, in detached mode (no logs)
+docker-compose: ## Runs Docker Compose (arg, eg `arg='logs --tail=0 --follow'`)
+    @docker compose $(arg)
+
+docker-init: ## Builds the Docker images and starts the services in detached mode (no logs)
+    @docker compose build --pull
     @docker compose up --detach
 
-logs: ## Show live logs
-    @docker compose logs --tail=0 --follow
-
-down: ## Stops Docker Compose services
+docker-down: ## Stops the services
     @docker compose down --remove-orphans
 
-bash: ## Connect to the container via bash so up and down arrows go to previous commands
+docker-bash: ## Opens a (bash) shell in the container
     @docker compose exec $(PHP_SERVICE) bash
 
 ## —— PHP 🐘 ———————————————————————————————————————————————————————————————————
-composer: ## Runs Composer (arg, eg `arg='install --optimize-autoloader'`)
+composer: ## Runs Composer (arg, eg `arg='outdated'`)
     @$(COMPOSER) $(arg)
+
+composer-install: ## Install dependencies (arg, eg `arg='--no-dev'`)
+    @$(COMPOSER) install --optimize-autoloader $(arg)
+
+composer-update: ## Updates dependencies (arg, eg `arg='--no-dev'`)
+    @$(COMPOSER) update --optimize-autoloader $(arg)
+
+composer-dump: ## Dumps autoloader (arg, eg `arg='--classmap-authoritative'`)
+    @$(COMPOSER) dump-autoload --optimize --strict-psr --strict-ambiguous $(arg)
 
 console: ## Runs bin/console (arg, eg `arg='cache:clear'`) (env, eg `env=prod`)
     @$(CONSOLE) $(arg)
 
-phinx: ## Runs Phinx (arg, eg `arg='create MyMigration'`)
-    @$(PHINX) $(arg)
-
-migrate: ## Runs DB migrations (arg, eg `arg='--environment prod'`; env, eg env=prod)
-    @$(PHINX) migrate --environment=$(env) $(arg)
-
-## —— Quality 🛂 ———————————————————————————————————————————————————————————————
-db-reset: ## Resets test database (drop, create, migrate, fixtures)
-    @$(CONSOLE) doctrine:database:drop --force --if-exists
-    @$(CONSOLE) doctrine:database:create --if-not-exists
-    @$(PHINX) migrate --environment=$(env)
-    @$(PHINX) seed:run --environment=$(env)
-
-test: ## Runs the tests with PHPUnit (arg, eg `arg='./tests/Unit'`)
-    @$(PHPUNIT) $(arg)
-
-static-analysis: ## Static Analysis with phpstan (arg, eg `arg='./src/'`)
-    @$(PHPSTAN) analyze $(arg)
-
 cs-check: ## Checks CS with PHP-CS-Fixer (arg, eg `arg='./src'`)
     @$(PHP_CS_FIXER) check --verbose $(arg)
 
-qa: ## Equivalent to cs-check &amp;&amp; static-analysis &amp;&amp; test
-    @$(MAKE) cs-check
-    @$(MAKE) static-analysis
-    @$(MAKE) test
-
-cs-fix: ## Fixes CS with PHP-CS-Fixer (arg, eg `arg='./src'`)
+cs-fix: ## Fixes CS with Swiss Knife and PHP-CS-Fixer
+    @$(SWISS_KNIFE) namespace-to-psr-4 src --namespace-root 'App\\'
+    @$(SWISS_KNIFE) namespace-to-psr-4 tests --namespace-root 'App\\Tests\\'
     @$(PHP_CS_FIXER) fix --verbose $(arg)
+
+phpstan: ## Runs phpstan (arg, eg `arg='clear-result-cache'`)
+    @$(PHPSTAN) $(arg)
+
+phpstan-analyze: ## Static Analysis with phpstan (arg, eg `arg='./src/'`)
+    @$(PHPSTAN) analyze $(arg)
+
+swiss-knife: ## Automated refactorings with Swiss Knife (arg, eg `arg='namespace-to-psr-4 src --namespace-root \'App\\\''`)
+    @$(SWISS_KNIFE) $(arg)
+
+phpunit: ## Runs the tests with PHPUnit (arg, eg `arg='./tests/Unit'`)
+    @docker compose exec $(PHP_SERVICE) sh bin/sfcc-if-stale.sh test
+    @$(PHPUNIT) $(arg)
+
+rector-fix: ## Automated refactorings with Rector (arg, eg `arg='--clear-cache'`)
+    @$(RECTOR) $(arg)
+
+rector-check: ## Refactoring checks with Rector
+    @$(RECTOR) process --dry-run
+
+## —— App 📱 ———————————————————————————————————————————————————————————————————
+app-init: ## First install / resetting (Docker build, up, etc)
+    @echo ''
+    @echo '  // Stopping docker services...'
+    @$(MAKE) docker-down
+    @echo ''
+    @echo '  // Starting docker services...'
+    @$(MAKE) docker-init
+    @echo ''
+    @echo '  // Installing Composer dependencies...'
+    @$(MAKE) composer-install
+    @echo ''
+    @echo '  [OK] App initialized'
+
+app-clear: ## Clears the Symfony cache (env, eg `env='prod'`)
+    @$(CONSOLE) cache:clear
+
+app-qa: ## Runs full QA pipeline (composer-dump, cs-check, phpstan, rector-check, phpunit)
+    @echo ''
+    @echo '  // Running composer dump...'
+    @$(MAKE) composer-dump
+    @echo ''
+    @echo '  // Running PHP CS Fixer...'
+    @$(MAKE) cs-check
+    @echo ''
+    @echo '  // Running PHPStan...'
+    @$(MAKE) phpstan
+    @echo ''
+    @echo '  // Running Rector...'
+    @$(MAKE) rector-check
+    @echo ''
+    @echo '  // Running PHPUnit...'
+    @$(MAKE) phpunit
+    @echo ''
+    @echo '  [OK] QA done'
+</code></pre>
+
+<h4 id="bin%2Fsfcc-if-stale.sh">bin/sfcc-if-stale.sh</h4>
+
+<p>The <code>phpunit</code> rule calls a script that clears the Symfony cache only when stale,
+since unlike <code>dev</code>, the <code>test</code> environment doesn't auto-invalidate on source changes:</p>
+
+<pre><code class="bash">#!/usr/bin/env bash
+# File: /apps/qa/bin/sfcc-if-stale.sh
+# ──────────────────────────────────────────────────────────────────────────────
+# Symfony cache clear, but only if it's stale.
+#
+# Unlike dev, test and prod environments don't auto-invalidate cache when source
+# files change. Changes to services, routes, Twig templates, Doctrine mappings,
+# or environment variables all require a cache clear.
+#
+# This script detects stale cache by comparing modification times of src/,
+# config/, and .env* files against the cache directory.
+#
+# Usage:
+#
+# ```shell
+# bin/clear-cache-if-stale.sh
+# bin/clear-cache-if-stale.sh prod
+# ```
+#
+# Arguments:
+#
+# 1. `env`: Symfony environment, defaults to `test`
+# ──────────────────────────────────────────────────────────────────────────────
+
+_CLEAR_CACHE_ENV=${1:-test}
+_CLEAR_CACHE_DIR="var/cache/${_CLEAR_CACHE_ENV}"
+
+if [ ! -d "${_CLEAR_CACHE_DIR}" ]; then
+    echo "  // Symfony cache directory does not exist, clearing..."
+    php bin/console cache:clear --env="${_CLEAR_CACHE_ENV}"
+    exit 0
+fi
+
+if [ -n "$(find src config .env* -newer "${_CLEAR_CACHE_DIR}" -print -quit 2&gt;/dev/null)" ]; then
+    echo "  // Symfony cache stale, clearing cache..."
+    php bin/console cache:clear --env="${_CLEAR_CACHE_ENV}"
+    exit 0
+fi
+
+echo "  // Symfony cache is up to date"
 </code></pre>
 
 <h3 id="docker-version">Docker version</h3>
@@ -225,12 +311,13 @@ PHP_SERVICE = app
 PHP_CONT = $(DOCKER_RUN) $(PHP_SERVICE)
 
 # Executables
-PHP = $(PHP_CONT) symfony php
-COMPOSER = $(PHP_CONT) symfony composer
-CONSOLE = $(DOCKER_RUN) -e APP_ENV=$(env) $(PHP_SERVICE) symfony console
-PHPUNIT = $(PHP_CONT) symfony php vendor/bin/phpunit
-PHP_CS_FIXER = $(PHP_CONT) symfony php vendor/bin/php-cs-fixer
-PHPSTAN = $(PHP_CONT) symfony php vendor/bin/phpstan
+COMPOSER = $(PHP_CONT) composer
+CONSOLE = $(DOCKER_RUN) -e APP_ENV=$(env) $(PHP_SERVICE) php bin/console
+PHPUNIT = $(PHP_CONT) php vendor/bin/phpunit
+PHP_CS_FIXER = $(PHP_CONT) php vendor/bin/php-cs-fixer
+PHPSTAN = $(PHP_CONT) php vendor/bin/phpstan --memory-limit=256M
+RECTOR = $(PHP_CONT) php vendor/bin/rector
+SWISS_KNIFE = $(PHP_CONT) php vendor/bin/swiss-knife
 
 # Misc
 .DEFAULT_GOAL = help
@@ -243,44 +330,93 @@ PHPSTAN = $(PHP_CONT) symfony php vendor/bin/phpstan
 ## (env) denotes the possibility to pass "env=" parameter to the target
 ##     this allows to set APP_ENV environment variable (default: test), example: make console env='prod' arg='cache:warmup'
 help: ## Outputs this help screen
-    @grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
+    @grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) \
+        | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}' \
+        | sed -e 's/\[32m##/[33m/'
 
 ## —— Docker 🐳 ————————————————————————————————————————————————————————————————
-build: ## Builds the Docker image
+docker-init: ## Builds the Docker image
     @docker build -t $(PHP_SERVICE) .
 
-bash: ## Connect to the container via bash so up and down arrows go to previous commands
+docker-bash: ## Opens a (bash) shell in the container
     @$(DOCKER_RUN) $(PHP_SERVICE) bash
 
 ## —— PHP 🐘 ———————————————————————————————————————————————————————————————————
-composer: ## Runs Composer (arg, eg `arg='install --optimize-autoloader'`)
+composer: ## Runs Composer (arg, eg `arg='outdated'`)
     @$(COMPOSER) $(arg)
+
+composer-install: ## Install dependencies (arg, eg `arg='--no-dev'`)
+    @$(COMPOSER) install --optimize-autoloader $(arg)
+
+composer-update: ## Updates dependencies (arg, eg `arg='--no-dev'`)
+    @$(COMPOSER) update --optimize-autoloader $(arg)
+
+composer-dump: ## Dumps autoloader (arg, eg `arg='--classmap-authoritative'`)
+    @$(COMPOSER) dump-autoload --optimize --strict-psr --strict-ambiguous $(arg)
 
 console: ## Runs bin/console (arg, eg `arg='cache:clear'`) (env, eg `env=prod`)
     @$(CONSOLE) $(arg)
 
-## —— Quality 🛂 ———————————————————————————————————————————————————————————————
-test: ## Runs the tests with PHPUnit (arg, eg `arg='./tests/Unit'`)
-    @$(PHPUNIT) $(arg)
-
-static-analysis: ## Static Analysis with phpstan (arg, eg `arg='./src/'`)
-    @$(PHPSTAN) analyze $(arg)
-
 cs-check: ## Checks CS with PHP-CS-Fixer (arg, eg `arg='./src'`)
     @$(PHP_CS_FIXER) check --verbose $(arg)
 
-qa: ## Equivalent to cs-check &amp;&amp; static-analysis &amp;&amp; test
-    @$(MAKE) cs-check
-    @$(MAKE) static-analysis
-    @$(MAKE) test
-
-cs-fix: ## Fixes CS with PHP-CS-Fixer (arg, eg `arg='./src'`)
+cs-fix: ## Fixes CS with Swiss Knife and PHP-CS-Fixer
+    @$(SWISS_KNIFE) namespace-to-psr-4 src --namespace-root 'App\\'
+    @$(SWISS_KNIFE) namespace-to-psr-4 tests --namespace-root 'App\\Tests\\'
     @$(PHP_CS_FIXER) fix --verbose $(arg)
+
+phpstan: ## Runs phpstan (arg, eg `arg='clear-result-cache'`)
+    @$(PHPSTAN) $(arg)
+
+phpstan-analyze: ## Static Analysis with phpstan (arg, eg `arg='./src/'`)
+    @$(PHPSTAN) analyze $(arg)
+
+swiss-knife: ## Automated refactorings with Swiss Knife (arg, eg `arg='namespace-to-psr-4 src --namespace-root \'App\\\''`)
+    @$(SWISS_KNIFE) $(arg)
+
+phpunit: ## Runs the tests with PHPUnit (arg, eg `arg='./tests/Unit'`)
+    @$(PHPUNIT) $(arg)
+
+rector-fix: ## Automated refactorings with Rector (arg, eg `arg='--clear-cache'`)
+    @$(RECTOR) $(arg)
+
+rector-check: ## Refactoring checks with Rector
+    @$(RECTOR) process --dry-run
+
+## —— App 📱 ———————————————————————————————————————————————————————————————————
+app-init: ## First install
+    @echo ''
+    @echo '  // Building docker image...'
+    @$(MAKE) docker-init
+    @echo ''
+    @echo '  // Installing Composer dependencies...'
+    @$(MAKE) composer-install
+    @echo ''
+    @echo '  [OK] App initialized'
+
+app-qa: ## Runs full QA pipeline (composer-dump, cs-check, phpstan, rector-check, phpunit)
+    @echo ''
+    @echo '  // Running composer dump...'
+    @$(MAKE) composer-dump
+    @echo ''
+    @echo '  // Running PHP CS Fixer...'
+    @$(MAKE) cs-check
+    @echo ''
+    @echo '  // Running PHPStan...'
+    @$(MAKE) phpstan
+    @echo ''
+    @echo '  // Running Rector...'
+    @$(MAKE) rector-check
+    @echo ''
+    @echo '  // Running PHPUnit...'
+    @$(MAKE) phpunit
+    @echo ''
+    @echo '  [OK] QA done'
 </code></pre>
 
 <h3 id="native-php-version">Native PHP version</h3>
 
-<p>For pure PHP projects without Symfony CLI (or Symfony console),
+<p>For pure PHP projects without Symfony,
 that don't run in Docker Containers, the <code>Makefile</code> can look like this:</p>
 
 <pre><code class="Makefile"># Parameters (optional)
@@ -294,7 +430,9 @@ PHP = php
 COMPOSER = composer
 PHPUNIT = php vendor/bin/phpunit
 PHP_CS_FIXER = php vendor/bin/php-cs-fixer
-PHPSTAN = php vendor/bin/phpstan
+PHPSTAN = php vendor/bin/phpstan --memory-limit=256M
+RECTOR = php vendor/bin/rector
+SWISS_KNIFE = php vendor/bin/swiss-knife
 
 # Misc
 .DEFAULT_GOAL = help
@@ -307,32 +445,78 @@ PHPSTAN = php vendor/bin/phpstan
 ## (env) denotes the possibility to pass "env=" parameter to the target
 ##     this allows to set APP_ENV environment variable (default: test), example: make php env='prod' arg='script.php'
 help: ## Outputs this help screen
-    @grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}' | sed -e 's/\[32m##/[33m/'
+    @grep -E '(^[a-zA-Z0-9\./_-]+:.*?##.*$$)|(^##)' $(MAKEFILE_LIST) \
+        | awk 'BEGIN {FS = ":.*?## "}{printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}' \
+        | sed -e 's/\[32m##/[33m/'
 
 ## —— PHP 🐘 ———————————————————————————————————————————————————————————————————
-composer: ## Runs Composer (arg, eg `arg='install --optimize-autoloader'`)
+composer: ## Runs Composer (arg, eg `arg='outdated'`)
     @$(COMPOSER) $(arg)
+
+composer-install: ## Install dependencies (arg, eg `arg='--no-dev'`)
+    @$(COMPOSER) install --optimize-autoloader $(arg)
+
+composer-update: ## Updates dependencies (arg, eg `arg='--no-dev'`)
+    @$(COMPOSER) update --optimize-autoloader $(arg)
+
+composer-dump: ## Dumps autoloader (arg, eg `arg='--classmap-authoritative'`)
+    @$(COMPOSER) dump-autoload --optimize --strict-psr --strict-ambiguous $(arg)
 
 php: ## Runs PHP (arg, eg `arg='script.php'`) (env, eg `env=prod`)
     @APP_ENV=$(env) $(PHP) $(arg)
 
-## —— Quality 🛂 ———————————————————————————————————————————————————————————————
-test: ## Runs the tests with PHPUnit (arg, eg `arg='./tests/Unit'`)
-    @$(PHPUNIT) $(arg)
-
-static-analysis: ## Static Analysis with phpstan (arg, eg `arg='./src/'`)
-    @$(PHPSTAN) analyze $(arg)
-
 cs-check: ## Checks CS with PHP-CS-Fixer (arg, eg `arg='./src'`)
     @$(PHP_CS_FIXER) check --verbose $(arg)
 
-qa: ## Equivalent to cs-check &amp;&amp; static-analysis &amp;&amp; test
-    @$(MAKE) cs-check
-    @$(MAKE) static-analysis
-    @$(MAKE) test
-
-cs-fix: ## Fixes CS with PHP-CS-Fixer (arg, eg `arg='./src'`)
+cs-fix: ## Fixes CS with Swiss Knife and PHP-CS-Fixer
+    @$(SWISS_KNIFE) namespace-to-psr-4 src --namespace-root 'App\\'
+    @$(SWISS_KNIFE) namespace-to-psr-4 tests --namespace-root 'App\\Tests\\'
     @$(PHP_CS_FIXER) fix --verbose $(arg)
+
+phpstan: ## Runs phpstan (arg, eg `arg='clear-result-cache'`)
+    @$(PHPSTAN) $(arg)
+
+phpstan-analyze: ## Static Analysis with phpstan (arg, eg `arg='./src/'`)
+    @$(PHPSTAN) analyze $(arg)
+
+swiss-knife: ## Automated refactorings with Swiss Knife (arg, eg `arg='namespace-to-psr-4 src --namespace-root \'App\\\''`)
+    @$(SWISS_KNIFE) $(arg)
+
+phpunit: ## Runs the tests with PHPUnit (arg, eg `arg='./tests/Unit'`)
+    @$(PHPUNIT) $(arg)
+
+rector-fix: ## Automated refactorings with Rector (arg, eg `arg='--clear-cache'`)
+    @$(RECTOR) $(arg)
+
+rector-check: ## Refactoring checks with Rector
+    @$(RECTOR) process --dry-run
+
+## —— App 📱 ———————————————————————————————————————————————————————————————————
+app-init: ## First install
+    @echo ''
+    @echo '  // Installing Composer dependencies...'
+    @$(MAKE) composer-install
+    @echo ''
+    @echo '  [OK] App initialized'
+
+app-qa: ## Runs full QA pipeline (composer-dump, cs-check, phpstan, rector-check, phpunit)
+    @echo ''
+    @echo '  // Running composer dump...'
+    @$(MAKE) composer-dump
+    @echo ''
+    @echo '  // Running PHP CS Fixer...'
+    @$(MAKE) cs-check
+    @echo ''
+    @echo '  // Running PHPStan...'
+    @$(MAKE) phpstan
+    @echo ''
+    @echo '  // Running Rector...'
+    @$(MAKE) rector-check
+    @echo ''
+    @echo '  // Running PHPUnit...'
+    @$(MAKE) phpunit
+    @echo ''
+    @echo '  [OK] QA done'
 </code></pre>
 
 <h2 id="conclusion">Conclusion</h2>
