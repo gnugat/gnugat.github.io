@@ -143,6 +143,20 @@ documentation of complex flows.
 
 At Bumble, QAAPI has grown to over 1,500 methods and has been in use since 2013.
 
+In an earlier article (2019), Vladimir Yants described
+[A monolithic architecture for our clients' hundreds of versions: how we write and support tests](https://medium.com/bumble-tech/a-monolithic-architecture-for-our-clients-hundreds-of-versions-how-we-write-and-support-tests-php-e8fe0b79c0bc),
+showing QAAPI used programmatically inside automated API tests: three calls to set up a
+test user's profession, A/B test group, and registration date, then assert on the server
+response. The article also details their **test user pool** (pre-registered users with an
+`is_test_user` flag, restored to a clean state after each test) and how that flag lets them
+run the same API tests against a pre-production cluster with real data, while keeping test
+users isolated from real ones.
+
+> ✏️ **Edit**: [Artem Soldatkin](https://www.linkedin.com/feed/update/urn:li:activity:7432334582177492992/)
+> rightly points out that the first version of QAAPI was authored by Ilya Ageev
+> and created at Badoo in 2013, before Bumble existed and before Badoo was
+> incorporated into Bumble Inc.
+
 A Test Control Interface is a deceptively simple idea whose implementation cost is low,
 yet it makes everyone on the team faster and transforms how they work.
 
@@ -493,7 +507,25 @@ That machinery is encapsulated in the `SignInNewPlayer` scenario,
 reused across every test that needs a logged-in player.
 
 This is where the Test Control Interface pays off most: not only for manual testers,
-but also for the automated test suite that runs on every commit.
+but also for the automated test suite that runs on every commit. Bumble arrived at
+the same pattern: their API tests call QAAPI methods in the arrange phase to configure
+test users before exercising the real protocol.
+
+> ✏️ **Edit**: [obstreperous_troll on Reddit](https://www.reddit.com/r/PHP/comments/1re9i74/comment/o7bny2e/)
+> observes that this resembles white-box testing, since Qalin reaches into
+> internal state to set things up. That is a fair comparison: Qalin is
+> white-box for the **Arrange** part of a test (it bypasses the public API
+> to put the system in a specific state), but black-box for the **Act** and
+> **Assert** parts (the test exercises real HTTP endpoints and checks real
+> responses, just like any external consumer would).
+
+> ✏️ **Edit**: [Benjamin Rothan](https://bsky.app/profile/monitaurus.bsky.social) asks whether this is
+> fixture generation for QA. Symfony developers may recognise a resemblance
+> to Doctrine Fixtures or FakerBundle, but the intent is different: fixtures
+> generate seed data at deployment time (a fixed dataset loaded once),
+> whereas Qalin actions are called on demand, at any time, to reach a
+> specific state for a specific test or demo. Think of it as a remote
+> control for your application state, not a data seeder.
 
 ## Scaffolding with MakerBundle
 
@@ -660,6 +692,11 @@ Want to learn more?
 
 * [browse BisouLand / Qalin source code on Github](https://github.com/pyricau/bisouland/tree/4.0.25)
 * [read more about modernising this eXtreme Legacy app](/tags/extreme-legacy)
+* [GeePaw Hill's "Making App"](https://www.geepawhill.org/2024/10/01/basic-concepts-of-the-making-app/):
+  a related concept where developers interact with a dedicated UI instead of
+  the real app, pointed out by [Jakub Zalas](https://bsky.app/profile/kuba.zalas.pl).
+  The Making App is a developer-only UI that replaces the actual app entirely,
+  whereas a Test Control Interface like Qalin sits alongside it
 
 ### Retrospective
 
