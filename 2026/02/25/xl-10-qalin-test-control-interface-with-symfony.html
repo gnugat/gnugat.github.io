@@ -310,6 +310,22 @@ documentation of complex flows.</p>
 
 <p>At Bumble, QAAPI has grown to over 1,500 methods and has been in use since 2013.</p>
 
+<p>In an earlier article (2019), Vladimir Yants described
+<a href="https://medium.com/bumble-tech/a-monolithic-architecture-for-our-clients-hundreds-of-versions-how-we-write-and-support-tests-php-e8fe0b79c0bc">A monolithic architecture for our clients' hundreds of versions: how we write and support tests</a>,
+showing QAAPI used programmatically inside automated API tests: three calls to set up a
+test user's profession, A/B test group, and registration date, then assert on the server
+response. The article also details their <strong>test user pool</strong> (pre-registered users with an
+<code>is_test_user</code> flag, restored to a clean state after each test) and how that flag lets them
+run the same API tests against a pre-production cluster with real data, while keeping test
+users isolated from real ones.</p>
+
+<blockquote>
+  <p>✏️ <strong>Edit</strong>: <a href="https://www.linkedin.com/feed/update/urn:li:activity:7432334582177492992/">Artem Soldatkin</a>
+  rightly points out that the first version of QAAPI was authored by Ilya Ageev
+  and created at Badoo in 2013, before Bumble existed and before Badoo was
+  incorporated into Bumble Inc.</p>
+</blockquote>
+
 <p>A Test Control Interface is a deceptively simple idea whose implementation cost is low,
 yet it makes everyone on the team faster and transforms how they work.</p>
 
@@ -662,7 +678,27 @@ not about the sign-up and sign-in machinery needed to reach that state.</p>
 reused across every test that needs a logged-in player.</p>
 
 <p>This is where the Test Control Interface pays off most: not only for manual testers,
-but also for the automated test suite that runs on every commit.</p>
+but also for the automated test suite that runs on every commit. Bumble arrived at
+the same pattern: their API tests call QAAPI methods in the arrange phase to configure
+test users before exercising the real protocol.</p>
+
+<blockquote>
+  <p>✏️ <strong>Edit</strong>: <a href="https://www.reddit.com/r/PHP/comments/1re9i74/comment/o7bny2e/">obstreperous_troll on Reddit</a>
+  observes that this resembles white-box testing, since Qalin reaches into
+  internal state to set things up. That is a fair comparison: Qalin is
+  white-box for the <strong>Arrange</strong> part of a test (it bypasses the public API
+  to put the system in a specific state), but black-box for the <strong>Act</strong> and
+  <strong>Assert</strong> parts (the test exercises real HTTP endpoints and checks real
+  responses, just like any external consumer would).</p>
+  
+  <p>✏️ <strong>Edit</strong>: <a href="https://bsky.app/profile/monitaurus.bsky.social">Benjamin Rothan</a> asks whether this is
+  fixture generation for QA. Symfony developers may recognise a resemblance
+  to Doctrine Fixtures or FakerBundle, but the intent is different: fixtures
+  generate seed data at deployment time (a fixed dataset loaded once),
+  whereas Qalin actions are called on demand, at any time, to reach a
+  specific state for a specific test or demo. Think of it as a remote
+  control for your application state, not a data seeder.</p>
+</blockquote>
 
 <h2 id="scaffolding-with-makerbundle">Scaffolding with MakerBundle</h2>
 
@@ -832,6 +868,11 @@ the web UI, or a PHPUnit test.</p>
 <ul>
 <li><a href="https://github.com/pyricau/bisouland/tree/4.0.25">browse BisouLand / Qalin source code on Github</a></li>
 <li><a href="/tags/extreme-legacy">read more about modernising this eXtreme Legacy app</a></li>
+<li><a href="https://www.geepawhill.org/2024/10/01/basic-concepts-of-the-making-app/">GeePaw Hill's "Making App"</a>:
+a related concept where developers interact with a dedicated UI instead of
+the real app, pointed out by <a href="https://bsky.app/profile/kuba.zalas.pl">Jakub Zalas</a>.
+The Making App is a developer-only UI that replaces the actual app entirely,
+whereas a Test Control Interface like Qalin sits alongside it</li>
 </ul>
 
 <h3 id="retrospective">Retrospective</h3>
