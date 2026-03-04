@@ -6,6 +6,8 @@ tags:
     - reference
 ---
 
+> **Edit**: brought up to date on 2026-02-27.
+
 Forge battle-tested code, under the hammer of PHPUnit.
 
 * [Unit Tests](#unit-tests)
@@ -20,105 +22,75 @@ Forge battle-tested code, under the hammer of PHPUnit.
     * [Smoke Tests](#smoke-tests)
 * [Useful CLI options](#useful-cli-options)
     * [Configuration](#configuration)
+* [Resources](#resources)
 
 ## Unit Tests
 
-> _Inspired by **Sebastian Bergmann**, _Sources_:
-> 
-> * [So you think you know PHPUnit - Sebastian Bergmann - PHPDD2024](https://www.youtube.com/watch?v=qwRdnoeq1H8)
-> * [Optimizing Your Test Suite - Sebastian Bergmann - PHP fwdays 2021](https://www.youtube.com/watch?v=wR6YflVkAt4)
-> * [Sebastian's raytracer project](https://github.com/sebastianbergmann/raytracer/)
-> * [PHPUnit documentation](https://phpunit.de/documentation.html)
-
-Here's a unit test for a `CheckArray->check(string $field, mixed $value): array` class:
+Here's a unit test for a `Username` value object:
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\Domain\Check;
+namespace App\Tests\Unit;
 
-use App\Domain\Check\CheckArray;
-use App\Domain\Exception\ValidationFailedException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(CheckArray::class)]
+#[CoversClass(Username::class)]
 #[Small]
-class CheckArrayTest extends TestCase
+final class UsernameTest extends TestCase
 {
-    private const string FIELD = 'path.field_name';
-
-    private function checkArray(): CheckArray
+    private function username(string $value = 'Merlin'): Username
     {
-        return new CheckArray();
+        return Username::fromString($value);
     }
 
-    public function test_it_accepts_valid_array(): void
+    #[TestDox('It can be converted from/to string')]
+    public function test_it_can_be_converted_from_and_to_string(): void
     {
-        $validArray = [23, 42, 1337];
-
-        $this->assertSame($validArray, $this->checkArray()->check(
-            self::FIELD,
-            $validArray,
-        ));
+        $this->assertSame('Merlin', $this->username()->toString());
     }
 
-    public function test_it_accepts_null(): void
-    {
-        // When checking that no exception is thrown
-        $this->expectNotToPerformAssertions();
-
-        $this->checkArray()->check(
-            self::FIELD,
-            null,
-        );
+    #[DataProvider('invalidUsernameProvider')]
+    #[TestDox('It fails when raw username $scenario')]
+    public function test_it_fails_when_raw_username_is_invalid(
+        string $scenario,
+        string $invalidUsername,
+    ): void {
+        $this->expectException(ValidationFailedException::class);
+        $this->username($invalidUsername);
     }
 
     /**
-     * @return array<string, array{mixed}>
+     * @return \Iterator<array{
+     *     scenario: string,
+     *     invalidUsername: string,
+     * }>
      */
-    public static function nonArrayTypesProvider(): array
+    public static function invalidUsernameProvider(): \Iterator
     {
-        return [
-            'string' => ['hello world'],
-            'integer' => [42],
-            'boolean' => [false],
-        ];
-    }
-
-    #[DataProvider('nonArrayTypesProvider')]
-    public function test_it_rejects_non_array_types(mixed $notAnArray): void
-    {
-        $this->expectException(ValidationFailedException::class);
-
-        $this->checkArray()->check(
-            self::FIELD,
-            $notAnArray,
-        );
+        yield ['scenario' => 'is empty', 'invalidUsername' => ''];
+        yield ['scenario' => 'is too short (< 4 characters)', 'invalidUsername' => 'abc'];
+        yield ['scenario' => 'is too long (> 15 characters)', 'invalidUsername' => 'abcdefghijklmnop'];
     }
 }
 ```
 
 ### Factory Methods
 
-When the System Under Test (SUT) has a simple constructor,
-or its instantiation is clear and consistent,
-then instantiate it directly in each test method.
+Prefer private factory methods over `setUp()` to create the System Under Test (SUT):
 
-But when the SUT's constructor has multiple parameters,
-or a couple of test method require the same specific configuration, 
-consider moving that creation logic to a private factory method:
+* `setUp()` runs before every test, even those that don't need it
+* test class properties, once instantiated, are kept in memory until the end of the testsuite run
+* factory methods use local variables that are freed after each test
 
-* it ensures test consistency and validity by eliminating configuration drift
-* it centralizes complex instantiation logic, making tests more readable
-
-Finally, when your SUT legitimately needs to be tested under different configurations,
-create explicit factory methods that document these variations.
+> **Warning**: PHPUnit creates one instance of each test class per test method
+> and per data provider row, and keeps them all in memory until the testsuite completes.
 
 ### Attributes
 
@@ -163,104 +135,19 @@ Their goal is to make PHP tooling more robust and IDE integration more reliable,
 * `#[TestDox(string $text)]`
   to customize what PHPUnit will display
 
-> **Note 1**
->
-> Running `phpunit --testdox` with the following data provider:
->
-> ```php
->     public static function nonArrayTypesProvider(): array
->     {
->         return [
->             ['hello world'],
->             [42],
->             [false],
->         ];
->     }
->
->     #[DataProvider('nonArrayTypesProvider')]
->     public function test_it_rejects_non_array_types(mixed $notAnArray): void
-> ```
->
-> Will output:
->
-> ```
-> Check Array (App\Tests\Unit\Domain\Check\CheckArray)
->  ✔ It rejects non array types with data set 0
->  ✔ It rejects non array types with data set 1
->  ✔ It rejects non array types with data set 2
-> ```
+Use `\Iterator` with `yield` and named parameters for readable data providers,
+combined with `#[TestDox]` and a `$scenario` variable
+(as shown in the `UsernameTest` example above).
 
----
+Output with `--testdox`:
 
-> **Note 2**
->
-> This is equivalent to:
->
-> ```php
->     #[TestWith(['hello world'])]
->     #[TestWith([42])]
->     #[TestWith([false])]
->     public function test_it_rejects_non_array_types(mixed $notAnArray): void
-> ```
-
----
-
-> **Note 3**
->
-> However, we can use string keys to describe each set:
->
-> ```php
->     public static function nonArrayTypesProvider(): array
->     {
->         return [
->             'string' => ['hello world'],
->             'integer' => [42],
->             'boolean' => [false],
->         ];
->     }
->
->     #[DataProvider('nonArrayTypesProvider')]
->     public function test_it_rejects_non_array_types(mixed $notAnArray): void
-> ```
->
-> Which will output:
->
-> ```
-> Check Array (App\Tests\Unit\Domain\Check\CheckArray)
->  ✔ It rejects non array types with string
->  ✔ It rejects non array types with integer
->  ✔ It rejects non array types with boolean
-> ```
-
----
-
-> **Note 4**
->
-> Finally, we can also change the text with `#[TestDox]`:
->
-> ```php
->     public static function nonArrayTypesProvider(): array
->     {
->         return [
->             'string' => ['hello world'],
->             'integer' => [42],
->             'boolean' => [false],
->         ];
->     }
->
->     #[DataProvider('nonArrayTypesProvider')]
->     #[TestDox('it rejects `$notAnArray` because it does not have type `array`')]
->     public function test_it_rejects_non_array_types(mixed $notAnArray): void
-> ```
->
-> Which will output:
->
-> ```
-> Check Array (App\Tests\Unit\Domain\Check\CheckArray)
->  ✔ it rejects `hello·world` because it does not have type `array`
->  ✔ it rejects `42` because it does not have type `array`
->  ✔ it rejects `false` because it does not have type `array`
-> ```
+```
+Username
+ ✔ It can be converted from/to string
+ ✔ It fails when raw username is empty
+ ✔ It fails when raw username is too short (< 4 characters)
+ ✔ It fails when raw username is too long (> 15 characters)
+```
 
 ### Coding Standards
 
@@ -330,47 +217,58 @@ There are two Test Driven Development (TDD) schools of thought:
 
 The mocking library [prophecy](https://github.com/phpspec/prophecy)'s expressive syntax
 allows for an approach that's more aligned with spec BDD.
-It can be used in PHPUnit with the `phpspec/prophecy-phpunit` package:
+It can be used in PHPUnit with the `phpspec/prophecy-phpunit` package.
+
+When the SUT creates values internally, use Argument matchers:
+
+* `Argument::type(ClassName::class)`: matches by type
+* `Argument::that(static fn ($v): bool => ...)`: matches with a custom closure
+* `Argument::any()`: matches anything
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\Domain\Event\Check;
+namespace App\Tests\Unit;
 
-use App\Domain\Check\CheckDateTimeIso8601;
-use App\Domain\Event\Check\CheckStart;
+use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
-use Prophecy\PhpUnit\ProphecyTrait;
 
-#[CoversClass(CheckStart::class)]
+#[CoversClass(SignInPlayerHandler::class)]
 #[Small]
-final class CheckStartTest extends TestCase
+final class SignInPlayerHandlerTest extends TestCase
 {
     use ProphecyTrait;
 
-    private const string FIELD = 'start';
-    private const string START = '2025-06-17T13:00:00';
-
-    public function test_it_checks_start(): void
+    public function test_it_signs_in_player(): void
     {
-        $checkDateTimeIso8601 = $this->prophesize(CheckDateTimeIso8601::class);
+        $username = UsernameFixture::makeString();
+        $player = PlayerFixture::make();
 
-        $checkDateTimeIso8601->check(
-            self::FIELD,
-            self::START,
-        )->shouldBeCalled()->willReturn(self::START);
+        // Stub: configure return value
+        $findPlayer = $this->prophesize(FindPlayer::class);
+        $findPlayer->find(
+            Argument::that(static fn (Username $u): bool => $u->toString() === $username),
+        )->willReturn($player);
 
-        $checkStart = new CheckStart(
-            $checkDateTimeIso8601->reveal(),
+        // Mock: assert it gets called
+        $saveAuthToken = $this->prophesize(SaveAuthToken::class);
+        $saveAuthToken->save(Argument::type(AuthToken::class))
+            ->shouldBeCalled();
+
+        $signInPlayerHandler = new SignInPlayerHandler(
+            $findPlayer->reveal(),
+            $saveAuthToken->reveal(),
         );
-        $this->assertSame(self::START, $checkStart->check(
-            self::FIELD,
-            self::START,
+        $signedInPlayer = $signInPlayerHandler->run(new SignInPlayer(
+            $username,
         ));
+
+        $this->assertInstanceOf(SignedInPlayer::class, $signedInPlayer);
     }
 }
 ```
@@ -416,96 +314,75 @@ Just craft the input, pass it to application, and verify the status code.
 This tests the entire request-response cycle:
 routing, middleware, validation, business logic, serialization... Everything.
 
-Here's an integration test for a `POST /v1/events` endpoint controller:
+Here's an integration test for a `POST /api/v1/actions/sign-up-new-player` endpoint controller:
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace App\Tests\Integration\Controller\Event;
+namespace App\Tests\Integration\Controller;
 
-use App\Controller\Event\CreateController;
-use App\Tests\AppSingleton;
-use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Medium;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
-#[CoversClass(CreateController::class)]
+#[CoversNothing]
 #[Medium]
-final class CreateControllerTest extends TestCase
+final class SignUpNewPlayerControllerTest extends TestCase
 {
-    public function test_it_creates_new_one(): void
+    public function test_it_signs_up_a_new_player(): void
     {
-        $appKernel = AppSingleton::get()->appKernel();
+        $appKernel = TestKernelSingleton::get()->appKernel();
 
-        $headers = [
-            'CONTENT_TYPE' => 'application/json',
-        ];
-        $request = Request::create('/v1/events', 'POST', [], [], [], $headers, (string) json_encode([
-            'title' => 'Daily stand up',
-            'start' => (new \DateTimeImmutable('now'))->format('Y-m-d\TH:i:s'),
-            'end' => (new \DateTimeImmutable('now + 1 second'))->format('Y-m-d\TH:i:s'),
-        ]));
+        $request = Request::create(
+            uri: '/api/v1/actions/sign-up-new-player',
+            method: 'POST',
+            server: ['CONTENT_TYPE' => 'application/json'],
+            content: json_encode([
+                'username' => UsernameFixture::makeString(),
+                'password' => PasswordPlainFixture::makeString(),
+            ], \JSON_THROW_ON_ERROR),
+        );
 
         $response = $appKernel->handle($request);
-        $appKernel->terminate($request, $response);
 
-        $this->assertSame(201, $response->getStatusCode(), (string) $response->getContent());
-    }
-
-    public function test_it_cannot_create_new_one_without_required_fields(): void
-    {
-        $appKernel = AppSingleton::get()->appKernel();
-
-        $headers = [
-            'CONTENT_TYPE' => 'application/json',
-        ];
-        $request = Request::create('/v1/events', 'POST', [], [], [], $headers, (string) json_encode([
-            'start' => '2025-07-09T09:00:00+00:00',
-            'end' => '2025-07-09T09:15:00+00:00',
-        ]));
-
-        $response = $appKernel->handle($request);
-        $appKernel->terminate($request, $response);
-
-        $this->assertSame(422, $response->getStatusCode(), (string) $response->getContent());
+        $this->assertSame(Response::HTTP_CREATED, $response->getStatusCode(), (string) $response->getContent());
     }
 }
 ```
 
-And here's an integration test for a `./bin/console events:list` CLI command:
+And here's an integration test for a `./bin/console action:sign-up-new-player` CLI command:
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace App\Tests\Integration\Command\Event;
+namespace App\Tests\Integration\Cli;
 
-use App\Command\Event\ListCommand;
-use App\Tests\AppSingleton;
-use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Medium;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 
-#[CoversClass(ListCommand::class)]
+#[CoversNothing]
 #[Medium]
-final class ListCommandTest extends TestCase
+final class SignUpNewPlayerCommandTest extends TestCase
 {
-    public function test_it_lists_existing_ones(): void
+    public function test_it_signs_up_a_new_player(): void
     {
-        $applicationTester = AppSingleton::get()->applicationTester();
+        $application = TestKernelSingleton::get()->application();
 
-        $input = [
-            ListCommand::NAME,
-        ];
+        $application->run([
+            'command' => 'action:sign-up-new-player',
+            'username' => UsernameFixture::makeString(),
+            'password' => PasswordPlainFixture::makeString(),
+        ]);
 
-        $statusCode = $applicationTester->run($input);
-
-        $this->assertSame(Command::SUCCESS, $statusCode, $applicationTester->getDisplay());
+        $this->assertSame(Command::SUCCESS, $application->getStatusCode());
     }
 }
 ```
@@ -525,9 +402,9 @@ phpunit
   --exclude-group small                Exclude tests from the specified group(s)
 
   --list-tests                         List available tests
-  --covers 'CheckArray'                Only run tests that intend to cover <name>
-  --filter 'CheckArrayTest'            Filter which tests to run (test class, or test method)
-  --filter 'test_it_accepts_valid_array'
+  --covers 'Username'                  Only run tests that intend to cover <name>
+  --filter 'UsernameTest'              Filter which tests to run (test class, or test method)
+  --filter 'test_it_can_be_converted_from_and_to_string'
 
   ## Useful for running testsuites individually, in the CI
   --list-testsuites                    List available testsuites
@@ -558,7 +435,9 @@ phpunit
 > * `reverse`: tests run in reverse discovery order
 > * `size`: tests run by size: `#[Small]`, then `#[Medium]`, after `#[Large]`, and finally unsized tests
 >
-> _Worth noting_: > * Combining options: `--order-by=depends,defects`
+> _Worth noting_:
+>
+> * Combining options: `--order-by=depends,defects`
 
 ### Configuration
 
@@ -620,3 +499,14 @@ phpunit
 > * `bootstrap` defaults to `vendor/autoload.php`
 > * `shortenArraysForExportThreshold` defaults to `0` from v11.3 and `10` from v12
 > * `colors` defaults to `false`, for automated/scripted environment compatibility
+
+## Resources
+
+* [So you think you know PHPUnit - Sebastian Bergmann - PHPDD2024](https://www.youtube.com/watch?v=qwRdnoeq1H8) ([article](https://phpunit.expert/articles/phpunit-features-that-surprise-even-professionals.html))
+* [Optimizing Your Test Suite - Sebastian Bergmann - PHP fwdays 2021](https://www.youtube.com/watch?v=wR6YflVkAt4)
+* [Sebastian's raytracer project](https://github.com/sebastianbergmann/raytracer/)
+* [Testing with(out) dependencies - Sebastian Bergmann](https://www.youtube.com/watch?v=d3qXBEBNjHc) ([article](https://phpunit.expert/articles/testing-with-and-without-dependencies.html))
+* [Testing with DTOs and Value Objects - Sebastian Bergmann](https://phpunit.expert/articles/testing-with-data-transfer-objects-and-value-objects.html)
+* [How I manage test fixture - Sebastian Bergmann](https://phpunit.expert/articles/how-i-manage-test-fixture.html)
+* [Do Not Mock What You Do Not Own - Sebastian Bergmann](https://thephp.cc/articles/do-not-mock-what-you-do-not-own)
+* [PHPUnit documentation](https://phpunit.de/documentation.html)
