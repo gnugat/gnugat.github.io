@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc></loc>
-    <lastmod>2026-02-26T09:01:41+00:00</lastmod>
+    <lastmod>2026-03-04T07:18:05+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>/about</loc>
-    <lastmod>2026-02-26T09:01:41+00:00</lastmod>
+    <lastmod>2026-03-04T07:18:05+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>/2026/03/04/xl-11-monorepo.html</loc>
+    <lastmod>2026-03-04T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>/2026/02/25/xl-10-qalin-test-control-interface-with-symfony.html</loc>

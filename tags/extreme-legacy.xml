@@ -3,11 +3,587 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2026-02-26T09:01:41+00:00</updated>
+    <updated>2026-03-04T07:18:05+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[eXtreme Legacy 11: A PHP Monorepo of Apps and Packages]]></title>
+            <link href="/2026/03/04/xl-11-monorepo.html"/>
+            <updated>2026-03-04T00:00:00+00:00</updated>
+            <id>/2026/03/04/xl-11-monorepo.html</id>
+            <content type="html"><![CDATA[<p>BisouLand is an eXtreme Legacy (2005 LAMP) app, an idle browser game where players
+take each other's Love Points by blowing kisses across clouds.</p>
+
+<p>In this series, we're dealing with it as it is: a big ball of mud,
+a spaghetti code base written by a student learning web development from online tutorials.</p>
+
+<p>So far, we have:</p>
+
+<ol>
+<li><a href="/2025/09/10/xl-1-dockerizing-2005-lamp-app.html">🐋 got it to run in a local container</a></li>
+<li><a href="/2025/09/17/xl-2-smoke-tests.html">💨 written Smoke Tests</a></li>
+<li><a href="/2025/09/24/xl-3-end-to-end-tests.html">🎯 written End to End Tests</a></li>
+<li><a href="/2025/10/01/xl-4-coding-standards.html">🧹 created and applied Coding Standards</a></li>
+<li><a href="/2025/10/22/xl-5-pdo.html">⛃ migrated to PDO</a></li>
+<li><a href="/2025/11/19/xl-6-php-8.html">🐘 upgraded PHP 5 to PHP 8</a></li>
+<li><a href="/2025/11/26/xl-7-rector.html">🏡 applied automated refactorings using Rector</a></li>
+<li><a href="/2025/12/03/xl-8-postgresql.html">🐘 migrated from MySQL to PostgreSQL</a></li>
+<li><a href="/2026/01/21/xl-9-xss-vulnerability.html">🔒 fixed an XSS Vulnerability</a></li>
+<li><a href="/2026/02/25/xl-10-qalin-test-control-interface-with-symfony.html">🎭 built Qalin: a Test Control Interface, with modern Symfony</a></li>
+</ol>
+
+<p>The XSS fix introduced clean domain objects (<code>Account</code>, <code>AuthToken</code>) and PDO PostgreSQL
+adapters. Qalin, the modern Symfony application built alongside the monolith,
+depends on those same objects to create test scenarios.</p>
+
+<p>Now we have two applications and ten packages. That is where a <strong>monorepo</strong> comes in.</p>
+
+<h2 id="the-problem">The Problem</h2>
+
+<p>Adding Qalin turned a single-application repository into something bigger:
+two apps and a growing set of shared packages.</p>
+
+<p>In a multi-repository setup, each package lives in its own repository:
+its own checkout, its own CI pipeline, its own version tag, its own Packagist entry.</p>
+
+<p>Changing an interface that touches two packages means:</p>
+
+<ol>
+<li>Edit package A, commit, push, tag</li>
+<li>Edit package B, bump the constraint to pick up the tag, commit, push</li>
+<li>Edit the application, bump the constraint again, commit, push</li>
+</ol>
+
+<p>A change that touches one line of an interface requires three commits
+across three repositories before you can test whether it compiles.</p>
+
+<p>Cross-cutting tools face the same problem. A single PHPStan rule change
+means updating ten <code>phpstan.neon.dist</code> files, one per package.</p>
+
+<p>A monorepo solves this by putting everything in one place.</p>
+
+<h2 id="the-structure">The Structure</h2>
+
+<p>The root of the repository has two directories:</p>
+
+<pre><code>bisouland/
+├── apps/
+│   ├── monolith/   ← the 2005 LAMP app
+│   └── qa/         ← Qalin (Symfony 8)
+└── packages/
+    ├── bl-auth/
+    ├── bl-auth-bundle/
+    ├── bl-auth-pdopg/
+    ├── bl-auth-tests/
+    ├── bl-exception/
+    ├── bl-exception-bundle/
+    ├── bl-game/
+    ├── bl-game-bundle/
+    ├── bl-game-pdopg/
+    └── bl-game-tests/
+</code></pre>
+
+<p>There is no root <code>composer.json</code>. Each application and each package manages its own
+dependencies independently. What connects them is Composer's built-in support for
+local path repositories.</p>
+
+<h2 id="composer-path-repositories">Composer Path Repositories</h2>
+
+<p>When Composer resolves a package, it normally fetches it from Packagist.
+But packages do not have to be published to be used.
+Composer supports a <code>path</code> repository type that points to a local directory:</p>
+
+<pre><code class="json">{
+    "repositories": [
+        {"type": "path", "url": "../../packages/*"}
+    ]
+}
+</code></pre>
+
+<p>The <code>*</code> glob means every subdirectory under <code>packages/</code> is a potential package.
+When you run <code>composer install</code>, Composer reads each subdirectory's <code>composer.json</code>,
+finds the declared <code>name</code>, and makes it available as if it had been fetched from Packagist.</p>
+
+<p>Here is the monolith's (app) <code>composer.json</code>:</p>
+
+<pre><code class="json">{
+    "name": "bl/monolith",
+    "type": "project",
+    "repositories": [
+        {"type": "path", "url": "../../packages/*"}
+    ],
+    "require": {
+        "php": "&gt;=8.5",
+        "bl/auth": "*@dev",
+        "bl/auth-pdopg": "*@dev",
+        "bl/exception": "*@dev",
+        "ext-curl": "*",
+        "ext-pdo_pgsql": "*",
+        "symfony/uid": "^8.0"
+    }
+}
+</code></pre>
+
+<p>The version constraint <code>*@dev</code> means "any version, at development stability".
+Composer symlinks the local directory into <code>vendor/</code> rather than copying it,
+so edits to the package source are immediately reflected without a <code>composer update</code>.</p>
+
+<p>Packages can also depend on each other.
+<code>bl/auth</code> depends on <code>bl/exception</code>, and declares its own path repository pointing upstream:</p>
+
+<pre><code class="json">{
+    "name": "bl/auth",
+    "type": "library",
+    "repositories": [
+        {"type": "path", "url": "../*"}
+    ],
+    "require": {
+        "php": "&gt;=8.5",
+        "bl/exception": "*@dev",
+        "symfony/uid": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {"Bl\\Auth\\": "src/"}
+    }
+}
+</code></pre>
+
+<h2 id="the-package-graph">The Package Graph</h2>
+
+<p>The ten packages form a layered dependency graph. Each layer has a clear responsibility:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Suffix</th>
+  <th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><em>(none)</em></td>
+  <td>Domain model: interfaces, value objects, entities</td>
+</tr>
+<tr>
+  <td><code>-pdopg</code></td>
+  <td>Infrastructure: PDO PostgreSQL implementations</td>
+</tr>
+<tr>
+  <td><code>-bundle</code></td>
+  <td>Infrastructure: Symfony integration (service wiring)</td>
+</tr>
+<tr>
+  <td><code>-tests</code></td>
+  <td>Package unit tests and shared fixtures (builders, factories)</td>
+</tr>
+</tbody>
+</table>
+
+<p>The domain packages (<code>bl-auth</code>, <code>bl-game</code>) are framework-agnostic.
+They declare interfaces and value objects but hold no framework dependency
+beyond <code>symfony/uid</code> for UUID generation.</p>
+
+<p>The infrastructure packages implement the domain interfaces using PDO.
+The application never depends on the implementation directly; it depends on the interface
+and relies on the Symfony bundle to provide the binding:</p>
+
+<pre><code class="php">// packages/bl-auth-bundle/src/BlAuthBundle.php
+final class BlAuthBundle extends AbstractBundle
+{
+    public function loadExtension(array $config, ContainerConfigurator $container, ContainerBuilder $builder): void
+    {
+        $container-&gt;services()
+            -&gt;set(PdoPgSaveAuthToken::class)-&gt;autowire()-&gt;autoconfigure()
+            -&gt;alias(SaveAuthToken::class, PdoPgSaveAuthToken::class);
+    }
+}
+</code></pre>
+
+<p><code>SaveAuthToken</code> is the domain interface. <code>PdoPgSaveAuthToken</code> is the PDO implementation.
+The bundle connects them.</p>
+
+<blockquote>
+  <p>🤔 <strong>Retrospective</strong>: back in 2016, when I explored MonoRepos <a href="/2016/06/15/mars-rover-introduction.html#monolithic-repositories">with the Mars Rover series</a>,
+  one thing I was wondering about was whether Symfony's autowiring would play
+  nicely with bundles living in local path-repository packages.</p>
+  
+  <p>It does 🎉. Composer symlinks the package into <code>vendor/</code>, Symfony finds the
+  bundle through the normal discovery mechanism, and autowiring resolves across
+  package boundaries without any extra configuration.</p>
+</blockquote>
+
+<p>The test packages serve a dual purpose. They contain the package's own unit
+tests, which PHPUnit discovers via the <code>packages-spec</code> suite in <code>apps/qa</code>.
+They also expose builders and factories that other packages and applications
+can import as test dependencies.</p>
+
+<p><code>bl/auth-tests</code> for example provides <code>AccountFixture</code>, a static factory that
+assembles a valid <code>Account</code> with randomised defaults and optional overrides:</p>
+
+<pre><code class="php">// packages/bl-auth-tests/src/Fixtures/AccountFixture.php
+final readonly class AccountFixture
+{
+    public static function make(
+        ?AccountId $accountId = null,
+        ?Username $username = null,
+        ?PasswordHash $passwordHash = null,
+    ): Account {
+        return new Account(
+            accountId: $accountId ?? AccountIdFixture::make(),
+            username: $username ?? UsernameFixture::make(),
+            passwordHash: $passwordHash ?? PasswordHashFixture::make(),
+        );
+    }
+}
+</code></pre>
+
+<p><code>bl/game-tests</code> follows the same pattern, providing <code>PlayerFixture</code> and its value-object
+companions. A unit test in the QA application can pull fixtures from both packages
+without any setup duplication:</p>
+
+<pre><code class="php">// apps/qa/tests/Qalin/Spec/Application/Action/SignUpNewPlayerHandlerTest.php
+use Bl\Auth\Tests\Fixtures\Account\PasswordPlainFixture;
+use Bl\Auth\Tests\Fixtures\Account\UsernameFixture;
+use Bl\Game\Tests\Fixtures\PlayerFixture;
+
+public function test_it_signs_up_a_new_player_for_a_given_username_and_password(): void
+{
+    $username = UsernameFixture::makeString();
+    $passwordPlain = PasswordPlainFixture::makeString();
+    $expectedPlayer = PlayerFixture::make();
+
+    // ...
+}
+</code></pre>
+
+<h2 id="one-place-for-quality">One Place for Quality</h2>
+
+<p>Code quality is enforced from a single place: the QA application.</p>
+
+<p><code>apps/qa/composer.json</code> lists all packages in <code>require</code> and all tools in <code>require-dev</code>:</p>
+
+<pre><code class="json">{
+    "name": "bl/qa",
+    "type": "project",
+    "repositories": [
+        {"type": "path", "url": "../../packages/*"}
+    ],
+    "require": {
+        "php": "&gt;=8.5",
+        "ext-curl": "*",
+        "ext-pdo_pgsql": "*",
+        "bl/auth": "*@dev",
+        "bl/auth-bundle": "*@dev",
+        "bl/auth-pdopg": "*@dev",
+        "bl/exception": "*@dev",
+        "bl/exception-bundle": "*@dev",
+        "bl/game": "*@dev",
+        "bl/game-bundle": "*@dev",
+        "bl/game-pdopg": "*@dev",
+        "phpspec/prophecy-phpunit": "^2.5",
+        "symfony/console": "^8.0.4",
+        "symfony/framework-bundle": "^8.0.5",
+        "symfony/monolog-bundle": "^4.0.1",
+        "symfony/property-access": "^8.0.4",
+        "symfony/property-info": "^8.0.5",
+        "symfony/routing": "^8.0.4",
+        "symfony/runtime": "^8.0.1",
+        "symfony/serializer": "^8.0.5",
+        "symfony/twig-bundle": "^8.0.4",
+        "symfony/uid": "^8.0.4",
+        "symfony/yaml": "^8.0.1"
+    },
+    "require-dev": {
+        "bl/auth-tests": "*@dev",
+        "bl/game-tests": "*@dev",
+        "friendsofphp/php-cs-fixer": "^3.94.1",
+        "jangregor/phpstan-prophecy": "^2.3",
+        "phpstan/phpstan": "^2.1.39",
+        "phpunit/phpunit": "^13",
+        "rector/rector": "^2.3.7",
+        "rector/swiss-knife": "^2.3.5",
+        "symfony/dotenv": "^8.0",
+        "symfony/http-client": "^8.0.5",
+        "symfony/maker-bundle": "^1.66"
+    },
+    "config": {
+        "allow-plugins": {
+            "symfony/runtime": true
+        },
+        "bump-after-update": true,
+        "sort-packages": true
+    }
+}
+</code></pre>
+
+<p>Each tool is configured to scan everything: all apps (QA, monolith) and all packages.</p>
+
+<p><strong>PHPStan</strong> analyses them all at once:</p>
+
+<pre><code class="neon"># apps/qa/phpstan.neon.dist
+includes:
+    - phpstan-baseline.neon
+    - vendor/jangregor/phpstan-prophecy/extension.neon
+
+parameters:
+    level: 10
+    paths:
+        - src/
+        - tests/
+        - ../monolith/src/
+        - ../../packages/
+    excludePaths:
+        - templates/maker/
+    bootstrapFiles:
+        - vendor/autoload.php
+        - ../monolith/vendor/autoload.php
+        # legacy code is in phpincludes/, not src/ - baseline is empty
+</code></pre>
+
+<p><strong>PHP CS Fixer</strong> scans the same three locations, but unlike PHPStan it reaches
+into <code>phpincludes/</code>. Two legacy files that break the indentation rule are
+excluded, and <code>declare_strict_types</code> is disabled: CS Fixer would apply it
+blindly to every file, including the legacy ones where it causes fatal errors:</p>
+
+<pre><code class="php">// apps/qa/.php-cs-fixer.dist.php
+$finder = (new PhpCsFixer\Finder())
+    -&gt;in([
+        __DIR__,
+        __DIR__.'/../monolith',
+        __DIR__.'/../../packages',
+    ])
+    -&gt;exclude(['var'])
+    -&gt;notPath([
+        'phpincludes/bisous.php',
+        'phpincludes/cerveau.php',
+    ])
+;
+
+return (new PhpCsFixer\Config())
+    -&gt;setRules([
+        // ...
+        'declare_strict_types' =&gt; false, // would break legacy phpincludes/
+        // ...
+    ])
+    // ...
+;
+</code></pre>
+
+<p><strong>Rector</strong> covers the same paths and applies the <code>TYPE_DECLARATION</code> set, which
+includes adding <code>declare(strict_types=1)</code>. Unlike CS Fixer, Rector analyses
+each file before modifying it and only applies the transformation where it is
+safe to do so; legacy files in <code>phpincludes/</code> that would break are left alone:</p>
+
+<pre><code class="php">// apps/qa/rector.php
+return RectorConfig::configure()
+    -&gt;withPaths([
+        __DIR__,
+        __DIR__.'/../monolith',
+        __DIR__.'/../../packages',
+    ])
+    -&gt;withSkip([
+        __DIR__.'/../monolith/vendor',
+        __DIR__.'/../../packages/*/vendor',
+        // ...
+    ])
+    -&gt;withSets([
+        SetList::PHP_85,
+        SetList::TYPE_DECLARATION, // adds declare(strict_types=1) where safe
+        // ...
+    ]);
+</code></pre>
+
+<p><strong>PHPUnit</strong> organises tests into named suites covering all packages and both apps:</p>
+
+<pre><code class="xml">&lt;!-- apps/qa/phpunit.xml.dist --&gt;
+&lt;testsuites&gt;
+    &lt;testsuite name="packages-spec"&gt;
+        &lt;directory&gt;../../packages&lt;/directory&gt;
+    &lt;/testsuite&gt;
+    &lt;testsuite name="qalin-spec"&gt;
+        &lt;directory&gt;tests/spec&lt;/directory&gt;
+    &lt;/testsuite&gt;
+    &lt;testsuite name="qalin-integration"&gt;
+        &lt;directory&gt;tests/integration&lt;/directory&gt;
+    &lt;/testsuite&gt;
+    &lt;testsuite name="monolith-smoke"&gt;
+        &lt;directory&gt;tests/monolith/smoke&lt;/directory&gt;
+    &lt;/testsuite&gt;
+    &lt;testsuite name="monolith-end-to-end"&gt;
+        &lt;directory&gt;tests/monolith/end-to-end&lt;/directory&gt;
+    &lt;/testsuite&gt;
+&lt;/testsuites&gt;
+</code></pre>
+
+<p>Running <code>make phpunit</code> from the QA application executes every package spec,
+every Qalin test, and every monolith integration test in one command.</p>
+
+<p>We can select a specific subset of tests, using PHPUnit's options:</p>
+
+<pre><code>make phpunit arg='--testsuite qalin-spec,qalin-integration --filter Handler'
+</code></pre>
+
+<h2 id="docker-integration">Docker Integration</h2>
+
+<p>Each application has its own <code>compose.yaml</code>. The QA application mounts the
+packages directory and the monolith source as Docker volumes:</p>
+
+<pre><code class="yaml"># apps/qa/compose.yaml (excerpt)
+services:
+  app:
+    volumes:
+      - ../../packages:/packages
+      - ../monolith:/apps/monolith
+      - bisouland-monolith_vendor:/apps/monolith/vendor
+    networks:
+      - bisouland-monolith_default
+    ports:
+      - "43010:8080"
+</code></pre>
+
+<p>Mounting the monolith's <code>vendor</code> from the monolith's own named volume
+avoids duplicating the dependency installation.
+The monolith must be started before the QA application so the named volume exists.
+The root <code>apps-init</code> target enforces this order: it runs the monolith's <code>app-init</code>
+before QA's, so the volume is always present by the time QA's containers start.</p>
+
+<p>The QA application joins the monolith's Docker network (<code>bisouland-monolith_default</code>),
+which allows the integration and end-to-end test suites to send real HTTP requests
+to the monolith container using its internal hostname.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Port</th>
+  <th>Service</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>43000</td>
+  <td>Monolith (web)</td>
+</tr>
+<tr>
+  <td>43001</td>
+  <td>Monolith (DB)</td>
+</tr>
+<tr>
+  <td>43010</td>
+  <td>Qalin (web)</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p>Port assignments follow a convention: the <code>43</code> prefix is inspired by the game itself
+  ("love" has 4 letters, "you" has 3), the next two digits identify the application
+  (<code>00</code> for monolith, <code>01</code> for QA), and the last digit identifies the service
+  (<code>0</code> for the web server, <code>1</code> for the database).</p>
+</blockquote>
+
+<h2 id="root-makefile">Root Makefile</h2>
+
+<p>A root <code>Makefile</code> ties everything together with two targets:</p>
+
+<pre><code class="makefile"># Makefile
+apps-init:
+    @$(MAKE) -C apps/monolith app-init
+    @$(MAKE) -C apps/qa app-init
+
+apps-qa:
+    @$(MAKE) -C apps/qa app-qa
+</code></pre>
+
+<p><code>make apps-init</code> bootstraps both applications in the correct order.
+<code>make apps-qa</code> runs the full quality pipeline from the QA application,
+which in turn runs code style checks, static analysis, refactoring validation,
+and all test suites:</p>
+
+<pre><code class="makefile"># apps/qa/Makefile (excerpt)
+app-qa: composer-dump cs-check phpstan rector-check phpunit
+</code></pre>
+
+<p>One command covers the entire codebase. No CI configuration file is required:
+whatever runs locally is what would run in any future CI environment.</p>
+
+<h2 id="tradeoffs">Tradeoffs</h2>
+
+<p>A monorepo is not without cost.</p>
+
+<p><strong>Coupling risk</strong>: packages sharing a repository make it easy to skip proper
+interfaces. A shortcut that imports an internal implementation directly rather
+than going through the declared interface is one file away instead of one
+repository away. The package graph above enforces discipline by design,
+but nothing in the tooling prevents a careless <code>use</code> statement.</p>
+
+<p><strong>No granular access control</strong>: a contributor with read access to the
+repository can see every application and every package. For BisouLand this
+is not a concern, but it would matter in a team where different members
+should see different parts of the system.</p>
+
+<p><strong>Synchronised upgrades</strong>: upgrading a shared dependency or the PHP version
+requires every package and application to be updated at once. There is no
+gradual rollout across repositories; the whole monorepo moves together.
+For a small project this is an advantage as much as a cost, but in a large
+codebase with many packages it can turn a routine upgrade into a significant
+coordinated effort.</p>
+
+<p><strong>Repository growth</strong>: every application, package, vendor directory (as
+bind-mount or volume), and test fixture lives in the same history. <code>git clone</code>
+and <code>git log</code> grow with the full project. For a project of this size the
+impact is negligible; at the scale of a large organisation it is not.</p>
+
+<p>For BisouLand, a single-team project where all packages are internal,
+none of these tradeoffs are blocking. They are worth naming so the choice
+remains a deliberate one.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>BisouLand started as a single PHP file importing other PHP files.
+After ten iterations it has two applications and ten packages.</p>
+
+<p>A monorepo keeps them together without any tooling beyond what Composer already provides:</p>
+
+<ul>
+<li><strong>Path repositories</strong> resolve local packages by directory rather than Packagist,
+with symlinks so edits are picked up immediately</li>
+<li><strong><code>*@dev</code> constraints</strong> opt out of version pinning for in-repository packages</li>
+<li><strong>Cross-cutting tools</strong> run from one place, configured once, covering everything</li>
+<li><strong>Docker volumes</strong> share package sources and compiled assets across containers</li>
+<li><strong>Root Makefile</strong> gives a single entry point for bootstrapping and quality checks</li>
+</ul>
+
+<p>No monorepo-specific tooling was needed. No version synchronisation scripts.
+No split tooling to publish packages separately. Everything lives in one checkout,
+one <code>git log</code>, one <code>make apps-qa</code>.</p>
+
+<blockquote>
+  <p>🤔 <strong>Retrospective</strong>: this approach works well as long as all packages remain
+  internal to the project. The moment one needs to be published to Packagist for
+  external consumption, path repositories and <code>*@dev</code> constraints are no longer
+  sufficient. Tools such as <a href="https://github.com/symplify/monorepo-builder"><code>symplify/monorepo-builder</code></a>
+  or <a href="https://github.com/danharrin/monorepo-split-github-action">GitHub Actions with a split workflow</a>
+  automate publishing each package to its own repository.
+  For BisouLand, that day has not come.</p>
+</blockquote>
+
+<p>Want to learn more?</p>
+
+<ul>
+<li><a href="https://github.com/pyricau/bisouland/tree/4.0.24">browse BisouLand source code on Github</a></li>
+<li><a href="https://medium.com/sroze/managing-monolithic-repositories-with-composers-path-repository-c28af031746d">Managing monolithic repositories with Composer's path repository</a> by Samuel Roze,
+the article that first described this pattern: one repository, multiple <code>composer.json</code> files, path repositories linking them</li>
+<li><a href="https://github.com/beberlei/composer-monorepo-plugin">composer-monorepo-plugin</a> by Benjamin Eberlei,
+a Composer plugin that auto-discovers all <code>composer.json</code> files in subdirectories and wires their dependencies,
+removing the need to declare path repositories by hand</li>
+<li><a href="https://github.com/soyuka/pmu">pmu</a> by Antoine Bluchet, 
+a CLI tool for managing dependencies across all packages in a monorepo at once:
+<code>pmu require symfony/uid</code> adds the constraint to every <code>composer.json</code> that needs it in a single command</li>
+</ul>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Qalin: Test Control Interface, built with modern Symfony]]></title>
             <link href="/2026/02/25/xl-10-qalin-test-control-interface-with-symfony.html"/>
