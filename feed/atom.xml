@@ -3,11 +3,1003 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2026-03-04T07:18:05+00:00</updated>
+    <updated>2026-03-18T12:02:57+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[PHP-TUI]]></title>
+            <link href="/2026/03/18/xl-12-php-tui.html"/>
+            <updated>2026-03-18T00:00:00+00:00</updated>
+            <id>/2026/03/18/xl-12-php-tui.html</id>
+            <content type="html"><![CDATA[<p>BisouLand is an eXtreme Legacy (2005 LAMP) app, an idle browser game where players
+take each other's Love Points by blowing kisses across clouds.</p>
+
+<p>In the <a href="/2026/02/25/xl-10-qalin-test-control-interface-with-symfony/">previous article</a>,
+we built <strong>Qalin</strong>: BisouLand's Test Control Interface, a dedicated Symfony app that lets
+anyone on the team reach any game state on demand, without touching production code.</p>
+
+<p>Qalin already has three interfaces: CLI, API, and a Web UI.</p>
+
+<p>After using it for a bit, I realised to my utter dismay that I somehow preferred
+using the Web UI, instead of the CLI one as I'd expect 🙀.
+I live in the terminal, using a Web UI or GUI is unacceptable, so let's fix that by...</p>
+
+<p>Introducing a <strong>TUI</strong> (Terminal User Interface).
+In today's article, we'll build one with <a href="https://php-tui.github.io/php-tui/">PHP-TUI</a>.</p>
+
+<p><img alt="Qalin TUI demo" src="/images/xl-12-00-qalin-tui-demo.gif" width="100%" /></p>
+
+<p><em>Did you notice the animated banner when switching to new screen or submitting the forms? Nice!</em></p>
+
+<h2 id="what-is-php-tui%3F">What is PHP-TUI?</h2>
+
+<p>PHP-TUI is a PHP port of <a href="https://ratatui.rs/">Ratatui</a>, the popular Rust TUI library.</p>
+
+<p>It gives you a retained-mode widget system, a layout engine based on constraints,
+and a terminal backend: all the building blocks to draw full-screen interactive
+applications directly in your terminal.</p>
+
+<p>The core loop is straightforward:</p>
+
+<ol>
+<li>Poll the terminal for keyboard events</li>
+<li>Update application state based on those events</li>
+<li>Build a widget tree that reflects current state</li>
+<li>Render it to the screen</li>
+</ol>
+
+<p>No browser, no HTTP server, no JavaScript framework.
+Just your terminal, a render loop, and widgets.</p>
+
+<p>PHP-TUI is powerful precisely because it stays out of your way:
+it doesn't come with any opinionated defaults or conventions about how to structure
+an application. It gives you widgets, a layout engine, and a terminal backend, and
+leaves everything else to you.</p>
+
+<p>But that means it can be quite daunting to build your own application with it,
+especially since there are (at the time of writing) not a lot of resources about it.</p>
+
+<p>Most of what follows, the <code>Screen</code> interface, the <code>Action</code> navigation model,
+the <code>Component</code> abstraction, the <code>Form</code> system, the custom widgets, are things I designed myself,
+loosely inspired by my partial understanding of how Ratatui applications are structured.
+Take them as one possible approach, not as the official way to use PHP-TUI.</p>
+
+<p>Let's walk through it.</p>
+
+<h2 id="the-main-loop">The Main Loop</h2>
+
+<p><code>QalinTui</code> is the entry point. It sets up the terminal, registers widget renderers,
+and runs the event/render loop:</p>
+
+<pre><code class="php">public function run(): void
+{
+    $terminal = Terminal::new();
+    $backend = PhpTermBackend::new($terminal);
+    $display = DisplayBuilder::default($backend)
+        -&gt;addWidgetRenderer(new LayoutWidgetRenderer())
+        -&gt;addWidgetRenderer(new BannerWidgetRenderer())
+        -&gt;addWidgetRenderer(new FormWidgetRenderer())
+        -&gt;addWidgetRenderer(new KeyHintsWidgetRenderer())
+        // ... more custom renderers
+        -&gt;fullscreen()
+        -&gt;build()
+    ;
+
+    try {
+        $terminal-&gt;execute(Actions::cursorHide());
+        $terminal-&gt;execute(Actions::alternateScreenEnable());
+        $terminal-&gt;enableRawMode();
+
+        while (true) {
+            // Drain all queued events before redrawing
+            while ($event = $terminal-&gt;events()-&gt;next()) {
+                $action = $this-&gt;handle($event);
+                if ($action instanceof Quit) {
+                    return;
+                }
+            }
+
+            $display-&gt;draw($this-&gt;activeScreen-&gt;build());
+            usleep(50_000); // 50 ms
+        }
+    } finally {
+        $terminal-&gt;disableRawMode();
+        $terminal-&gt;execute(Actions::alternateScreenDisable());
+        $terminal-&gt;execute(Actions::cursorShow());
+    }
+}
+</code></pre>
+
+<p>Three terminal setup calls worth knowing:</p>
+
+<ul>
+<li><code>alternateScreenEnable()</code> switches to a blank buffer, so closing the TUI restores the
+terminal exactly as it was before</li>
+<li><code>enableRawMode()</code> disables the default echo and buffering behaviours, so keypresses go
+directly to the application instead of being processed by the shell</li>
+<li><code>cursorHide()</code> removes the blinking cursor from the TUI surface</li>
+</ul>
+
+<p>The <code>finally</code> block ensures all three are reversed on exit, whether the app quits normally
+or throws.</p>
+
+<p>The inner loop drains all queued events before each redraw. This avoids redundant renders
+when multiple events arrive within the same 50 ms window.</p>
+
+<blockquote>
+  <p>🐘 <strong>PHP-TUI</strong>: <code>DisplayBuilder::default()</code> is the entry point for constructing a
+  display. <code>addWidgetRenderer()</code> registers custom renderers alongside the built-in ones.
+  <code>fullscreen()</code> sizes the surface to the terminal dimensions. <code>build()</code> returns the
+  display ready for use.</p>
+</blockquote>
+
+<h2 id="the-screen-interface">The Screen Interface</h2>
+
+<p>The application is structured around screens.</p>
+
+<p>Each screen is a full-page view with three responsibilities:</p>
+
+<pre><code class="php">interface Screen
+{
+    // Unique display name (shown in menus, titles, etc.)
+    public function name(): string;
+
+    // Renders current state as a Widget tree for this frame
+    public function build(): Widget;
+
+    // Processes an input event and signals what should happen next
+    public function handle(Event $event): Action;
+}
+</code></pre>
+
+<p><code>handle()</code> returns one of three <code>Action</code> types:</p>
+
+<ul>
+<li><code>Stay</code>: the event was handled internally, stay on this screen</li>
+<li><code>Navigate(ScreenClass::class)</code>: transition to another screen</li>
+<li><code>Quit</code>: exit the TUI</li>
+</ul>
+
+<p><code>QalinTui</code> owns all registered screens and a pointer to the active one.
+When <code>handle()</code> returns <code>Navigate</code>, it updates the active screen pointer and returns
+<code>Stay</code> to the loop:</p>
+
+<pre><code class="php">public function handle(Event $event): Action
+{
+    $action = $this-&gt;activeScreen-&gt;handle($event);
+
+    if ($action instanceof Navigate) {
+        $this-&gt;activeScreen = $this-&gt;screens[$action-&gt;screen] ?? $this-&gt;activeScreen;
+
+        return new Stay();
+    }
+
+    return $action;
+}
+</code></pre>
+
+<p>Screens are registered via Symfony's <code>#[AutowireIterator]</code> by DI tag, so adding a new
+screen is a matter of implementing <code>Screen</code> and tagging it, no wiring by hand.</p>
+
+<h2 id="the-home-screen">The Home Screen</h2>
+
+<p><code>HomeScreen</code> is the entry point. It shows a tab-split choice input
+of available actions and scenarios.</p>
+
+<p><img alt="Qalin TUI Home Screen" src="/images/xl-12-01-qalin-tui-home-screen.png" width="100%" /></p>
+
+<p>The choice input combines a fuzzy-find filter and a navigable list in a single component,
+<code>ChoiceFieldComponent</code>. The screen passes it the screen names for the active tab and
+delegates all filtering and navigation to it.</p>
+
+<p><code>build()</code> is straightforward:</p>
+
+<pre><code class="php">public function build(): Widget
+{
+    return LayoutWidget::from(
+        $this-&gt;qalinAnimatedBanner-&gt;widget(),
+        $this-&gt;tabs-&gt;build(),      // hotkey tab bar: "1 Actions / 2 Scenarios"
+        $this-&gt;choiceInput-&gt;build(), // fuzzy-find filter + navigable list
+        KeyHintsWidget::from(['Next' =&gt; 'Tab', 'Select' =&gt; 'Enter', 'Quit' =&gt; 'Esc']),
+    );
+}
+</code></pre>
+
+<p><code>ChoiceFieldComponent::build()</code> returns a single widget that renders both the filter
+input and the list, so the screen body is just <code>$this-&gt;choiceInput-&gt;build()</code>: no
+manual <code>GridWidget</code>, no <code>ListWidget</code>, no cursor tracking.</p>
+
+<p>The <code>handle()</code> method uses PHP's <code>match</code> to dispatch on event type and key code:</p>
+
+<pre><code class="php">public function handle(Event $event): Action
+{
+    return match (true) {
+        $event instanceof CodedKeyEvent =&gt; match ($event-&gt;code) {
+            KeyCode::Esc =&gt; new Quit(),
+            KeyCode::Tab, KeyCode::Down =&gt; $this-&gt;handleChoiceInput(CodedKeyEvent::new(KeyCode::Down)),
+            KeyCode::BackTab, KeyCode::Up =&gt; $this-&gt;handleChoiceInput(CodedKeyEvent::new(KeyCode::Up)),
+            KeyCode::Enter =&gt; $this-&gt;selectCurrentScreen(),
+            default =&gt; $this-&gt;handleChoiceInput($event),
+        },
+        $event instanceof CharKeyEvent =&gt; match ($this-&gt;tabs-&gt;handle($event)) {
+            ComponentState::Changed =&gt; $this-&gt;resetChoiceInput(),
+            ComponentState::Handled =&gt; new Stay(),
+            ComponentState::Ignored, ComponentState::Submitted =&gt; $this-&gt;handleChoiceInput($event),
+        },
+        default =&gt; new Stay(),
+    };
+}
+</code></pre>
+
+<p>Tab hotkeys (<code>1</code> for Actions, <code>2</code> for Scenarios) are tried first for every character
+event. If the character is not a hotkey, it is forwarded to <code>ChoiceFieldComponent</code>,
+which appends it to the filter. Switching tabs resets the choice input for the new tab's
+screen list.</p>
+
+<h2 id="action-screens">Action Screens</h2>
+
+<p>Each Qalin action has its own screen. They all follow the same pattern:
+a form on the left, the API response on the right.</p>
+
+<p><img alt="Qalin TUI Action Screen" src="/images/xl-12-02-qalin-tui-action-screen.png" width="100%" /></p>
+
+<p>Here is <code>UpgradeInstantlyForFreeScreen</code>:</p>
+
+<pre><code class="php">public function __construct(
+    private readonly HttpClientInterface $qalinHttpClient,
+    private readonly QalinAnimatedBanner $qalinAnimatedBanner,
+) {
+    $this-&gt;form = FormComponent::fromFields(
+        InputFieldComponent::fromLabel('Username'),
+        ChoiceFieldComponent::fromLabelAndChoices('Upgradable', array_map(
+            static fn (Upgradable $u): string =&gt; $u-&gt;value,
+            Upgradable::cases(),
+        )),
+        InputFieldComponent::fromLabel('Levels')-&gt;withValue('1'),
+        SubmitFieldComponent::fromLabel('Upgrade'),
+    );
+}
+
+public function build(): Widget
+{
+    return LayoutWidget::from(
+        $this-&gt;qalinAnimatedBanner-&gt;widget(),
+        ConstrainedWidget::wrap(
+            ParagraphWidget::fromLines(Line::fromSpans(
+                Span::styled('Action: UpgradeInstantlyForFree', Style::default()
+                    -&gt;fg(AnsiColor::Yellow)
+                    -&gt;addModifier(Modifier::BOLD)),
+            )),
+            Constraint::length(3),
+        ),
+        GridWidget::default()
+            -&gt;direction(Direction::Horizontal)
+            -&gt;constraints(
+                Constraint::percentage(50),
+                Constraint::percentage(50),
+            )
+            -&gt;widgets(
+                $this-&gt;form-&gt;build(),
+                BlockWidget::default()
+                    -&gt;borders(Borders::ALL)
+                    -&gt;borderType(BorderType::Rounded)
+                    -&gt;titles(Title::fromString('Result'))
+                    -&gt;widget(KeyValueWidget::fromRows($this-&gt;result ?? [])),
+            ),
+        KeyHintsWidget::from(['Next' =&gt; 'Tab', 'Submit' =&gt; 'Enter', 'Back' =&gt; 'Esc']),
+    );
+}
+
+public function handle(Event $event): Action
+{
+    if ($event instanceof CodedKeyEvent &amp;&amp; KeyCode::Esc === $event-&gt;code) {
+        $this-&gt;qalinAnimatedBanner-&gt;animate();
+
+        return new Navigate(HomeScreen::class);
+    }
+
+    if (ComponentState::Submitted !== $this-&gt;form-&gt;handle($event)) {
+        return new Stay();
+    }
+
+    $this-&gt;qalinAnimatedBanner-&gt;animate();
+
+    $response = $this-&gt;qalinHttpClient-&gt;request('POST', 'api/v1/actions/upgrade-instantly-for-free', [
+        'json' =&gt; [
+            'username'   =&gt; $this-&gt;form-&gt;getValues()['Username'],
+            'upgradable' =&gt; $this-&gt;form-&gt;getValues()['Upgradable'],
+            'levels'     =&gt; (int) $this-&gt;form-&gt;getValues()['Levels'],
+        ],
+    ]);
+    $this-&gt;result = $response-&gt;toArray(false);
+
+    return new Stay();
+}
+</code></pre>
+
+<p>The <code>FormComponent</code> manages tab-cycling between fields and signals <code>ComponentState::Submitted</code>
+when the submit button is pressed. The screen delegates all form events to it and only
+reacts to the <code>Submitted</code> state: it does not need to know which field is focused or
+how the cursor moves.</p>
+
+<h2 id="custom-widgets">Custom Widgets</h2>
+
+<p>PHP-TUI ships a set of built-in widgets (Paragraph, Grid, Block, List, etc.).
+For anything that needs different composition or reuse, you create a custom widget.</p>
+
+<p>A custom widget is two classes:</p>
+
+<ol>
+<li>A <strong>data class</strong> (the widget itself): holds parameters, has no rendering logic</li>
+<li>A <strong>renderer</strong>: converts the widget data into built-in widget calls</li>
+</ol>
+
+<p><code>HotkeyTabsWidget</code> renders a tab bar like <code>[1] Actions | [2] Scenarios</code>.
+The data class holds the tabs map, the focused hotkey, and three style properties:</p>
+
+<pre><code class="php">final readonly class HotkeyTabsWidget implements Widget, Constrained
+{
+    /** @param non-empty-array&lt;array-key, string&gt; $hotkeyTabs hotkey =&gt; label */
+    private function __construct(
+        public array $hotkeyTabs,
+        public string $focusedHotkey,
+        public Style $hotkeyStyle,
+        public Style $focusedLabelStyle,
+        public Style $unfocusedLabelsStyle,
+    ) {
+    }
+
+    /** @param array&lt;array-key, string&gt; $tabs hotkey =&gt; label */
+    public static function fromTabs(array $tabs): self
+    {
+        if ([] === $tabs) {
+            throw ValidationFailedException::make(
+                'Invalid "HotkeyTabsWidget" parameter: tabs should not be empty (`[]` given)',
+            );
+        }
+
+        foreach (array_keys($tabs) as $hotkey) {
+            if (1 !== mb_strlen((string) $hotkey)) {
+                throw ValidationFailedException::make(
+                    "Invalid \"HotkeyTabsWidget\" parameter: tab hotkey should be a single character (`{$hotkey}` given)",
+                );
+            }
+        }
+
+        return new self(
+            $tabs,
+            (string) array_key_first($tabs),
+            Style::default()-&gt;fg(AnsiColor::Blue)-&gt;addModifier(Modifier::BOLD),
+            Style::default()-&gt;fg(AnsiColor::Yellow)-&gt;addModifier(Modifier::BOLD),
+            Style::default()-&gt;fg(AnsiColor::DarkGray),
+        );
+    }
+
+    public function focus(string $hotkey): self
+    {
+        if (!\array_key_exists($hotkey, $this-&gt;hotkeyTabs)) {
+            throw ValidationFailedException::make(
+                "Invalid \"HotkeyTabsWidget\" parameter: focusedHotkey should match an existing tab hotkey (`{$hotkey}` given)",
+            );
+        }
+
+        return new self(
+            $this-&gt;hotkeyTabs,
+            $hotkey,
+            $this-&gt;hotkeyStyle,
+            $this-&gt;focusedLabelStyle,
+            $this-&gt;unfocusedLabelsStyle,
+        );
+    }
+
+    public function constraint(): LengthConstraint
+    {
+        return Constraint::length(3);
+    }
+
+    // hotkeyStyle(), focusedLabelStyle(), unfocusedLabelsStyle() withers omitted for brevity
+}
+</code></pre>
+
+<p>The widget is immutable: <code>focus()</code> returns a new instance rather than mutating state.
+<code>constraint()</code> is part of the <code>Constrained</code> interface, which lets the layout system
+ask the widget how much space it needs (3 rows: 1 content + 2 border).</p>
+
+<p>The renderer builds the <code>[1] Actions | [2] Scenarios</code> line from <code>Span</code> elements,
+applying the focused or unfocused label style depending on which hotkey is active:</p>
+
+<pre><code class="php">final class HotkeyTabsWidgetRenderer implements WidgetRenderer
+{
+    public function render(
+        WidgetRenderer $renderer,
+        Widget $widget,
+        Buffer $buffer,
+        Area $area,
+    ): void {
+        if (!$widget instanceof HotkeyTabsWidget) {
+            return;
+        }
+
+        $spans = [];
+        $isFirstTab = true;
+        foreach ($widget-&gt;hotkeyTabs as $key =&gt; $label) {
+            $hotkey = (string) $key;
+            $label  = (string) $label;
+
+            if (!$isFirstTab) {
+                $spans[] = Span::styled(' | ', $widget-&gt;unfocusedLabelsStyle);
+            }
+
+            $isFirstTab = false;
+
+            $spans[] = Span::styled('[', $widget-&gt;unfocusedLabelsStyle);
+            $spans[] = Span::styled($hotkey, $widget-&gt;hotkeyStyle);
+            $spans[] = Span::styled('' !== $label ? '] ' : ']', $widget-&gt;unfocusedLabelsStyle);
+            $spans[] = Span::styled(
+                $label,
+                $hotkey === $widget-&gt;focusedHotkey
+                    ? $widget-&gt;focusedLabelStyle
+                    : $widget-&gt;unfocusedLabelsStyle,
+            );
+        }
+
+        $renderer-&gt;render(
+            $renderer,
+            ParagraphWidget::fromLines(Line::fromSpans(...$spans)),
+            $buffer,
+            $area,
+        );
+    }
+}
+</code></pre>
+
+<p>The renderer receives the <code>Area</code> (width and height of the allocated space) and the
+<code>Buffer</code> (the mutable character grid for this frame). It does not write to the buffer
+directly: it delegates to a built-in widget via <code>$renderer-&gt;render()</code>.
+That is the common pattern: assemble standard widgets from the widget's data, then
+pass rendering back to the framework.</p>
+
+<blockquote>
+  <p>🐘 <strong>PHP-TUI</strong>: register custom renderers with <code>DisplayBuilder::addWidgetRenderer()</code>.
+  Renderers are checked in order; the first one that recognises the widget class wins.
+  The <code>WidgetRenderer $renderer</code> parameter passed to <code>render()</code> is the full chain,
+  so delegating to built-in widgets is just <code>$renderer-&gt;render($renderer, $childWidget, $buffer, $area)</code>.</p>
+</blockquote>
+
+<h2 id="components">Components</h2>
+
+<p>A <strong>component</strong> wraps a widget with mutable state and event handling.
+Where a widget is pure data built fresh each frame, a component lives across frames
+and tracks what has changed.</p>
+
+<p><code>HotkeyTabsComponent</code> wraps <code>HotkeyTabsWidget</code> and adds focus state and event handling.
+It is generic over <code>HotkeyTab</code>, an interface with two methods:</p>
+
+<pre><code class="php">interface HotkeyTab
+{
+    public function key(): string;   // single character, e.g. '1'
+    public function label(): string; // display name, e.g. 'Actions'
+}
+</code></pre>
+
+<p>Any backed enum implementing <code>HotkeyTab</code> can be used as a tab set.
+<code>HomeTab</code> is the one used by <code>HomeScreen</code>:</p>
+
+<pre><code class="php">enum HomeTab: string implements HotkeyTab
+{
+    case Actions   = 'Actions';
+    case Scenarios = 'Scenarios';
+
+    public function key(): string
+    {
+        return match ($this) {
+            self::Actions   =&gt; '1',
+            self::Scenarios =&gt; '2',
+        };
+    }
+
+    public function label(): string { return $this-&gt;value; }
+}
+</code></pre>
+
+<p>The component itself:</p>
+
+<pre><code class="php">/** @template TTab of HotkeyTab */
+final class HotkeyTabsComponent implements Component
+{
+    private int $focusedIndex = 0;
+
+    /** @param non-empty-list&lt;TTab&gt; $tabs */
+    private function __construct(private readonly array $tabs) {}
+
+    /** @return self&lt;TTab&gt; */
+    public static function fromTabs(array $tabs): self
+    {
+        return new self($tabs);
+    }
+
+    public function handle(Event $event): ComponentState
+    {
+        if (!$event instanceof CharKeyEvent) {
+            return ComponentState::Ignored;
+        }
+
+        foreach ($this-&gt;tabs as $index =&gt; $tab) {
+            if ($event-&gt;char === $tab-&gt;key()) {
+                if ($index === $this-&gt;focusedIndex) {
+                    return ComponentState::Handled;
+                }
+
+                $this-&gt;focusedIndex = $index;
+
+                return ComponentState::Changed;
+            }
+        }
+
+        return ComponentState::Ignored;
+    }
+
+    public function build(): HotkeyTabsWidget
+    {
+        $tabs = [];
+        foreach ($this-&gt;tabs as $tab) {
+            $tabs[$tab-&gt;key()] = $tab-&gt;label();
+        }
+
+        return HotkeyTabsWidget::fromTabs($tabs)
+            -&gt;focus($this-&gt;tabs[$this-&gt;focusedIndex]-&gt;key());
+    }
+
+    /** @return TTab */
+    public function isFocused(): mixed
+    {
+        return $this-&gt;tabs[$this-&gt;focusedIndex];
+    }
+}
+</code></pre>
+
+<p><code>handle()</code> returns <code>ComponentState::Changed</code> when the focused tab changes, <code>Handled</code>
+when the same tab's hotkey is pressed again, and <code>Ignored</code> for anything else.
+The screen uses that distinction to decide whether to reset dependent state (e.g. the
+choice input) or simply stay put.</p>
+
+<p><code>build()</code> snapshots the current focus into a fresh <code>HotkeyTabsWidget</code> each frame.
+The widget has no memory of previous frames; the component does.</p>
+
+<h2 id="animations">Animations</h2>
+
+<p>The Qalin banner is animated. When the user navigates between screens, it plays a
+short animation: either a <strong>Beat</strong> (the logo contracts and shifts to magenta) or
+<strong>Sparkles</strong> (sparkle characters appear on the logo).</p>
+
+<p>Both implement the same <code>Animation</code> interface:</p>
+
+<pre><code class="php">interface Animation
+{
+    public function animate(): void;
+    public function logo(): array;
+    public function logoStyle(): Style;
+}
+</code></pre>
+
+<p><code>Beat</code> is time-based. It stores the moment <code>animate()</code> was called, then
+<code>isBeating()</code> derives the current state from elapsed time:</p>
+
+<pre><code class="php">final class Beat implements Animation
+{
+    private const BEAT_ON_SECONDS  = 0.15;
+    private const BEAT_OFF_SECONDS = 0.1;
+    private const BEAT_COUNT       = 2;
+
+    private ?float $beatStartedAt = null;
+
+    public function animate(): void
+    {
+        $this-&gt;beatStartedAt = $this-&gt;now();
+    }
+
+    public function logo(): array
+    {
+        return $this-&gt;isBeating() ? self::CONTRACTED_LOGO : QalinBanner::LOGO;
+    }
+
+    public function logoStyle(): Style
+    {
+        return $this-&gt;isBeating()
+            ? Style::default()-&gt;fg(AnsiColor::Magenta)
+            : Style::default()-&gt;fg(AnsiColor::Red);
+    }
+
+    private function isBeating(): bool
+    {
+        if (null === $this-&gt;beatStartedAt) {
+            return false;
+        }
+
+        $elapsed = $this-&gt;now() - $this-&gt;beatStartedAt;
+        $cycleSeconds = self::BEAT_ON_SECONDS + self::BEAT_OFF_SECONDS;
+        $totalSeconds = self::BEAT_COUNT * $cycleSeconds;
+
+        if ($elapsed &gt;= $totalSeconds) {
+            $this-&gt;beatStartedAt = null;
+
+            return false;
+        }
+
+        return fmod($elapsed, $cycleSeconds) &lt; self::BEAT_ON_SECONDS;
+    }
+
+    private function now(): float
+    {
+        return (float) $this-&gt;clock-&gt;now()-&gt;format('U.u');
+    }
+}
+</code></pre>
+
+<p>The animation has no state machine, no scheduler, no timer callback.
+<code>logo()</code> and <code>logoStyle()</code> are called every frame (every 50 ms);
+they read the clock, compute where we are in the animation, and return the right data.
+When the animation is over, <code>beatStartedAt</code> is reset to <code>null</code>.</p>
+
+<p><code>QalinAnimatedBanner</code> wraps the animations and exposes a single <code>widget()</code> method
+for screens to use:</p>
+
+<pre><code class="php">final class QalinAnimatedBanner
+{
+    public function animate(): void
+    {
+        $this-&gt;currentAnimation = $this-&gt;pickRandomAnimation();
+        $this-&gt;currentAnimation-&gt;animate();
+    }
+
+    public function widget(): BannerWidget
+    {
+        $logo      = $this-&gt;currentAnimation?-&gt;logo()      ?? QalinBanner::LOGO;
+        $logoStyle = $this-&gt;currentAnimation?-&gt;logoStyle() ?? Style::default()-&gt;fg(AnsiColor::Red);
+
+        return QalinBanner::widgetWithLogo($logo, $logoStyle);
+    }
+}
+</code></pre>
+
+<p>Screens call <code>$this-&gt;qalinAnimatedBanner-&gt;animate()</code> on navigation events (entering and
+leaving a screen), then let <code>widget()</code> return whatever frame the animation is currently on.</p>
+
+<blockquote>
+  <p>🎶 <strong>Symfony Clock</strong>: <code>ClockInterface</code> from <code>symfony/clock</code> lets the animation read
+  the current time without coupling to <code>time()</code> or <code>microtime()</code>. In tests, swap in a
+  <code>MockClock</code> and control time explicitly. For a feature as simple as a cosmetic
+  animation the test value is low, but the approach scales cleanly to anything
+  time-sensitive.</p>
+</blockquote>
+
+<h2 id="testing">Testing</h2>
+
+<p>Testing a TUI application might sound tricky, but the architecture makes it
+straightforward. There are three levels.</p>
+
+<h3 id="spec-tests%3A-widgets-and-components-in-isolation">Spec tests: widgets and components in isolation</h3>
+
+<p>Widgets and components are plain PHP classes with no terminal dependency.
+Testing them is just instantiating, calling methods, and asserting state.</p>
+
+<p><code>HotkeyTabsWidgetTest</code> covers construction, validation, focus switching, and styles:</p>
+
+<pre><code class="php">/** @param array&lt;array-key, string&gt; $tabs */
+#[DataProvider('tabsProvider')]
+#[TestDox('It has hotkeyTabs: $scenario')]
+public function test_it_has_hotkey_tabs(string $scenario, array $tabs): void
+{
+    $tabsWidget = HotkeyTabsWidget::fromTabs($tabs);
+
+    $this-&gt;assertSame($tabs, $tabsWidget-&gt;hotkeyTabs);
+}
+
+public static function tabsProvider(): \Generator
+{
+    yield [
+        'scenario' =&gt; "one as `['1' =&gt; 'TabA']` (`[hotkey =&gt; label]`)",
+        'tabs' =&gt; ['1' =&gt; 'TabA'],
+    ];
+    yield [
+        'scenario' =&gt; "many as `['1' =&gt; 'TabA', '2' =&gt; 'TabB', '3' =&gt; 'TabC']` (`[hotkey =&gt; label]`)",
+        'tabs' =&gt; ['1' =&gt; 'TabA', '2' =&gt; 'TabB', '3' =&gt; 'TabC'],
+    ];
+}
+
+/** @param array&lt;array-key, string&gt; $tabs */
+#[DataProvider('invalidTabsProvider')]
+#[TestDox('It fails when $scenario')]
+public function test_it_fails_with_invalid_tabs(string $scenario, array $tabs): void
+{
+    $this-&gt;expectException(ValidationFailedException::class);
+
+    HotkeyTabsWidget::fromTabs($tabs);
+}
+
+public static function invalidTabsProvider(): \Generator
+{
+    yield [
+        'scenario' =&gt; 'hotkeyTabs is empty (`[]` given)',
+        'tabs' =&gt; [],
+    ];
+    yield [
+        'scenario' =&gt; "hotkey is more than one character (`['ab' =&gt; 'TabA']` given)",
+        'tabs' =&gt; ['ab' =&gt; 'TabA'],
+    ];
+}
+</code></pre>
+
+<pre><code class="console">make phpunit arg='--testdox --order-by=default --filter HotkeyTabsWidgetTest'
+</code></pre>
+
+<pre><code>Hotkey Tabs Widget (Bl\Qa\Tests\Qalin\Spec\Infrastructure\PhpTui\Component\HotkeyTab\HotkeyTabsWidget)
+ ✔ It has hotkeyTabs: one as `['1' =&gt; 'TabA']` (`[hotkey =&gt; label]`)
+ ✔ It has hotkeyTabs: many as `['1' =&gt; 'TabA', '2' =&gt; 'TabB', '3' =&gt; 'TabC']` (`[hotkey =&gt; label]`)
+ ✔ It has hotkeyTabs: with empty label (e.g. `['1' =&gt; '']`)
+ ✔ It has constraint (e.g. Constraint::length(3): 1 content row + 2 border rows)
+ ✔ It fails when hotkeyTabs is empty (`[]` given)
+ ✔ It fails when hotkey is missing (`['TabA']` given)
+ ✔ It fails when hotkey is empty (`['' =&gt; 'TabA']` given)
+ ✔ It fails when hotkey is more than one character (`['ab' =&gt; 'TabA']` given)
+ ✔ It has focusedHotkey: first one by default (e.g. `1` for `TabA`)
+ ✔ It has focusedHotkey: can switch to another one (e.g. `focus('2')` for `TabB`)
+ ✔ It fails when focusing on non existing hotkey (e.g. `focus('4')`)
+ ✔ It has default style: hotkey in blue bold
+ ✔ It has default style: focusedLabel in yellow bold
+ ✔ It has default style: unfocusedLabels in dark gray
+ ✔ It can customize style: hotkey
+ ✔ It can customize style: focusedLabel
+ ✔ It can customize style: unfocusedLabels
+</code></pre>
+
+<p><code>HotkeyTabsComponentTest</code> covers event handling and the <code>build()</code> snapshot:</p>
+
+<pre><code class="php">#[TestDox("It reports ComponentState::Changed when pressing another tab's hotkey")]
+public function test_it_reports_changed_when_pressing_another_tabs_hotkey(): void
+{
+    $tabs = HotkeyTabsComponent::fromTabs(HotkeyFixtureTab::cases());
+    $tab  = HotkeyFixtureTab::TabB;
+
+    $componentState = $tabs-&gt;handle(CharKeyEvent::new($tab-&gt;key()));
+
+    $this-&gt;assertSame(ComponentState::Changed, $componentState);
+    $this-&gt;assertSame($tab, $tabs-&gt;isFocused());
+}
+
+#[DataProvider('ignoredEventsProvider')]
+#[TestDox('It reports ComponentState::Ignored when $scenario')]
+public function test_it_reports_ignored(string $scenario, Event $event): void
+{
+    $tabs = HotkeyTabsComponent::fromTabs(HotkeyFixtureTab::cases());
+
+    $componentState = $tabs-&gt;handle($event);
+
+    $this-&gt;assertSame(ComponentState::Ignored, $componentState);
+    $this-&gt;assertSame(HotkeyFixtureTab::TabA, $tabs-&gt;isFocused());
+}
+
+public static function ignoredEventsProvider(): \Generator
+{
+    yield [
+        'scenario' =&gt; 'pressing an unregistered hotkey',
+        'event' =&gt; CharKeyEvent::new('x'),
+    ];
+    yield [
+        'scenario' =&gt; 'receiving a non CharKeyEvent (e.g. KeyCode::Tab)',
+        'event' =&gt; CodedKeyEvent::new(KeyCode::Tab),
+    ];
+}
+</code></pre>
+
+<pre><code class="console">make phpunit arg='--testdox --order-by=default --filter HotkeyTabsComponentTest'
+</code></pre>
+
+<pre><code>Hotkey Tabs Component (Bl\Qa\Tests\Qalin\Spec\Infrastructure\PhpTui\Component\HotkeyTab\HotkeyTabsComponent)
+ ✔ It builds HotkeyTabsWidget snapshotting current tabs and focused hotkey
+ ✔ It reports ComponentState::Changed when pressing another tab's hotkey
+ ✔ It reports ComponentState::Handled when pressing the focused tab's hotkey
+ ✔ It reports ComponentState::Ignored when pressing an unregistered hotkey
+ ✔ It reports ComponentState::Ignored when receiving a non CharKeyEvent (e.g. KeyCode::Tab)
+</code></pre>
+
+<p>No mocks. No test doubles. Just events and assertions.</p>
+
+<h3 id="animation-tests%3A-controlling-time">Animation tests: controlling time</h3>
+
+<p><code>Beat</code> uses <code>ClockInterface</code>, so <code>MockClock</code> from <code>symfony/clock</code> lets us freeze and
+advance time to land on any frame.</p>
+
+<p>Each frame test is parameterised with a data provider that yields one timing entry and
+one entry per logo line. <code>#[TestDox]</code> interpolates <code>$scenario</code> from the provider to
+produce a descriptive name for each case:</p>
+
+<pre><code class="php">#[DataProvider('frame1Provider')]
+#[TestDox('It renders frame 1: $scenario')]
+public function test_it_renders_logo_frame_1(
+    string $scenario,
+    int $index,
+    string $line,
+): void {
+    $mockClock = new MockClock('2024-01-01 00:00:00');
+    $beat = new Beat($mockClock);
+    $beat-&gt;animate();
+
+    $this-&gt;assertSame($line, $beat-&gt;logo()[$index]);
+    $this-&gt;assertEquals(Style::default()-&gt;fg(AnsiColor::Magenta), $beat-&gt;logoStyle());
+}
+
+public static function frame1Provider(): \Generator
+{
+    $lines = Beat::CONTRACTED_LOGO;
+
+    yield [
+        'scenario' =&gt; 'at t=0s: contracted logo, in magenta',
+        'index' =&gt; 0,
+        'line' =&gt; $lines[0],
+    ];
+
+    foreach ($lines as $index =&gt; $line) {
+        yield [
+            'scenario' =&gt; "`{$line}`",
+            'index' =&gt; $index,
+            'line' =&gt; $line,
+        ];
+    }
+}
+</code></pre>
+
+<pre><code class="console">make phpunit arg='--testdox --order-by=default --filter BeatTest'
+</code></pre>
+
+<pre><code>Beat (Bl\Qa\Tests\Qalin\Spec\UserInterface\Tui\QalinAnimatedBanner\Beat)
+ ✔ It renders frame 0: before animate(): default logo, in red
+ ✔ It renders frame 0: `  ████      ████  `
+ ✔ It renders frame 0: `████████  ████████`
+ ✔ It renders frame 0: `██████████████████`
+ ✔ It renders frame 0: `██████████████████`
+ ✔ It renders frame 0: `   ████████████   `
+ ✔ It renders frame 0: `      ██████      `
+ ✔ It renders frame 1: at t=0s: contracted logo, in magenta
+ ✔ It renders frame 1: `                  `
+ ✔ It renders frame 1: `    ████  ████    `
+ ✔ It renders frame 1: `   ████████████   `
+ ✔ It renders frame 1: `     ████████     `
+ ✔ It renders frame 1: `       ████       `
+ ✔ It renders frame 1: `                  `
+ ✔ It renders frame 2: at t=0.151s: default logo, in red
+ ...
+ ✔ It renders frame 4: at t=1.0s: default logo, in red
+ ...
+</code></pre>
+
+<p>Each line of the logo is asserted individually. If the contracted logo shifts a pixel,
+the failing test name tells you exactly which line broke and at which frame.</p>
+
+<h3 id="integration-tests%3A-screens-end-to-end">Integration tests: screens end-to-end</h3>
+
+<p>Screen tests exercise the full Symfony container and real HTTP client.
+They drive the screen by sending the same events a user would: character keys,
+tab presses, enter.</p>
+
+<p>Required and invalid input cases are covered with data providers:</p>
+
+<pre><code class="php">#[DataProvider('invalidInputProvider')]
+#[TestDox('It fails when $scenario')]
+public function test_it_fails_on_invalid_input(string $scenario, bool $preCreate, array $input): void
+{
+    if ($preCreate) {
+        TestKernelSingleton::get()-&gt;actionRunner()-&gt;run(
+            new SignUpNewPlayer($input['username'], PasswordPlainFixture::makeString()),
+        );
+    }
+
+    $screen = TestKernelSingleton::get()-&gt;container()-&gt;get(UpgradeInstantlyForFreeScreen::class);
+
+    foreach (str_split($input['username']) as $char) {
+        $screen-&gt;handle(CharKeyEvent::new($char));
+    }
+
+    $screen-&gt;handle(CodedKeyEvent::new(KeyCode::Tab)); // username -&gt; upgradable
+    foreach (str_split($input['upgradable_filter']) as $char) {
+        $screen-&gt;handle(CharKeyEvent::new($char));
+    }
+
+    $screen-&gt;handle(CodedKeyEvent::new(KeyCode::Tab)); // upgradable -&gt; levels
+    if ('' !== $input['levels_override']) {
+        $screen-&gt;handle(CodedKeyEvent::new(KeyCode::Backspace)); // clear default '1'
+        foreach (str_split($input['levels_override']) as $char) {
+            $screen-&gt;handle(CharKeyEvent::new($char));
+        }
+    }
+
+    $screen-&gt;handle(CodedKeyEvent::new(KeyCode::Tab)); // levels -&gt; Upgrade
+    $result = $screen-&gt;handle(CodedKeyEvent::new(KeyCode::Enter)); // submit
+
+    $this-&gt;assertInstanceOf(Stay::class, $result);
+}
+
+public static function invalidInputProvider(): \Iterator
+{
+    yield [
+        'scenario' =&gt; 'invalid username',
+        'preCreate' =&gt; false,
+        'input' =&gt; ['username' =&gt; 'x', 'upgradable_filter' =&gt; '', 'levels_override' =&gt; ''],
+    ];
+    yield [
+        'scenario' =&gt; 'invalid upgradable (ChoiceField: valid choices only)',
+        'preCreate' =&gt; true,
+        'input' =&gt; ['username' =&gt; UsernameFixture::makeString(), 'upgradable_filter' =&gt; 'zzz', 'levels_override' =&gt; ''],
+    ];
+    yield [
+        'scenario' =&gt; 'invalid levels',
+        'preCreate' =&gt; true,
+        'input' =&gt; ['username' =&gt; UsernameFixture::makeString(), 'upgradable_filter' =&gt; '', 'levels_override' =&gt; '-1'],
+    ];
+}
+</code></pre>
+
+<p>The test arranges game state through Qalin's <code>ActionRunner</code> (the same one used by
+the testsuite interface described in the previous article), then drives the TUI screen
+purely through events. The terminal is never involved.</p>
+
+<pre><code class="console">make phpunit arg='--testdox --order-by=default --filter UpgradeInstantlyForFreeScreenTest'
+</code></pre>
+
+<pre><code>Upgrade Instantly For Free Screen (Bl\Qa\Tests\Qalin\Integration\UserInterface\Tui\Action\UpgradeInstantlyForFreeScreen)
+ ✔ It upgrades instantly for free
+ ✔ It has levels as an optional field (defaults to 1)
+ ✔ It has levels as an optional field (set to 2)
+ ✔ It has username as a required field
+ ✔ It has upgradable as a required field
+ ✔ It fails when invalid username
+ ✔ It fails when invalid upgradable (ChoiceField: valid choices only)
+ ✔ It fails when invalid levels
+ ✔ It reports Navigate to HomeScreen when pressing Esc
+</code></pre>
+
+<blockquote>
+  <p>🤔 <strong>Retrospective</strong>: the screen integration tests send real HTTP requests to a live
+  Qalin server at <code>localhost:8080</code> (configured via <code>QALIN_BASE_URI</code> in <code>.env.test</code>).
+  That means running them requires the server to be up. It is consistent with the TUI's
+  own design (the TUI calls the HTTP API rather than handlers in-process), but it makes
+  the tests heavier than they need to be. A <code>MockHttpClient</code> from Symfony would remove
+  the server dependency and make the tests faster and self-contained.</p>
+</blockquote>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>PHP-TUI brings the Ratatui model to PHP: a retained-mode widget system,
+a constraint-based layout engine, and a clean event/render loop.</p>
+
+<p>The architecture maps naturally to how we think about screens:</p>
+
+<ul>
+<li><code>Screen::build()</code> constructs a widget tree from current state: pure data, called every frame</li>
+<li><code>Screen::handle()</code> processes one event and returns a navigation signal</li>
+<li>Custom widgets encapsulate reusable rendering logic without coupling it to any screen</li>
+</ul>
+
+<p>What surprised me is how little PHP-TUI requires.
+There is no framework to learn, no lifecycle to manage.</p>
+
+<p><code>DisplayBuilder</code>, <code>Widget</code>, <code>WidgetRenderer</code>, and a handful of layout types
+cover everything. The rest is just PHP.</p>
+
+<p>After a couple of days, I'm delighted to say that this is now my favourite Qalin UI.
+My geek honour is therefore saved 😼.</p>
+
+<p>Want to learn more?</p>
+
+<ul>
+<li><a href="https://github.com/pyricau/bisouland/releases/tag/4.0.27">browse BisouLand / Qalin TUI source code on Github</a></li>
+<li><a href="https://php-tui.github.io/php-tui/">PHP-TUI documentation</a></li>
+<li><a href="/tags/extreme-legacy">read more about modernising this eXtreme Legacy app</a></li>
+</ul>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[eXtreme Legacy 11: A PHP Monorepo of Apps and Packages]]></title>
             <link href="/2026/03/04/xl-11-monorepo.html"/>
