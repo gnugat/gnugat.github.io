@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2026-03-25T07:03:55+00:00</updated>
+    <updated>2026-03-25T07:07:49+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -14,12 +14,15 @@
             <updated>2026-03-25T00:00:00+00:00</updated>
             <id>/2026/03/25/turn-you-php-app-into-a-standalone-binary.html</id>
             <content type="html"><![CDATA[<blockquote>
-  <p><strong>TL;DR</strong>:
-  1. Prepare app for prod environment:
-     no dev deps, autoloading optimisation (classmap authoritative),
-     making <code>.env.local.php</code> from <code>.env</code>, no debug symfony cache, etc
-  2. Compile the PHAR with <a href="https://github.com/box-project/box">Box</a>
-  3. Concatenate micro.sfx + dtk.phar into a self-contained binary with <a href="https://github.com/crazywhalecc/static-php-cli">static-php-cli</a></p>
+  <p><strong>TL;DR</strong>:</p>
+  
+  <ol>
+  <li>Prepare app for prod environment:
+  no dev deps, autoloading optimisation (classmap authoritative),
+  making <code>.env.local.php</code> from <code>.env</code>, no debug symfony cache, etc</li>
+  <li>Compile the PHAR with <a href="https://github.com/box-project/box">Box</a></li>
+  <li>Concatenate micro.sfx + dtk.phar into a self-contained binary with <a href="https://github.com/crazywhalecc/static-php-cli">static-php-cli</a></li>
+  </ol>
 </blockquote>
 
 <p>I've been building <a href="https://github.com/gnugat/dtk">DTK</a>, a PHP CLI tool that automates

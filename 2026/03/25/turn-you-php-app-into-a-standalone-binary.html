@@ -46,12 +46,15 @@
                 </header>
 
                 <blockquote>
-  <p><strong>TL;DR</strong>:
-  1. Prepare app for prod environment:
-     no dev deps, autoloading optimisation (classmap authoritative),
-     making <code>.env.local.php</code> from <code>.env</code>, no debug symfony cache, etc
-  2. Compile the PHAR with <a href="https://github.com/box-project/box">Box</a>
-  3. Concatenate micro.sfx + dtk.phar into a self-contained binary with <a href="https://github.com/crazywhalecc/static-php-cli">static-php-cli</a></p>
+  <p><strong>TL;DR</strong>:</p>
+  
+  <ol>
+  <li>Prepare app for prod environment:
+  no dev deps, autoloading optimisation (classmap authoritative),
+  making <code>.env.local.php</code> from <code>.env</code>, no debug symfony cache, etc</li>
+  <li>Compile the PHAR with <a href="https://github.com/box-project/box">Box</a></li>
+  <li>Concatenate micro.sfx + dtk.phar into a self-contained binary with <a href="https://github.com/crazywhalecc/static-php-cli">static-php-cli</a></li>
+  </ol>
 </blockquote>
 
 <p>I've been building <a href="https://github.com/gnugat/dtk">DTK</a>, a PHP CLI tool that automates
