@@ -13,7 +13,7 @@ tags:
 > 2. Compile the PHAR with [Box](https://github.com/box-project/box)
 > 3. Concatenate micro.sfx + dtk.phar into a self-contained binary with [static-php-cli](https://github.com/crazywhalecc/static-php-cli)
 
-I've been building [DTK](https://github.com/gnugat/dtk), a PHP CLI tool that automates
+I've been building [DTK](https://github.com/ssc-php/dtk), a PHP CLI tool that automates
 the repetitive ceremony around the developer workflow:
 open ticket, create branch, open PR, merge, deploy -
 all wired together so you don't have to context-switch between your terminal,
@@ -240,4 +240,4 @@ Its build setup is a good reference for when you outgrow the prebuilt micro SFX 
 and need to compile your own with a custom extension set.
 
 The full DTK source used in this article is available at
-[github.com/gnugat/dtk/tree/v0.1.0](https://github.com/gnugat/dtk/tree/v0.1.0).
+[github.com/ssc-php/dtk/tree/v0.1.0](https://github.com/ssc-php/dtk/tree/v0.1.0).
