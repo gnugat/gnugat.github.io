@@ -6,6 +6,7 @@ tags:
 ---
 
 > **TL;DR**:
+> 
 > 1. Prepare app for prod environment:
 >    no dev deps, autoloading optimisation (classmap authoritative),
 >    making `.env.local.php` from `.env`, no debug symfony cache, etc
