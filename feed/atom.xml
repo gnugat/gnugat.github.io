@@ -3,11 +3,253 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2026-03-18T12:02:57+00:00</updated>
+    <updated>2026-03-25T07:03:55+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Turn your PHP app into a standalone binary]]></title>
+            <link href="/2026/03/25/turn-you-php-app-into-a-standalone-binary.html"/>
+            <updated>2026-03-25T00:00:00+00:00</updated>
+            <id>/2026/03/25/turn-you-php-app-into-a-standalone-binary.html</id>
+            <content type="html"><![CDATA[<blockquote>
+  <p><strong>TL;DR</strong>:
+  1. Prepare app for prod environment:
+     no dev deps, autoloading optimisation (classmap authoritative),
+     making <code>.env.local.php</code> from <code>.env</code>, no debug symfony cache, etc
+  2. Compile the PHAR with <a href="https://github.com/box-project/box">Box</a>
+  3. Concatenate micro.sfx + dtk.phar into a self-contained binary with <a href="https://github.com/crazywhalecc/static-php-cli">static-php-cli</a></p>
+</blockquote>
+
+<p>I've been building <a href="https://github.com/gnugat/dtk">DTK</a>, a PHP CLI tool that automates
+the repetitive ceremony around the developer workflow:
+open ticket, create branch, open PR, merge, deploy -
+all wired together so you don't have to context-switch between your terminal,
+your Kanban board, and GitHub.</p>
+
+<p>It's a Symfony Console app, it runs fine with <code>php dtk</code>,
+but distributing it to teammates means they need PHP installed at the right version,
+with the right extensions, plus Composer.
+That's friction I'd rather not ask anyone to deal with.</p>
+
+<p>Turns out, PHP can produce a single self-contained binary, no PHP required on the target machine.
+I learned this from a talk by Jean-François Lépine at Forum PHP 2025,
+<a href="https://www.youtube.com/watch?v=gqre9g4XV00">PHP without PHP: Make Standalone Binaries from Your Code</a>,
+which is in French, but <a href="https://github.com/gnugat/knowledge/blob/main/talks-recapped/2025-10-forum-php/012-php-without-php-make-standalone-binaries-from-your-code.md">here's an English recap of it</a>.</p>
+
+<p>Surprisingly easy to set up. Here's how.</p>
+
+<h2 id="the-two-ingredients">The two ingredients</h2>
+
+<p>Two tools do all the work.</p>
+
+<p><strong>Box</strong> packages a PHP project into a <code>.phar</code> archive.
+A <code>.phar</code> is a self-contained PHP archive: it includes all your source files and vendor
+dependencies, and PHP can execute it directly.</p>
+
+<p><strong>PHP Micro SFX</strong>, part of the static-php-cli (SPC) project,
+is a minimal static PHP binary with no external dependencies.
+It reads whatever binary data is appended to it and executes it as a <code>.phar</code>.</p>
+
+<p>Combine the two:</p>
+
+<pre><code>micro.sfx + app.phar = standalone binary
+</code></pre>
+
+<p>One file. No PHP needed on the target machine. Drop it, run it.</p>
+
+<h2 id="step-1%3A-package-the-app-as-a-phar">Step 1: package the app as a PHAR</h2>
+
+<p>Box reads a <code>box.json</code> config file and produces the archive.
+Here's the one for DTK:</p>
+
+<pre><code class="json">{
+    "$schema": "https://box-project.github.io/box/schema.json",
+    "main": "dtk",
+    "output": "build/dtk.phar",
+    "compression": "GZ",
+    "check-requirements": false,
+    "directories": [
+        "config",
+        "src",
+        "var/cache/prod",
+        "vendor"
+    ],
+    "files": [
+        ".env.local.php"
+    ]
+}
+</code></pre>
+
+<p>A few things worth noting:</p>
+
+<ul>
+<li><code>"main": "dtk"</code> is the entry point PHP file that Box will call when the PHAR is executed</li>
+<li><code>"compression": "GZ"</code> compresses the archive contents, smaller file, same behaviour</li>
+<li><code>"check-requirements": false</code> skips the PHP version and extension check at runtime,
+since we know the bundled micro binary already has everything we need</li>
+<li><code>var/cache/prod</code> includes the pre-warmed Symfony cache,
+so the binary doesn't need to write to the filesystem on first run</li>
+<li><code>.env.local.php</code> is a compiled version of the environment variables</li>
+</ul>
+
+<h2 id="step-2%3A-get-the-micro-binaries">Step 2: get the micro binaries</h2>
+
+<p><a href="https://dl.static-php.dev/static-php-cli/common/">static-php-cli prebuilds micro SFX files</a>
+for all major platforms and PHP versions, so you don't need to compile anything yourself.</p>
+
+<p>In the DTK Dockerfile, I download them all at image build time:</p>
+
+<pre><code class="dockerfile">RUN for PLATFORM in linux-x86_64 linux-aarch64 macos-x86_64 macos-aarch64; do \
+        curl -fsSL \
+            -o /tmp/micro.tar.gz \
+            "https://dl.static-php.dev/static-php-cli/common/php-${PHP_VERSION}-micro-${PLATFORM}.tar.gz" \
+        &amp;&amp; tar xzf /tmp/micro.tar.gz -C /usr/local/lib/ \
+        &amp;&amp; mv /usr/local/lib/micro.sfx "/usr/local/lib/micro-${PLATFORM}.sfx" \
+        &amp;&amp; rm /tmp/micro.tar.gz; \
+    done
+</code></pre>
+
+<p>Windows has a separate download (a zip, not a tarball), but same idea.</p>
+
+<p>The micro SFX from static-php-cli includes <a href="https://static-php.dev/en/guide/extensions.html">a whole bunch of extensions</a>,
+so if you need some that are missing, or if you want the bare minimum, you'd need to compile
+your own micro using SPC, that's more involved, but SPC has a <code>doctor --auto-fix</code>
+command to help with the build environment setup.</p>
+
+<h2 id="step-3%3A-assemble-the-binaries">Step 3: assemble the binaries</h2>
+
+<p>With the PHAR built and the micro SFX files in place, combining them is a <code>cat</code> 😼:</p>
+
+<pre><code class="bash">cat micro-linux-x86_64.sfx dtk.phar &gt; dtk-linux-x86_64
+chmod +x dtk-linux-x86_64
+</code></pre>
+
+<p>That's it. The resulting file is a valid ELF binary (or Mach-O on macOS, PE on Windows)
+that carries its own PHP interpreter alongside the application code.</p>
+
+<p>Here's the full build script I use for DTK (<code>bin/mk-dtk-bin.sh</code>) that does all of it:</p>
+
+<pre><code class="bash">#!/usr/bin/env bash
+set -euo pipefail
+
+# Restore dev dependencies once finished
+trap 'composer install --optimize-autoloader --quiet' EXIT
+
+echo '  // Installing prod dependencies...'
+composer install --no-dev --classmap-authoritative --quiet
+
+echo '  // Compiling environment variables...'
+php bin/mk-dtk-bin/dump-env-prod.php
+
+echo '  // Warming up Symfony cache...'
+APP_ENV=prod APP_DEBUG=0 php bin/console cache:warmup --quiet
+
+echo '  // Building PHAR...'
+mkdir -p build
+php -d phar.readonly=0 /usr/local/bin/box compile
+
+echo '  // Assembling binaries...'
+for _PLATFORM in linux-x86_64 linux-aarch64 macos-x86_64 macos-aarch64 windows-x86_64; do
+    case "${_PLATFORM}" in
+        windows-*) _EXT='.exe' ; _CHMOD=false ;;
+        *)         _EXT=''     ; _CHMOD=true  ;;
+    esac
+
+    cat "/usr/local/lib/micro-${_PLATFORM}.sfx" build/dtk.phar &gt; "build/dtk-${_PLATFORM}${_EXT}"
+    ${_CHMOD} &amp;&amp; chmod +x "build/dtk-${_PLATFORM}${_EXT}"
+done
+
+echo '  // Generating checksums...'
+sha256sum \
+    build/dtk-linux-x86_64 \
+    build/dtk-linux-aarch64 \
+    build/dtk-macos-x86_64 \
+    build/dtk-macos-aarch64 \
+    build/dtk-windows-x86_64.exe \
+    &gt; build/checksums.txt
+
+echo '  [OK] Binaries built'
+</code></pre>
+
+<p>A few things the script does before building the PHAR:</p>
+
+<ul>
+<li><strong><code>composer install --no-dev --classmap-authoritative</code></strong>: strips dev dependencies
+and generates a fast classmap-only autoloader, smaller archive, faster startup.</li>
+<li><strong><code>dump-env-prod.php</code></strong>: compiles <code>.env</code> files into <code>.env.local.php</code> so the binary
+doesn't need to parse <code>.env</code> files at runtime.
+(Replicates what <code>composer dump-env prod</code> from symfony/flex does,
+without requiring symfony/flex as a dependency.)</li>
+<li><strong><code>cache:warmup</code></strong>: pre-generates the Symfony container so the binary
+doesn't need write access to the filesystem on first run.</li>
+</ul>
+
+<p>The <code>trap</code> at the top restores dev dependencies when the script exits,
+so the local dev environment is left intact after a build.</p>
+
+<h2 id="what-comes-out">What comes out</h2>
+
+<p>Running <code>make app-bin</code> in the Docker container produces:</p>
+
+<pre><code>build/dtk.phar
+build/dtk-linux-x86_64
+build/dtk-linux-aarch64
+build/dtk-macos-x86_64
+build/dtk-macos-aarch64
+build/dtk-windows-x86_64.exe
+build/checksums.txt
+</code></pre>
+
+<p>Five binaries, one per platform, from a single command, without leaving Docker.
+Each one runs without PHP on the target machine.</p>
+
+<h2 id="constraints-worth-knowing">Constraints worth knowing</h2>
+
+<p>This is real PHP, the same interpreter, the same extensions, the same behaviour.
+A few things to be aware of:</p>
+
+<p><strong>FFI is not available.</strong> Foreign Function Interface calls (PHP calling C libraries directly)
+don't work in static builds. For a CLI tool this is unlikely to matter.</p>
+
+<p><strong>Binary size.</strong> A minimal PHP binary with no extensions is around 3 MB.
+DTK, which only uses standard extensions, comes out much smaller than a full PHP install.
+Not Go-binary small, but perfectly acceptable for a CLI tool distributed via GitHub Releases.</p>
+
+<p><strong>Startup time.</strong> There's a small overhead compared to running <code>php dtk</code> directly:
+PHAR extraction adds a few milliseconds, and the static build uses musl libc rather
+than glibc, which is slightly slower.
+For a developer tool where the user is waiting hundreds of milliseconds anyway, this doesn't matter.</p>
+
+<p><strong>Not for web apps.</strong> This is for CLI / TUI / scripts, for web PHP apps,
+use <a href="https://frankenphp.dev/">FrankenPHP</a> instead.
+It's a production-proven PHP app server built on top of static-php-cli that handles
+all the complexity, and it ships as a standalone binary too.</p>
+
+<h2 id="a-surprisingly-short-path">A surprisingly short path</h2>
+
+<p>The whole thing (Box config, Dockerfile setup, build script) took an afternoon.
+Most of that time was reading the static-php-cli docs and figuring out the Docker layering.
+The actual concatenation step (<code>cat micro.sfx app.phar &gt; binary</code>) was the part that surprised me most:
+something that powerful should not be that simple :D !</p>
+
+<p>If you're building a PHP CLI tool meant to be distributed to people who shouldn't need
+to care about PHP, this is the approach. It works, it's well-supported
+(FrankenPHP, Laravel Herd, and NativePHP all use static-php-cli under the hood),
+and the tooling is solid.</p>
+
+<p>If you want to see a real-world example of a PHP project that compiles its own micro binaries
+(including the SPC setup), look at <a href="https://github.com/jolicode/castor">Castor</a>.
+Castor is a task runner / script launcher for PHP (think Make or Taskfile, but in PHP)
+and it ships prebuilt binaries for all platforms.
+Its build setup is a good reference for when you outgrow the prebuilt micro SFX files
+and need to compile your own with a custom extension set.</p>
+
+<p>The full DTK source used in this article is available at
+<a href="https://github.com/gnugat/dtk/tree/v0.1.0">github.com/gnugat/dtk/tree/v0.1.0</a>.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[PHP-TUI]]></title>
             <link href="/2026/03/18/xl-12-php-tui.html"/>

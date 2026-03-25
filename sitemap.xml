@@ -2,15 +2,21 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc></loc>
-    <lastmod>2026-03-18T12:02:57+00:00</lastmod>
+    <lastmod>2026-03-25T07:03:55+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>/about</loc>
-    <lastmod>2026-03-18T12:02:57+00:00</lastmod>
+    <lastmod>2026-03-25T07:03:55+00:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>/2026/03/25/turn-you-php-app-into-a-standalone-binary.html</loc>
+    <lastmod>2026-03-25T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>/2026/03/18/xl-12-php-tui.html</loc>
