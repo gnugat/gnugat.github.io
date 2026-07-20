@@ -1,6 +1,6 @@
 {
     "require": {
-        "sculpin/sculpin": "^3.2"
+        "sculpin/sculpin": "^3.3"
     },
     "config": {
         "allow-plugins": {
