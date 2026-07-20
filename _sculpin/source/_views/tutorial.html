@@ -1,0 +1,63 @@
+{% extends "default" %}
+
+{% block page_title %}
+<h2>
+    {{ page.title }}
+    <span class="sub-title">Tutorial</span>
+</h2>
+{% endblock %}
+
+{% block content_wrapper %}
+    <div class="row" id="tutorial-layout">
+        <div class="ten columns" id="tutorial-content">
+            {{ page.blocks.content|raw }}
+        </div>
+        <div class="two columns" id="tutorial-toc-col">
+            <nav id="toc">
+                <b>On this page</b>
+                <ol id="toc-list"></ol>
+            </nav>
+        </div>
+    </div>
+
+    <style>
+        #tutorial-layout { align-items: flex-start; }
+        #tutorial-toc-col { position: sticky; top: 20px; }
+        #toc { font-size: 0.8rem; }
+        #toc-list, #toc-list ol { list-style: none; margin: 0; padding: 0; }
+        #toc-list li { margin: 0; }
+        #toc-list a { display: block; padding: 1px 0; text-decoration: none; opacity: 0.65; }
+        #toc-list a:hover { opacity: 1; }
+        #toc-list .h3 a { padding-left: 10px; }
+        #toc-list .h4 a { padding-left: 20px; }
+        @media (max-width: 750px) {
+            #tutorial-toc-col { display: none; }
+        }
+    </style>
+
+    <script>
+        (function() {
+            var list = document.getElementById('toc-list');
+            document.querySelectorAll('article h2, article h3, article h4').forEach(function(h) {
+                if (!h.id) return;
+                var li = document.createElement('li');
+                li.className = h.tagName.toLowerCase();
+                li.innerHTML = '<a href="#' + h.id + '">' + h.textContent + '</a>';
+                list.appendChild(li);
+            });
+        })();
+    </script>
+{% endblock %}
+
+{% block article_footer %}
+    {% if page.previous_post or page.next_post %}
+        <nav class="row">
+            {% if page.previous_post %}
+                <a class="button six columns" href="{{ site.url }}{{ page.previous_post.url }}" title="{{ page.previous_post.title }}">Previous &lt; {{ page.previous_post.title }}</a>
+            {% endif %}
+            {% if page.next_post %}
+                <a class="button six columns" href="{{ site.url }}{{ page.next_post.url }}" title="{{ page.next_post.title }}">Next &gt; {{ page.next_post.title }}</a>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}

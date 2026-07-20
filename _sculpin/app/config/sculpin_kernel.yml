@@ -6,3 +6,8 @@ sculpin_content_types:
         enabled: true
         taxonomies:
             - tags
+    tutorials:
+        type: path
+        path: _tutorials
+        permalink: tutorials/:filename.html
+        enabled: true
