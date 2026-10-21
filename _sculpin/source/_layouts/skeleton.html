@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="{{ site.url }}/css/github-dark.min.css">
     <link rel="stylesheet" href="{{ site.url }}/css/catppuccin-macchiato.css">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
     <div class="container">
         <header class="title">
             <h1>

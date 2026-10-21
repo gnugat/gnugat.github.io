@@ -1,5 +1,7 @@
 {% extends "default" %}
 
+{% block body_class %}{% if page.toc %}toc-layout{% endif %}{% endblock %}
+
 {% block page_title %}
 <h2>
     {{ page.title }}
@@ -25,7 +27,75 @@
 {% endblock %}
 
 {% block content_wrapper %}
-    {{ page.blocks.content|raw }}
+    {% if not page.toc %}
+        {{ page.blocks.content|raw }}
+    {% else %}
+        <div class="row toc-row">
+            <aside class="three columns">
+                <details class="toc">
+                    <summary>Contents</summary>
+                    <nav>{{ page.blocks.content|toc }}</nav>
+                </details>
+            </aside>
+            <div class="nine columns post-content">
+                {{ page.blocks.content|raw }}
+            </div>
+        </div>
+        <script type="text/javascript">
+            (function () {
+                var toc = document.querySelector('.toc');
+                var headings = document.querySelectorAll('.post-content h2[id], .post-content h3[id]');
+                var links = toc.querySelectorAll('nav a');
+
+                // Sidebar on wide screens (always open), collapsible block otherwise
+                var wide = window.matchMedia('(min-width: 1300px)');
+                var syncOpen = function () { toc.open = wide.matches; };
+                syncOpen();
+                wide.addEventListener('change', syncOpen);
+                toc.addEventListener('click', function (event) {
+                    if (wide.matches && 'SUMMARY' === event.target.tagName) {
+                        event.preventDefault();
+                    }
+                    if (!wide.matches && 'A' === event.target.tagName) {
+                        toc.open = false;
+                    }
+                });
+
+                // Highlight the section currently being read
+                var current = null;
+                var highlight = function () {
+                    var active = null;
+                    headings.forEach(function (heading, index) {
+                        if (heading.getBoundingClientRect().top < 100) {
+                            active = links[index];
+                        }
+                    });
+                    if (active === current) {
+                        return;
+                    }
+                    if (null !== current) {
+                        current.classList.remove('active');
+                    }
+                    if (null !== active) {
+                        active.classList.add('active');
+                    }
+                    current = active;
+                };
+                var ticking = false;
+                window.addEventListener('scroll', function () {
+                    if (ticking) {
+                        return;
+                    }
+                    ticking = true;
+                    window.requestAnimationFrame(function () {
+                        highlight();
+                        ticking = false;
+                    });
+                }, {passive: true});
+                highlight();
+            })();
+        </script>
+    {% endif %}
 {% endblock %}
 
 {% block article_footer %}
