@@ -1,0 +1,3613 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Loïc Faugeron]]></title>
+    <link href="/feed/atom.xml" rel="self"/>
+    <link href="/"/>
+    <updated>2026-11-04T22:42:56+00:00</updated>
+    <id>http://gnugat.github.com</id>
+            <author>
+            <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Blazingly PHPast Symfony 8.1]]></title>
+            <link href="/2026/11/06/blazingly-phpast-symfony-81.html"/>
+            <updated>2026-11-06T00:00:00+00:00</updated>
+            <id>/2026/11/06/blazingly-phpast-symfony-81.html</id>
+            <content type="html"><![CDATA[<p><a href="https://www.youtube.com/@arjay_the_dev">Arjay McCandless</a>, an ex Amazon Backend Engineer,
+published an interesting challenge:</p>
+
+<ul>
+<li><a href="https://www.youtube.com/watch?v=GFtFIxrAjIs">How Many Users Can a $12 Server Handle?</a></li>
+<li><a href="https://www.youtube.com/watch?v=sQXFhh_PiG4">Which Programming Language Can Handle the Most Users on a $12 Server?</a></li>
+<li><a href="https://www.youtube.com/watch?v=QGWKCaglSBI">I Asked Expert Programmers to Max Out a $12 Server</a></li>
+</ul>
+
+<p>I really like his down to earth and realistic approach,
+but I don't find the final scores representative:</p>
+
+<blockquote>
+  <p><strong>Arjay</strong>: plz submit some real world app<br>
+  <br>
+  <strong>Go dev</strong>: <em>batches 250 <code>INSERT</code> per commit in a single goroutine</em> (53k users)<br>
+  <strong>Fortran dev</strong>: <em>validates JWTs in the database</em> (70k)<br>
+  <strong>PHP dev</strong>: <em>writes a 120 loc single file app with Swoole C extension</em> (71k)<br>
+  <strong>C++ dev</strong>: <em>handrolls HTTP / JSON parsers</em> (71k)<br>
+  <strong>C dev</strong>: <em>starts optimising their own SQLite</em> (172k)<br>
+  <strong>Rust dev</strong>: <em>gets the kernel to manage socket references</em> (264k)<br></p>
+</blockquote>
+
+<p>Today, we're going to show what an idiomatic Symfony 8.1 app with Doctrine and FrankenPHP
+(classic, which is equivalent to PHP-FPM) can do. And then show what FrankenPHP Worker Mode can do even better.</p>
+
+<p>And before anyone comments with "Swoole / FrankenPHP? That's not PHP, that's C / Go!",
+let me remind you that FPM, Apache and Nginx are all written in C, as well as PHP itself.</p>
+
+<p>Nobody says Node isn't JavaScript because its HTTP parser is C, right?</p>
+
+<blockquote>
+  <p><strong>TL;DR</strong>:<br>
+  <em>$12 server</em>: 18,500 users<br>
+  <em>throttled locally, classic</em>: 250 (default), 1,500 (optimised)<br>
+  <em>throttled locally, worker</em>: 1,000 (default), 5,250 (optimised)<br></p>
+</blockquote>
+
+<p>Now, sharpen your attention (it's going to be a long, human made, article), and...<br>
+<em>Let's get technical, technical, let's get technical, ooh 🎶</em>.</p>
+
+<ul>
+<li><a href="#the-rules">The rules</a></li>
+<li><a href="#defaults">Defaults (p0)</a>: Symfony / Doctrine out of the box</li>
+<li><a href="#benchmarking">Benchmarking</a></li>
+<li><a href="#tuned-config">Tuned Config (p1-p3)</a>: php.ini, preload and JIT</li>
+<li><a href="#read-model">Read Model (p6)</a>: DQL <code>NEW</code> instead of entities</li>
+<li><a href="#jsonstreamer">JsonStreamer (p7)</a>: Generated JSON writers instead of the Serializer</li>
+<li><a href="#plain-sql-reads">Plain SQL Reads (p8)</a>: DBAL reads</li>
+<li><a href="#persistent-connection">Persistent Connection (p9)</a>: SQLite stays open between requests</li>
+<li><a href="#dbal-instead-of-orm">DBAL instead of ORM (p10-p11)</a>: DBAL writes, then no ORM</li>
+<li><a href="#extract-till-you-drop">Extract Till You Drop (p12-p14)</a>: Less framework, more SQLite</li>
+<li><a href="#experiments">Experiments</a>: What didn't make a difference</li>
+<li><a href="#conclusion">Conclusion</a>: It's over 9000!!!!</li>
+</ul>
+
+<h2 id="the-rules">The rules</h2>
+
+<p>The idea is to use a "cheap" server with 1 vCPU and 2 GB RAM,
+make a micro-blogging app that uses SQLite
+(and my rule: the code should be something you find at work, not tailored to beat the benchmark),
+then use <a href="https://k6.io/">k6</a> to simulate realistic user behaviour, at scale:</p>
+
+<pre><code class="javascript">import http from 'k6/http';
+import { check, sleep } from 'k6';
+import { SharedArray } from 'k6/data';
+
+// VUS = Virtual UserS
+const VUS = Number(__ENV.VUS || 100);
+const BASE_URL = __ENV.BASE_URL || 'http://127.0.0.1:3000';
+const LIKE_PROB = 0.15;
+const POST_PROB = 0.02;
+const tokens = new SharedArray('tokens', () =&gt; JSON.parse(open(__ENV.TOKENS || '../seed/tokens.json')));
+
+export const options = {
+  scenarios: {
+    users: {
+      executor: 'ramping-vus',
+      stages: [
+        // 01 min ramp-up: allowing to create users progressively
+        { duration: __ENV.RAMP_UP || '60s', target: VUS },
+
+        // 05 min hold
+        { duration: __ENV.DURATION || '5m', target: VUS },
+
+        // 30 sec ramp-down: bring users gradually to 0
+        { duration: '30s', target: 0 },
+      ],
+      // 10 s grace for users to finish their loop during ramp-down
+      gracefulRampDown: '10s',
+    },
+  },
+
+  // To find the number of users the app can handle, we use the following criteria:
+  thresholds: {
+    // 95% of requests must be answered in under 500 ms
+    // 99% under 1 s
+    http_req_duration: ['p(95)&lt;500', 'p(99)&lt;1000'],
+
+    // fewer than 1% request failure
+    http_req_failed: ['rate&lt;0.01'],
+  },
+  summaryTrendStats: ['avg', 'med', 'p(95)', 'p(99)', 'max'],
+};
+
+const between = (lo, hi) =&gt; lo + Math.random() * (hi - lo);
+
+export default function () {
+  const user = tokens[(__VU - 1) % tokens.length];
+  const auth = { headers: { Authorization: `Bearer ${user.token}`, 'Content-Type': 'application/json' } };
+
+  // 0. First iteration only: wait between 0 to 5 seconds, to avoid thundering herd
+  if (__ITER === 0) sleep(between(0, 5));
+
+  // 1. Load the feed
+  const feed = http.get(`${BASE_URL}/feed`, { tags: { name: 'GET /feed' } });
+
+  // 1.1 If feed fails, wait between 3 to 7 seconds before starting the loop again
+  if (!check(feed, { 'feed 200': (r) =&gt; r.status === 200 })) { sleep(between(3, 7)); return; }
+
+  const posts = feed.json('posts');
+  const post = posts[Math.floor(Math.random() * posts.length)];
+
+  // 2. Wait between 3 to 7 seconds
+  sleep(between(3, 7));
+
+  // 3. Open a random post from the feed
+  check(http.get(`${BASE_URL}/posts/${post.id}`, { tags: { name: 'GET /posts/:id' } }), { 'post 200': (r) =&gt; r.status === 200 });
+
+  // 4. Wait between 3 to 8 seconds
+  sleep(between(3, 8));
+
+  // 5. 15% chance to like the post
+  if (Math.random() &lt; LIKE_PROB) {
+    const r = http.post(`${BASE_URL}/posts/${post.id}/like`, null, { ...auth, tags: { name: 'POST /posts/:id/like' } });
+    check(r, { 'like 200/201': (r) =&gt; r.status === 200 || r.status === 201 });
+  }
+
+  // 6. 2% chance to write a post
+  if (Math.random() &lt; POST_PROB) {
+    const body = JSON.stringify({ body: `${user.username} says hi at ${new Date().toISOString()} (VU ${__VU}, iter ${__ITER})` });
+    check(http.post(`${BASE_URL}/posts`, body, { ...auth, tags: { name: 'POST /posts' } }), { 'create 201': (r) =&gt; r.status === 201 });
+  }
+
+  // 7. Wait between 5 to 15 seconds
+  sleep(between(5, 15));
+}
+</code></pre>
+
+<p>The endpoints are:</p>
+
+<ul>
+<li><code>GET /feed</code>: <code>200</code>, <code>{"posts":[&lt;post&gt;, ...]}</code></li>
+<li><code>GET /posts/:id</code>: <code>200</code>, <code>{"post":&lt;post&gt;}</code></li>
+<li><code>POST /posts/:id/like</code>: <code>201</code> or <code>200</code>, <code>{"liked":true,"already_liked":&lt;bool&gt;,"post_id":&lt;int&gt;}</code></li>
+<li><code>POST /posts</code>: <code>201</code>, <code>{"post":&lt;post&gt;}</code></li>
+</ul>
+
+<blockquote>
+  <p><em>Note</em>: with <code>&lt;post&gt;</code> being:</p>
+
+<pre><code class="json">{
+  "id": &lt;postitive integer, e.g. 23&gt;,
+  "body": &lt;non empty string, e.g. "Here I am, brain the size of a planet, and they ask me to serve JSON."&gt;,
+  "created_at": &lt;string (ISO 8601 datetime) e.g. "2025-05-25T13:37:00.409Z"&gt;,
+  "author": &lt;non empty string, e.g. "Marvin"&gt;,
+  "like_count": &lt;non negative integer, e.g. 42&gt;
+}
+</code></pre>
+</blockquote>
+
+<p>We start with at 2500 virtual users, then double until it fails,
+to finally narrow it down to within 5%.</p>
+
+<p>The highest level that holds for 5 minutes is the score.</p>
+
+<p>Oh and there's a seed with 50k pre-signed JWT credentials,
+every virtual user logs in as one of them (above 50k virtual users, some share a login).</p>
+
+<h2 id="defaults">Defaults (p0)</h2>
+
+<p>I went with a PHP 8.5, Symfony 8.1, Doctrine (DBAL 4.5 / ORM 3.7) app,
+and tried to keep it as idiomatic as possible,
+running on FrankenPHP once in "classic" mode and once in "worker" mode:</p>
+
+<ul>
+<li>"classic": the PHP app boots once per request then dies once the response is served,
+this is what PHP-FPM does and FrankenPHP in Classic Mode is
+<a href="https://www.youtube.com/watch?v=1yQubrkwzz4">proven to be as performant as PHP-FPM</a></li>
+<li>"worker": the PHP app boots once per worker, then each worker handles requests one after another in a loop</li>
+</ul>
+
+<h3 id="controller">Controller</h3>
+
+<p>Let's start with the controller:</p>
+
+<pre><code class="php">final class PostController extends AbstractController
+{
+    private const int FEED_SIZE = 20;
+
+    public function __construct(
+        private readonly PostRepository $posts,
+        private readonly PostLikeRepository $likes,
+        private readonly EntityManagerInterface $entityManager,
+    ) {
+    }
+
+    #[Route('/feed', methods: ['GET'])]
+    public function feed(): JsonResponse
+    {
+        return $this-&gt;json([
+            'posts' =&gt; $this-&gt;posts-&gt;findLatest(self::FEED_SIZE),
+        ]);
+    }
+
+    #[Route('/posts/{id}', methods: ['GET'])]
+    public function show(
+        #[ValueResolver(PostId::class)]
+        int $id,
+    ): JsonResponse {
+        return $this-&gt;json([
+            'post' =&gt; $this-&gt;posts-&gt;find($id)
+                ?? throw new NotFoundHttpException('post not found'),
+        ]);
+    }
+
+    #[Route('/posts', methods: ['POST'])]
+    public function create(
+        #[CurrentUser]
+        JwtUser $user,
+        #[MapRequestPayload(validationFailedStatusCode: Response::HTTP_BAD_REQUEST)]
+        CreatePostPayload $payload,
+    ): JsonResponse {
+        $author = $this-&gt;entityManager-&gt;getReference(User::class, $user-&gt;id)
+            ?? throw new \LogicException('user reference not available');
+
+        $post = Post::fromPayload($author, $payload);
+        $this-&gt;entityManager-&gt;persist($post);
+        $this-&gt;entityManager-&gt;flush();
+
+        return $this-&gt;json([
+            'post' =&gt; $post,
+        ], Response::HTTP_CREATED);
+    }
+
+    #[Route('/posts/{id}/like', methods: ['POST'])]
+    public function like(
+        #[CurrentUser]
+        JwtUser $user,
+        #[ValueResolver(PostId::class)]
+        int $id,
+    ): JsonResponse {
+        $post = $this-&gt;posts-&gt;find($id)
+            ?? throw new NotFoundHttpException('post not found');
+        $liker = $this-&gt;entityManager-&gt;getReference(User::class, $user-&gt;id)
+            ?? throw new \LogicException('user reference not available');
+
+        $alreadyLiked = null !== $this-&gt;likes-&gt;findOneBy([
+            'user' =&gt; $liker,
+            'post' =&gt; $post,
+        ]);
+        if (!$alreadyLiked) {
+            try {
+                $this-&gt;entityManager-&gt;persist(new PostLike(
+                    $liker,
+                    $post,
+                ));
+                $this-&gt;entityManager-&gt;flush();
+            } catch (UniqueConstraintViolationException) {
+                $alreadyLiked = true; // liked by a concurrent request
+            }
+        }
+
+        return $this-&gt;json([
+            'liked' =&gt; true,
+            'already_liked' =&gt; $alreadyLiked,
+            'post_id' =&gt; $id,
+        ], $alreadyLiked ? Response::HTTP_OK : Response::HTTP_CREATED);
+    }
+}
+</code></pre>
+
+<h3 id="vo-and-validation">VO and Validation</h3>
+
+<p>We make use of the Validator component with the Value Object for the <code>POST /posts</code> payload:</p>
+
+<pre><code class="php">final readonly class CreatePostPayload
+{
+    public function __construct(
+        #[Assert\Sequentially([
+            new Assert\Type('string', message: 'body is required'),
+            new Assert\NotBlank(message: 'body is required', normalizer: 'trim'),
+            new Assert\Length(max: 500, normalizer: 'trim', maxMessage: 'body must be at most 500 characters'),
+        ])]
+        public mixed $body = null,
+    ) {
+    }
+}
+</code></pre>
+
+<h3 id="doctrine-entity-and-serializer">Doctrine Entity and Serializer</h3>
+
+<p>We use a regular Doctrine Entity for Posts, and the Symfony Serializer component:</p>
+
+<pre><code class="php">#[ORM\Entity(repositoryClass: PostRepository::class)]
+#[ORM\Table(name: 'posts')]
+class Post
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
+
+    #[ORM\Column(length: 500)]
+    private string $body;
+
+    /**
+     * SQLite has no DateTime type, so the challenge specifies the following in the schema:
+     * `created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`
+     */
+    #[ORM\Column(insertable: false, updatable: false, generated: 'INSERT')]
+    private string $createdAt;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(name: 'user_id', nullable: false)]
+    private User $author;
+
+    /** @var Collection&lt;int, PostLike&gt; */
+    #[ORM\OneToMany(targetEntity: PostLike::class, mappedBy: 'post', fetch: 'EXTRA_LAZY')]
+    private Collection $likes;
+
+    private function __construct(User $author, string $body)
+    {
+        $this-&gt;author = $author;
+        $this-&gt;body = $body;
+        $this-&gt;likes = new ArrayCollection();
+    }
+
+    public static function fromPayload(User $author, CreatePostPayload $payload): self
+    {
+        if (!\is_string($payload-&gt;body)) {
+            throw new \LogicException('body must be validated first');
+        }
+
+        return new self(
+            $author,
+            trim($payload-&gt;body),
+        );
+    }
+
+    public function getId(): ?int
+    {
+        return $this-&gt;id;
+    }
+
+    #[Ignore]
+    public function getAuthor(): User
+    {
+        return $this-&gt;author;
+    }
+
+    public function getBody(): string
+    {
+        return $this-&gt;body;
+    }
+
+    #[SerializedName('created_at')]
+    public function getCreatedAt(): string
+    {
+        return $this-&gt;createdAt;
+    }
+
+    #[SerializedName('author')]
+    public function getAuthorUsername(): string
+    {
+        return $this-&gt;author-&gt;getUsername();
+    }
+
+    #[SerializedName('like_count')]
+    public function getLikeCount(): int
+    {
+        return $this-&gt;likes-&gt;count();
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><em>Note</em>: The challenge requires the JSON to have the fields in a specific order:</p>
+
+<pre><code class="json">{"id": ..., "body": ..., "created_at": ..., "author": ..., "like_count": ...}
+</code></pre>
+  
+  <p>Without the Serializer attributes, our <code>Post</code> Entity would serialise with fields:
+  in "getter" order, in camelCase, with no <code>like_count</code>, and <code>author</code> being the whole <code>User</code> Entity:</p>
+
+<pre><code class="json">{
+  "id": ...,
+  "author": {"id": ..., "username": ..., "createdAt": ...},
+  "body": ...,
+  "createdAt": ...
+}
+</code></pre>
+</blockquote>
+
+<p>In <code>getLikeCount()</code>, the <code>$this-&gt;likes-&gt;count()</code> call would trigger a
+<code>SELECT ... FROM likes WHERE post_id = ?</code> (42 likes = 42 rows returned),
+but since we're using <code>EXTRA_LAZY</code> it becomes the intended <code>SELECT COUNT(*) FROM likes WHERE post_id = ?</code>.</p>
+
+<blockquote>
+  <p><em>Note</em>: Whenever you have to use <code>EXTRA_LAZY</code>,
+  this is pretty much a hint telling you you shouldn't be using the ORM here.</p>
+</blockquote>
+
+<p>Yet we still have a problem: the Serializer calls <code>getLikeCount()</code> on each post,
+so for example in the <code>GET /feed</code> endpoint we issue one query that returns the 20 posts,
+then 20 more queries to get the count for each.</p>
+
+<p>This is a N+1 query problem which we'll fix in the <a href="#read-model">Read Model section</a>.</p>
+
+<h3 id="doctrine-repository">Doctrine Repository</h3>
+
+<p>In the controller, for the <code>GET /feed</code> endpoint we use the following Doctrine Repository:</p>
+
+<pre><code class="php">class PostRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Post::class);
+    }
+
+    /** @return list&lt;Post&gt; */
+    public function findLatest(int $limit): array
+    {
+        return $this-&gt;createQueryBuilder('p')
+            -&gt;addSelect('u')
+            -&gt;join('p.author', 'u')
+            -&gt;orderBy('p.createdAt', \SortDirection::Descending)
+            -&gt;addOrderBy('p.id', \SortDirection::Descending)
+            -&gt;setMaxResults($limit)
+            -&gt;getQuery()
+            -&gt;getResult();
+    }
+}
+</code></pre>
+
+<p>If we were calling directly <code>$this-&gt;posts-&gt;findBy([], ['createdAt' =&gt; 'DESC', 'id' =&gt; 'DESC'], 20)</code>,
+Doctrine ORM would issue a first <code>SELECT ... FROM posts ORDER BY ... LIMIT 20</code> query,
+followed by 20 <code>SELECT ... FROM users WHERE id = ?</code> to get the author's username of each post.</p>
+
+<p>Instead our <code>findLatest()</code> method uses a "fetch join" (<code>addSelect()</code> + <code>join()</code>):
+<code>SELECT posts.*, users.* FROM posts INNER JOIN users ORDER BY ... LIMIT 20</code>,
+saving us from a second N+1 query trap.</p>
+
+<h3 id="firewall-config">Firewall config</h3>
+
+<p>For the authentication and authorization of users, we rely on Symfony's SecurityBundle:</p>
+
+<pre><code class="yaml">security:
+    # Users come from verified JWTs (see App\Security\JwtAccessTokenHandler), they're never loaded.
+    providers:
+        users_in_memory: { memory: null }
+
+    firewalls:
+        main:
+            lazy: true
+            stateless: true
+            provider: users_in_memory
+            access_token:
+                token_handler: App\Security\JwtAccessTokenHandler
+                failure_handler: App\Security\JsonAuthenticationFailureHandler
+            entry_point: App\Security\BearerTokenEntryPoint
+
+    # Checked before the route's {id} is validated: a 401 wins over a 400.
+    access_control:
+        - { path: ^/posts, methods: [POST], roles: IS_AUTHENTICATED }
+</code></pre>
+
+<blockquote>
+  <p><em>Note</em>: We had to handroll our JWT verification because the challenge requires
+  a HMAC key that is 9 bytes shorter than what RFC 7518 specifies,
+  existing libraries like firebase/php-jwt enforce the RFC requirements.</p>
+</blockquote>
+
+<p>We only require authentication on the "write" endpoints (<code>access_control</code>),
+because the challenge doesn't require it on the "read" ones.</p>
+
+<h3 id="doctrine-config">Doctrine config</h3>
+
+<p>Doctrine's config is the recipe's, pointed at SQLite,
+minus the result cache (the challenge forbids caching data across requests):</p>
+
+<pre><code class="yaml">doctrine:
+    dbal:
+        driver: pdo_sqlite
+        path: '%env(SQLITE_PATH)%'
+
+        profiling_collect_backtrace: '%kernel.debug%'
+    orm:
+        validate_xml_mapping: true
+        naming_strategy: doctrine.orm.naming_strategy.underscore
+        auto_mapping: true
+        mappings:
+            App:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Entity'
+                prefix: 'App\Entity'
+                alias: App
+
+# No result cache: the challenge forbids caching data across requests.
+# The query cache only holds DQL to SQL translations, like a prepared statement.
+when@prod:
+    doctrine:
+        orm:
+            query_cache_driver:
+                type: pool
+                pool: doctrine.system_cache_pool
+
+    framework:
+        cache:
+            pools:
+                doctrine.system_cache_pool:
+                    adapter: cache.system
+</code></pre>
+
+<h3 id="sqlite-dbal-middleware">SQLite DBAL Middleware</h3>
+
+<p>The challenge (rule 6) requires some specific SQLite settings (<code>PRAGMA</code>),
+but since those only last as long as the connection does,
+we need to send them everytime Doctrine connects,
+and this is done with a custom DBAL middleware:</p>
+
+<pre><code class="php">#[AsMiddleware]
+final readonly class SqlitePragmasMiddleware implements Middleware
+{
+    // 2 `PRAGMA` queries
+    public const array PRAGMAS = [
+        // WAL (Write Ahead Logs) required for challenge: already set in the database file
+        // 'journal_mode' =&gt; 'WAL', // readers don't block the writer, SQLite writes to -wal file, and copies it to db file at "checkpoints" 
+
+        // synchronous: If the power cuts off or the OS crashes...
+        // 'synchronous' =&gt; 'OFF', // ... recent transactions can be lost, and the database can be corrupted (not allowed for the challenge)
+        'synchronous' =&gt; 'NORMAL', // ... last few commits can be lost but database stays consistent; done on "checkpoint" 
+        // 'synchronous' =&gt; 'FULL', // ... nothing committed is lost; done on every commit
+
+        'busy_timeout' =&gt; '5000',  // wait for the write lock instead of failing with SQLITE_BUSY
+    ];
+
+    public function wrap(Driver $driver): Driver
+    {
+        return new class($driver) extends AbstractDriverMiddleware {
+            public function connect(#[\SensitiveParameter] array $params): Connection
+            {
+                $connection = parent::connect($params);
+                foreach (SqlitePragmasMiddleware::PRAGMAS as $pragma =&gt; $value) {
+                    $connection-&gt;exec("PRAGMA {$pragma} = {$value}");
+                }
+
+                return $connection;
+            }
+        };
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><em>Note</em>: in Classic Mode, there's 1 connection and 2 <code>PRAGMA</code> queries per request,
+  in Worker Mode it happens only once per worker
+  (by default Symfony's runtime will restart workers every 500 requests).</p>
+</blockquote>
+
+<h3 id="caddyfile">Caddyfile</h3>
+
+<p>Finally, the Caddyfile, which is the FrankenPHP configuration, for Classic Mode:</p>
+
+<pre><code># Caddyfile.classic
+{
+    auto_https off # no TLS
+    admin off # no Caddy admin API
+
+    frankenphp {
+        # num_threads 2 # default: 2 per CPU
+
+        # Worker mode disabled
+        # worker {
+        #   file ./public/index.php
+        # }
+    }
+}
+
+http://:{$PORT} {
+    bind {$HOST}
+    root ./public
+    # Serves static files: on every request, looks for a matching file in ./public first,
+    # then falls back to index.php
+    php_server
+}
+</code></pre>
+
+<p>And for Worker Mode:</p>
+
+<pre><code># Caddyfile.worker
+{
+    auto_https off
+    admin off
+
+    frankenphp {
+        # num_threads 2 # default: 2 threads per CPU
+
+        # Worker mode enabled
+        worker {
+            # num 2 # default: 2 workers per CPU
+            file ./public/index.php
+        }
+    }
+}
+
+http://:{$PORT} {
+    bind {$HOST}
+    root ./public
+    # Serves static files: on every request, looks for a matching file in ./public first,
+    # then falls back to index.php
+    php_server
+}
+</code></pre>
+
+<blockquote>
+  <p><em>Note</em>: Symfony detects FrankenPHP out of the box (classic and Worker Mode),
+  so no changes to the PHP code need to be made (just keep your app stateless).<br>
+  <br>
+  After serving the Response, Symfony resets its services (like Doctrine's EntityManager),
+  so nothing leaks from one request to another (but still, keep your app stateless!).</p>
+</blockquote>
+
+<p>There's no custom <code>php.ini</code>:
+we use FrankenPHP's release binary, which comes with the default PHP settings.</p>
+
+<h2 id="benchmarking">Benchmarking</h2>
+
+<p>In the video Arjay uses a DigitalOcean droplet (1 vCPU, 2 GB RAM, no swap),
+but then switched to a Synteq VPS (same specs)
+for the <a href="https://github.com/arjaythedev/twelve-dollar-server-challenge/blob/main/LEADERBOARD.md">Leaderboard</a> (more consistent).</p>
+
+<blockquote>
+  <p><em>Note</em>: I also recommend <a href="https://whateverthing.com/blog/2026/09/09/digitalocean-what-r-u-doing/">never using DigitalOcean, ever</a>.</p>
+</blockquote>
+
+<p>I'll instead run everything locally with: an Ubuntu 24.04 Docker container,
+pinned to the CPU core 1 (<code>--cpuset-cpus=1</code>),
+throttled to a quarter of that core (<code>--cpus=0.25</code>), 2 GB of RAM and no swap.</p>
+
+<blockquote>
+  <p><em>Note</em>: I initially ran my tests without the throttling,
+  then submitted my app which turned out to score much less than expected.<br>
+  The much less powerful CPU turned out to be a much bigger issue for my app,
+  so I had to rerun everything, which led me to find more optimisations!</p>
+</blockquote>
+
+<p>I'll then run k6 in a second container, with access to the other cores
+(<code>--cpuset-cpus=2-15</code>), making sure to leave core 0 for the VM
+(in the video and leaderboard, Arjay runs k6 on a separate machine).</p>
+
+<blockquote>
+  <p><em>Note</em>: I'm running this on my MacBook Pro (Apple M4 Max):<br>
+  * 16 CPU cores: 12 performance cores and 4 efficiency cores<br>
+  * 64 GB of RAM, of which the Docker VM gets about 57 GB and all 16 cores<br></p>
+</blockquote>
+
+<p><img alt="fastfetch output: MacBook Pro 16-inch 2024, Apple M4 Max (12+4 cores), 64 GiB of RAM, macOS Tahoe 26.7.1" src="/images/blazingly-phpast-fastfetch.png" width="100%" /></p>
+
+<p>Here's how to run:</p>
+
+<pre><code class="console"># 1. build the image
+bash local-bench/bench.sh build
+
+# 2. start the server on http://127.0.0.1:3000
+SERVE_ARGS="--cpus=0.25" bash local-bench/bench.sh start
+
+# 3. bench bench bench
+# Note: 02 min warmup with 1000 users
+# then use the bench/load.js script
+bash local-bench/bench.sh load 1000 step-x
+
+# 4. stop
+bash local-bench/bench.sh stop
+</code></pre>
+
+<h4 id="thresholds">Thresholds</h4>
+
+<p>It will output a handful of sections:</p>
+
+<pre><code>  █ THRESHOLDS
+
+    http_req_duration
+    ✓ 'p(95)&lt;500' p(95)=324.29ms
+    ✓ 'p(99)&lt;1000' p(99)=503.86ms
+
+    http_req_failed
+    ✓ 'rate&lt;0.01' rate=0.00%
+</code></pre>
+
+<p>These are the challenge's criteria:</p>
+
+<ul>
+<li>95% of requests answered in 324.29 ms, that's under 500 ms, so we get a ✓</li>
+<li>99% in 503.86 ms, that's under 1 s, so we get a ✓</li>
+<li>0.00% failure, that's under 1%, so we get a ✓</li>
+</ul>
+
+<p>All three must get a ✓ to be considered a success, so a single ✗ means failure.</p>
+
+<h4 id="diagnostics">Diagnostics</h4>
+
+<pre><code>  █ TOTAL RESULTS
+
+    checks_total.......: 36903   92.262913/s
+    checks_succeeded...: 100.00% 36903 out of 36903
+    checks_failed......: 0.00%   0 out of 36903
+
+    ✓ feed 200
+    ✓ post 200
+    ✓ like 200/201
+    ✓ create 201
+</code></pre>
+
+<p>This section is mostly diagnostics, and can mostly be disregarded.</p>
+
+<p>The first part details how we compute <code>http_req_failed</code>:
+by checking the response status codes for each endpoint.</p>
+
+<h4 id="latency-and-volume">Latency and Volume</h4>
+
+<pre><code>    HTTP
+    http_req_duration..............: avg=87.12ms med=45.55ms p(95)=324.29ms p(99)=503.86ms max=772.54ms
+      { expected_response:true }...: avg=87.12ms med=45.55ms p(95)=324.29ms p(99)=503.86ms max=772.54ms
+    http_req_failed................: 0.00%  0 out of 36903
+    http_reqs......................: 36903  92.262913/s
+</code></pre>
+
+<p>The HTTP subsection gives us the latency and volume:</p>
+
+<ul>
+<li><code>http_req_duration</code>:
+
+<ul>
+<li><code>avg</code>: average, should be more than median</li>
+<li><code>med</code>: median, the typical request</li>
+<li><code>p(95)</code> and <code>p(99)</code>: used in the score, the slowest parts</li>
+<li><code>max</code>: the single slowest request (if huge, then should be a warning)</li>
+</ul></li>
+<li><code>expected_response:true</code>: same numbers, but for successful responses only</li>
+<li><code>http_req_failed</code>: 4xx, 5xx and requests that never responded</li>
+<li><code>http_reqs</code>: total number of requests and average, includes the ramps</li>
+</ul>
+
+<blockquote>
+  <p><em>Note</em>: Requests per second is not a pertinent performance metric under regular load,
+  because it depends entirely on the load script "loop" (which sends 2.2 requests every 20s = 0.105 req/s).<br>
+  The req/s metric is <code>vus_max * 0.105</code>, for example 262 req/s for 2500 users.</p>
+</blockquote>
+
+<h4 id="vus-loop">Vus loop</h4>
+
+<pre><code>    EXECUTION
+    iteration_duration.............: avg=20.84s med=20.9s  p(95)=26.51s p(99)=28.34s  max=33s
+    iterations.....................: 16530  41.327425/s
+    vus............................: 1      min=1          max=1000
+    vus_max........................: 1000   min=1000       max=1000
+</code></pre>
+
+<p>This is information about the k6 users and their loop (load the feed, wait, like, post, etc):</p>
+
+<ul>
+<li><code>iteration_duration</code>: how long each user interacts in the "load the feed, wait, post, etc" loop</li>
+<li><code>iterations</code>: total number of loops, and how many loops per second</li>
+<li><code>vus</code>: number of Virtual USers at the end of the ramp down
+
+<ul>
+<li><code>min</code>: at the ramp down</li>
+<li><code>max</code>: at the hold, if different than <code>vus_max</code> then something went wrong</li>
+</ul></li>
+<li><code>vus_max</code>: that's the number we set with the script, if different than expected (e.g. 1000) then something went wrong</li>
+</ul>
+
+<h4 id="network">Network</h4>
+
+<pre><code>    NETWORK
+    data_received..................: 71 MB  178 kB/s
+    data_sent......................: 3.9 MB 9.7 kB/s
+</code></pre>
+
+<p>This one counts how much (JSON) data is moved:</p>
+
+<ul>
+<li><code>data_received</code>: server to k6</li>
+<li><code>data_sent</code>: k6 to server</li>
+</ul>
+
+<p>This usually doesn't need checking and it mostly tells us about the bandwidth.</p>
+
+<h4 id="bottleneck">Bottleneck</h4>
+
+<pre><code>peak CPU: 27.79%  peak RAM: 120.4MiB
+hold CPU (median): 26.11%
+k6 peak CPU: 28.56% (of 14 cores)  k6 peak RAM: 357.4MiB
+k6 exit code: 0 (0 = thresholds passed)  -&gt; local-bench/results/20261102-075620-step-x-1000.k6
+</code></pre>
+
+<p>This section tells us what the bottleneck was:</p>
+
+<ul>
+<li><code>peak CPU</code> vs <code>peak RAM</code>: did we fail to support more users because we ran out of CPU or RAM?</li>
+<li><code>hold CPU (median)</code>: to determine actual CPU utilisation (useful to measure improvements)</li>
+<li><code>k6 peak CPU</code> vs <code>k6 peak RAM</code>: when the load generator becomes the bottleneck</li>
+</ul>
+
+<h3 id="results-p0">p0 results</h3>
+
+<p>While optimising, the numbers we'll watch are:</p>
+
+<ul>
+<li>Users: <code>vus_max</code></li>
+<li><code>p(95)</code> (&lt; 500 ms): <code>http_req_duration</code></li>
+<li><code>p(99)</code> (&lt; 1 s): <code>http_req_duration</code></li>
+<li>Error Rate (&lt; 1%): <code>http_req_failed</code></li>
+<li>Hold CPU: <code>hold CPU (median)</code></li>
+<li>Peak RAM: <code>peak RAM</code></li>
+</ul>
+
+<p>The other ones will be useful to debug and find what to optimise.</p>
+
+<p>Here are the results for <code>p0</code> ("phase 0": Defaults):</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th align="right">Users</th>
+  <th align="right">p95 &lt; 0.5 s</th>
+  <th align="right">p99 &lt; 1 s</th>
+  <th align="right">Errors</th>
+  <th align="right">Hold CPU</th>
+  <th align="right">Peak RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Classic p0</td>
+  <td align="right">250</td>
+  <td align="right">0.126 s</td>
+  <td align="right">0.218 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">21%</td>
+  <td align="right">0.115 GiB</td>
+</tr>
+<tr>
+  <td>Classic p0</td>
+  <td align="right">500</td>
+  <td align="right">❌ 3.770 s</td>
+  <td align="right">❌ 4.040 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.112 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p0</td>
+  <td align="right">1,000</td>
+  <td align="right">0.248 s</td>
+  <td align="right">0.720 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.100 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p0</td>
+  <td align="right">1,250</td>
+  <td align="right">❌ 1.180 s</td>
+  <td align="right">❌ 1.600 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.115 GiB</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p><em>Note</em>: <code>docker stats</code> divides the container's CPU time by the VM's total CPU time,
+  and that total leaves out the time macOS takes back from the VM,
+  so a maxed-out core can read above 25% (remember, we've throttled our CPU).</p>
+</blockquote>
+
+<p>There's lots of leg room for the RAM and there are no errors,
+but the CPU is at the throttle's limit in both cases:</p>
+
+<ul>
+<li>Classic: CPU is spending most of its time booting Symfony for each request</li>
+<li>Worker: CPU is dealing with requests themselves, until users send more requests than it can finish</li>
+</ul>
+
+<blockquote>
+  <p><em>Note</em>: If a run fails while the CPU isn't maxed out,
+  it points to a bottleneck elsewhere
+  (e.g. PHP is waiting on I/O, locks, connections, rather than computing).</p>
+</blockquote>
+
+<h2 id="tuned-config">Tuned Config (p1-p3)</h2>
+
+<blockquote>
+  <p>It's dangerous to go to production alone! Take this <code>php.ini</code>.</p>
+</blockquote>
+
+<p>We've been using so far the default settings,
+but Paul Dragoonis made a legendary <a href="https://www.youtube.com/watch?v=o1oGWQEOclE">Scaling to Resilience</a> workshop,
+which we're going to utilise here to optimise the settings:</p>
+
+<pre><code class="ini">; php.ini
+
+; The default settings favour development environment, for production use:
+; https://github.com/php/php-src/blob/PHP-8.5/php.ini-production
+
+; Don't compile `assert()` calls (meant for development)
+; Default: 1 (compile and run)
+zend.assertions=-1
+
+; Don't show errors to users, they can leak sensitive information
+; Defaults: On
+display_errors=Off
+display_startup_errors=Off
+
+; Use logs instead to report all except deprecations
+; Defaults: Off, E_ALL
+log_errors=On
+error_reporting=E_ALL &amp; ~E_DEPRECATED
+
+; Leave function arguments out of stack traces, they can hold sensitive information
+; Default: Off
+zend.exception_ignore_args=On
+
+; Don't copy process ENVVARS into $_ENV on worker start (you should use getenv() instead).
+; Default: "EGPCS" (Env, Get, Post, Cookie, Server)
+variables_order="GPCS"
+
+; Add into $_REQUEST GET, then POST parameters. Exclude COOKIES, they can be set by other means.
+; Default: same as variables_order
+request_order="GP"
+
+; Send output in chunks of 4 KiB rather than piece by piece (mostly good if you have several echo)
+; Default: 0 (off)
+output_buffering=4096
+
+; Disable `&lt;?` tags, use `&lt;?php` instead
+; Default: On
+short_open_tag=Off
+
+; Disable loading extensions at runtime with dl()
+; Default: On
+enable_dl=Off
+
+; Limit the time spent parsing request data to 60 s
+; Default: -1 (shares max_execution_time's 30 s)
+max_input_time=60
+
+; On top of this we can follow the workshop:
+; https://github.com/dragoonis/scaling-php/blob/main/docker/symfony.prod.ini
+
+; Keep resolved relative paths (e.g. in autoloading and require) up to 600 s
+; (default 120 s)
+realpath_cache_ttl=600
+
+; Never check if a PHP file has changed in production
+; (instead you should rebuild cache after deployments)
+opcache.validate_timestamps=0
+
+; OPcache memory, call `opcache_get_status()` on the web server (CLI has a different cache),
+; to see what your app consumes. In our case:
+;
+; memory_usage:
+; - free_memory: 109629816 (104.6 MiB)
+; interned_strings_usage:
+; - free_memory:   3230512   (3.1 MiB)
+; - number_of_strings: 48081
+; opcache_statistics:
+; - num_cached_scripts: 1205
+; - num_cached_keys:    1365
+; - max_cached_keys:   16229
+; - oom_restarts: 0
+;
+; Total OPcache memory.
+; Raise when: memory_usage.free_memory close to 0, or opcache_statistics.oom_restarts above 0
+; opcache.memory_consumption=128 ; Default value, 128 MiB
+;
+; Interned Strings (class names, etc), taken out of opcache.memory_consumption.
+; Raise when: interned_strings_usage.free_memory close to 0
+; opcache.interned_strings_buffer=8 ; Default value, 8 MiB
+;
+; Number of PHP files OPcache can hold, rounded up to a prime number (10000 becomes 16229).
+; Count files for a gross number, using: `find . -type f -name "*.php" | wc -l` (in our app: 3592)
+; Raise when: opcache_statistics.num_cached_keys close to max_cached_keys
+; opcache.max_accelerated_files=10000 ; Default value
+
+; Answer file_exists(), is_file() and is_readable() from OPcache for cached files
+opcache.enable_file_override=1
+
+; Load Symfony container classes into shared memory when FrankenPHP starts
+; (kept between requests)
+opcache.preload=${APP_DIR}/config/preload.php
+
+; Profile code while it runs, identifies hot paths (loops, sequence of calls), and compiles to machine code
+opcache.jit=tracing
+</code></pre>
+
+<p>The <code>config/preload.php</code> file is generated by Symfony on cache warmup,
+and for our app is about 1,037 classes (roughly 12 MiB).</p>
+
+<p>We also pass <code>--classmap-authoritative</code> to <code>composer install</code>:
+the autoloader answers from the class map only, without looking for files
+(no measurable gains from my run, but kept anyway).</p>
+
+<blockquote>
+  <p><em>Note</em>: <code>tracing</code> is the recommended setting, but by default is <code>disable</code>.<br>
+  <br>
+  It can also be set to <code>off</code>, which allows JIT to be enabled at runtime (using <code>ini_set()</code>).<br>
+  <br>
+  Another option is <code>function</code> which triggers compilation on loading
+  (as opposed to while it runs) and analyses on a file per file basis
+  (as opposed to on a function per function basis).</p>
+  
+  <p><em>Note</em>: Some settings from the workshop were left out, for example security hardening, etc.</p>
+</blockquote>
+
+<h3 id="results-p3">p3 results</h3>
+
+<p>Here are the results for <code>p3</code> (which includes <code>p1</code> and <code>p2</code>):</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th align="right">Users</th>
+  <th align="right"><a href="#results-p0">vs p0</a></th>
+  <th align="right">p95 &lt; 0.5 s</th>
+  <th align="right">p99 &lt; 1 s</th>
+  <th align="right">Errors</th>
+  <th align="right">Hold CPU</th>
+  <th align="right">Peak RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Classic p3</td>
+  <td align="right">250</td>
+  <td align="right">same</td>
+  <td align="right">0.065 s</td>
+  <td align="right">0.165 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">17%</td>
+  <td align="right">0.137 GiB</td>
+</tr>
+<tr>
+  <td>Classic p3</td>
+  <td align="right">500</td>
+  <td align="right"></td>
+  <td align="right">❌ 1.100 s</td>
+  <td align="right">❌ 1.310 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.137 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p3</td>
+  <td align="right">1,250</td>
+  <td align="right">+1 step</td>
+  <td align="right">0.171 s</td>
+  <td align="right">0.355 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.139 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p3</td>
+  <td align="right">1,500</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.587 s</td>
+  <td align="right">0.708 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.150 GiB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Oh noes! Amost no gains?</p>
+
+<p>In some cases the improvements wouldn't be enough to move from one step (e.g. 250) to the next successfully (e.g. 500),
+this hides the impact of potential small optimisations (e.g. maybe we can handle 370 instead of 300).</p>
+
+<p>Trying to find the exact number of handled users would take too long,
+so instead we do an <strong>Overload Test</strong>: way more users than it can handle (e.g. 2000 users)
+for 3 minutes (180 seconds, so it doesn't take too much time),
+and we check how many Requests per seconds it successfully handled.</p>
+
+<p>For example:</p>
+
+<pre><code>http_req_failed................: 0.00%  0 out of 7020
+</code></pre>
+
+<p>That's 7020 requests, over 180 seconds, which means = 39 req/s.</p>
+
+<p>From now on, the users tables tell us whether a step makes it to the next level,
+and the Overload Test's req/s tells us by how much:</p>
+
+<ul>
+<li><strong>Classic: 50 req/s</strong>, from 39</li>
+<li><strong>Worker: 163 req/s</strong>, from 117</li>
+</ul>
+
+<p>Each step helped a different mode:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Step</th>
+  <th align="right">Classic</th>
+  <th align="right">Worker</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>php.ini</code></td>
+  <td align="right">+5.0%</td>
+  <td align="right">-0.9%</td>
+</tr>
+<tr>
+  <td>Preload, class map</td>
+  <td align="right">+17.0%</td>
+  <td align="right">+7.2%</td>
+</tr>
+<tr>
+  <td>JIT</td>
+  <td align="right">+2.8%</td>
+  <td align="right">+30.4%</td>
+</tr>
+</tbody>
+</table>
+
+<p>Preloading, OPcache and realpath settings speed up finding, including and declaring classes,
+so the Classic Mode that does that on every requests benefit from it the most.</p>
+
+<blockquote>
+  <p><em>Note</em>: Worker mode only boots when a worker starts,
+  which by default is done every 500 requests
+  (Symfony runtime enforces this to avoid issues with memory leaks).<br>
+  <br>
+  I've tested disabling the restarts (<code>FRANKENPHP_LOOP_MAX=0</code>),
+  but this showed no gain.</p>
+</blockquote>
+
+<p>On the other hand the Just In Time compilation (JIT) only speeds up executing code,
+so it has more impact on the Worker Mode.</p>
+
+<p>Paul's workshop go beyond just optimisation settings,
+it also covers how to monitor your application,
+I highly recommend you check his video.</p>
+
+<h2 id="read-model">Read Model (p6)</h2>
+
+<blockquote>
+  <p>Tweaking settings is fine, but have you tried turning the ORM off and off again?</p>
+</blockquote>
+
+<p><br></p>
+
+<blockquote>
+  <p><em>Note</em>: <code>p4</code> restricted the firewall to <code>POST /posts</code>,
+  and <code>p5</code> set the Caddyfile to not check for serving static files (js, CSS, etc).<br>
+  Neither made a measurable difference (see <a href="#experiments">Experiments</a>),
+  so we jump straight to p6.</p>
+</blockquote>
+
+<p>So, where do we take it from here?
+Let's first check where the server's CPU goes with Linux <code>perf</code> (Worker Mode, 750 users):</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th align="right">CPU</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>PHP (SQLite included)</td>
+  <td align="right">88%</td>
+</tr>
+<tr>
+  <td>Linux kernel</td>
+  <td align="right">8%</td>
+</tr>
+<tr>
+  <td>FrankenPHP</td>
+  <td align="right">4%</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+  <p><em>Note</em>: Linux kernel includes system calls and TCP,
+  and FrankenPHP includes Caddy and Go's garbage collector.</p>
+</blockquote>
+
+<p>PHP is the biggest cost by far, so let's profile it with
+<a href="https://github.com/wikimedia/mediawiki-php-excimer">Excimer</a>,
+focusing on the Controllers:</p>
+
+<pre><code>All PHP samples (Worker Mode, 750 users)                        100.0%
+├── HttpKernel::handle                                           80.8%
+│   ├── GET /feed: PostController::feed                          54.4%
+│   ├── GET /posts/{id}: PostController::show                    11.0%
+│   ├── POST /posts/{id}/like: PostController::like               3.6%
+│   ├── POST /posts: PostController::create                       0.5%
+│   └── routing, firewall, listeners                             11.3%
+└── Symfony Runtime's worker loop (outside of Symfony's kernel)  19.2%
+    ├── Response::send                                            3.1%
+    ├── Kernel::boot (worker restarts)                            1.8%
+    └── everything else                                          14.3%
+</code></pre>
+
+<blockquote>
+  <p><em>Note</em>: We use well under the Worker Mode 1,250 limit to measure the work as opposed to the queuing.</p>
+</blockquote>
+
+<p>Clearly the <code>GET /feed</code> endpoint will have the most impact (54.4%), so let's zoom on it:</p>
+
+<pre><code>GET /feed: PostController::feed                          100.0%
+├── PostRepository::findLatest (posts + authors)          35.6%
+│   └── AbstractHydrator::hydrateAll                      26.2%
+└── AbstractController::json                              64.4%
+    └── Serializer::serialize                             62.0%
+        └── Post::getLikeCount (a COUNT query per post)   34.7%
+</code></pre>
+
+<p>As a reminder <code>PostRepository::findLatest</code> (35.6%) issues this 1st query:</p>
+
+<pre><code class="SQL">SELECT posts.*, users.*
+FROM posts
+INNER JOIN users ON posts.user_id = users.id
+ORDER BY ... LIMIT 20
+</code></pre>
+
+<p>This returns 20 posts.</p>
+
+<p>We know, from the Default p0 section, that this endpoint has a N+1 Query problem,
+and we can sort of see it in this profile: <code>Post::getLikeCount</code> taking 34.7%,
+called by the Serlializer, which is called 20 times to get the like number for each post:</p>
+
+<pre><code class="SQL">SELECT COUNT(*) FROM likes WHERE post_id = ?
+</code></pre>
+
+<p>The <code>GET /posts/{id}</code> endpoint (11.0%) shares some similarity:</p>
+
+<pre><code>GET /posts/{id}: PostController::show                    100.0%
+├── PostRepository::find (the post)                       33.8%
+│   └── AbstractHydrator::hydrateAll                      17.6%
+└── AbstractController::json                              65.4%
+    └── Serializer::serialize                             57.1%
+        ├── Post::getAuthorUsername (lazy loads the User) 20.5%
+        │   └── AbstractHydrator::hydrateAll               8.9%
+        └── Post::getLikeCount (a COUNT query)            20.1%
+</code></pre>
+
+<p><code>PostRepository::find</code> (33.8%) issues this first query:</p>
+
+<pre><code class="SQL">SELECT ...  FROM posts WHERE id = ?
+</code></pre>
+
+<p>This gets the post but then it also needs its author,
+which is an extra query (<code>Post::getAuthorUsername</code>, 20.5%):</p>
+
+<pre><code class="SQL">SELECT ...  FROM users WHERE id = ?
+</code></pre>
+
+<p>And it needs the like number as well,
+so another extra query (<code>Post::getLikeCount</code>, 20.1%):</p>
+
+<pre><code class="SQL">SELECT COUNT(*) FROM likes WHERE post_id = ?
+</code></pre>
+
+<p>In both endpoints the ORM works hard on hydration:
+<code>AbstractHydrator::hydrateAll</code> takes 26.2% for feed, 17.6% for the post and 8.9% for username.</p>
+
+<p>But then we throw that effort away by directly serializing without any modification:
+<code>Serializer::serialize</code> takes 27.3% for feed and 16.5% for post,
+if we exclude <code>Post</code> and <code>AbstractHydrator</code> work
+(<a href="#jsonstreamer">we'll tackle serialization in the next section</a>).</p>
+
+<p>Marco Piveta (aka Ocramius) gave a fabulous <a href="https://www.youtube.com/watch?v=rzGeNYC3oz0">Doctrine ORM Good Practices and Tricks</a> talk,
+and we're going to follow his decade old advice by... dropping Doctrine ORM.</p>
+
+<p>Or rather the Entities. At least for the read side. For now...</p>
+
+<p>By getting rid of the entity we can bring both endpoints to 1 single query,
+vanquishing the N+1 query issue:</p>
+
+<pre><code class="php">class PostRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Post::class);
+    }
+
+    /** @return list&lt;PostView&gt; */
+    public function findLatestViews(int $limit): array
+    {
+        return $this-&gt;createViewQueryBuilder()
+            -&gt;orderBy('p.createdAt', \SortDirection::Descending)
+            -&gt;addOrderBy('p.id', \SortDirection::Descending)
+            -&gt;setMaxResults($limit)
+            -&gt;getQuery()
+            -&gt;getResult();
+    }
+
+    public function findView(int $id): ?PostView
+    {
+        return $this-&gt;createViewQueryBuilder()
+            -&gt;where('p.id = :id')
+            -&gt;setParameter('id', $id)
+            -&gt;getQuery()
+            -&gt;getOneOrNullResult(Query::HYDRATE_OBJECT);
+    }
+
+    private function createViewQueryBuilder(): QueryBuilder
+    {
+        return $this-&gt;createQueryBuilder('p')
+            -&gt;select(&lt;&lt;&lt;'DQL'
+            NEW App\ReadModel\PostView(
+                p.id,
+                p.body,
+                p.createdAt,
+                u.username,
+                (SELECT COUNT(IDENTITY(l.post)) FROM App\Entity\PostLike l WHERE l.post = p)
+            )
+            DQL)
+            -&gt;join('p.author', 'u');
+    }
+}
+</code></pre>
+
+<p>It's totally legal Doctrine stuff, I swear,
+<a href="https://www.doctrine-project.org/projects/doctrine-orm/en/3.7/reference/dql-doctrine-query-language.html#new-operator-syntax">see the docs</a>!</p>
+
+<p>This requires a PostView DTO:</p>
+
+<pre><code class="php">final readonly class PostView
+{
+    public function __construct(
+        public int $id,
+        public string $body,
+        #[SerializedName('created_at')]
+        public string $createdAt,
+        public string $author,
+        #[SerializedName('like_count')]
+        public int $likeCount,
+    ) {
+    }
+
+    /** Converting Post entity to PostView, e.g. for the response of `POST /posts` */
+    public static function fromPost(Post $post, string $author): self
+    {
+        return new self(
+            $post-&gt;getId()
+                ?? throw new \LogicException('post id is set by flush()'),
+            $post-&gt;getBody(),
+            $post-&gt;getCreatedAt(),
+            $author,
+            0,
+        );
+    }
+}
+</code></pre>
+
+<p>And the controller now uses the read model for all the responses that contain posts:</p>
+
+<pre><code class="php">final class PostController extends AbstractController
+{
+    private const int FEED_SIZE = 20;
+
+    public function __construct(
+        private readonly PostRepository $posts,
+        private readonly PostLikeRepository $likes,
+        private readonly EntityManagerInterface $entityManager,
+    ) {
+    }
+
+    #[Route('/feed', methods: ['GET'])]
+    public function feed(): JsonResponse
+    {
+        return $this-&gt;json([
+            'posts' =&gt; $this-&gt;posts-&gt;findLatestViews(self::FEED_SIZE),
+        ]);
+    }
+
+    #[Route('/posts/{id}', methods: ['GET'])]
+    public function show(
+        #[ValueResolver(PostId::class)]
+        int $id,
+    ): JsonResponse {
+        return $this-&gt;json([
+            'post' =&gt; $this-&gt;posts-&gt;findView($id)
+                ?? throw new NotFoundHttpException('post not found'),
+        ]);
+    }
+
+    #[Route('/posts', methods: ['POST'])]
+    public function create(
+        #[CurrentUser]
+        JwtUser $user,
+        #[MapRequestPayload(validationFailedStatusCode: Response::HTTP_BAD_REQUEST)]
+        CreatePostPayload $payload,
+    ): JsonResponse {
+        $author = $this-&gt;entityManager-&gt;getReference(User::class, $user-&gt;id)
+            ?? throw new \LogicException('user reference not available');
+
+        $post = Post::fromPayload($author, $payload);
+        $this-&gt;entityManager-&gt;persist($post);
+        $this-&gt;entityManager-&gt;flush();
+
+        return $this-&gt;json([
+            'post' =&gt; PostView::fromPost($post, $user-&gt;username),
+        ], Response::HTTP_CREATED);
+    }
+
+    #[Route('/posts/{id}/like', methods: ['POST'])]
+    public function like(
+        #[CurrentUser]
+        JwtUser $user,
+        #[ValueResolver(PostId::class)]
+        int $id,
+    ): JsonResponse {
+        // ... unchanged
+    }
+}
+</code></pre>
+
+<h3 id="results-p6">p6 results</h3>
+
+<p>Here are the results for <code>p6</code>:</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th align="right">Users</th>
+  <th align="right"><a href="#results-p3">vs p3</a></th>
+  <th align="right">p95 &lt; 0.5 s</th>
+  <th align="right">p99 &lt; 1 s</th>
+  <th align="right">Errors</th>
+  <th align="right">Hold CPU</th>
+  <th align="right">Peak RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Classic p6</td>
+  <td align="right">500</td>
+  <td align="right">+1 step</td>
+  <td align="right">0.245 s</td>
+  <td align="right">0.367 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">25%</td>
+  <td align="right">0.134 GiB</td>
+</tr>
+<tr>
+  <td>Classic p6</td>
+  <td align="right">750</td>
+  <td align="right"></td>
+  <td align="right">❌ 2.340 s</td>
+  <td align="right">❌ 2.500 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.131 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p6</td>
+  <td align="right">2,250</td>
+  <td align="right">+4 steps</td>
+  <td align="right">0.157 s</td>
+  <td align="right">0.233 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.182 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p6</td>
+  <td align="right">2,500</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.674 s</td>
+  <td align="right">❌ 1.240 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.202 GiB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Using a Read Model gives us some agreeable gains, with classic finally moving one step up.</p>
+
+<p>With the Overload Test, compared to <code>p3</code>, we can see exactly by how much:</p>
+
+<ul>
+<li><strong>Classic: 67 req/s (+34.0%)</strong>, from 50</li>
+<li><strong>Worker: 273 req/s (+67.2%)</strong>, from 163</li>
+</ul>
+
+<p>It feels like Worker mode benefits the most from this change,
+but if we look at the time per request using the req/s,
+we can see that this was also very good for Classic:</p>
+
+<ul>
+<li><strong>Classic: 14.9 ms (-5.1 ms)</strong>, from 20.0 ms</li>
+<li><strong>Worker: 3.7 ms (-2.5 ms)</strong>, from 6.1 ms</li>
+</ul>
+
+<p>Profiling <code>p6</code> we can observe that <code>GET /feed</code> drops from 54.5% to 38.0% for PHP time:</p>
+
+<pre><code>All PHP samples (Worker Mode, 750 users)                        100.0%  vs p5
+├── HttpKernel::handle                                           75.3%   -5.5
+│   ├── GET /feed: PostController::feed                          38.0%  -16.4
+│   ├── GET /posts/{id}: PostController::show                    14.6%   +3.6
+│   │   └── cached DQL to SQL (Query::getSqlExecutor)             2.2%   +2.2
+│   ├── POST /posts/{id}/like: PostController::like               6.0%   +2.4
+│   ├── POST /posts: PostController::create                       0.6%   +0.1
+│   └── routing, firewall, listeners                             16.1%   +4.8
+└── Symfony Runtime's worker loop (outside of Symfony's kernel)  24.7%   +5.5
+    ├── Response::send                                            4.0%   +0.9
+    ├── Kernel::boot (worker restarts)                            2.2%   +0.4
+    └── everything else                                          18.5%   +4.2
+</code></pre>
+
+<p>You lose some, you win some, everything else grows by about x 1.36, which is expected (total must be 100%!).</p>
+
+<p>Surprisingly, <code>GET /posts/{id}</code> doesn't seem to get any benefit from that change,
+that's because <code>PostRepository::find</code> now uses DQL (2.2% of total PHP, 15.2% of the endpoint),
+<a href="#plain-sql-reads">we'll take care of that in Plain SQL Reads section</a>.</p>
+
+<h2 id="jsonstreamer">JsonStreamer (p7)</h2>
+
+<blockquote>
+  <p>I have a plan so cunning you could put a Streamer on it and call it a JSON. Hon hi hon.</p>
+</blockquote>
+
+<p>Mathias Arlaud (aka mtarld) gave a fantastic
+<a href="https://www.youtube.com/watch?v=2kHygcXcdQs">API Platform, JsonStreamer and ESA talk</a>
+which introduced his brand new Symfony Component: JsonStreamer.</p>
+
+<p>This is going to come in handy, because now that we have a read model,
+the Serializer is our biggest cost. Zooming in the <code>GET /feed</code> endpoint (38.0% in the previous profile):</p>
+
+<pre><code>GET /feed: PostController::feed                                   100.0%
+├── PostRepository::findLatestViews                                41.9%
+│   └── AbstractHydrator::hydrateAll                               21.0%
+└── AbstractController::json                                       58.1%
+    └── Serializer::serialize                                      53.3%
+        ├── AbstractNormalizer::getAttributeNormalizationContext   18.2%
+        └── ObjectNormalizer::getAttributeValue (PropertyAccess)   11.4%
+</code></pre>
+
+<p>For each property of each object, <code>ObjectNormalizer</code> looks up its metadata (serialized name, groups, context),
+checks for a class discriminator, then reads the value using <code>PropertyAccess</code>...
+That's why it takes 53% of the endpoint!</p>
+
+<p>With <a href="https://symfony.com/doc/current/serializer/streaming_json.html">JsonStreamer</a>,
+Symfony generates on cache warm up plain PHP encoders for each class,
+which means to create one DTO per endpoint response.</p>
+
+<p>Let's change <code>PostView</code> by switching the <code>#[SerializedName]</code> attributes with the JsonStreamer ones:</p>
+
+<pre><code class="php">/**
+ * The post object of the API: properties are written in this order.
+ */
+#[JsonStreamable]
+final readonly class PostView
+{
+    public function __construct(
+        public int $id,
+        public string $body,
+        #[StreamedName('created_at')]
+        public string $createdAt,
+        public string $author,
+        #[StreamedName('like_count')]
+        public int $likeCount,
+    ) {
+    }
+
+    public static function fromPost(Post $post, string $author): self
+    {
+        // ... unchanged
+    }
+}
+</code></pre>
+
+<p>For the curious, here's what JsonStreamer generates for it
+(in <code>var/cache/prod/json_streamer/stream_writer/</code>):</p>
+
+<p></p>
+
+<pre><code class="php">/**
+ * @param App\ReadModel\PostView $data
+ */
+return static function (mixed $data, \Psr\Container\ContainerInterface $transformers, array $options): \Traversable {
+    try {
+        $prefix1 = '';
+        yield "{{$prefix1}\"id\":";
+        yield \json_encode($data-&gt;id, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE, 511);
+        $prefix1 = ',';
+        yield "{$prefix1}\"body\":";
+        yield \json_encode($data-&gt;body, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE, 511);
+        yield "{$prefix1}\"created_at\":";
+        yield \json_encode($data-&gt;createdAt, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE, 511);
+        yield "{$prefix1}\"author\":";
+        yield \json_encode($data-&gt;author, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE, 511);
+        yield "{$prefix1}\"like_count\":";
+        yield \json_encode($data-&gt;likeCount, \JSON_THROW_ON_ERROR | \JSON_PRESERVE_ZERO_FRACTION | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE, 511);
+        yield "}";
+    } catch (\JsonException $e) {
+        throw new \Symfony\Component\JsonStreamer\Exception\NotEncodableValueException(\sprintf('Cannot encode "%s" to JSON: %s.', 'App\\ReadModel\\PostView', $e-&gt;getMessage()), 0, $e);
+    }
+};
+</code></pre>
+
+<p></p>
+
+<p>Then we need to create 3 DTOs for our 4 endpoints:</p>
+
+<pre><code class="php">/**
+ * GET /feed
+ */
+#[JsonStreamable]
+final readonly class FeedOutput
+{
+    public function __construct(
+        // requires phpstan/phpdoc-parser installed
+        /** @var list&lt;PostView&gt; */
+        public array $posts,
+    ) {
+    }
+}
+
+/**
+ * GET /posts/{id}
+ * POST /posts
+ */
+#[JsonStreamable]
+final readonly class PostOutput
+{
+    public function __construct(
+        public PostView $post,
+    ) {
+    }
+}
+
+/**
+ * POST /posts/{id}/like
+ */
+#[JsonStreamable]
+final readonly class LikeOutput
+{
+    public function __construct(
+        public bool $liked,
+        #[StreamedName('already_liked')]
+        public bool $alreadyLiked,
+        #[StreamedName('post_id')]
+        public int $postId,
+    ) {
+    }
+}
+</code></pre>
+
+<p>In the controller we used <code>$this-&gt;json()</code> (<code>AbstractController::json()</code>),
+which is a shortcut for <code>$this-&gt;serializer-&gt;serialize()</code> + <code>JsonResponse</code>,
+we need to swap that for <code>$this-&gt;jsonStreamWriter-&gt;write()</code>
+(let's create a shortcut <code>$this-&gt;writeJson()</code>):</p>
+
+<pre><code class="php">final class PostController extends AbstractController
+{
+    private const int FEED_SIZE = 20;
+
+    public function __construct(
+        private readonly PostRepository $posts,
+        private readonly PostLikeRepository $likes,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly JsonStreamWriter $jsonStreamWriter,
+    ) {
+    }
+
+    #[Route('/feed', methods: ['GET'])]
+    public function feed(): JsonResponse
+    {
+        return $this-&gt;writeJson(new FeedOutput(
+            $this-&gt;posts-&gt;findLatestViews(self::FEED_SIZE),
+        ));
+    }
+
+    #[Route('/posts/{id}', methods: ['GET'])]
+    public function show(
+        #[ValueResolver(PostId::class)]
+        int $id,
+    ): JsonResponse {
+        return $this-&gt;writeJson(new PostOutput(
+            $this-&gt;posts-&gt;findView($id)
+                ?? throw new NotFoundHttpException('post not found'),
+        ));
+    }
+
+    #[Route('/posts', methods: ['POST'])]
+    public function create(
+        #[CurrentUser]
+        JwtUser $user,
+        #[MapRequestPayload(validationFailedStatusCode: Response::HTTP_BAD_REQUEST)]
+        CreatePostPayload $payload,
+    ): JsonResponse {
+        $author = $this-&gt;entityManager-&gt;getReference(User::class, $user-&gt;id)
+            ?? throw new \LogicException('user reference not available');
+
+        $post = Post::fromPayload($author, $payload);
+        $this-&gt;entityManager-&gt;persist($post);
+        $this-&gt;entityManager-&gt;flush();
+
+        return $this-&gt;writeJson(
+            new PostOutput(PostView::fromPost($post, $user-&gt;username)),
+            Response::HTTP_CREATED,
+        );
+    }
+
+    #[Route('/posts/{id}/like', methods: ['POST'])]
+    public function like(
+        #[CurrentUser]
+        JwtUser $user,
+        #[ValueResolver(PostId::class)]
+        int $id,
+    ): JsonResponse {
+        $post = $this-&gt;posts-&gt;find($id)
+            ?? throw new NotFoundHttpException('post not found');
+        $liker = $this-&gt;entityManager-&gt;getReference(User::class, $user-&gt;id)
+            ?? throw new \LogicException('user reference not available');
+
+        $alreadyLiked = null !== $this-&gt;likes-&gt;findOneBy([
+            'user' =&gt; $liker,
+            'post' =&gt; $post,
+        ]);
+        if (!$alreadyLiked) {
+            try {
+                $this-&gt;entityManager-&gt;persist(new PostLike(
+                    $liker,
+                    $post,
+                ));
+                $this-&gt;entityManager-&gt;flush();
+            } catch (UniqueConstraintViolationException) {
+                $alreadyLiked = true; // liked by a concurrent request
+            }
+        }
+
+        return $this-&gt;writeJson(
+            new LikeOutput(
+                true,
+                $alreadyLiked,
+                $id,
+            ),
+            $alreadyLiked ? Response::HTTP_OK : Response::HTTP_CREATED,
+        );
+    }
+
+    /**
+     * JsonStreamer writes the JSON with PHP code generated for each output class at cache warmup.
+     */
+    private function writeJson(object $output, int $status = Response::HTTP_OK): JsonResponse
+    {
+        $json = $this-&gt;jsonStreamWriter-&gt;write($output, Type::object($output::class));
+
+        return new JsonResponse((string) $json, $status, json: true);
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><em>Note</em>: Despite its name, we don't actually stream anything here:
+  <code>writeJson()</code> casts the result to a string and puts it in a regular <code>JsonResponse</code>.
+  The gain comes from the generated code, not from streaming
+  (our responses are small, a <code>StreamedResponse</code> would only make sense for large ones).</p>
+</blockquote>
+
+<h3 id="results-p7">p7 results</h3>
+
+<p>Here are the results for <code>p7</code>:</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th align="right">Users</th>
+  <th align="right"><a href="#results-p6">vs p6</a></th>
+  <th align="right">p95 &lt; 0.5 s</th>
+  <th align="right">p99 &lt; 1 s</th>
+  <th align="right">Errors</th>
+  <th align="right">Hold CPU</th>
+  <th align="right">Peak RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Classic p7</td>
+  <td align="right">500</td>
+  <td align="right">same</td>
+  <td align="right">0.073 s</td>
+  <td align="right">0.145 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">23%</td>
+  <td align="right">0.128 GiB</td>
+</tr>
+<tr>
+  <td>Classic p7</td>
+  <td align="right">750</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.634 s</td>
+  <td align="right">0.772 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.129 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p7</td>
+  <td align="right">3,000</td>
+  <td align="right">+3 steps</td>
+  <td align="right">0.266 s</td>
+  <td align="right">0.380 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.218 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p7</td>
+  <td align="right">3,250</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.551 s</td>
+  <td align="right">0.863 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.233 GiB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Compared to <code>p6</code>, the Overload Test gives us some pleasant gains:</p>
+
+<ul>
+<li><strong>Classic: 81 req/s (+20.0%)</strong>, from 67</li>
+<li><strong>Worker: 366 req/s (+34.1%)</strong>, from 273</li>
+</ul>
+
+<p>Let's profile <code>p7</code>:</p>
+
+<pre><code>All PHP samples (Worker Mode, 750 users)                        100.0%  vs p6
+├── HttpKernel::handle                                           68.4%   -6.9
+│   ├── GET /feed: PostController::feed                          23.9%  -14.1
+│   │   └── writing the JSON                                      3.5%  -18.6
+│   ├── GET /posts/{id}: PostController::show                    15.1%   +0.5
+│   │   └── writing the JSON                                      1.2%   -2.9
+│   ├── POST /posts/{id}/like: PostController::like               7.3%   +1.3
+│   ├── POST /posts: PostController::create                       0.7%   +0.1
+│   └── routing, firewall, listeners                             21.4%   +5.3
+└── Symfony Runtime's worker loop (outside of Symfony's kernel)  31.6%   +6.9
+    ├── Response::send                                            5.2%   +1.2
+    ├── Kernel::boot (worker restarts)                            3.1%   +0.9
+    └── everything else                                          23.3%   +4.8
+</code></pre>
+
+<p>Writing the feed's JSON drops from 22.1% to 3.5% of PHP's time.</p>
+
+<p>Everything else grows mechanically by x 1.23,
+except for the <code>GET /posts/{id}</code> endpoint which grows by x 1.03,
+which shows that it also benefited from using JsonStreamer,
+just a bit less since its JSON was 28.2% of its endpoint.</p>
+
+<h2 id="plain-sql-reads">Plain SQL Reads (p8)</h2>
+
+<blockquote>
+  <p>Entities? Where we're going, we don't need entities.</p>
+</blockquote>
+
+<p>With the Serializer out of the way, let's zoom in the <code>GET /feed</code> endpoint
+(23.9% in the previous profile):</p>
+
+<pre><code>GET /feed: PostController::feed                          100.0%
+├── PostRepository::findLatestViews                       76.9%
+│   ├── cached DQL to SQL (Query::getSqlExecutor)          9.5%
+│   ├── Connection::executeQuery (SQLite)                 17.7%
+│   └── AbstractHydrator::hydrateAll                      38.2%
+└── PostController::writeJson                             23.0%
+</code></pre>
+
+<p>And the <code>GET /posts/{id}</code> endpoint (15.1%):</p>
+
+<pre><code>GET /posts/{id}: PostController::show                    100.0%
+├── PostRepository::findView                              81.0%
+│   ├── cached DQL to SQL (Query::getSqlExecutor)         20.2%
+│   ├── Connection::executeQuery (SQLite)                 28.6%
+│   └── AbstractHydrator::hydrateAll                      12.8%
+└── PostController::writeJson                             18.0%
+</code></pre>
+
+<p>Now the biggest part of the work is the ORM (59.2% and 52.4%, everything but SQLite),
+with Doctrine hydrating the Read Models instead of the entities (38.2% and 12.8%),
+and fetching the cached DQL to SQL translation (9.5% and 20.2%).</p>
+
+<p>Let's follow Ocramius advice, and "just use SQL"!</p>
+
+<pre><code class="php">class PostRepository extends ServiceEntityRepository
+{
+    /**
+     * One row per post, with its author and its like count as of now.
+     */
+    private const string VIEW_SQL = &lt;&lt;&lt;'SQL'
+    SELECT p.id, p.body, p.created_at, u.username,
+           (SELECT COUNT(l.post_id) FROM likes l WHERE l.post_id = p.id) AS like_count
+      FROM posts p
+      JOIN users u ON u.id = p.user_id
+    SQL;
+
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Post::class);
+    }
+
+    /** @return list&lt;PostView&gt; */
+    public function findLatestViews(int $limit): array
+    {
+        $rows = $this-&gt;getEntityManager()-&gt;getConnection()-&gt;fetchAllAssociative(
+            self::VIEW_SQL.' ORDER BY p.created_at DESC, p.id DESC LIMIT ?',
+            [$limit],
+        );
+
+        return array_map(PostView::fromRow(...), $rows);
+    }
+
+    public function findView(int $id): ?PostView
+    {
+        $row = $this-&gt;getEntityManager()-&gt;getConnection()-&gt;fetchAssociative(
+            self::VIEW_SQL.' WHERE p.id = ?',
+            [$id],
+        );
+
+        return false === $row ? null : PostView::fromRow($row);
+    }
+}
+</code></pre>
+
+<p>And <code>PostView</code> gets a named constructor to map a row:</p>
+
+<pre><code class="php">#[JsonStreamable]
+final readonly class PostView
+{
+    // ... unchanged
+
+    /**
+     * @param array{id: int, body: string, created_at: string, username: string, like_count: int} $row
+     */
+    public static function fromRow(array $row): self
+    {
+        return new self(
+            $row['id'],
+            $row['body'],
+            $row['created_at'],
+            $row['username'],
+            $row['like_count'],
+        );
+    }
+}
+</code></pre>
+
+<p>The controller doesn't change.</p>
+
+<h3 id="results-p8">p8 results</h3>
+
+<p>We get some fantastic gains from this:</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th align="right">Users</th>
+  <th align="right"><a href="#results-p7">vs p7</a></th>
+  <th align="right">p95 &lt; 0.5 s</th>
+  <th align="right">p99 &lt; 1 s</th>
+  <th align="right">Errors</th>
+  <th align="right">Hold CPU</th>
+  <th align="right">Peak RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Classic p8</td>
+  <td align="right">750</td>
+  <td align="right">+1 step</td>
+  <td align="right">0.277 s</td>
+  <td align="right">0.376 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.125 GiB</td>
+</tr>
+<tr>
+  <td>Classic p8</td>
+  <td align="right">1,000</td>
+  <td align="right"></td>
+  <td align="right">❌ 2.830 s</td>
+  <td align="right">❌ 3.200 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.132 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p8</td>
+  <td align="right">4,000</td>
+  <td align="right">+4 steps</td>
+  <td align="right">0.433 s</td>
+  <td align="right">0.582 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.264 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p8</td>
+  <td align="right">4,250</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.909 s</td>
+  <td align="right">❌ 1.240 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.284 GiB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Compared to <code>p7</code>, the Overload Test gives us:</p>
+
+<ul>
+<li><strong>Classic: 88 req/s (+9.8%)</strong>, from 81</li>
+<li><strong>Worker: 479 req/s (+31.1%)</strong>, from 366</li>
+</ul>
+
+<p>Let's profile <code>p8</code>:</p>
+
+<pre><code>All PHP samples (Worker Mode, 750 users)                        100.0%  vs p7
+├── HttpKernel::handle                                           63.2%   -5.2
+│   ├── GET /feed: PostController::feed                          18.0%   -5.9
+│   ├── GET /posts/{id}: PostController::show                     8.4%   -6.7
+│   ├── POST /posts/{id}/like: PostController::like              10.4%   +3.1
+│   ├── POST /posts: PostController::create                       1.2%   +0.5
+│   └── routing, firewall, listeners                             25.2%   +3.8
+└── Symfony Runtime's worker loop (outside of Symfony's kernel)  36.8%   +5.2
+    ├── Response::send                                            5.6%   +0.4
+    ├── Kernel::boot (worker restarts)                            4.0%   +0.9
+    └── everything else                                          27.2%   +3.9
+</code></pre>
+
+<p>The ORM's share of the reads drops from 75.7% of <code>GET /feed</code> and 80.0% of <code>GET /posts/{id}</code> to under 2%.
+This time both endpoints shrink, while everything else grows by about x 1.21.</p>
+
+<h2 id="persistent-connection">Persistent Connection (p9)</h2>
+
+<blockquote>
+  <p>It has the words DON'T KERNEL PANIC inscribed in large friendly letters on its cover.</p>
+</blockquote>
+
+<p>Because <a href="/2025/01/06/php-devs-are-pirates.html">PHP devs are pirates</a> I went back to the video to see if there were any ideas I could steal,
+and three tricks (five sir!) five tricks stood out to me:</p>
+
+<ul>
+<li>no reverse proxy, serving HTTP directly (FrankenPHP already does, with Caddy built in)</li>
+<li>SQLite builds the JSON response, instead of hydrating objects and serializing them
+(we'll see this in <a href="#sqlite-writes-the-json">SQLite Writes the JSON</a>)</li>
+<li>grouped commits: holding writes for a few milliseconds, then committing them all in one transaction
+(not a good fit for FrankenPHP: each PHP thread handles one request at a time, so there's little to group)</li>
+<li>replacing the framework altogether (not an option for an idiomatic Symfony app)</li>
+<li>prepared queries and a single database connection, reused across every request</li>
+</ul>
+
+<p>Reused a single database connection? That rings a bell!
+I had the exact same issue in the eXtreme Legacy series
+(see <a href="/2025/12/03/xl-8-postgresql.html">From MySQL to PostgreSQL</a>)!</p>
+
+<p>So far we've been only profiling Worker Mode,
+I think it's time to check where Classic Mode is spending its time,
+by sampling the wall-clock time (which includes the time spent waiting):</p>
+
+<pre><code>All PHP wall-clock samples (classic, 8,000 users, no CPU limit)   100.0%
+├── HttpKernel::handle                                             82.1%
+│   ├── opening the connection (Connection::connect)               42.0%
+│   │   └── its PRAGMAs (SqlitePragmasMiddleware)                  42.0%
+│   ├── committing the writes (Connection::commit)                 16.7%
+│   └── everything else                                            23.4%
+└── outside of Symfony's kernel                                    17.9%
+</code></pre>
+
+<p>What is the Answer to Life, the Universe, and Everything?
+After waiting for the connection, we get The Answer: 42%.</p>
+
+<p>SQLite might not require connecting through a socket like other client/server databases (MySQL / Postgres),
+but it still requires on "connect" to open the database files (<code>feed.db</code>, <code>feed.db-wal</code>, <code>feed.db-shm</code>),
+and in our current Classic Mode setup, each request opens its own connection and closes it at the end.</p>
+
+<p>If it's the only connection open, SQLite creates the <code>feed.db-wal</code> and <code>feed.db-shm</code> files,
+and it locks <code>feed.db-shm</code> to rebuild the WAL index.</p>
+
+<p>When a like or a new post commits (16.7%), it's often the first commit into that fresh <code>feed.db-wal</code> file,
+which makes SQLite flush it to disk.</p>
+
+<p>If it's the last connection closing, SQLite locks again to checkpoint the WAL into the database,
+and delete the <code>feed.db-wal</code> and <code>feed.db-shm</code> files.</p>
+
+<p>While SQLite holds these locks, the other connections have to wait for their turn.</p>
+
+<p>In Worker Mode the connection stays open between requests, so it's not impacted by this,
+but what if I told you PHP can also keep it open in Classic Mode?</p>
+
+<p>To do that we just have to configure Doctrine DBAL to use persistent connections:</p>
+
+<pre><code class="yaml">doctrine:
+    dbal:
+        driver: pdo_sqlite
+        path: '%env(SQLITE_PATH)%'
+        # Keep the SQLite connection open between requests, one per PHP thread
+        options:
+            !php/const PDO::ATTR_PERSISTENT: true
+</code></pre>
+
+<h3 id="results-p9">p9 results</h3>
+
+<p>This is Classic Mode's biggest gain yet:</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th align="right">Users</th>
+  <th align="right"><a href="#results-p8">vs p8</a></th>
+  <th align="right">p95 &lt; 0.5 s</th>
+  <th align="right">p99 &lt; 1 s</th>
+  <th align="right">Errors</th>
+  <th align="right">Hold CPU</th>
+  <th align="right">Peak RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Classic p9</td>
+  <td align="right">1,000</td>
+  <td align="right">+1 step</td>
+  <td align="right">0.187 s</td>
+  <td align="right">0.648 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.126 GiB</td>
+</tr>
+<tr>
+  <td>Classic p9</td>
+  <td align="right">1,250</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.911 s</td>
+  <td align="right">❌ 1.090 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.136 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p9</td>
+  <td align="right">4,000</td>
+  <td align="right">same</td>
+  <td align="right">0.390 s</td>
+  <td align="right">0.530 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.263 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p9</td>
+  <td align="right">4,250</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.579 s</td>
+  <td align="right">0.785 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.277 GiB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Compared to <code>p8</code>, the Overload Test gives us:</p>
+
+<ul>
+<li><strong>Classic: 132 req/s (+49.0%)</strong>, from 88</li>
+<li><strong>Worker: 466 req/s (-2.8%)</strong>, from 479</li>
+</ul>
+
+<blockquote>
+  <p><em>Note</em>: Each Overload Test runs twice, and the mean of the two rounds is used.<br>
+  <code>p9</code> worker's two rounds alone differ by 3.5% (458 and 474 req/s),
+  with nothing changed between them, so a -2.8% is within noise.</p>
+</blockquote>
+
+<p>We can confirm the connection and writes are almost gone by profiling <code>p9</code>:</p>
+
+<pre><code>Wall-clock time per request (classic, 8,000 users, no CPU limit)       p8        p9
+├── HttpKernel::handle                                            0.97 ms   0.28 ms
+│   ├── opening the connection (Connection::connect)              0.50 ms  &lt;0.01 ms
+│   ├── committing the writes (Connection::commit)                0.20 ms  &lt;0.01 ms
+│   └── everything else                                           0.28 ms   0.26 ms
+└── outside of Symfony's kernel                                   0.21 ms   0.28 ms
+Total                                                             1.18 ms   0.55 ms
+</code></pre>
+
+<h2 id="dbal-instead-of-orm">DBAL instead of ORM (p10-p11)</h2>
+
+<blockquote>
+  <p>Let the ORM go, let the ORM goooo! It can't hold us back anymooooOooOoore!</p>
+</blockquote>
+
+<h3 id="plain-sql-writes">Plain SQL Writes (p10)</h3>
+
+<p>Reads are 92.2% of the requests (two per user loop), which is why we've focused on them so far:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Requests</th>
+  <th align="right">Share</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Feed (<code>GET /feed</code>)</td>
+  <td align="right">46.1%</td>
+</tr>
+<tr>
+  <td>Post (<code>GET /posts/{id}</code>)</td>
+  <td align="right">46.1%</td>
+</tr>
+<tr>
+  <td>Likes (<code>POST /posts/{id}/like</code>)</td>
+  <td align="right">6.9%</td>
+</tr>
+<tr>
+  <td>New post (<code>POST /posts</code>)</td>
+  <td align="right">0.9%</td>
+</tr>
+</tbody>
+</table>
+
+<p>Yet if we look at the PHP time, we can see that <code>POST /posts/{id}/like</code> takes 10.5%:</p>
+
+<pre><code>All PHP samples (Worker Mode, 750 users)                        100.0%
+├── HttpKernel::handle                                           62.7%
+│   ├── GET /feed: PostController::feed                          17.3%
+│   ├── GET /posts/{id}: PostController::show                     8.8%
+│   ├── POST /posts/{id}/like: PostController::like              10.5%
+│   ├── POST /posts: PostController::create                       1.0%
+│   └── routing, firewall, listeners                             25.1%
+└── Symfony Runtime's worker loop (outside of Symfony's kernel)  37.3%
+    ├── Response::send                                            6.4%
+    ├── Kernel::boot (worker restarts)                            3.8%
+    └── everything else                                          27.1%
+</code></pre>
+
+<p>There's definitely something going on there,
+so let's zoom on <code>POST /posts/{id}/like</code> (10.5% of PHP):</p>
+
+<pre><code>POST /posts/{id}/like: PostController::like                 100.0%
+├── SQLite (PDO commit, execute, fetch)                      38.4%
+├── find(), findOneBy() (SQL, parameters, identity map)      18.9%
+├── flush() (change sets, insert order, persister)           15.0%
+├── hydration (AbstractHydrator::hydrateAll)                 13.3%
+├── persist(), getReference()                                 5.1%
+├── JSON response                                             4.2%
+├── reading back the generated created_at                     3.9%
+└── controller, other                                         1.2%
+</code></pre>
+
+<p>Our controller with the help of Doctrine issues the following queries:</p>
+
+<pre><code class="SQL">SELECT ... FROM posts WHERE id = ?                               -- find()
+SELECT ... FROM likes WHERE user_id = ? AND post_id = ?          -- findOneBy()
+BEGIN                                                            -- flush()
+INSERT INTO likes (user_id, post_id) VALUES (?, ?)
+SELECT created_at FROM likes WHERE user_id = ? AND post_id = ?   -- the generated created_at
+COMMIT
+</code></pre>
+
+<p>And <code>POST /posts</code> (1.0% of PHP):</p>
+
+<pre><code>POST /posts: PostController::create                         100.0%
+├── SQLite (PDO commit, execute, fetch)                      48.2%
+├── flush() (change sets, insert order, persister)           32.3%
+├── persist()                                                 6.6%
+├── reading back the generated created_at                     6.5%
+├── JSON response                                             4.8%
+└── controller, other                                         1.6%
+</code></pre>
+
+<p>With the following query:</p>
+
+<pre><code class="SQL">BEGIN                                                            -- flush()
+INSERT INTO posts (user_id, body) VALUES (?, ?)
+SELECT created_at FROM posts WHERE id = ?                        -- the generated created_at
+COMMIT
+</code></pre>
+
+<p>Doctrine's own work is more than half of a like (56.2%),
+and almost half of a <code>POST /posts</code> (45.4%)...</p>
+
+<p>Since we're not doing much with our Entities
+(they're never updated, we don't bind them to Forms, we don't even use them for the schema),
+I think it's perfectly fine to use plain SQL instead.</p>
+
+<p>Some might argue we're leaving the idiomatic realm,
+but this is something I've done at work so from my point of view this is fair game:</p>
+
+<p>For the like endpoint, let's use an UPSERT:</p>
+
+<pre><code class="php">class PostLikeRepository extends ServiceEntityRepository
+{
+    // ...
+
+    /** @return bool hasBeenAdded */
+    public function add(int $userId, int $postId): bool
+    {
+        return 1 === $this-&gt;getEntityManager()-&gt;getConnection()-&gt;executeStatement(&lt;&lt;&lt;'SQL'
+            INSERT INTO likes (user_id, post_id)
+                 SELECT ?, id FROM posts WHERE id = ?
+            ON CONFLICT DO NOTHING
+            SQL,
+            [$userId, $postId],
+        );
+    }
+}
+
+class PostRepository extends ServiceEntityRepository
+{
+    // ...
+
+    public function exists(int $id): bool
+    {
+        return false !== $this-&gt;getEntityManager()-&gt;getConnection()-&gt;fetchOne(&lt;&lt;&lt;'SQL'
+            SELECT 1 FROM posts WHERE id = ?
+            SQL,
+            [$id],
+        );
+    }
+}
+</code></pre>
+
+<p>The controller then only needs a second query when nothing was added, to tell a 404 from a 200:</p>
+
+<pre><code class="php">    #[Route('/posts/{id}/like', methods: ['POST'])]
+    public function like(
+        #[CurrentUser]
+        JwtUser $user,
+        #[ValueResolver(PostId::class)]
+        int $id,
+    ): JsonResponse {
+        $added = $this-&gt;likes-&gt;add($user-&gt;id, $id);
+        if (!$added &amp;&amp; !$this-&gt;posts-&gt;exists($id)) {
+            throw new NotFoundHttpException('post not found');
+        }
+
+        return $this-&gt;writeJson(
+            new LikeOutput(true, !$added, $id),
+            $added ? Response::HTTP_CREATED : Response::HTTP_OK,
+        );
+    }
+</code></pre>
+
+<p>As for create post,
+making use of <code>RETURNING</code> will give us the generated <code>id</code> and <code>created_at</code>:</p>
+
+<pre><code class="php">class PostRepository extends ServiceEntityRepository
+{
+    // ...
+
+    public function create(JwtUser $author, CreatePostPayload $payload): PostView
+    {
+        $body = trim($payload-&gt;body);
+
+        $rows = $this-&gt;getEntityManager()-&gt;getConnection()-&gt;fetchAllAssociative(&lt;&lt;&lt;'SQL'
+            INSERT INTO posts (user_id, body)
+                 VALUES (?, ?)
+            RETURNING id, created_at
+            SQL,
+            [$author-&gt;id, $body],
+        );
+
+        return new PostView(
+            $rows[0]['id'],
+            $body,
+            $rows[0]['created_at'],
+            $author-&gt;username,
+            likeCount: 0, 
+        );
+    }
+}
+</code></pre>
+
+<h3 id="results-p10">p10 results</h3>
+
+<p>This gives Worker Mode some satisfying gains:</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th align="right">Users</th>
+  <th align="right"><a href="#results-p9">vs p9</a></th>
+  <th align="right">p95 &lt; 0.5 s</th>
+  <th align="right">p99 &lt; 1 s</th>
+  <th align="right">Errors</th>
+  <th align="right">Hold CPU</th>
+  <th align="right">Peak RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Classic p10</td>
+  <td align="right">1,000</td>
+  <td align="right">same</td>
+  <td align="right">0.127 s</td>
+  <td align="right">0.234 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.124 GiB</td>
+</tr>
+<tr>
+  <td>Classic p10</td>
+  <td align="right">1,250</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.650 s</td>
+  <td align="right">❌ 1.910 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.140 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p10</td>
+  <td align="right">4,500</td>
+  <td align="right">+2 steps</td>
+  <td align="right">0.431 s</td>
+  <td align="right">0.593 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.290 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p10</td>
+  <td align="right">4,750</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.768 s</td>
+  <td align="right">0.993 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.313 GiB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Compared to <code>p9</code>, the Overload Test gives us:</p>
+
+<ul>
+<li><strong>Classic: 132 req/s (+0.0%)</strong>, from 132</li>
+<li><strong>Worker: 529 req/s (+13.5%)</strong>, from 466</li>
+</ul>
+
+<p>We managed to shrink the SQL queries for <code>POST /posts/{id}/like</code> from 6 to 1 (or 2 for 404),
+which makes its PHP time drop from 10.5% to 4.2%,
+and for <code>POST /posts</code> from 4 to 1, dropping from 1.0% ro 0.8%:</p>
+
+<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p9
+├── HttpKernel::handle                                           60.6%   -2.1
+│   ├── GET /feed: PostController::feed                          18.4%   +1.1
+│   ├── GET /posts/{id}: PostController::show                     9.7%   +0.9
+│   ├── POST /posts/{id}/like: PostController::like               4.2%   -6.3
+│   ├── POST /posts: PostController::create                       0.8%   -0.2
+│   └── routing, firewall, listeners                             27.5%   +2.4
+└── Symfony Runtime's worker loop (outside of Symfony's kernel)  39.4%   +2.1
+    ├── Response::send                                            7.0%   +0.6
+    ├── Kernel::boot (worker restarts)                            3.9%   +0.1
+    └── everything else                                          28.6%   +1.5
+</code></pre>
+
+<h3 id="no-orm">No ORM (p11)</h3>
+
+<p>But I'm surprised Classic Mode didn't get any gains, let's profile it:</p>
+
+<pre><code>All PHP wall-clock samples (classic, 8,000 users, no CPU limit)   100.0%   vs p9
+├── HttpKernel::handle                                             47.0%    -3.0
+│   ├── GET /feed: PostController::feed                            13.7%    -0.1
+│   ├── GET /posts/{id}: PostController::show                      11.2%    +0.3
+│   ├── POST /posts/{id}/like: PostController::like                 3.9%    -2.8
+│   ├── POST /posts: PostController::create                         0.4%    -0.2
+│   └── routing, firewall, listeners                               17.8%    -0.2
+└── outside of Symfony's kernel                                    53.0%    +3.0
+</code></pre>
+
+<p><code>POST /posts/{id}/like</code> did get some boost, but not as much, let's zoom on it:</p>
+
+<pre><code>Wall-clock time per like (classic, 8,000 users, no CPU limit)         p9        p10
+POST /posts/{id}/like: PostController::like                       0.54 ms   0.29 ms
+├── SQLite (PDO execute, fetch)                                   0.22 ms   0.17 ms
+├── ORM (find(), findOneBy(), flush(), ...)                       0.30 ms   0.00 ms
+├── getEntityManager() (building the entity manager)                  N/A   0.10 ms
+├── JSON response                                                 0.01 ms   0.02 ms
+└── DBAL, controller, other                                       0.01 ms  &lt;0.01 ms
+</code></pre>
+
+<p>So SQLite does get cheaper in the like endpoint,
+but we swapped one part of the ORM (which accounted for 55.4% of the request)
+for another (which now accounts for 35.3%): <code>getEntityManager</code>.</p>
+
+<p>We don't really use the ORM features anymore but because we still get <code>Connection</code> from it,
+we still load the entities' metadata on every request.</p>
+
+<p>To fix it we have to not extend from <code>ServiceEntityRepository</code> and inject <code>Connection</code> directly:</p>
+
+<pre><code class="php">final readonly class PostLikeRepository
+{
+    public function __construct(
+        private Connection $connection,
+    ) {
+    }
+
+    public function add(int $userId, int $postId): bool
+    {
+        return 1 === $this-&gt;connection-&gt;executeStatement(&lt;&lt;&lt;'SQL'
+            INSERT INTO likes (user_id, post_id)
+                 SELECT ?, id FROM posts WHERE id = ?
+            ON CONFLICT DO NOTHING
+            SQL,
+            [$userId, $postId],
+        );
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><em>Note</em>: Same for <code>PostRepository</code>.</p>
+</blockquote>
+
+<p>Since we're not using the ORM anymore, we might as well remove its package
+(but we do keep DoctrineBundle for the DBAL configuration):</p>
+
+<pre><code class="console">composer remove doctrine/orm
+
+rm -r src/Entity
+rm src/Repository/UserRepository.php
+</code></pre>
+
+<p>And <code>config/packages/doctrine.yaml</code> is down to its DBAL part:</p>
+
+<pre><code class="yaml">doctrine:
+    dbal:
+        driver: pdo_sqlite
+        path: '%env(SQLITE_PATH)%'
+        # Keep the SQLite connection open between requests, one per PHP thread
+        options:
+            !php/const PDO::ATTR_PERSISTENT: true
+
+        profiling_collect_backtrace: '%kernel.debug%'
+</code></pre>
+
+<h3 id="results-p11">p11 results</h3>
+
+<p>This gives Classic Mode its well deserve gain:</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th align="right">Users</th>
+  <th align="right"><a href="#results-p10">vs p10</a></th>
+  <th align="right">p95 &lt; 0.5 s</th>
+  <th align="right">p99 &lt; 1 s</th>
+  <th align="right">Errors</th>
+  <th align="right">Hold CPU</th>
+  <th align="right">Peak RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Classic p11</td>
+  <td align="right">1,500</td>
+  <td align="right">+2 steps</td>
+  <td align="right">0.274 s</td>
+  <td align="right">0.902 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.142 GiB</td>
+</tr>
+<tr>
+  <td>Classic p11</td>
+  <td align="right">1,750</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.999 s</td>
+  <td align="right">❌ 1.350 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.158 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p11</td>
+  <td align="right">4,500</td>
+  <td align="right">same</td>
+  <td align="right">0.449 s</td>
+  <td align="right">0.643 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.289 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p11</td>
+  <td align="right">4,750</td>
+  <td align="right"></td>
+  <td align="right">❌ 1.610 s</td>
+  <td align="right">❌ 2.370 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.313 GiB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Compared to <code>p10</code>, the Overload Test gives us:</p>
+
+<ul>
+<li><strong>Classic: 177 req/s (+34.6%)</strong>, from 132</li>
+<li><strong>Worker: 539 req/s (+2.0%)</strong>, from 529</li>
+</ul>
+
+<p>We get even small potato gains in Worker Mode,
+because DoctrineBundle was resetting the Entity Manager after every request.</p>
+
+<h2 id="extract-till-you-drop">Extract Till You Drop (p12-p14)</h2>
+
+<blockquote>
+  <p>It is a mistake to think you can solve any major problems just with potatoes.</p>
+</blockquote>
+
+<p>We're at a point where a third of the time is spent in our endpoints,
+another third in the framework, and a last third in Symfony Runtime's worker loop.</p>
+
+<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p10
+├── HttpKernel::handle                                           63.8%   +3.2
+│   ├── GET /feed: PostController::feed                          18.8%   +0.4
+│   ├── GET /posts/{id}: PostController::show                    10.8%   +1.1
+│   ├── POST /posts/{id}/like: PostController::like               4.1%   -0.1
+│   ├── POST /posts: PostController::create                       0.8%    0.0
+│   └── routing, firewall, listeners                             29.4%   +1.9
+└── Symfony Runtime's worker loop (outside of Symfony's kernel)  36.2%   -3.2
+    ├── Response::send                                            7.2%   +0.2
+    ├── Kernel::boot (worker restarts)                            3.1%   -0.8
+    └── everything else                                          25.9%   -2.7
+</code></pre>
+
+<p>I'll be frank there are no big gains left to make, just a few percent here and there,
+so let's go after them, one potato at a time.</p>
+
+<h3 id="no-serializer-no-validator">No Serializer, No Validator (p12)</h3>
+
+<p>Since JsonStreamer took over our responses (<code>p7</code>), the Serializer has only one job left:
+turning <code>POST /posts</code>'s body into <code>CreatePostPayload</code>,
+with the Validator checking that payload's constraints (see <a href="#vo-and-validation">VO and Validation</a>).</p>
+
+<p>Both are used in by <code>#[MapRequestPayload]</code>:</p>
+
+<pre><code>POST /posts (2.7% of PHP)                                   100.0%
+├── #[MapRequestPayload] (RequestPayloadValueResolver)       71.5%
+│   ├── Serializer::deserialize                              28.2%
+│   ├── Validator::validate                                  26.0%
+│   ├── creating the Serializer and the Validator             7.3%
+│   └── other                                                10.0%
+└── PostController::create                                   28.5%
+</code></pre>
+
+<p>Yes, these components are nice, but are they 71.5% nice for a single <code>body</code> field?
+We can do their job by hand instead:</p>
+
+<pre><code class="php">final readonly class CreatePostPayload
+{
+    private function __construct(
+        public string $body,
+    ) {
+    }
+
+    public static function fromRequest(Request $request): self
+    {
+        try {
+            $payload = json_decode($request-&gt;getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        } catch (\JsonException $jsonException) {
+            throw new BadRequestHttpException('malformed JSON body', $jsonException);
+        }
+
+        $body = \is_array($payload) ? $payload['body'] ?? null : null;
+        if (!\is_string($body) || '' === $body = trim($body)) {
+            throw new BadRequestHttpException('body is required');
+        }
+
+        if (mb_strlen($body) &gt; 500) {
+            throw new BadRequestHttpException('body must be at most 500 characters');
+        }
+
+        return new self($body);
+    }
+}
+</code></pre>
+
+<p>The controller now takes the <code>Request</code>:</p>
+
+<pre><code class="php">    #[Route('/posts', methods: ['POST'])]
+    public function create(
+        #[CurrentUser]
+        JwtUser $user,
+        Request $request,
+    ): JsonResponse {
+        return $this-&gt;writeJson(
+            new PostOutput($this-&gt;posts-&gt;create($user, CreatePostPayload::fromRequest($request))),
+            Response::HTTP_CREATED,
+        );
+    }
+</code></pre>
+
+<p>And both components can go:</p>
+
+<pre><code class="console">composer remove symfony/serializer symfony/validator
+
+rm config/packages/validator.yaml
+</code></pre>
+
+<h3 id="results-p12">p12 results</h3>
+
+<p>A small potato for Classic Mode, and a slightly bigger one for Worker Mode:</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th align="right">Users</th>
+  <th align="right"><a href="#results-p11">vs p11</a></th>
+  <th align="right">p95 &lt; 0.5 s</th>
+  <th align="right">p99 &lt; 1 s</th>
+  <th align="right">Errors</th>
+  <th align="right">Hold CPU</th>
+  <th align="right">Peak RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Classic p12</td>
+  <td align="right">1,500</td>
+  <td align="right">same</td>
+  <td align="right">0.174 s</td>
+  <td align="right">0.282 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.132 GiB</td>
+</tr>
+<tr>
+  <td>Classic p12</td>
+  <td align="right">1,750</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.509 s</td>
+  <td align="right">0.653 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.144 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p12</td>
+  <td align="right">4,500</td>
+  <td align="right">same</td>
+  <td align="right">0.264 s</td>
+  <td align="right">0.419 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.272 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p12</td>
+  <td align="right">4,750</td>
+  <td align="right"></td>
+  <td align="right">0.429 s</td>
+  <td align="right">❌ 1.580 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.293 GiB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Compared to <code>p11</code>, the Overload Test gives us:</p>
+
+<ul>
+<li><strong>Classic: 183 req/s (+3.3%)</strong>, from 177</li>
+<li><strong>Worker: 590 req/s (+9.4%)</strong>, from 539</li>
+</ul>
+
+<p>Profiling <code>p12</code> in worker mode:</p>
+
+<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p11
+├── HttpKernel::handle                                           65.1%   +1.3
+│   ├── GET /feed: PostController::feed                          20.7%   +1.9
+│   ├── GET /posts/{id}: PostController::show                    11.9%   +1.1
+│   ├── POST /posts/{id}/like: PostController::like               3.6%   -0.5
+│   ├── POST /posts: PostController::create (with its payload)    0.7%   -2.0
+│   └── routing, firewall, listeners                             28.2%   +0.7
+│       └── LocaleAwareListener                                   0.0%   -1.4
+└── Symfony Runtime's worker loop (outside of Symfony's kernel)  34.9%   -1.3
+    ├── Response::send                                            7.2%    0.0
+    ├── Kernel::boot (worker restarts)                            2.7%   -0.4
+    └── everything else                                          24.9%   -1.0
+</code></pre>
+
+<p><code>POST /posts</code> drops from 2.7% to 0.7% of PHP's time,
+and suprisingly we have a LocaleAwareListener (1.4%) that we didn't know existed,
+which now disapears with the removal of the Validator.</p>
+
+<h3 id="reused-prepared-statements">Reused Prepared Statements (p13)</h3>
+
+<p>One of the three (five, sir!) five tricks mentioned by the video is "reused prepared statements",
+which turns out isn't done by PDO or DBAL:</p>
+
+<pre><code>All PHP samples (worker mode, 750 users)                        100.0%
+├── HttpKernel::handle                                           65.1%
+│   ├── GET /feed: PostController::feed                          20.7%
+│   │   └── Connection::prepare                                   4.1%
+│   ├── GET /posts/{id}: PostController::show                    11.9%
+│   │   └── Connection::prepare                                   4.2%
+│   ├── POST /posts/{id}/like: PostController::like               3.6%
+│   │   └── Connection::prepare                                   0.5%
+│   ├── POST /posts: PostController::create                       0.7%
+│   │   └── Connection::prepare                                   0.1%
+│   └── routing, firewall, listeners                             28.2%
+└── Symfony Runtime's worker loop (outside of Symfony's kernel)  34.9%
+</code></pre>
+
+<p>We need to create our own DBAL driver middleware to take care of it:</p>
+
+<pre><code class="php">#[AsMiddleware]
+final readonly class StatementReuseMiddleware implements Middleware
+{
+    public function wrap(Driver $driver): Driver
+    {
+        return new class($driver) extends AbstractDriverMiddleware {
+            public function connect(#[\SensitiveParameter] array $params): Connection
+            {
+                return new StatementReuseConnection(parent::connect($params));
+            }
+        };
+    }
+}
+</code></pre>
+
+<p>The actual work needs to be something along the lines of:</p>
+
+<pre><code class="php">$show = $pool[$showSql] ?? $pdo-&gt;prepare($showSql);
+
+$show-&gt;execute([42]);
+$show-&gt;fetch();          // like_count: 12
+
+$show-&gt;closeCursor();    // without this, the connection's other queries stay stuck on like_count: 12
+$pool[$showSql] = $show;
+</code></pre>
+
+<p>This is done in <code>StatementReuseConnection</code>:</p>
+
+<pre><code class="php">final class StatementReuseConnection extends AbstractConnectionMiddleware
+{
+    private const int MAX_SQL_STRINGS = 128; // cap on different SQL queries kept (only a handful in this app)
+
+    private const int MAX_IDLE_PER_SQL = 2; // cap on spare copies of the same stmt (should be 1 in this app tbh)
+
+    /** @var array&lt;string, list&lt;Statement&gt;&gt; */
+    private array $idle = [];
+
+    public function prepare(string $sql): Statement
+    {
+        $statement = [] !== ($this-&gt;idle[$sql] ?? [])
+            ? array_pop($this-&gt;idle[$sql])            // take stmt out of pool
+            : parent::prepare($sql);                  // or create a new one
+
+        // PooledStatement calls release() when destroyed,
+        // and its PooledResult closes the cursor once the rows are read
+        return new PooledStatement($statement, function (Statement $statement) use ($sql): void {
+            $this-&gt;release($sql, $statement);
+        });
+    }
+
+    private function release(string $sql, Statement $statement): void
+    {
+        $idle = $this-&gt;idle[$sql] ?? null;
+        if (null === $idle &amp;&amp; \count($this-&gt;idle) &gt;= self::MAX_SQL_STRINGS) {
+            return; // new query, but we already keep too many, so don't keep that one
+        }
+
+        if (\count($idle ?? []) &lt; self::MAX_IDLE_PER_SQL) {
+            $this-&gt;idle[$sql][] = $statement; // put stmt back in pool, unless we have too many copies
+        }
+    }
+}
+</code></pre>
+
+<blockquote>
+  <p><em>Note</em>: The <code>$idle</code> bit is a bit over-engineered and really shouldn't go in a production app,
+  but this is necessary for the challenge to comply with the "no caching data" rule.</p>
+</blockquote>
+
+<h3 id="results-p13">p13 results</h3>
+
+<p>This only gives small potatoes to Worker Mode, because the middleware survives between requests there:</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th align="right">Users</th>
+  <th align="right"><a href="#results-p12">vs p12</a></th>
+  <th align="right">p95 &lt; 0.5 s</th>
+  <th align="right">p99 &lt; 1 s</th>
+  <th align="right">Errors</th>
+  <th align="right">Hold CPU</th>
+  <th align="right">Peak RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Classic p13</td>
+  <td align="right">1,500</td>
+  <td align="right">same</td>
+  <td align="right">0.192 s</td>
+  <td align="right">0.279 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.132 GiB</td>
+</tr>
+<tr>
+  <td>Classic p13</td>
+  <td align="right">1,750</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.721 s</td>
+  <td align="right">0.861 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.145 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p13</td>
+  <td align="right">5,250</td>
+  <td align="right">+3 steps</td>
+  <td align="right">0.433 s</td>
+  <td align="right">0.644 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.312 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p13</td>
+  <td align="right">5,500</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.548 s</td>
+  <td align="right">0.773 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.315 GiB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Compared to <code>p12</code>, the Overload Test gives us:</p>
+
+<ul>
+<li><strong>Classic: 180 req/s (-1.5%)</strong>, from 183</li>
+<li><strong>Worker: 612 req/s (+3.7%)</strong>, from 590</li>
+</ul>
+
+<p>Profiling <code>p13</code> in worker mode:</p>
+
+<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p12
+├── HttpKernel::handle                                           62.6%   -2.5
+│   ├── GET /feed: PostController::feed                          19.5%   -1.2
+│   │   ├── Connection::prepare                                   0.1%   -4.0
+│   │   └── our pool's wrappers (self time)                       0.4%   +0.4
+│   ├── GET /posts/{id}: PostController::show                     8.0%   -3.9
+│   │   ├── Connection::prepare                                   0.0%   -4.2
+│   │   └── our pool's wrappers (self time)                       0.5%   +0.5
+│   ├── POST /posts/{id}/like: PostController::like               4.7%   +1.1
+│   │   └── Connection::prepare                                   0.1%   -0.4
+│   ├── POST /posts: PostController::create                       0.9%   +0.2
+│   │   └── Connection::prepare                                   0.0%   -0.1
+│   └── routing, firewall, listeners                             29.6%   +1.4
+└── Symfony Runtime's worker loop (outside of Symfony's kernel)  37.4%   +2.5
+    ├── Response::send                                            7.9%   +0.7
+    ├── Kernel::boot (worker restarts)                            2.5%   -0.2
+    └── everything else                                          27.0%   +2.1
+</code></pre>
+
+<p>This is a drop from 8.9% to 0.2% for <code>Connection::prepare</code>,
+with our wrapper only adding 0.9%.</p>
+
+<h3 id="sqlite-writes-the-json">SQLite Writes the JSON (p14)</h3>
+
+<p>Yet another of the three (FIVE SIR!!) five tricks from the video is having SQLite write the JSON,
+instead of getting an array out of it and transform it into JSON.</p>
+
+<p>I know this might look dodgy to some (borderline non idiomatic),
+but that's also something I've used at work (except we were using PostgreSQL, not SQLite).</p>
+
+<p>Let's see what building the JSON costs us:</p>
+
+<pre><code>All PHP samples (worker mode, 750 users)                        100.0%
+├── GET /feed: PostController::feed                              19.5%
+│   ├── SQL (DBAL, SQLite)                                        9.1%
+│   ├── building PostView objects                                 1.2%
+│   ├── JsonStreamer                                              6.4%
+│   └── new JsonResponse                                          2.7%
+└── GET /posts/{id}: PostController::show                         8.0%
+    ├── SQL (DBAL, SQLite)                                        3.7%
+    ├── JsonStreamer                                              1.7%
+    └── new JsonResponse                                          2.4%
+</code></pre>
+
+<p>SQLite provides the <code>json_object()</code> and <code>json_group_array()</code> functions:</p>
+
+<pre><code class="php">final readonly class PostRepository
+{
+    private const string POST_SQL = &lt;&lt;&lt;'SQL'
+    SELECT p.id, p.created_at,
+           json_object(
+               'id', p.id,
+               'body', p.body,
+               'created_at', p.created_at,
+               'author', u.username,
+               'like_count', (SELECT COUNT(l.post_id) FROM likes l WHERE l.post_id = p.id)
+           ) AS post
+      FROM posts p
+      JOIN users u ON u.id = p.user_id
+    SQL;
+
+    // ...
+
+    public function findFeedJson(int $limit): string
+    {
+        // json() turns the subquery's text back into JSON, so json_group_array() doesn't quote it as a string
+        return $this-&gt;connection-&gt;fetchOne(
+            "SELECT json_object('posts', json_group_array(json(post) ORDER BY created_at DESC, id DESC))"
+            .' FROM ('.self::POST_SQL.' ORDER BY p.created_at DESC, p.id DESC LIMIT ?)',
+            [$limit],
+        );
+    }
+}
+</code></pre>
+
+<p>The controller then returns it as is:</p>
+
+<pre><code class="php">    #[Route('/feed', methods: ['GET'])]
+    public function feed(): JsonResponse
+    {
+        return new JsonResponse(
+            $this-&gt;posts-&gt;findFeedJson(self::FEED_SIZE),
+            json: true,
+        );
+    }
+</code></pre>
+
+<blockquote>
+  <p><em>Note</em>: <code>GET /posts/{id}</code> gets the same treatment.<br>
+  It wouldn't make sense for the write endpoints, as their data don't come from the database anyway.</p>
+</blockquote>
+
+<h3 id="results-p14">p14 results</h3>
+
+<p>This is tiny potato:</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th align="right">Users</th>
+  <th align="right"><a href="#results-p13">vs p13</a></th>
+  <th align="right">p95 &lt; 0.5 s</th>
+  <th align="right">p99 &lt; 1 s</th>
+  <th align="right">Errors</th>
+  <th align="right">Hold CPU</th>
+  <th align="right">Peak RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Classic p14</td>
+  <td align="right">1,500</td>
+  <td align="right">same</td>
+  <td align="right">0.237 s</td>
+  <td align="right">0.356 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.133 GiB</td>
+</tr>
+<tr>
+  <td>Classic p14</td>
+  <td align="right">1,750</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.948 s</td>
+  <td align="right">❌ 1.170 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">26%</td>
+  <td align="right">0.160 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p14</td>
+  <td align="right">5,250</td>
+  <td align="right">same</td>
+  <td align="right">0.316 s</td>
+  <td align="right">0.455 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.303 GiB</td>
+</tr>
+<tr>
+  <td>Worker  p14</td>
+  <td align="right">5,500</td>
+  <td align="right"></td>
+  <td align="right">❌ 0.539 s</td>
+  <td align="right">0.697 s</td>
+  <td align="right">0.00%</td>
+  <td align="right">27%</td>
+  <td align="right">0.315 GiB</td>
+</tr>
+</tbody>
+</table>
+
+<p>Compared to <code>p13</code>, the Overload Test gives us:</p>
+
+<ul>
+<li><strong>Classic: 184 req/s (+2.1%)</strong>, from 180</li>
+<li><strong>Worker: 633 req/s (+3.4%)</strong>, from 612</li>
+</ul>
+
+<p>Profiling <code>p14</code> in worker mode:</p>
+
+<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p13
+├── HttpKernel::handle                                           59.8%   -2.8
+│   ├── GET /feed: PostController::feed                          15.9%   -3.6
+│   │   ├── SQL (DBAL, SQLite, now with the JSON)                13.3%   +4.2
+│   │   └── new JsonResponse                                      2.6%   -0.1
+│   ├── GET /posts/{id}: PostController::show                     7.1%   -0.9
+│   │   ├── SQL (DBAL, SQLite, now with the JSON)                 4.6%   +0.9
+│   │   └── new JsonResponse                                      2.4%    0.0
+│   ├── POST /posts/{id}/like: PostController::like               4.3%   -0.4
+│   ├── POST /posts: PostController::create                       0.9%    0.0
+│   └── routing, firewall, listeners                             31.6%   +2.0
+└── Symfony Runtime's worker loop (outside of Symfony's kernel)  40.2%   +2.8
+    ├── Response::send                                            8.3%   +0.4
+    ├── Kernel::boot (worker restarts)                            3.1%   +0.6
+    └── everything else                                          28.8%   +1.8
+</code></pre>
+
+<p>That's a drop of 9.3% from <code>PostView</code> and <code>JsonStreamer</code>,
+and SQLite grows about only half of it (+5.1).</p>
+
+<h2 id="experiments">Experiments</h2>
+
+<blockquote>
+  <p><a href="https://www.youtube.com/watch?v=yup8gIXxWDU">Garbage CollectooooooooOOOOOOOOOoooooooor</a></p>
+</blockquote>
+
+<p>I threw as many things at the wall until something stuck,
+but then just like Sticky the stick insect who got stuck on a sticky bun many of these experiments got in a sticky situation:</p>
+
+<table>
+<thead>
+<tr>
+  <th></th>
+  <th>Experiment</th>
+  <th align="right">Worker</th>
+  <th align="right">Classic</th>
+  <th>Kept?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>a</td>
+  <td>Firewall on <code>POST /posts</code> only (p4)</td>
+  <td align="right">162 req/s, -0.5%</td>
+  <td align="right">50 req/s, +1.1%</td>
+  <td>✅</td>
+</tr>
+<tr>
+  <td>b</td>
+  <td>Every request to Symfony (Caddy <code>rewrite</code>, p5)</td>
+  <td align="right">164 req/s, +1.3%</td>
+  <td align="right">51 req/s, +1.1%</td>
+  <td>✅</td>
+</tr>
+<tr>
+  <td>c</td>
+  <td>Own worker loop instead of Symfony Runtime (p15)</td>
+  <td align="right">664 req/s, +4.9%</td>
+  <td align="right">201 req/s, +9.2%</td>
+  <td>⚠️</td>
+</tr>
+<tr>
+  <td>d</td>
+  <td>No PHP cycle collector (<code>zend.enable_gc=0</code>)</td>
+  <td align="right">709 req/s, +7.2%</td>
+  <td align="right"></td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>e</td>
+  <td>PR 40's Caddyfile</td>
+  <td align="right">686 req/s, +3.7%</td>
+  <td align="right"></td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>f</td>
+  <td>Go's GC at twice the heap growth (<code>GOGC=200</code>)</td>
+  <td align="right">680 req/s, +2.8%</td>
+  <td align="right"></td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>g</td>
+  <td>Never restart the workers</td>
+  <td align="right">680 req/s, +1.2%</td>
+  <td align="right"></td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>h</td>
+  <td>No output buffering (<code>output_buffering=0</code>)</td>
+  <td align="right">671 req/s, +1.5%</td>
+  <td align="right"></td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>i</td>
+  <td>SQLite <code>cache_size</code> 64 MiB</td>
+  <td align="right">674 req/s, +0.4%</td>
+  <td align="right"></td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>j</td>
+  <td>Go's soft memory limit at 1,100 MiB (<code>GOMEMLIMIT</code>)</td>
+  <td align="right">663 req/s, +0.2%</td>
+  <td align="right"></td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>k</td>
+  <td>1 worker (default: 2 per CPU)</td>
+  <td align="right">659 req/s, -0.4%</td>
+  <td align="right"></td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>l</td>
+  <td>4 workers</td>
+  <td align="right">658 req/s, -0.4%</td>
+  <td align="right"></td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>m</td>
+  <td>No cgo pointer checks (<code>GODEBUG=cgocheck=0</code>)</td>
+  <td align="right">658 req/s, -0.5%</td>
+  <td align="right"></td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>n</td>
+  <td>8 PHP threads all the time (<code>num_threads 8</code>)</td>
+  <td align="right"></td>
+  <td align="right">199 req/s, -0.7%</td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>o</td>
+  <td>SQLite <code>mmap_size</code> 1 GiB</td>
+  <td align="right">651 req/s, -3.1%</td>
+  <td align="right"></td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>p</td>
+  <td><code>max_threads 8</code></td>
+  <td align="right">640 req/s, -3.2%</td>
+  <td align="right">194 req/s, -3.1%</td>
+  <td>❌</td>
+</tr>
+</tbody>
+</table>
+
+<p>One thing to keep in mind is that the Overload Testing is done in two rounds,
+and then the mean number was used in the article.</p>
+
+<p>But between two rounds, I've found that the numbers could swing between 3% to 5%,
+so most of these experiments were deemed inconclusive if the number is say -3.2%: that's within noise.</p>
+
+<p>I ended up keeping experiments <code>a</code> and <code>b</code>, because they made the configuration clearer.</p>
+
+<p>In experiment <code>c</code> I replaced the Symfony Runtime with a hand written loop,
+and seeing the gain I kept it, and sent my submission with it.</p>
+
+<p>But I've since realised that the gains came from the fact that Symfony's ErrorHandler,
+which catches PHP's warnings / uncaught exceptions / fatal errors and logs / renders them,
+wasn't registered: it's either registered by Symfony Runtime,
+or by <code>FrameworkBundle::boot()</code> <strong>if <code>SymfonyRuntime::class</code> doesn't exist</strong>,
+and in my case the <code>symfony/runtime</code> component was still installed.</p>
+
+<p>Finally experiment <code>d</code> (no PHP cycle collector) is the only one above the noise,
+but only in one round out of two (from p15 661 to 687 and 730 req/s).</p>
+
+<p>It's also risky: without the cycle collector leaking cycles grow a worker's memory until it restarts,
+for a gain smaller than a step of 250 users (not that I detected any memory leak in the app).</p>
+
+<p>A small note on experiment <code>f</code> (<code>GOGC=200</code>): it was close to show real gain,
+but was using 0.13 GiB more memory, so not sure it would have been worth it long term.</p>
+
+<h3 id="memory-leaks">Memory Leaks</h3>
+
+<p>In long running processes and Worker Mode, we need to watch out for stateful services:
+an array property that keeps growing, static properties, loggers that buffer, etc.</p>
+
+<p>By having these implement <code>ResetInterface</code>,
+Symfony will make sure to clean these up after every request.</p>
+
+<p>Another thing to be careful with are reference cycles,
+which can be hard to spot for example when a closure created in a non-static method captures <code>$this</code>:</p>
+
+<pre><code class="php">final class Cart
+{
+    private array $onChange = [];
+
+    public function __construct()
+    {
+        // Danger!
+        $this-&gt;onChange[] = function (): void {
+            $this-&gt;recalculate(); // the closure holds $this, $this holds the closure
+        };
+
+        // Safe.
+        $this-&gt;onChange[] = static function (Cart $cart): void {
+            $cart-&gt;recalculate();
+        };
+    }
+}
+</code></pre>
+
+<p>The cycle collector is able to clear the <code>Danger!</code> from memory,
+but if we want to see if we need it we can run the worker with no restarts,
+and log every 1,000 requests how many cycles <code>gc_collect_cycles()</code> freed:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Worker</th>
+  <th align="right">Requests</th>
+  <th align="right">Cycles freed</th>
+  <th align="right">Memory used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td align="right">111,000</td>
+  <td align="right">0</td>
+  <td align="right">1.03 MB</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td align="right">65,000</td>
+  <td align="right">0</td>
+  <td align="right">0.57 MB</td>
+</tr>
+</tbody>
+</table>
+
+<p>In our case it's <code>0</code> cycles so we could disable it (<code>zend.enable_gc=0</code>),
+but we'd be straying away from idiomatic Symfony apps too much IMHO.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>I made a first submission which was only missing the following from this article:</p>
+
+<ul>
+<li>p11: no ORM</li>
+<li>p12: no Serializer, no Validator</li>
+<li>p15 (experiment c): custom worker loop</li>
+</ul>
+
+<p>But when it got scored I was surprised to see it was ranking significantly (in potato terms)
+lower than another similar PHP/Symfony/FrankenPHP (php-symfony-pklebba).</p>
+
+<p>I had made many runs locally with one CPU and was in some cases limited by memory,
+but it turned out on the much weaker Synteq box submissions are mostly bound by CPU.</p>
+
+<p>I redid my local runs with a throttled CPU, added the phases mentioned above and got:</p>
+
+<table>
+<thead>
+<tr>
+  <th>On the box</th>
+  <th align="right">Users</th>
+  <th align="right">req/s</th>
+  <th align="right">p95</th>
+  <th align="right">p99</th>
+  <th align="right">Errors</th>
+  <th align="right">CPU</th>
+  <th align="right">CPU per request</th>
+  <th align="right">RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>php-symfony-gnugat v1</td>
+  <td align="right">15,500</td>
+  <td align="right">1,521</td>
+  <td align="right">174 ms</td>
+  <td align="right">425 ms</td>
+  <td align="right">0.00%</td>
+  <td align="right">97%</td>
+  <td align="right">592 µs</td>
+  <td align="right">952 MB</td>
+</tr>
+<tr>
+  <td>php-symfony-gnugat v2</td>
+  <td align="right">18,500</td>
+  <td align="right">1,809</td>
+  <td align="right">325 ms</td>
+  <td align="right">804 ms</td>
+  <td align="right">0.00%</td>
+  <td align="right">96%</td>
+  <td align="right">494 µs</td>
+  <td align="right">1,111 MB</td>
+</tr>
+<tr>
+  <td>php-symfony-pklebba</td>
+  <td align="right">21,000</td>
+  <td align="right">2,061</td>
+  <td align="right">186 ms</td>
+  <td align="right">274 ms</td>
+  <td align="right">0.00%</td>
+  <td align="right">95%</td>
+  <td align="right">428 µs</td>
+  <td align="right">915 MB</td>
+</tr>
+</tbody>
+</table>
+
+<p>From what I can see, the other submission has the following differences:</p>
+
+<ul>
+<li>manual DBAL connection: no DoctrineBundle</li>
+<li>manual JSON decode/encode: no Serializer / JsonStreamer</li>
+</ul>
+
+<p>I don't think these would be considered "idiomatic symfony" choices,
+so I'm fine with what I got.</p>
+
+<p>With our optimisations, we were able to handle 5 to 6 times more users:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Throttled locally</th>
+  <th align="right">Classic Mode</th>
+  <th align="right">Worker Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Defaults (p0)</td>
+  <td align="right">250 users,  39 req/s</td>
+  <td align="right">1,000 users, 117 req/s</td>
+</tr>
+<tr>
+  <td>Optimised (p14)</td>
+  <td align="right">1,500 users, 184 req/s</td>
+  <td align="right">5,250 users, 633 req/s</td>
+</tr>
+</tbody>
+</table>
+
+<p>And here's roughly where the CPU time goes now:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Where</th>
+  <th align="right">Share of CPU</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>PHP (Symfony, our code, PHP's engine, JIT)</td>
+  <td align="right">~52%</td>
+</tr>
+<tr>
+  <td>Linux (network, syscalls, container firewall)</td>
+  <td align="right">~27%</td>
+</tr>
+<tr>
+  <td>Go (Caddy's HTTP server, Go's runtime)</td>
+  <td align="right">~15%</td>
+</tr>
+<tr>
+  <td>SQLite</td>
+  <td align="right">~12%</td>
+</tr>
+</tbody>
+</table>
+
+<p>Another way to look at that table is that 50% of the time is spent outside of PHP and so is out of otpimisation reach.</p>
+
+<p>The top submissions were specifically cutting these parts:</p>
+
+<ul>
+<li><code>io_uring</code> to handle connections</li>
+<li>their own HTTP / JSON code</li>
+<li>even their own SQLite code</li>
+</ul>
+
+<p>Another limit is FrankenPHP's model: Go's HTTP server hands each request over to a PHP thread,
+one request at a time, with no event loop to batch work across requests (like the grouped commits we saw earlier).</p>
+
+<p>There are two PHP Swoole submissions, they use an event loop which calls PHP in the same process:</p>
+
+<table>
+<thead>
+<tr>
+  <th>On the box</th>
+  <th align="right">Users</th>
+  <th align="right">req/s</th>
+  <th align="right">p95</th>
+  <th align="right">p99</th>
+  <th align="right">Errors</th>
+  <th align="right">CPU</th>
+  <th align="right">CPU per request</th>
+  <th align="right">RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>php-swoole-mattsplat</td>
+  <td align="right">71,000</td>
+  <td align="right">6,552</td>
+  <td align="right">45 ms</td>
+  <td align="right">102 ms</td>
+  <td align="right">0.93%</td>
+  <td align="right">66%</td>
+  <td align="right">94 µs</td>
+  <td align="right">1,025 MB</td>
+</tr>
+<tr>
+  <td>php-swoole-tzimpel</td>
+  <td align="right">71,000</td>
+  <td align="right">6,552</td>
+  <td align="right">17 ms</td>
+  <td align="right">175 ms</td>
+  <td align="right">0.93%</td>
+  <td align="right">71%</td>
+  <td align="right">101 µs</td>
+  <td align="right">325 MB</td>
+</tr>
+<tr>
+  <td>php-symfony-gnugat v2</td>
+  <td align="right">18,500</td>
+  <td align="right">1,809</td>
+  <td align="right">325 ms</td>
+  <td align="right">804 ms</td>
+  <td align="right">0.00%</td>
+  <td align="right">96%</td>
+  <td align="right">494 µs</td>
+  <td align="right">1,111 MB</td>
+</tr>
+</tbody>
+</table>
+
+<p>I'm personally happy with the choices I made,
+there's a line to be drawn and to me Symfony's HttpKernel, Routing,
+Dependency Injection, Security are all things to keep.</p>
+]]></content>
+        </entry>
+    </feed>
