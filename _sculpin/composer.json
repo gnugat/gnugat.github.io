@@ -2,6 +2,11 @@
     "require": {
         "sculpin/sculpin": "^3.3"
     },
+    "autoload": {
+        "psr-4": {
+            "Gnugat\\Blog\\": "src/"
+        }
+    },
     "config": {
         "allow-plugins": {
             "sculpin/sculpin-theme-composer-plugin": true

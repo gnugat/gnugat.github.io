@@ -71,3 +71,58 @@ input[type="button"].button-reference:focus {
   color: #FFF;
   background-color: #4cae4c;
   border-color: #5cb85c; }
+
+/* Table of contents (opt-in with `toc: true` in front matter) */
+.post-content h2,
+.post-content h3 {
+  scroll-margin-top: 2rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth; }
+}
+
+.toc {
+  margin-bottom: 2.5rem; }
+.toc summary {
+  cursor: pointer;
+  font-weight: 600; }
+.toc ul {
+  list-style: none;
+  margin: 0.5rem 0 0 0; }
+.toc ul ul {
+  margin: 0.25rem 0 0 1rem; }
+.toc li {
+  margin-bottom: 0.25rem; }
+.toc a {
+  text-decoration: none; }
+
+/* Stack the TOC above the article, until there's room for a sidebar */
+@media (max-width: 1299px) {
+  .toc-row > .columns {
+    width: 100%;
+    float: none;
+    margin-left: 0; }
+}
+
+@media (min-width: 1300px) {
+  .toc-layout .container {
+    width: 90%;
+    max-width: 1240px; }
+  .toc-row > aside {
+    position: sticky;
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto; }
+  .toc {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.4; }
+  .toc summary {
+    cursor: default;
+    list-style: none;
+    text-transform: uppercase;
+    letter-spacing: 2px; }
+  .toc summary::-webkit-details-marker {
+    display: none; }
+}

@@ -273,3 +273,26 @@ th, td,
 hr, blockquote {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
+/* Table of contents */
+.toc summary {
+  color: var(--subtext1);
+}
+
+.toc a {
+  color: var(--overlay2);
+}
+
+.toc a:hover {
+  color: var(--sky);
+}
+
+.toc a.active {
+  color: var(--mauve);
+}
+
+@media (min-width: 1300px) {
+  .toc {
+    border-left: 2px solid var(--surface1);
+    padding-left: 1rem;
+  }
+}
