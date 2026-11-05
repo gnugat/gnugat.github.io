@@ -35,9 +35,13 @@ let me remind you that FPM, Apache and Nginx are all written in C, as well as PH
 Nobody says Node isn't JavaScript because its HTTP parser is C, right?
 
 > **TL;DR**:<br>
-> _$12 server_: 18,500 users<br>
-> _throttled locally, classic_: 250 (default), 1,500 (optimised)<br>
-> _throttled locally, worker_: 1,000 (default), 5,250 (optimised)<br>
+> <br>
+> The following optimisations gave us the biggest gains:<br>
+> <br>
+> - _Classic_: Persistent Connection (+49%), No ORM (+35%), Read Model (+34%)<br>
+> - _Worker_: Read Model (+67%), JsonStreamer (+34%), Plain SQL Reads (+31%)<br>
+>
+> <img alt="Line chart of users handled per phase, throttled to a quarter of a CPU core: Worker Mode climbs from 1,000 users (p0) to 5,250 (p14), Classic Mode from 250 to 1,500" src="/images/blazingly-phpast-users-per-phase.svg" width="100%" />
 
 Now, sharpen your attention (it's going to be a long, human made, article), and...<br>
 _Let's get technical, technical, let's get technical, ooh 🎶_.
@@ -2646,7 +2650,8 @@ lower than another similar PHP/Symfony/FrankenPHP (php-symfony-pklebba).
 I had made many runs locally with one CPU and was in some cases limited by memory,
 but it turned out on the much weaker Synteq box submissions are mostly bound by CPU.
 
-I redid my local runs with a throttled CPU, added the phases mentioned above and got:
+I redid my local runs with a throttled CPU, added the phases mentioned above and got
+(see the [Leaderboard](https://github.com/arjaythedev/twelve-dollar-server-challenge/blob/main/LEADERBOARD.md)):
 
 | On the box            |  Users | req/s |    p95 |    p99 | Errors | CPU | CPU per request |      RAM |
 |-----------------------|-------:|------:|-------:|-------:|-------:|----:|----------------:|---------:|
