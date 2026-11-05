@@ -3,7 +3,7 @@
     <title><![CDATA[Loïc Faugeron]]></title>
     <link href="/feed/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2026-11-04T22:42:56+00:00</updated>
+    <updated>2026-11-05T12:26:08+00:00</updated>
     <id>http://gnugat.github.com</id>
             <author>
             <name><![CDATA[Loïc Faugeron]]></name>            <email><![CDATA[faugeron.loic@gmail.com]]></email>        </author>
@@ -46,9 +46,13 @@ let me remind you that FPM, Apache and Nginx are all written in C, as well as PH
 
 <blockquote>
   <p><strong>TL;DR</strong>:<br>
-  <em>$12 server</em>: 18,500 users<br>
-  <em>throttled locally, classic</em>: 250 (default), 1,500 (optimised)<br>
-  <em>throttled locally, worker</em>: 1,000 (default), 5,250 (optimised)<br></p>
+  <br>
+  The following optimisations gave us the biggest gains:<br>
+  <br>
+  - <em>Classic</em>: Persistent Connection (+49%), No ORM (+35%), Read Model (+34%)<br>
+  - <em>Worker</em>: Read Model (+67%), JsonStreamer (+34%), Plain SQL Reads (+31%)<br></p>
+  
+  <p><img alt="Line chart of users handled per phase, throttled to a quarter of a CPU core: Worker Mode climbs from 1,000 users (p0) to 5,250 (p14), Classic Mode from 250 to 1,500" src="/images/blazingly-phpast-users-per-phase.svg" width="100%" /></p>
 </blockquote>
 
 <p>Now, sharpen your attention (it's going to be a long, human made, article), and...<br>
@@ -3423,7 +3427,8 @@ lower than another similar PHP/Symfony/FrankenPHP (php-symfony-pklebba).</p>
 <p>I had made many runs locally with one CPU and was in some cases limited by memory,
 but it turned out on the much weaker Synteq box submissions are mostly bound by CPU.</p>
 
-<p>I redid my local runs with a throttled CPU, added the phases mentioned above and got:</p>
+<p>I redid my local runs with a throttled CPU, added the phases mentioned above and got
+(see the <a href="https://github.com/arjaythedev/twelve-dollar-server-challenge/blob/main/LEADERBOARD.md">Leaderboard</a>):</p>
 
 <table>
 <thead>
