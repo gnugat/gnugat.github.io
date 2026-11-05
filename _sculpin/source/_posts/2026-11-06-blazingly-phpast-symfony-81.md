@@ -2674,6 +2674,107 @@ With our optimisations, we were able to handle 5 to 6 times more users:
 | Defaults (p0)     |   250 users,  39 req/s  | 1,000 users, 117 req/s  |
 | Optimised (p14)   | 1,500 users, 184 req/s  | 5,250 users, 633 req/s  |
 
+So what's left? Let's profile `p14` one last time, starting with Worker Mode:
+
+```
+All PHP samples (Worker Mode, 750 users)                        100.0%
+├── HttpKernel::handle                                           59.8%
+│   ├── routing, firewall, listeners                             21.0%
+│   │   ├── RouterListener (routing)                              8.0%
+│   │   ├── Firewall, FirewallListener (security)                 5.0%
+│   │   ├── ControllerAttributesListener                          3.1%
+│   │   └── other listeners, EventDispatcher itself               4.9%
+│   ├── GET /feed: PostController::feed                          15.9%
+│   │   ├── SQLite (Statement::execute)                          11.1%
+│   │   ├── JsonResponse::__construct                             2.6%
+│   │   └── DBAL around the query                                 2.1%
+│   ├── GET /posts/{id}: PostController::show                     7.1%
+│   │   ├── JsonResponse::__construct                             2.4%
+│   │   ├── SQLite (Statement::execute)                           2.3%
+│   │   └── DBAL around the query                                 2.3%
+│   ├── POST /posts/{id}/like: PostController::like               4.3%
+│   │   ├── SQLite (Statement::execute)                           2.8%
+│   │   ├── JsonStreamer (writeJson)                              0.7%
+│   │   ├── JsonResponse::__construct                             0.5%
+│   │   └── DBAL around the query                                 0.3%
+│   ├── POST /posts: PostController::create                       0.9%
+│   │   ├── DBAL around the query                                 0.4%
+│   │   ├── SQLite (Statement::execute)                           0.3%
+│   │   ├── JsonStreamer (writeJson)                              0.1%
+│   │   └── JsonResponse::__construct                             0.1%
+│   └── controller and argument resolvers, filterResponse        10.6%
+│       ├── filterResponse (response listeners, finishRequest)    4.2%
+│       ├── ArgumentResolver::getArguments                        2.2%
+│       ├── ControllerResolver::getController                     1.6%
+│       ├── HttpKernel itself                                     1.4%
+│       └── ControllerEvent, ControllerArgumentsEvent             1.2%
+└── Symfony Runtime's worker loop (outside of Symfony's kernel)  40.2%
+    ├── worker loop (FrankenPHP's C code, gc_collect_cycles)     23.9%
+    ├── Response::send                                            8.3%
+    ├── Request::createFromGlobals                                3.3%
+    ├── Kernel::boot (resets services between requests)           3.7%
+    └── Kernel::terminate                                         0.9%
+```
+
+The time is spent between:
+
+* our endpoints (28.2%), which is mostly SQLite work (16.5%)
+* the framework (47.8%):
+    * routing, security and the other listeners (21.0%)
+    * building the Request and sending the Response (11.6%)
+    * resolving the controller and its arguments, then preparing the response (10.6%)
+    * resetting services between requests, and terminating the kernel (4.6%)
+* the worker loop (23.9%):
+    * FrankenPHP setting up each request for PHP (superglobals) and passing the output back to Go
+    * Symfony Runtime's `gc_collect_cycles()` after every request
+
+As for Classic Mode:
+
+```
+All PHP samples (Classic Mode, 750 users)                       100.0%
+├── HttpKernel::handle                                           78.3%
+│   ├── routing, firewall, listeners                             23.8%
+│   │   ├── RouterListener (routing)                              7.1%
+│   │   ├── creating the listener services                        5.9%
+│   │   ├── Firewall, FirewallListener (security)                 3.4%
+│   │   ├── ControllerAttributesListener                          1.9%
+│   │   └── other listeners, EventDispatcher itself               5.5%
+│   ├── controller instantiation                                 17.3%
+│   │   └── DBAL Connection service                              13.5%
+│   │       └── ConnectionFactory::initializeTypes                7.1%
+│   ├── GET /feed: PostController::feed                          15.8%
+│   ├── GET /posts/{id}: PostController::show                     9.6%
+│   ├── POST /posts/{id}/like: PostController::like               2.6%
+│   ├── POST /posts: PostController::create                       0.5%
+│   └── argument resolver, filterResponse                         8.7%
+│       ├── filterResponse (response listeners, finishRequest)    5.4%
+│       ├── ArgumentResolver::getArguments                        1.4%
+│       ├── HttpKernel itself                                     1.2%
+│       └── ControllerEvent, ControllerArgumentsEvent             0.7%
+└── outside of Symfony's kernel                                  21.7%
+    ├── Kernel::preBoot, boot, getHttpKernel                      9.9%
+    ├── HttpKernelRunner::run (flushing the response)             6.8%
+    ├── Response::send, Runtime, Kernel::terminate                3.7%
+    └── Excimer (the profiler itself)                             1.3%
+```
+
+We can see how rebuilding the kernel on every requests impacts the performance:
+
+* our endpoints (28.5%), where SQLite runs the queries (10.7%) and **prepares them (7.4%)**
+* the framework (63.4%):
+    * routing, security and the other listeners (23.8%)
+    * **creating the listener services (5.9%)**
+    * **creating the controller's services (17.3%)**, mostly the DBAL Connection (13.5%):
+        * **DoctrineBundle registering the DBAL types, loading their classes included (7.1%)**
+        * **loading the other DBAL classes (3.2%)**
+    * **booting the kernel (9.9%)**
+    * resolving the arguments, then preparing the response (8.7%)
+    * Symfony Runtime, sending the Response and terminating the kernel (3.7%)
+* flushing the response to FrankenPHP (6.8%)
+* the profiler itself (1.3%)
+
+Spread across all of these, resolving environment variables (`%env()%`) takes 6.9%.
+
 And here's roughly where the CPU time goes now:
 
 | Where                                              | Share of CPU |
