@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 460" width="1040" height="460" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-labelledby="t d">
 <title id="t">Users handled per phase, throttled to a quarter of a CPU</title>
-<desc id="d">Classic Mode goes from 250 users (p0) to 1,500 (p14). Worker Mode goes from 1,000 users (p0) to 5,250 (p14).</desc>
+<desc id="d">Classic Mode goes from 250 users (p0) to 1,500 (p12). Worker Mode goes from 1,000 users (p0) to 5,250 (p12).</desc>
 <rect width="1040" height="460" fill="#363a4f"/>
 <text x="80" y="36" fill="#cad3f5" font-size="20" font-weight="600">Users handled, phase by phase</text>
 <text x="80" y="58" fill="#b8c0e0" font-size="13">Symfony 8.1 on FrankenPHP, throttled to a quarter of a CPU core</text>
@@ -26,52 +26,51 @@
 <text x="80.0" y="438" fill="#a5adcb" font-size="11" text-anchor="middle">Defaults</text>
 <text x="158.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p3</text>
 <text x="158.0" y="438" fill="#a5adcb" font-size="11" text-anchor="middle">Tuned config</text>
-<text x="236.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p6</text>
+<text x="236.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p4</text>
 <text x="236.0" y="438" fill="#a5adcb" font-size="11" text-anchor="middle">Read Model</text>
-<text x="314.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p7</text>
+<text x="314.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p5</text>
 <text x="314.0" y="438" fill="#a5adcb" font-size="11" text-anchor="middle">JsonStreamer</text>
-<text x="392.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p8</text>
+<text x="392.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p6</text>
 <text x="392.0" y="438" fill="#a5adcb" font-size="11" text-anchor="middle">SQL reads</text>
-<text x="470.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p9</text>
+<text x="470.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p7</text>
 <text x="470.0" y="438" fill="#a5adcb" font-size="11" text-anchor="middle">Persistent</text>
-<text x="548.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p10</text>
+<text x="548.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p8</text>
 <text x="548.0" y="438" fill="#a5adcb" font-size="11" text-anchor="middle">DBAL writes</text>
-<text x="626.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p11</text>
+<text x="626.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p9</text>
 <text x="626.0" y="438" fill="#a5adcb" font-size="11" text-anchor="middle">No ORM</text>
-<text x="704.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p12</text>
+<text x="704.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p10</text>
 <text x="704.0" y="438" fill="#a5adcb" font-size="11" text-anchor="middle">No Serializer</text>
-<text x="782.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p13</text>
+<text x="782.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p11</text>
 <text x="782.0" y="438" fill="#a5adcb" font-size="11" text-anchor="middle">Prepared</text>
-<text x="860.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p14</text>
+<text x="860.0" y="422" fill="#b8c0e0" font-size="12" font-weight="600" text-anchor="middle">p12</text>
 <text x="860.0" y="438" fill="#a5adcb" font-size="11" text-anchor="middle">SQLite JSON</text>
 <polyline points="80.0,386.7 158.0,386.7 236.0,373.3 314.0,373.3 392.0,360.0 470.0,346.7 548.0,346.7 626.0,320.0 704.0,320.0 782.0,320.0 860.0,320.0" fill="none" stroke="#d95926" stroke-width="2" stroke-linejoin="round"/>
 <circle cx="80.0" cy="386.7" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p0: 250 users</title></circle>
 <circle cx="158.0" cy="386.7" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p3: 250 users</title></circle>
-<circle cx="236.0" cy="373.3" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p6: 500 users</title></circle>
-<circle cx="314.0" cy="373.3" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p7: 500 users</title></circle>
-<circle cx="392.0" cy="360.0" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p8: 750 users</title></circle>
-<circle cx="470.0" cy="346.7" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p9: 1,000 users</title></circle>
-<circle cx="548.0" cy="346.7" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p10: 1,000 users</title></circle>
-<circle cx="626.0" cy="320.0" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p11: 1,500 users</title></circle>
-<circle cx="704.0" cy="320.0" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p12: 1,500 users</title></circle>
-<circle cx="782.0" cy="320.0" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p13: 1,500 users</title></circle>
-<circle cx="860.0" cy="320.0" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p14: 1,500 users</title></circle>
+<circle cx="236.0" cy="373.3" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p4: 500 users</title></circle>
+<circle cx="314.0" cy="373.3" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p5: 500 users</title></circle>
+<circle cx="392.0" cy="360.0" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p6: 750 users</title></circle>
+<circle cx="470.0" cy="346.7" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p7: 1,000 users</title></circle>
+<circle cx="548.0" cy="346.7" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p8: 1,000 users</title></circle>
+<circle cx="626.0" cy="320.0" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p9: 1,500 users</title></circle>
+<circle cx="704.0" cy="320.0" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p10: 1,500 users</title></circle>
+<circle cx="782.0" cy="320.0" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p11: 1,500 users</title></circle>
+<circle cx="860.0" cy="320.0" r="4" fill="#d95926" stroke="#363a4f" stroke-width="2"><title>Classic p12: 1,500 users</title></circle>
 <text x="72.0" y="376.7" fill="#b8c0e0" font-size="12">250</text>
 <text x="872" y="318.0" fill="#cad3f5" font-size="15" font-weight="600">Classic: 1,500</text>
 <text x="872" y="335.0" fill="#b8c0e0" font-size="12">×6 vs defaults</text>
 <polyline points="80.0,346.7 158.0,333.3 236.0,280.0 314.0,240.0 392.0,186.7 470.0,186.7 548.0,160.0 626.0,160.0 704.0,160.0 782.0,120.0 860.0,120.0" fill="none" stroke="#3987e5" stroke-width="2" stroke-linejoin="round"/>
 <circle cx="80.0" cy="346.7" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p0: 1,000 users</title></circle>
 <circle cx="158.0" cy="333.3" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p3: 1,250 users</title></circle>
-<circle cx="236.0" cy="280.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p6: 2,250 users</title></circle>
-<circle cx="314.0" cy="240.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p7: 3,000 users</title></circle>
-<circle cx="392.0" cy="186.7" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p8: 4,000 users</title></circle>
-<circle cx="470.0" cy="186.7" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p9: 4,000 users</title></circle>
-<circle cx="548.0" cy="160.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p10: 4,500 users</title></circle>
-<circle cx="626.0" cy="160.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p11: 4,500 users</title></circle>
-<circle cx="704.0" cy="160.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p12: 4,500 users</title></circle>
-<circle cx="782.0" cy="120.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p13: 5,250 users</title></circle>
-<circle cx="860.0" cy="120.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p14: 5,250 users</title></circle>
-<text x="72.0" y="336.7" fill="#b8c0e0" font-size="12">1,000</text>
+<circle cx="236.0" cy="280.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p4: 2,250 users</title></circle>
+<circle cx="314.0" cy="240.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p5: 3,000 users</title></circle>
+<circle cx="392.0" cy="186.7" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p6: 4,000 users</title></circle>
+<circle cx="470.0" cy="186.7" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p7: 4,000 users</title></circle>
+<circle cx="548.0" cy="160.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p8: 4,500 users</title></circle>
+<circle cx="626.0" cy="160.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p9: 4,500 users</title></circle>
+<circle cx="704.0" cy="160.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p10: 4,500 users</title></circle>
+<circle cx="782.0" cy="120.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p11: 5,250 users</title></circle>
+<circle cx="860.0" cy="120.0" r="4" fill="#3987e5" stroke="#363a4f" stroke-width="2"><title>Worker p12: 5,250 users</title></circle>
 <text x="872" y="118.0" fill="#cad3f5" font-size="15" font-weight="600">Worker: 5,250</text>
 <text x="872" y="135.0" fill="#b8c0e0" font-size="12">×5.25 vs defaults</text>
 </svg>

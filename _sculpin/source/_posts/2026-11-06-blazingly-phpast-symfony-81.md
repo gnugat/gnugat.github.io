@@ -38,10 +38,10 @@ Nobody says Node isn't JavaScript because its HTTP parser is C, right?
 > <br>
 > The following optimisations gave us the biggest gains:<br>
 > <br>
-> - _Classic_: Persistent Connection (+49%), No ORM (+35%), Read Model (+34%)<br>
-> - _Worker_: Read Model (+67%), JsonStreamer (+34%), Plain SQL Reads (+31%)<br>
+> - _Classic_: Persistent Connection (+41%), No ORM (+29%), Read Model (+25%)<br>
+> - _Worker_: Read Model (+58%), JsonStreamer (+40%), Plain SQL Reads (+23%)<br>
 >
-> <img alt="Line chart of users handled per phase, throttled to a quarter of a CPU core: Worker Mode climbs from 1,000 users (p0) to 5,250 (p14), Classic Mode from 250 to 1,500" src="/images/blazingly-phpast-users-per-phase.svg" width="100%" />
+> <img alt="Line chart of users handled per phase, throttled to a quarter of a CPU core: Worker Mode climbs from 1,000 users (p0) to 5,250 (p12), Classic Mode from 250 to 1,500" src="/images/blazingly-phpast-users-per-phase.svg" width="100%" />
 
 Now, sharpen your attention (it's going to be a long, human made, article), and...<br>
 _Let's get technical, technical, let's get technical, ooh 🎶_.
@@ -51,12 +51,12 @@ _Let's get technical, technical, let's get technical, ooh 🎶_.
 * [Defaults (p0)](#defaults): Symfony / Doctrine out of the box
 * [Benchmarking](#benchmarking)
 * [Tuned Config (p1-p3)](#tuned-config): php.ini, preload and JIT
-* [Read Model (p6)](#read-model): DQL `NEW` instead of entities
-* [JsonStreamer (p7)](#jsonstreamer): Generated JSON writers instead of the Serializer
-* [Plain SQL Reads (p8)](#plain-sql-reads): DBAL reads
-* [Persistent Connection (p9)](#persistent-connection): SQLite stays open between requests
-* [DBAL instead of ORM (p10-p11)](#dbal-instead-of-orm): DBAL writes, then no ORM
-* [Extract Till You Drop (p12-p14)](#extract-till-you-drop): Less framework, more SQLite
+* [Read Model (p4)](#read-model): DQL `NEW` instead of entities
+* [JsonStreamer (p5)](#jsonstreamer): Generated JSON writers instead of the Serializer
+* [Plain SQL Reads (p6)](#plain-sql-reads): DBAL reads
+* [Persistent Connection (p7)](#persistent-connection): SQLite stays open between requests
+* [DBAL instead of ORM (p8-p9)](#dbal-instead-of-orm): DBAL writes, then no ORM
+* [Extract Till You Drop (p10-p12)](#extract-till-you-drop): Less framework, more SQLite
 * [Experiments](#experiments): What didn't make a difference
 * [Conclusion](#conclusion): It's over 9000!!!!
 
@@ -990,16 +990,16 @@ That's 7020 requests, over 180 seconds, which means = 39 req/s.
 From now on, the users tables tell us whether a step makes it to the next level,
 and the Overload Test's req/s tells us by how much:
 
-* **Classic: 50 req/s**, from 39
-* **Worker: 163 req/s**, from 117
+* **Classic: 50 req/s**, from 38
+* **Worker: 155 req/s**, from 114
 
 Each step helped a different mode:
 
 | Step               | Classic | Worker |
 |--------------------|--------:|-------:|
-| `php.ini`          |   +5.0% |  -0.9% |
-| Preload, class map |  +17.0% |  +7.2% |
-| JIT                |   +2.8% | +30.4% |
+| `php.ini`          |   +2.6% |  +2.2% |
+| Preload, class map |  +20.5% |  +2.6% |
+| JIT                |   +7.4% | +29.7% |
 
 Preloading, OPcache and realpath settings speed up finding, including and declaring classes,
 so the Classic Mode that does that on every requests benefit from it the most.
@@ -1018,16 +1018,9 @@ Paul's workshop go beyond just optimisation settings,
 it also covers how to monitor your application,
 I highly recommend you check his video.
 
-## Read Model (p6) {#read-model}
+## Read Model (p4) {#read-model}
 
 > Tweaking settings is fine, but have you tried turning the ORM off and off again?
-
-<br>
-
-> _Note_: `p4` restricted the firewall to `POST /posts`,
-> and `p5` set the Caddyfile to not check for serving static files (js, CSS, etc).<br>
-> Neither made a measurable difference (see [Experiments](#experiments)),
-> so we jump straight to p6.
 
 So, where do we take it from here?
 Let's first check where the server's CPU goes with Linux `perf` (Worker Mode, 750 users):
@@ -1283,35 +1276,38 @@ final class PostController extends AbstractController
 }
 ```
 
-### p6 results {#results-p6}
+### p4 results {#results-p4}
 
-Here are the results for `p6`:
+Here are the results for `p4`:
 
 |            | Users | [vs p3](#results-p3) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
 |------------|------:|---------------------:|------------:|-----------:|-------:|---------:|----------:|
-| Classic p6 |   500 |              +1 step |     0.245 s |    0.367 s |  0.00% |      25% | 0.134 GiB |
-| Classic p6 |   750 |                      |  ❌ 2.340 s | ❌ 2.500 s |  0.00% |      26% | 0.131 GiB |
-| Worker  p6 | 2,250 |             +4 steps |     0.157 s |    0.233 s |  0.00% |      27% | 0.182 GiB |
-| Worker  p6 | 2,500 |                      |  ❌ 0.674 s | ❌ 1.240 s |  0.00% |      27% | 0.202 GiB |
+| Classic p4 |   500 |              +1 step |     0.245 s |    0.367 s |  0.00% |      25% | 0.134 GiB |
+| Classic p4 |   750 |                      |  ❌ 2.340 s | ❌ 2.500 s |  0.00% |      26% | 0.131 GiB |
+| Worker  p4 | 2,250 |             +4 steps |     0.157 s |    0.233 s |  0.00% |      27% | 0.182 GiB |
+| Worker  p4 | 2,500 |                      |  ❌ 0.674 s | ❌ 1.240 s |  0.00% |      27% | 0.202 GiB |
+
+> _Note_: From here on, the users tables and the profiles were measured
+> with experiments `a` and `b` in place (see [Experiments](#experiments)), the req/s without them.
 
 Using a Read Model gives us some agreeable gains, with classic finally moving one step up.
 
 With the Overload Test, compared to `p3`, we can see exactly by how much:
 
-* **Classic: 67 req/s (+34.0%)**, from 50
-* **Worker: 273 req/s (+67.2%)**, from 163
+* **Classic: 63 req/s (+24.8%)**, from 50
+* **Worker: 244 req/s (+57.7%)**, from 155
 
 It feels like Worker mode benefits the most from this change,
 but if we look at the time per request using the req/s,
 we can see that this was also very good for Classic:
 
-* **Classic: 14.9 ms (-5.1 ms)**, from 20.0 ms
-* **Worker: 3.7 ms (-2.5 ms)**, from 6.1 ms
+* **Classic: 15.9 ms (-4.1 ms)**, from 20.0 ms
+* **Worker: 4.1 ms (-2.4 ms)**, from 6.5 ms
 
-Profiling `p6` we can observe that `GET /feed` drops from 54.5% to 38.0% for PHP time:
+Profiling `p4` we can observe that `GET /feed` drops from 54.5% to 38.0% for PHP time:
 
 ```
-All PHP samples (Worker Mode, 750 users)                        100.0%  vs p5
+All PHP samples (Worker Mode, 750 users)                        100.0%  vs p3
 ├── HttpKernel::handle                                           75.3%   -5.5
 │   ├── GET /feed: PostController::feed                          38.0%  -16.4
 │   ├── GET /posts/{id}: PostController::show                    14.6%   +3.6
@@ -1331,7 +1327,7 @@ Surprisingly, `GET /posts/{id}` doesn't seem to get any benefit from that change
 that's because `PostRepository::find` now uses DQL (2.2% of total PHP, 15.2% of the endpoint),
 [we'll take care of that in Plain SQL Reads section](#plain-sql-reads).
 
-## JsonStreamer (p7) {#jsonstreamer}
+## JsonStreamer (p5) {#jsonstreamer}
 
 > I have a plan so cunning you could put a Streamer on it and call it a JSON. Hon hi hon.
 
@@ -1576,26 +1572,26 @@ final class PostController extends AbstractController
 > The gain comes from the generated code, not from streaming
 > (our responses are small, a `StreamedResponse` would only make sense for large ones).
 
-### p7 results {#results-p7}
+### p5 results {#results-p5}
 
-Here are the results for `p7`:
+Here are the results for `p5`:
 
-|            | Users | [vs p6](#results-p6) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
+|            | Users | [vs p4](#results-p4) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
 |------------|------:|---------------------:|------------:|-----------:|-------:|---------:|----------:|
-| Classic p7 |   500 |                 same |     0.073 s |    0.145 s |  0.00% |      23% | 0.128 GiB |
-| Classic p7 |   750 |                      |  ❌ 0.634 s |    0.772 s |  0.00% |      26% | 0.129 GiB |
-| Worker  p7 | 3,000 |             +3 steps |     0.266 s |    0.380 s |  0.00% |      27% | 0.218 GiB |
-| Worker  p7 | 3,250 |                      |  ❌ 0.551 s |    0.863 s |  0.00% |      27% | 0.233 GiB |
+| Classic p5 |   500 |                 same |     0.073 s |    0.145 s |  0.00% |      23% | 0.128 GiB |
+| Classic p5 |   750 |                      |  ❌ 0.634 s |    0.772 s |  0.00% |      26% | 0.129 GiB |
+| Worker  p5 | 3,000 |             +3 steps |     0.266 s |    0.380 s |  0.00% |      27% | 0.218 GiB |
+| Worker  p5 | 3,250 |                      |  ❌ 0.551 s |    0.863 s |  0.00% |      27% | 0.233 GiB |
 
-Compared to `p6`, the Overload Test gives us some pleasant gains:
+Compared to `p4`, the Overload Test gives us some pleasant gains:
 
-* **Classic: 81 req/s (+20.0%)**, from 67
-* **Worker: 366 req/s (+34.1%)**, from 273
+* **Classic: 74 req/s (+17.5%)**, from 63
+* **Worker: 342 req/s (+40.1%)**, from 244
 
-Let's profile `p7`:
+Let's profile `p5`:
 
 ```
-All PHP samples (Worker Mode, 750 users)                        100.0%  vs p6
+All PHP samples (Worker Mode, 750 users)                        100.0%  vs p4
 ├── HttpKernel::handle                                           68.4%   -6.9
 │   ├── GET /feed: PostController::feed                          23.9%  -14.1
 │   │   └── writing the JSON                                      3.5%  -18.6
@@ -1617,7 +1613,7 @@ except for the `GET /posts/{id}` endpoint which grows by x 1.03,
 which shows that it also benefited from using JsonStreamer,
 just a bit less since its JSON was 28.2% of its endpoint.
 
-## Plain SQL Reads (p8) {#plain-sql-reads}
+## Plain SQL Reads (p6) {#plain-sql-reads}
 
 > Entities? Where we're going, we don't need entities.
 
@@ -1717,26 +1713,26 @@ final readonly class PostView
 
 The controller doesn't change.
 
-### p8 results {#results-p8}
+### p6 results {#results-p6}
 
 We get some fantastic gains from this:
 
-|            | Users | [vs p7](#results-p7) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
+|            | Users | [vs p5](#results-p5) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
 |------------|------:|---------------------:|------------:|-----------:|-------:|---------:|----------:|
-| Classic p8 |   750 |              +1 step |     0.277 s |    0.376 s |  0.00% |      26% | 0.125 GiB |
-| Classic p8 | 1,000 |                      |  ❌ 2.830 s | ❌ 3.200 s |  0.00% |      26% | 0.132 GiB |
-| Worker  p8 | 4,000 |             +4 steps |     0.433 s |    0.582 s |  0.00% |      27% | 0.264 GiB |
-| Worker  p8 | 4,250 |                      |  ❌ 0.909 s | ❌ 1.240 s |  0.00% |      27% | 0.284 GiB |
+| Classic p6 |   750 |              +1 step |     0.277 s |    0.376 s |  0.00% |      26% | 0.125 GiB |
+| Classic p6 | 1,000 |                      |  ❌ 2.830 s | ❌ 3.200 s |  0.00% |      26% | 0.132 GiB |
+| Worker  p6 | 4,000 |             +4 steps |     0.433 s |    0.582 s |  0.00% |      27% | 0.264 GiB |
+| Worker  p6 | 4,250 |                      |  ❌ 0.909 s | ❌ 1.240 s |  0.00% |      27% | 0.284 GiB |
 
-Compared to `p7`, the Overload Test gives us:
+Compared to `p5`, the Overload Test gives us:
 
-* **Classic: 88 req/s (+9.8%)**, from 81
-* **Worker: 479 req/s (+31.1%)**, from 366
+* **Classic: 85 req/s (+14.9%)**, from 74
+* **Worker: 422 req/s (+23.4%)**, from 342
 
-Let's profile `p8`:
+Let's profile `p6`:
 
 ```
-All PHP samples (Worker Mode, 750 users)                        100.0%  vs p7
+All PHP samples (Worker Mode, 750 users)                        100.0%  vs p5
 ├── HttpKernel::handle                                           63.2%   -5.2
 │   ├── GET /feed: PostController::feed                          18.0%   -5.9
 │   ├── GET /posts/{id}: PostController::show                     8.4%   -6.7
@@ -1752,7 +1748,7 @@ All PHP samples (Worker Mode, 750 users)                        100.0%  vs p7
 The ORM's share of the reads drops from 75.7% of `GET /feed` and 80.0% of `GET /posts/{id}` to under 2%.
 This time both endpoints shrink, while everything else grows by about x 1.21.
 
-## Persistent Connection (p9) {#persistent-connection}
+## Persistent Connection (p7) {#persistent-connection}
 
 > It has the words DON'T KERNEL PANIC inscribed in large friendly letters on its cover.
 
@@ -1818,30 +1814,30 @@ doctrine:
             !php/const PDO::ATTR_PERSISTENT: true
 ```
 
-### p9 results {#results-p9}
+### p7 results {#results-p7}
 
 This is Classic Mode's biggest gain yet:
 
-|            | Users | [vs p8](#results-p8) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
+|            | Users | [vs p6](#results-p6) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
 |------------|------:|---------------------:|------------:|-----------:|-------:|---------:|----------:|
-| Classic p9 | 1,000 |              +1 step |     0.187 s |    0.648 s |  0.00% |      26% | 0.126 GiB |
-| Classic p9 | 1,250 |                      |  ❌ 0.911 s | ❌ 1.090 s |  0.00% |      26% | 0.136 GiB |
-| Worker  p9 | 4,000 |                 same |     0.390 s |    0.530 s |  0.00% |      27% | 0.263 GiB |
-| Worker  p9 | 4,250 |                      |  ❌ 0.579 s |    0.785 s |  0.00% |      27% | 0.277 GiB |
+| Classic p7 | 1,000 |              +1 step |     0.187 s |    0.648 s |  0.00% |      26% | 0.126 GiB |
+| Classic p7 | 1,250 |                      |  ❌ 0.911 s | ❌ 1.090 s |  0.00% |      26% | 0.136 GiB |
+| Worker  p7 | 4,000 |                 same |     0.390 s |    0.530 s |  0.00% |      27% | 0.263 GiB |
+| Worker  p7 | 4,250 |                      |  ❌ 0.579 s |    0.785 s |  0.00% |      27% | 0.277 GiB |
 
-Compared to `p8`, the Overload Test gives us:
+Compared to `p6`, the Overload Test gives us:
 
-* **Classic: 132 req/s (+49.0%)**, from 88
-* **Worker: 466 req/s (-2.8%)**, from 479
+* **Classic: 120 req/s (+41.2%)**, from 85
+* **Worker: 429 req/s (+1.5%)**, from 422
 
 > _Note_: Each Overload Test runs twice, and the mean of the two rounds is used.<br>
-> `p9` worker's two rounds alone differ by 3.5% (458 and 474 req/s),
-> with nothing changed between them, so a -2.8% is within noise.
+> With nothing changed between them, two rounds can differ by up to 5%
+> (`p5` worker: 334 and 351 req/s), so a +1.5% is within noise.
 
-We can confirm the connection and writes are almost gone by profiling `p9`:
+We can confirm the connection and writes are almost gone by profiling `p7`:
 
 ```
-Wall-clock time per request (classic, 8,000 users, no CPU limit)       p8        p9
+Wall-clock time per request (classic, 8,000 users, no CPU limit)       p6        p7
 ├── HttpKernel::handle                                            0.97 ms   0.28 ms
 │   ├── opening the connection (Connection::connect)              0.50 ms  <0.01 ms
 │   ├── committing the writes (Connection::commit)                0.20 ms  <0.01 ms
@@ -1850,11 +1846,11 @@ Wall-clock time per request (classic, 8,000 users, no CPU limit)       p8       
 Total                                                             1.18 ms   0.55 ms
 ```
 
-## DBAL instead of ORM (p10-p11) {#dbal-instead-of-orm}
+## DBAL instead of ORM (p8-p9) {#dbal-instead-of-orm}
 
 > Let the ORM go, let the ORM goooo! It can't hold us back anymooooOooOoore!
 
-### Plain SQL Writes (p10) {#plain-sql-writes}
+### Plain SQL Writes (p8) {#plain-sql-writes}
 
 Reads are 92.2% of the requests (two per user loop), which is why we've focused on them so far:
 
@@ -2026,28 +2022,28 @@ class PostRepository extends ServiceEntityRepository
 }
 ```
 
-### p10 results {#results-p10}
+### p8 results {#results-p8}
 
 This gives Worker Mode some satisfying gains:
 
-|             | Users | [vs p9](#results-p9) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
-|-------------|------:|---------------------:|------------:|-----------:|-------:|---------:|----------:|
-| Classic p10 | 1,000 |                 same |     0.127 s |    0.234 s |  0.00% |      26% | 0.124 GiB |
-| Classic p10 | 1,250 |                      |  ❌ 0.650 s | ❌ 1.910 s |  0.00% |      26% | 0.140 GiB |
-| Worker  p10 | 4,500 |             +2 steps |     0.431 s |    0.593 s |  0.00% |      27% | 0.290 GiB |
-| Worker  p10 | 4,750 |                      |  ❌ 0.768 s |    0.993 s |  0.00% |      27% | 0.313 GiB |
+|            | Users | [vs p7](#results-p7) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
+|------------|------:|---------------------:|------------:|-----------:|-------:|---------:|----------:|
+| Classic p8 | 1,000 |                 same |     0.127 s |    0.234 s |  0.00% |      26% | 0.124 GiB |
+| Classic p8 | 1,250 |                      |  ❌ 0.650 s | ❌ 1.910 s |  0.00% |      26% | 0.140 GiB |
+| Worker  p8 | 4,500 |             +2 steps |     0.431 s |    0.593 s |  0.00% |      27% | 0.290 GiB |
+| Worker  p8 | 4,750 |                      |  ❌ 0.768 s |    0.993 s |  0.00% |      27% | 0.313 GiB |
 
-Compared to `p9`, the Overload Test gives us:
+Compared to `p7`, the Overload Test gives us:
 
-* **Classic: 132 req/s (+0.0%)**, from 132
-* **Worker: 529 req/s (+13.5%)**, from 466
+* **Classic: 122 req/s (+1.2%)**, from 120
+* **Worker: 470 req/s (+9.4%)**, from 429
 
 We managed to shrink the SQL queries for `POST /posts/{id}/like` from 6 to 1 (or 2 for 404),
 which makes its PHP time drop from 10.5% to 4.2%,
 and for `POST /posts` from 4 to 1, dropping from 1.0% ro 0.8%:
 
 ```
-All PHP samples (worker mode, 750 users)                        100.0%  vs p9
+All PHP samples (worker mode, 750 users)                        100.0%  vs p7
 ├── HttpKernel::handle                                           60.6%   -2.1
 │   ├── GET /feed: PostController::feed                          18.4%   +1.1
 │   ├── GET /posts/{id}: PostController::show                     9.7%   +0.9
@@ -2060,12 +2056,12 @@ All PHP samples (worker mode, 750 users)                        100.0%  vs p9
     └── everything else                                          28.6%   +1.5
 ```
 
-### No ORM (p11) {#no-orm}
+### No ORM (p9) {#no-orm}
 
 But I'm surprised Classic Mode didn't get any gains, let's profile it:
 
 ```
-All PHP wall-clock samples (classic, 8,000 users, no CPU limit)   100.0%   vs p9
+All PHP wall-clock samples (classic, 8,000 users, no CPU limit)   100.0%   vs p7
 ├── HttpKernel::handle                                             47.0%    -3.0
 │   ├── GET /feed: PostController::feed                            13.7%    -0.1
 │   ├── GET /posts/{id}: PostController::show                      11.2%    +0.3
@@ -2078,7 +2074,7 @@ All PHP wall-clock samples (classic, 8,000 users, no CPU limit)   100.0%   vs p9
 `POST /posts/{id}/like` did get some boost, but not as much, let's zoom on it:
 
 ```
-Wall-clock time per like (classic, 8,000 users, no CPU limit)         p9        p10
+Wall-clock time per like (classic, 8,000 users, no CPU limit)         p7         p8
 POST /posts/{id}/like: PostController::like                       0.54 ms   0.29 ms
 ├── SQLite (PDO execute, fetch)                                   0.22 ms   0.17 ms
 ├── ORM (find(), findOneBy(), flush(), ...)                       0.30 ms   0.00 ms
@@ -2143,26 +2139,26 @@ doctrine:
         profiling_collect_backtrace: '%kernel.debug%'
 ```
 
-### p11 results {#results-p11}
+### p9 results {#results-p9}
 
 This gives Classic Mode its well deserve gain:
 
-|             | Users | [vs p10](#results-p10) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
-|-------------|------:|-----------------------:|------------:|-----------:|-------:|---------:|----------:|
-| Classic p11 | 1,500 |               +2 steps |     0.274 s |    0.902 s |  0.00% |      26% | 0.142 GiB |
-| Classic p11 | 1,750 |                        |  ❌ 0.999 s | ❌ 1.350 s |  0.00% |      26% | 0.158 GiB |
-| Worker  p11 | 4,500 |                   same |     0.449 s |    0.643 s |  0.00% |      27% | 0.289 GiB |
-| Worker  p11 | 4,750 |                        |  ❌ 1.610 s | ❌ 2.370 s |  0.00% |      27% | 0.313 GiB |
+|            | Users | [vs p8](#results-p8) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
+|------------|------:|---------------------:|------------:|-----------:|-------:|---------:|----------:|
+| Classic p9 | 1,500 |             +2 steps |     0.274 s |    0.902 s |  0.00% |      26% | 0.142 GiB |
+| Classic p9 | 1,750 |                      |  ❌ 0.999 s | ❌ 1.350 s |  0.00% |      26% | 0.158 GiB |
+| Worker  p9 | 4,500 |                 same |     0.449 s |    0.643 s |  0.00% |      27% | 0.289 GiB |
+| Worker  p9 | 4,750 |                      |  ❌ 1.610 s | ❌ 2.370 s |  0.00% |      27% | 0.313 GiB |
 
-Compared to `p10`, the Overload Test gives us:
+Compared to `p8`, the Overload Test gives us:
 
-* **Classic: 177 req/s (+34.6%)**, from 132
-* **Worker: 539 req/s (+2.0%)**, from 529
+* **Classic: 156 req/s (+28.8%)**, from 122
+* **Worker: 482 req/s (+2.7%)**, from 470
 
 We get even small potato gains in Worker Mode,
 because DoctrineBundle was resetting the Entity Manager after every request.
 
-## Extract Till You Drop (p12-p14) {#extract-till-you-drop}
+## Extract Till You Drop (p10-p12) {#extract-till-you-drop}
 
 > It is a mistake to think you can solve any major problems just with potatoes.
 
@@ -2170,7 +2166,7 @@ We're at a point where a third of the time is spent in our endpoints,
 another third in the framework, and a last third in Symfony Runtime's worker loop.
 
 ```
-All PHP samples (worker mode, 750 users)                        100.0%  vs p10
+All PHP samples (worker mode, 750 users)                        100.0%  vs p8
 ├── HttpKernel::handle                                           63.8%   +3.2
 │   ├── GET /feed: PostController::feed                          18.8%   +0.4
 │   ├── GET /posts/{id}: PostController::show                    10.8%   +1.1
@@ -2186,9 +2182,9 @@ All PHP samples (worker mode, 750 users)                        100.0%  vs p10
 I'll be frank there are no big gains left to make, just a few percent here and there,
 so let's go after them, one potato at a time.
 
-### No Serializer, No Validator (p12) {#no-serializer-no-validator}
+### No Serializer, No Validator (p10) {#no-serializer-no-validator}
 
-Since JsonStreamer took over our responses (`p7`), the Serializer has only one job left:
+Since JsonStreamer took over our responses (`p5`), the Serializer has only one job left:
 turning `POST /posts`'s body into `CreatePostPayload`,
 with the Validator checking that payload's constraints (see [VO and Validation](#vo-and-validation)).
 
@@ -2261,26 +2257,26 @@ composer remove symfony/serializer symfony/validator
 rm config/packages/validator.yaml
 ```
 
-### p12 results {#results-p12}
+### p10 results {#results-p10}
 
 A small potato for Classic Mode, and a slightly bigger one for Worker Mode:
 
-|             | Users | [vs p11](#results-p11) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
-|-------------|------:|-----------------------:|------------:|-----------:|-------:|---------:|----------:|
-| Classic p12 | 1,500 |                   same |     0.174 s |    0.282 s |  0.00% |      26% | 0.132 GiB |
-| Classic p12 | 1,750 |                        |  ❌ 0.509 s |    0.653 s |  0.00% |      26% | 0.144 GiB |
-| Worker  p12 | 4,500 |                   same |     0.264 s |    0.419 s |  0.00% |      27% | 0.272 GiB |
-| Worker  p12 | 4,750 |                        |     0.429 s | ❌ 1.580 s |  0.00% |      27% | 0.293 GiB |
+|             | Users | [vs p9](#results-p9) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
+|-------------|------:|---------------------:|------------:|-----------:|-------:|---------:|----------:|
+| Classic p10 | 1,500 |                 same |     0.174 s |    0.282 s |  0.00% |      26% | 0.132 GiB |
+| Classic p10 | 1,750 |                      |  ❌ 0.509 s |    0.653 s |  0.00% |      26% | 0.144 GiB |
+| Worker  p10 | 4,500 |                 same |     0.264 s |    0.419 s |  0.00% |      27% | 0.272 GiB |
+| Worker  p10 | 4,750 |                      |     0.429 s | ❌ 1.580 s |  0.00% |      27% | 0.293 GiB |
 
-Compared to `p11`, the Overload Test gives us:
+Compared to `p9`, the Overload Test gives us:
 
-* **Classic: 183 req/s (+3.3%)**, from 177
-* **Worker: 590 req/s (+9.4%)**, from 539
+* **Classic: 162 req/s (+3.2%)**, from 156
+* **Worker: 513 req/s (+6.4%)**, from 482
 
-Profiling `p12` in worker mode:
+Profiling `p10` in worker mode:
 
 ```
-All PHP samples (worker mode, 750 users)                        100.0%  vs p11
+All PHP samples (worker mode, 750 users)                        100.0%  vs p9
 ├── HttpKernel::handle                                           65.1%   +1.3
 │   ├── GET /feed: PostController::feed                          20.7%   +1.9
 │   ├── GET /posts/{id}: PostController::show                    11.9%   +1.1
@@ -2298,7 +2294,7 @@ All PHP samples (worker mode, 750 users)                        100.0%  vs p11
 and suprisingly we have a LocaleAwareListener (1.4%) that we didn't know existed,
 which now disapears with the removal of the Validator.
 
-### Reused Prepared Statements (p13) {#reused-prepared-statements}
+### Reused Prepared Statements (p11) {#reused-prepared-statements}
 
 One of the three (five, sir!) five tricks mentioned by the video is "reused prepared statements",
 which turns out isn't done by PDO or DBAL:
@@ -2390,26 +2386,26 @@ final class StatementReuseConnection extends AbstractConnectionMiddleware
 > _Note_: The `$idle` bit is a bit over-engineered and really shouldn't go in a production app,
 > but this is necessary for the challenge to comply with the "no caching data" rule.
 
-### p13 results {#results-p13}
+### p11 results {#results-p11}
 
 This only gives small potatoes to Worker Mode, because the middleware survives between requests there:
 
-|             | Users | [vs p12](#results-p12) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
+|             | Users | [vs p10](#results-p10) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
 |-------------|------:|-----------------------:|------------:|-----------:|-------:|---------:|----------:|
-| Classic p13 | 1,500 |                   same |     0.192 s |    0.279 s |  0.00% |      26% | 0.132 GiB |
-| Classic p13 | 1,750 |                        |  ❌ 0.721 s |    0.861 s |  0.00% |      27% | 0.145 GiB |
-| Worker  p13 | 5,250 |               +3 steps |     0.433 s |    0.644 s |  0.00% |      27% | 0.312 GiB |
-| Worker  p13 | 5,500 |                        |  ❌ 0.548 s |    0.773 s |  0.00% |      27% | 0.315 GiB |
+| Classic p11 | 1,500 |                   same |     0.192 s |    0.279 s |  0.00% |      26% | 0.132 GiB |
+| Classic p11 | 1,750 |                        |  ❌ 0.721 s |    0.861 s |  0.00% |      27% | 0.145 GiB |
+| Worker  p11 | 5,250 |               +3 steps |     0.433 s |    0.644 s |  0.00% |      27% | 0.312 GiB |
+| Worker  p11 | 5,500 |                        |  ❌ 0.548 s |    0.773 s |  0.00% |      27% | 0.315 GiB |
 
-Compared to `p12`, the Overload Test gives us:
+Compared to `p10`, the Overload Test gives us:
 
-* **Classic: 180 req/s (-1.5%)**, from 183
-* **Worker: 612 req/s (+3.7%)**, from 590
+* **Classic: 153 req/s (-5.3%)**, from 162
+* **Worker: 569 req/s (+10.9%)**, from 513
 
-Profiling `p13` in worker mode:
+Profiling `p11` in worker mode:
 
 ```
-All PHP samples (worker mode, 750 users)                        100.0%  vs p12
+All PHP samples (worker mode, 750 users)                        100.0%  vs p10
 ├── HttpKernel::handle                                           62.6%   -2.5
 │   ├── GET /feed: PostController::feed                          19.5%   -1.2
 │   │   ├── Connection::prepare                                   0.1%   -4.0
@@ -2431,7 +2427,7 @@ All PHP samples (worker mode, 750 users)                        100.0%  vs p12
 This is a drop from 8.9% to 0.2% for `Connection::prepare`,
 with our wrapper only adding 0.9%.
 
-### SQLite Writes the JSON (p14) {#sqlite-writes-the-json}
+### SQLite Writes the JSON (p12) {#sqlite-writes-the-json}
 
 Yet another of the three (FIVE SIR!!) five tricks from the video is having SQLite write the JSON,
 instead of getting an array out of it and transform it into JSON.
@@ -2502,26 +2498,26 @@ The controller then returns it as is:
 > _Note_: `GET /posts/{id}` gets the same treatment.<br>
 > It wouldn't make sense for the write endpoints, as their data don't come from the database anyway.
 
-### p14 results {#results-p14}
+### p12 results {#results-p12}
 
 This is tiny potato:
 
-|             | Users | [vs p13](#results-p13) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
+|             | Users | [vs p11](#results-p11) | p95 < 0.5 s |  p99 < 1 s | Errors | Hold CPU | Peak RAM  |
 |-------------|------:|-----------------------:|------------:|-----------:|-------:|---------:|----------:|
-| Classic p14 | 1,500 |                   same |     0.237 s |    0.356 s |  0.00% |      26% | 0.133 GiB |
-| Classic p14 | 1,750 |                        |  ❌ 0.948 s | ❌ 1.170 s |  0.00% |      26% | 0.160 GiB |
-| Worker  p14 | 5,250 |                   same |     0.316 s |    0.455 s |  0.00% |      27% | 0.303 GiB |
-| Worker  p14 | 5,500 |                        |  ❌ 0.539 s |    0.697 s |  0.00% |      27% | 0.315 GiB |
+| Classic p12 | 1,500 |                   same |     0.237 s |    0.356 s |  0.00% |      26% | 0.133 GiB |
+| Classic p12 | 1,750 |                        |  ❌ 0.948 s | ❌ 1.170 s |  0.00% |      26% | 0.160 GiB |
+| Worker  p12 | 5,250 |                   same |     0.316 s |    0.455 s |  0.00% |      27% | 0.303 GiB |
+| Worker  p12 | 5,500 |                        |  ❌ 0.539 s |    0.697 s |  0.00% |      27% | 0.315 GiB |
 
-Compared to `p13`, the Overload Test gives us:
+Compared to `p11`, the Overload Test gives us:
 
-* **Classic: 184 req/s (+2.1%)**, from 180
-* **Worker: 633 req/s (+3.4%)**, from 612
+* **Classic: 160 req/s (+4.9%)**, from 153
+* **Worker: 592 req/s (+4.0%)**, from 569
 
-Profiling `p14` in worker mode:
+Profiling `p12` in worker mode:
 
 ```
-All PHP samples (worker mode, 750 users)                        100.0%  vs p13
+All PHP samples (worker mode, 750 users)                        100.0%  vs p11
 ├── HttpKernel::handle                                           59.8%   -2.8
 │   ├── GET /feed: PostController::feed                          15.9%   -3.6
 │   │   ├── SQL (DBAL, SQLite, now with the JSON)                13.3%   +4.2
@@ -2548,32 +2544,46 @@ and SQLite grows about only half of it (+5.1).
 I threw as many things at the wall until something stuck,
 but then just like Sticky the stick insect who got stuck on a sticky bun many of these experiments got in a sticky situation:
 
-|   | Experiment                                                  | Worker            | Classic           | Kept? |
-|---|-------------------------------------------------------------|------------------:|------------------:|-------|
-| a | Firewall on `POST /posts` only (p4)                         | 162 req/s, -0.5%  |  50 req/s, +1.1%  | ✅    |
-| b | Every request to Symfony (Caddy `rewrite`, p5)              | 164 req/s, +1.3%  |  51 req/s, +1.1%  | ✅    |
-| c | Own worker loop instead of Symfony Runtime (p15)            | 664 req/s, +4.9%  | 201 req/s, +9.2%  | ⚠️    |
-| d | No PHP cycle collector (`zend.enable_gc=0`)                 | 709 req/s, +7.2%  |                   | ❌    |
-| e | PR 40's Caddyfile                                           | 686 req/s, +3.7%  |                   | ❌    |
-| f | Go's GC at twice the heap growth (`GOGC=200`)               | 680 req/s, +2.8%  |                   | ❌    |
-| g | Never restart the workers                                   | 680 req/s, +1.2%  |                   | ❌    |
-| h | No output buffering (`output_buffering=0`)                  | 671 req/s, +1.5%  |                   | ❌    |
-| i | SQLite `cache_size` 64 MiB                                  | 674 req/s, +0.4%  |                   | ❌    |
-| j | Go's soft memory limit at 1,100 MiB (`GOMEMLIMIT`)          | 663 req/s, +0.2%  |                   | ❌    |
-| k | 1 worker (default: 2 per CPU)                               | 659 req/s, -0.4%  |                   | ❌    |
-| l | 4 workers                                                   | 658 req/s, -0.4%  |                   | ❌    |
-| m | No cgo pointer checks (`GODEBUG=cgocheck=0`)                | 658 req/s, -0.5%  |                   | ❌    |
-| n | 8 PHP threads all the time (`num_threads 8`)                |                   | 199 req/s, -0.7%  | ❌    |
-| o | SQLite `mmap_size` 1 GiB                                    | 651 req/s, -3.1%  |                   | ❌    |
-| p | `max_threads 8`                                             | 640 req/s, -3.2%  | 194 req/s, -3.1%  | ❌    |
+|   | Experiment                                                  | Worker                     | Classic                    | Kept? |
+|---|-------------------------------------------------------------|---------------------------:|---------------------------:|-------|
+| a | Every request to Symfony (Caddy `rewrite`, p13)             | after p3: +1.3%, at the end: +6.4% | after p3: +1.1%, at the end: +3.1% | ✅    |
+| b | Firewall on `POST /posts` only (p14)                        | after p3: -0.5%, at the end: +2.9% | after p3: +1.1%, at the end: +7.3% | ✅    |
+| c | Own worker loop instead of Symfony Runtime                  | 655 req/s, +2.5%           | 191 req/s, +6.0%           | ❌    |
+| d | No PHP cycle collector (`zend.enable_gc=0`)                 | 695 req/s, +8.8%           |                            | ❌    |
+| e | 1 worker (default: 2 per CPU)                               | 665 req/s, +4.1%           |                            | ❌    |
+| f | Go's soft memory limit at 1,100 MiB (`GOMEMLIMIT`)          | 662 req/s, +3.6%           |                            | ❌    |
+| g | SQLite `cache_size` 64 MiB                                  | 652 req/s, +2.1%           |                            | ❌    |
+| h | PR 40's Caddyfile                                           | 651 req/s, +2.0%           |                            | ❌    |
+| i | Never restart the workers                                   | 646 req/s, +1.1%           |                            | ❌    |
+| j | No cgo pointer checks (`GODEBUG=cgocheck=0`)                | 642 req/s, +0.5%           |                            | ❌    |
+| k | No output buffering (`output_buffering=0`)                  | 642 req/s, +0.5%           |                            | ❌    |
+| l | Go's GC at twice the heap growth (`GOGC=200`)               | 637 req/s, -0.3%           |                            | ❌    |
+| m | SQLite `mmap_size` 1 GiB                                    | 625 req/s, -2.1%           |                            | ❌    |
+| n | 4 workers                                                   | 622 req/s, -2.6%           |                            | ❌    |
+| o | `max_threads 8`                                             | 616 req/s, -3.5%           | 177 req/s, -2.1%           | ❌    |
+| p | 8 PHP threads all the time (`num_threads 8`)                |                            | 176 req/s, -2.5%           | ❌    |
+
+Experiments `c` to `p` were measured against `p14` (639 req/s in Worker Mode, 180 in Classic Mode).
 
 One thing to keep in mind is that the Overload Testing is done in two rounds,
 and then the mean number was used in the article.
 
-But between two rounds, I've found that the numbers could swing between 3% to 5%,
-so most of these experiments were deemed inconclusive if the number is say -3.2%: that's within noise.
+But between two rounds, I've found that the numbers could swing between 3% to 5%
+(even 8% for `l`: 661 and 612 req/s),
+so most of these experiments were deemed inconclusive if the number is say -3.5%: that's within noise.
 
-I ended up keeping experiments `a` and `b`, because they made the configuration clearer.
+I first tried experiments `a` and `b` right after `p3`, where they made no measurable difference,
+so I left them out. Once the app got much leaner, I tried them again at the end, and kept them as `p13` and `p14`.
+
+They save the same CPU time per request as before, but requests now cost a lot less (at a quarter of a core):
+
+* `a` skips the static file checks: ~25 µs, that's 1.6% of a 1.6 ms request after `p3`, but 6% of a 0.42 ms one after `p12`
+* `b` skips the firewall on reads in Classic Mode: ~100 µs, that's 2% of a 5 ms request after `p3`, but 7% of a 1.5 ms one after `p13`
+
+The firewall still makes no measurable difference in Worker Mode, where its services survive between requests (~11 µs).
+
+So an optimisation that seems useless early on might just be hiding behind bigger costs:
+once these are gone, it's worth measuring it again.
 
 In experiment `c` I replaced the Symfony Runtime with a hand written loop,
 and seeing the gain I kept it, and sent my submission with it.
@@ -2584,14 +2594,18 @@ wasn't registered: it's either registered by Symfony Runtime,
 or by `FrameworkBundle::boot()` **if `SymfonyRuntime::class` doesn't exist**,
 and in my case the `symfony/runtime` component was still installed.
 
-Finally experiment `d` (no PHP cycle collector) is the only one above the noise,
-but only in one round out of two (from p15 661 to 687 and 730 req/s).
+With `symfony/runtime` removed, so that FrameworkBundle registers the ErrorHandler,
+the hand written loop is within noise (+2.5%, and -2.5% in another session),
+so I went back to the Symfony Runtime.
+
+Finally experiment `d` (no PHP cycle collector) is the only one clearly above the noise,
+in both rounds (from p14's 637 and 641 to 691 and 699 req/s), with `e` (1 worker) at its edge.
 
 It's also risky: without the cycle collector leaking cycles grow a worker's memory until it restarts,
-for a gain smaller than a step of 250 users (not that I detected any memory leak in the app).
+for a gain of one or two steps of 250 users (not that I detected any memory leak in the app).
 
-A small note on experiment `f` (`GOGC=200`): it was close to show real gain,
-but was using 0.13 GiB more memory, so not sure it would have been worth it long term.
+A small note on experiment `l` (`GOGC=200`): it looked close to a real gain in a first session (+2.8%),
+but not when measured again (-0.3%), and it uses 0.2 GiB more memory.
 
 ### Memory Leaks {#memory-leaks}
 
@@ -2640,9 +2654,9 @@ but we'd be straying away from idiomatic Symfony apps too much IMHO.
 
 I made a first submission which was only missing the following from this article:
 
-* p11: no ORM
-* p12: no Serializer, no Validator
-* p15 (experiment c): custom worker loop
+* p9: no ORM
+* p10: no Serializer, no Validator
+* experiment c: custom worker loop
 
 But when it got scored I was surprised to see it was ranking significantly (in potato terms)
 lower than another similar PHP/Symfony/FrankenPHP (php-symfony-pklebba).
@@ -2671,8 +2685,8 @@ With our optimisations, we were able to handle 5 to 6 times more users:
 
 | Throttled locally | Classic Mode            | Worker Mode             |
 |-------------------|------------------------:|------------------------:|
-| Defaults (p0)     |   250 users,  39 req/s  | 1,000 users, 117 req/s  |
-| Optimised (p14)   | 1,500 users, 184 req/s  | 5,250 users, 633 req/s  |
+| Defaults (p0)     |   250 users,  38 req/s  | 1,000 users, 114 req/s  |
+| Optimised (p14)   | 1,500 users, 178 req/s  | 5,250 users, 648 req/s  |
 
 So what's left? Let's profile `p14` one last time, starting with Worker Mode:
 
