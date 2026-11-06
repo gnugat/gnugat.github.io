@@ -50,7 +50,7 @@
             <aside class="three columns">
                 <details class="toc">
                     <summary>Contents</summary>
-                    <nav><ul><li><a href="#the-rules">The rules</a></li><li><a href="#defaults">Defaults (p0)</a><ul><li><a href="#controller">Controller</a></li><li><a href="#vo-and-validation">VO and Validation</a></li><li><a href="#doctrine-entity-and-serializer">Doctrine Entity and Serializer</a></li><li><a href="#doctrine-repository">Doctrine Repository</a></li><li><a href="#firewall-config">Firewall config</a></li><li><a href="#doctrine-config">Doctrine config</a></li><li><a href="#sqlite-dbal-middleware">SQLite DBAL Middleware</a></li><li><a href="#caddyfile">Caddyfile</a></li></ul></li><li><a href="#benchmarking">Benchmarking</a><ul><li><a href="#results-p0">p0 results</a></li></ul></li><li><a href="#tuned-config">Tuned Config (p1-p3)</a><ul><li><a href="#results-p3">p3 results</a></li></ul></li><li><a href="#read-model">Read Model (p6)</a><ul><li><a href="#results-p6">p6 results</a></li></ul></li><li><a href="#jsonstreamer">JsonStreamer (p7)</a><ul><li><a href="#results-p7">p7 results</a></li></ul></li><li><a href="#plain-sql-reads">Plain SQL Reads (p8)</a><ul><li><a href="#results-p8">p8 results</a></li></ul></li><li><a href="#persistent-connection">Persistent Connection (p9)</a><ul><li><a href="#results-p9">p9 results</a></li></ul></li><li><a href="#dbal-instead-of-orm">DBAL instead of ORM (p10-p11)</a><ul><li><a href="#plain-sql-writes">Plain SQL Writes (p10)</a></li><li><a href="#results-p10">p10 results</a></li><li><a href="#no-orm">No ORM (p11)</a></li><li><a href="#results-p11">p11 results</a></li></ul></li><li><a href="#extract-till-you-drop">Extract Till You Drop (p12-p14)</a><ul><li><a href="#no-serializer-no-validator">No Serializer, No Validator (p12)</a></li><li><a href="#results-p12">p12 results</a></li><li><a href="#reused-prepared-statements">Reused Prepared Statements (p13)</a></li><li><a href="#results-p13">p13 results</a></li><li><a href="#sqlite-writes-the-json">SQLite Writes the JSON (p14)</a></li><li><a href="#results-p14">p14 results</a></li></ul></li><li><a href="#experiments">Experiments</a><ul><li><a href="#memory-leaks">Memory Leaks</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul></nav>
+                    <nav><ul><li><a href="#the-rules">The rules</a></li><li><a href="#defaults">Defaults (p0)</a><ul><li><a href="#controller">Controller</a></li><li><a href="#vo-and-validation">VO and Validation</a></li><li><a href="#doctrine-entity-and-serializer">Doctrine Entity and Serializer</a></li><li><a href="#doctrine-repository">Doctrine Repository</a></li><li><a href="#firewall-config">Firewall config</a></li><li><a href="#doctrine-config">Doctrine config</a></li><li><a href="#sqlite-dbal-middleware">SQLite DBAL Middleware</a></li><li><a href="#caddyfile">Caddyfile</a></li></ul></li><li><a href="#benchmarking">Benchmarking</a><ul><li><a href="#results-p0">p0 results</a></li></ul></li><li><a href="#tuned-config">Tuned Config (p1-p3)</a><ul><li><a href="#results-p3">p3 results</a></li></ul></li><li><a href="#read-model">Read Model (p4)</a><ul><li><a href="#results-p4">p4 results</a></li></ul></li><li><a href="#jsonstreamer">JsonStreamer (p5)</a><ul><li><a href="#results-p5">p5 results</a></li></ul></li><li><a href="#plain-sql-reads">Plain SQL Reads (p6)</a><ul><li><a href="#results-p6">p6 results</a></li></ul></li><li><a href="#persistent-connection">Persistent Connection (p7)</a><ul><li><a href="#results-p7">p7 results</a></li></ul></li><li><a href="#dbal-instead-of-orm">DBAL instead of ORM (p8-p9)</a><ul><li><a href="#plain-sql-writes">Plain SQL Writes (p8)</a></li><li><a href="#results-p8">p8 results</a></li><li><a href="#no-orm">No ORM (p9)</a></li><li><a href="#results-p9">p9 results</a></li></ul></li><li><a href="#extract-till-you-drop">Extract Till You Drop (p10-p12)</a><ul><li><a href="#no-serializer-no-validator">No Serializer, No Validator (p10)</a></li><li><a href="#results-p10">p10 results</a></li><li><a href="#reused-prepared-statements">Reused Prepared Statements (p11)</a></li><li><a href="#results-p11">p11 results</a></li><li><a href="#sqlite-writes-the-json">SQLite Writes the JSON (p12)</a></li><li><a href="#results-p12">p12 results</a></li></ul></li><li><a href="#experiments">Experiments</a><ul><li><a href="#memory-leaks">Memory Leaks</a></li></ul></li><li><a href="#conclusion">Conclusion</a></li></ul></nav>
                 </details>
             </aside>
             <div class="nine columns post-content">
@@ -90,10 +90,10 @@ let me remind you that FPM, Apache and Nginx are all written in C, as well as PH
   <br>
   The following optimisations gave us the biggest gains:<br>
   <br>
-  - <em>Classic</em>: Persistent Connection (+49%), No ORM (+35%), Read Model (+34%)<br>
-  - <em>Worker</em>: Read Model (+67%), JsonStreamer (+34%), Plain SQL Reads (+31%)<br></p>
+  - <em>Classic</em>: Persistent Connection (+41%), No ORM (+29%), Read Model (+25%)<br>
+  - <em>Worker</em>: Read Model (+58%), JsonStreamer (+40%), Plain SQL Reads (+23%)<br></p>
   
-  <p><img alt="Line chart of users handled per phase, throttled to a quarter of a CPU core: Worker Mode climbs from 1,000 users (p0) to 5,250 (p14), Classic Mode from 250 to 1,500" src="/images/blazingly-phpast-users-per-phase.svg" width="100%" /></p>
+  <p><img alt="Line chart of users handled per phase, throttled to a quarter of a CPU core: Worker Mode climbs from 1,000 users (p0) to 5,250 (p12), Classic Mode from 250 to 1,500" src="/images/blazingly-phpast-users-per-phase.svg" width="100%" /></p>
 </blockquote>
 
 <p>Now, sharpen your attention (it's going to be a long, human made, article), and...<br>
@@ -104,12 +104,12 @@ let me remind you that FPM, Apache and Nginx are all written in C, as well as PH
 <li><a href="#defaults">Defaults (p0)</a>: Symfony / Doctrine out of the box</li>
 <li><a href="#benchmarking">Benchmarking</a></li>
 <li><a href="#tuned-config">Tuned Config (p1-p3)</a>: php.ini, preload and JIT</li>
-<li><a href="#read-model">Read Model (p6)</a>: DQL <code>NEW</code> instead of entities</li>
-<li><a href="#jsonstreamer">JsonStreamer (p7)</a>: Generated JSON writers instead of the Serializer</li>
-<li><a href="#plain-sql-reads">Plain SQL Reads (p8)</a>: DBAL reads</li>
-<li><a href="#persistent-connection">Persistent Connection (p9)</a>: SQLite stays open between requests</li>
-<li><a href="#dbal-instead-of-orm">DBAL instead of ORM (p10-p11)</a>: DBAL writes, then no ORM</li>
-<li><a href="#extract-till-you-drop">Extract Till You Drop (p12-p14)</a>: Less framework, more SQLite</li>
+<li><a href="#read-model">Read Model (p4)</a>: DQL <code>NEW</code> instead of entities</li>
+<li><a href="#jsonstreamer">JsonStreamer (p5)</a>: Generated JSON writers instead of the Serializer</li>
+<li><a href="#plain-sql-reads">Plain SQL Reads (p6)</a>: DBAL reads</li>
+<li><a href="#persistent-connection">Persistent Connection (p7)</a>: SQLite stays open between requests</li>
+<li><a href="#dbal-instead-of-orm">DBAL instead of ORM (p8-p9)</a>: DBAL writes, then no ORM</li>
+<li><a href="#extract-till-you-drop">Extract Till You Drop (p10-p12)</a>: Less framework, more SQLite</li>
 <li><a href="#experiments">Experiments</a>: What didn't make a difference</li>
 <li><a href="#conclusion">Conclusion</a>: It's over 9000!!!!</li>
 </ul>
@@ -1170,8 +1170,8 @@ and we check how many Requests per seconds it successfully handled.</p>
 and the Overload Test's req/s tells us by how much:</p>
 
 <ul>
-<li><strong>Classic: 50 req/s</strong>, from 39</li>
-<li><strong>Worker: 163 req/s</strong>, from 117</li>
+<li><strong>Classic: 50 req/s</strong>, from 38</li>
+<li><strong>Worker: 155 req/s</strong>, from 114</li>
 </ul>
 
 <p>Each step helped a different mode:</p>
@@ -1187,18 +1187,18 @@ and the Overload Test's req/s tells us by how much:</p>
 <tbody>
 <tr>
   <td><code>php.ini</code></td>
-  <td align="right">+5.0%</td>
-  <td align="right">-0.9%</td>
+  <td align="right">+2.6%</td>
+  <td align="right">+2.2%</td>
 </tr>
 <tr>
   <td>Preload, class map</td>
-  <td align="right">+17.0%</td>
-  <td align="right">+7.2%</td>
+  <td align="right">+20.5%</td>
+  <td align="right">+2.6%</td>
 </tr>
 <tr>
   <td>JIT</td>
-  <td align="right">+2.8%</td>
-  <td align="right">+30.4%</td>
+  <td align="right">+7.4%</td>
+  <td align="right">+29.7%</td>
 </tr>
 </tbody>
 </table>
@@ -1222,19 +1222,10 @@ so it has more impact on the Worker Mode.</p>
 it also covers how to monitor your application,
 I highly recommend you check his video.</p>
 
-<h2 id="read-model">Read Model (p6)</h2>
+<h2 id="read-model">Read Model (p4)</h2>
 
 <blockquote>
   <p>Tweaking settings is fine, but have you tried turning the ORM off and off again?</p>
-</blockquote>
-
-<p><br></p>
-
-<blockquote>
-  <p><em>Note</em>: <code>p4</code> restricted the firewall to <code>POST /posts</code>,
-  and <code>p5</code> set the Caddyfile to not check for serving static files (js, CSS, etc).<br>
-  Neither made a measurable difference (see <a href="#experiments">Experiments</a>),
-  so we jump straight to p6.</p>
 </blockquote>
 
 <p>So, where do we take it from here?
@@ -1501,9 +1492,9 @@ vanquishing the N+1 query issue:</p>
 }
 </code></pre>
 
-<h3 id="results-p6">p6 results</h3>
+<h3 id="results-p4">p4 results</h3>
 
-<p>Here are the results for <code>p6</code>:</p>
+<p>Here are the results for <code>p4</code>:</p>
 
 <table>
 <thead>
@@ -1520,7 +1511,7 @@ vanquishing the N+1 query issue:</p>
 </thead>
 <tbody>
 <tr>
-  <td>Classic p6</td>
+  <td>Classic p4</td>
   <td align="right">500</td>
   <td align="right">+1 step</td>
   <td align="right">0.245 s</td>
@@ -1530,7 +1521,7 @@ vanquishing the N+1 query issue:</p>
   <td align="right">0.134 GiB</td>
 </tr>
 <tr>
-  <td>Classic p6</td>
+  <td>Classic p4</td>
   <td align="right">750</td>
   <td align="right"></td>
   <td align="right">❌ 2.340 s</td>
@@ -1540,7 +1531,7 @@ vanquishing the N+1 query issue:</p>
   <td align="right">0.131 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p6</td>
+  <td>Worker  p4</td>
   <td align="right">2,250</td>
   <td align="right">+4 steps</td>
   <td align="right">0.157 s</td>
@@ -1550,7 +1541,7 @@ vanquishing the N+1 query issue:</p>
   <td align="right">0.182 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p6</td>
+  <td>Worker  p4</td>
   <td align="right">2,500</td>
   <td align="right"></td>
   <td align="right">❌ 0.674 s</td>
@@ -1562,13 +1553,18 @@ vanquishing the N+1 query issue:</p>
 </tbody>
 </table>
 
+<blockquote>
+  <p><em>Note</em>: From here on, the users tables and the profiles were measured
+  with experiments <code>a</code> and <code>b</code> in place (see <a href="#experiments">Experiments</a>), the req/s without them.</p>
+</blockquote>
+
 <p>Using a Read Model gives us some agreeable gains, with classic finally moving one step up.</p>
 
 <p>With the Overload Test, compared to <code>p3</code>, we can see exactly by how much:</p>
 
 <ul>
-<li><strong>Classic: 67 req/s (+34.0%)</strong>, from 50</li>
-<li><strong>Worker: 273 req/s (+67.2%)</strong>, from 163</li>
+<li><strong>Classic: 63 req/s (+24.8%)</strong>, from 50</li>
+<li><strong>Worker: 244 req/s (+57.7%)</strong>, from 155</li>
 </ul>
 
 <p>It feels like Worker mode benefits the most from this change,
@@ -1576,13 +1572,13 @@ but if we look at the time per request using the req/s,
 we can see that this was also very good for Classic:</p>
 
 <ul>
-<li><strong>Classic: 14.9 ms (-5.1 ms)</strong>, from 20.0 ms</li>
-<li><strong>Worker: 3.7 ms (-2.5 ms)</strong>, from 6.1 ms</li>
+<li><strong>Classic: 15.9 ms (-4.1 ms)</strong>, from 20.0 ms</li>
+<li><strong>Worker: 4.1 ms (-2.4 ms)</strong>, from 6.5 ms</li>
 </ul>
 
-<p>Profiling <code>p6</code> we can observe that <code>GET /feed</code> drops from 54.5% to 38.0% for PHP time:</p>
+<p>Profiling <code>p4</code> we can observe that <code>GET /feed</code> drops from 54.5% to 38.0% for PHP time:</p>
 
-<pre><code>All PHP samples (Worker Mode, 750 users)                        100.0%  vs p5
+<pre><code>All PHP samples (Worker Mode, 750 users)                        100.0%  vs p3
 ├── HttpKernel::handle                                           75.3%   -5.5
 │   ├── GET /feed: PostController::feed                          38.0%  -16.4
 │   ├── GET /posts/{id}: PostController::show                    14.6%   +3.6
@@ -1602,7 +1598,7 @@ we can see that this was also very good for Classic:</p>
 that's because <code>PostRepository::find</code> now uses DQL (2.2% of total PHP, 15.2% of the endpoint),
 <a href="#plain-sql-reads">we'll take care of that in Plain SQL Reads section</a>.</p>
 
-<h2 id="jsonstreamer">JsonStreamer (p7)</h2>
+<h2 id="jsonstreamer">JsonStreamer (p5)</h2>
 
 <blockquote>
   <p>I have a plan so cunning you could put a Streamer on it and call it a JSON. Hon hi hon.</p>
@@ -1848,16 +1844,16 @@ we need to swap that for <code>$this-&gt;jsonStreamWriter-&gt;write()</code>
   (our responses are small, a <code>StreamedResponse</code> would only make sense for large ones).</p>
 </blockquote>
 
-<h3 id="results-p7">p7 results</h3>
+<h3 id="results-p5">p5 results</h3>
 
-<p>Here are the results for <code>p7</code>:</p>
+<p>Here are the results for <code>p5</code>:</p>
 
 <table>
 <thead>
 <tr>
   <th></th>
   <th align="right">Users</th>
-  <th align="right"><a href="#results-p6">vs p6</a></th>
+  <th align="right"><a href="#results-p4">vs p4</a></th>
   <th align="right">p95 &lt; 0.5 s</th>
   <th align="right">p99 &lt; 1 s</th>
   <th align="right">Errors</th>
@@ -1867,7 +1863,7 @@ we need to swap that for <code>$this-&gt;jsonStreamWriter-&gt;write()</code>
 </thead>
 <tbody>
 <tr>
-  <td>Classic p7</td>
+  <td>Classic p5</td>
   <td align="right">500</td>
   <td align="right">same</td>
   <td align="right">0.073 s</td>
@@ -1877,7 +1873,7 @@ we need to swap that for <code>$this-&gt;jsonStreamWriter-&gt;write()</code>
   <td align="right">0.128 GiB</td>
 </tr>
 <tr>
-  <td>Classic p7</td>
+  <td>Classic p5</td>
   <td align="right">750</td>
   <td align="right"></td>
   <td align="right">❌ 0.634 s</td>
@@ -1887,7 +1883,7 @@ we need to swap that for <code>$this-&gt;jsonStreamWriter-&gt;write()</code>
   <td align="right">0.129 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p7</td>
+  <td>Worker  p5</td>
   <td align="right">3,000</td>
   <td align="right">+3 steps</td>
   <td align="right">0.266 s</td>
@@ -1897,7 +1893,7 @@ we need to swap that for <code>$this-&gt;jsonStreamWriter-&gt;write()</code>
   <td align="right">0.218 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p7</td>
+  <td>Worker  p5</td>
   <td align="right">3,250</td>
   <td align="right"></td>
   <td align="right">❌ 0.551 s</td>
@@ -1909,16 +1905,16 @@ we need to swap that for <code>$this-&gt;jsonStreamWriter-&gt;write()</code>
 </tbody>
 </table>
 
-<p>Compared to <code>p6</code>, the Overload Test gives us some pleasant gains:</p>
+<p>Compared to <code>p4</code>, the Overload Test gives us some pleasant gains:</p>
 
 <ul>
-<li><strong>Classic: 81 req/s (+20.0%)</strong>, from 67</li>
-<li><strong>Worker: 366 req/s (+34.1%)</strong>, from 273</li>
+<li><strong>Classic: 74 req/s (+17.5%)</strong>, from 63</li>
+<li><strong>Worker: 342 req/s (+40.1%)</strong>, from 244</li>
 </ul>
 
-<p>Let's profile <code>p7</code>:</p>
+<p>Let's profile <code>p5</code>:</p>
 
-<pre><code>All PHP samples (Worker Mode, 750 users)                        100.0%  vs p6
+<pre><code>All PHP samples (Worker Mode, 750 users)                        100.0%  vs p4
 ├── HttpKernel::handle                                           68.4%   -6.9
 │   ├── GET /feed: PostController::feed                          23.9%  -14.1
 │   │   └── writing the JSON                                      3.5%  -18.6
@@ -1940,7 +1936,7 @@ except for the <code>GET /posts/{id}</code> endpoint which grows by x 1.03,
 which shows that it also benefited from using JsonStreamer,
 just a bit less since its JSON was 28.2% of its endpoint.</p>
 
-<h2 id="plain-sql-reads">Plain SQL Reads (p8)</h2>
+<h2 id="plain-sql-reads">Plain SQL Reads (p6)</h2>
 
 <blockquote>
   <p>Entities? Where we're going, we don't need entities.</p>
@@ -2038,7 +2034,7 @@ final readonly class PostView
 
 <p>The controller doesn't change.</p>
 
-<h3 id="results-p8">p8 results</h3>
+<h3 id="results-p6">p6 results</h3>
 
 <p>We get some fantastic gains from this:</p>
 
@@ -2047,7 +2043,7 @@ final readonly class PostView
 <tr>
   <th></th>
   <th align="right">Users</th>
-  <th align="right"><a href="#results-p7">vs p7</a></th>
+  <th align="right"><a href="#results-p5">vs p5</a></th>
   <th align="right">p95 &lt; 0.5 s</th>
   <th align="right">p99 &lt; 1 s</th>
   <th align="right">Errors</th>
@@ -2057,7 +2053,7 @@ final readonly class PostView
 </thead>
 <tbody>
 <tr>
-  <td>Classic p8</td>
+  <td>Classic p6</td>
   <td align="right">750</td>
   <td align="right">+1 step</td>
   <td align="right">0.277 s</td>
@@ -2067,7 +2063,7 @@ final readonly class PostView
   <td align="right">0.125 GiB</td>
 </tr>
 <tr>
-  <td>Classic p8</td>
+  <td>Classic p6</td>
   <td align="right">1,000</td>
   <td align="right"></td>
   <td align="right">❌ 2.830 s</td>
@@ -2077,7 +2073,7 @@ final readonly class PostView
   <td align="right">0.132 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p8</td>
+  <td>Worker  p6</td>
   <td align="right">4,000</td>
   <td align="right">+4 steps</td>
   <td align="right">0.433 s</td>
@@ -2087,7 +2083,7 @@ final readonly class PostView
   <td align="right">0.264 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p8</td>
+  <td>Worker  p6</td>
   <td align="right">4,250</td>
   <td align="right"></td>
   <td align="right">❌ 0.909 s</td>
@@ -2099,16 +2095,16 @@ final readonly class PostView
 </tbody>
 </table>
 
-<p>Compared to <code>p7</code>, the Overload Test gives us:</p>
+<p>Compared to <code>p5</code>, the Overload Test gives us:</p>
 
 <ul>
-<li><strong>Classic: 88 req/s (+9.8%)</strong>, from 81</li>
-<li><strong>Worker: 479 req/s (+31.1%)</strong>, from 366</li>
+<li><strong>Classic: 85 req/s (+14.9%)</strong>, from 74</li>
+<li><strong>Worker: 422 req/s (+23.4%)</strong>, from 342</li>
 </ul>
 
-<p>Let's profile <code>p8</code>:</p>
+<p>Let's profile <code>p6</code>:</p>
 
-<pre><code>All PHP samples (Worker Mode, 750 users)                        100.0%  vs p7
+<pre><code>All PHP samples (Worker Mode, 750 users)                        100.0%  vs p5
 ├── HttpKernel::handle                                           63.2%   -5.2
 │   ├── GET /feed: PostController::feed                          18.0%   -5.9
 │   ├── GET /posts/{id}: PostController::show                     8.4%   -6.7
@@ -2124,7 +2120,7 @@ final readonly class PostView
 <p>The ORM's share of the reads drops from 75.7% of <code>GET /feed</code> and 80.0% of <code>GET /posts/{id}</code> to under 2%.
 This time both endpoints shrink, while everything else grows by about x 1.21.</p>
 
-<h2 id="persistent-connection">Persistent Connection (p9)</h2>
+<h2 id="persistent-connection">Persistent Connection (p7)</h2>
 
 <blockquote>
   <p>It has the words DON'T KERNEL PANIC inscribed in large friendly letters on its cover.</p>
@@ -2192,7 +2188,7 @@ but what if I told you PHP can also keep it open in Classic Mode?</p>
             !php/const PDO::ATTR_PERSISTENT: true
 </code></pre>
 
-<h3 id="results-p9">p9 results</h3>
+<h3 id="results-p7">p7 results</h3>
 
 <p>This is Classic Mode's biggest gain yet:</p>
 
@@ -2201,7 +2197,7 @@ but what if I told you PHP can also keep it open in Classic Mode?</p>
 <tr>
   <th></th>
   <th align="right">Users</th>
-  <th align="right"><a href="#results-p8">vs p8</a></th>
+  <th align="right"><a href="#results-p6">vs p6</a></th>
   <th align="right">p95 &lt; 0.5 s</th>
   <th align="right">p99 &lt; 1 s</th>
   <th align="right">Errors</th>
@@ -2211,7 +2207,7 @@ but what if I told you PHP can also keep it open in Classic Mode?</p>
 </thead>
 <tbody>
 <tr>
-  <td>Classic p9</td>
+  <td>Classic p7</td>
   <td align="right">1,000</td>
   <td align="right">+1 step</td>
   <td align="right">0.187 s</td>
@@ -2221,7 +2217,7 @@ but what if I told you PHP can also keep it open in Classic Mode?</p>
   <td align="right">0.126 GiB</td>
 </tr>
 <tr>
-  <td>Classic p9</td>
+  <td>Classic p7</td>
   <td align="right">1,250</td>
   <td align="right"></td>
   <td align="right">❌ 0.911 s</td>
@@ -2231,7 +2227,7 @@ but what if I told you PHP can also keep it open in Classic Mode?</p>
   <td align="right">0.136 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p9</td>
+  <td>Worker  p7</td>
   <td align="right">4,000</td>
   <td align="right">same</td>
   <td align="right">0.390 s</td>
@@ -2241,7 +2237,7 @@ but what if I told you PHP can also keep it open in Classic Mode?</p>
   <td align="right">0.263 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p9</td>
+  <td>Worker  p7</td>
   <td align="right">4,250</td>
   <td align="right"></td>
   <td align="right">❌ 0.579 s</td>
@@ -2253,22 +2249,22 @@ but what if I told you PHP can also keep it open in Classic Mode?</p>
 </tbody>
 </table>
 
-<p>Compared to <code>p8</code>, the Overload Test gives us:</p>
+<p>Compared to <code>p6</code>, the Overload Test gives us:</p>
 
 <ul>
-<li><strong>Classic: 132 req/s (+49.0%)</strong>, from 88</li>
-<li><strong>Worker: 466 req/s (-2.8%)</strong>, from 479</li>
+<li><strong>Classic: 120 req/s (+41.2%)</strong>, from 85</li>
+<li><strong>Worker: 429 req/s (+1.5%)</strong>, from 422</li>
 </ul>
 
 <blockquote>
   <p><em>Note</em>: Each Overload Test runs twice, and the mean of the two rounds is used.<br>
-  <code>p9</code> worker's two rounds alone differ by 3.5% (458 and 474 req/s),
-  with nothing changed between them, so a -2.8% is within noise.</p>
+  With nothing changed between them, two rounds can differ by up to 5%
+  (<code>p5</code> worker: 334 and 351 req/s), so a +1.5% is within noise.</p>
 </blockquote>
 
-<p>We can confirm the connection and writes are almost gone by profiling <code>p9</code>:</p>
+<p>We can confirm the connection and writes are almost gone by profiling <code>p7</code>:</p>
 
-<pre><code>Wall-clock time per request (classic, 8,000 users, no CPU limit)       p8        p9
+<pre><code>Wall-clock time per request (classic, 8,000 users, no CPU limit)       p6        p7
 ├── HttpKernel::handle                                            0.97 ms   0.28 ms
 │   ├── opening the connection (Connection::connect)              0.50 ms  &lt;0.01 ms
 │   ├── committing the writes (Connection::commit)                0.20 ms  &lt;0.01 ms
@@ -2277,13 +2273,13 @@ but what if I told you PHP can also keep it open in Classic Mode?</p>
 Total                                                             1.18 ms   0.55 ms
 </code></pre>
 
-<h2 id="dbal-instead-of-orm">DBAL instead of ORM (p10-p11)</h2>
+<h2 id="dbal-instead-of-orm">DBAL instead of ORM (p8-p9)</h2>
 
 <blockquote>
   <p>Let the ORM go, let the ORM goooo! It can't hold us back anymooooOooOoore!</p>
 </blockquote>
 
-<h3 id="plain-sql-writes">Plain SQL Writes (p10)</h3>
+<h3 id="plain-sql-writes">Plain SQL Writes (p8)</h3>
 
 <p>Reads are 92.2% of the requests (two per user loop), which is why we've focused on them so far:</p>
 
@@ -2467,7 +2463,7 @@ making use of <code>RETURNING</code> will give us the generated <code>id</code> 
 }
 </code></pre>
 
-<h3 id="results-p10">p10 results</h3>
+<h3 id="results-p8">p8 results</h3>
 
 <p>This gives Worker Mode some satisfying gains:</p>
 
@@ -2476,7 +2472,7 @@ making use of <code>RETURNING</code> will give us the generated <code>id</code> 
 <tr>
   <th></th>
   <th align="right">Users</th>
-  <th align="right"><a href="#results-p9">vs p9</a></th>
+  <th align="right"><a href="#results-p7">vs p7</a></th>
   <th align="right">p95 &lt; 0.5 s</th>
   <th align="right">p99 &lt; 1 s</th>
   <th align="right">Errors</th>
@@ -2486,7 +2482,7 @@ making use of <code>RETURNING</code> will give us the generated <code>id</code> 
 </thead>
 <tbody>
 <tr>
-  <td>Classic p10</td>
+  <td>Classic p8</td>
   <td align="right">1,000</td>
   <td align="right">same</td>
   <td align="right">0.127 s</td>
@@ -2496,7 +2492,7 @@ making use of <code>RETURNING</code> will give us the generated <code>id</code> 
   <td align="right">0.124 GiB</td>
 </tr>
 <tr>
-  <td>Classic p10</td>
+  <td>Classic p8</td>
   <td align="right">1,250</td>
   <td align="right"></td>
   <td align="right">❌ 0.650 s</td>
@@ -2506,7 +2502,7 @@ making use of <code>RETURNING</code> will give us the generated <code>id</code> 
   <td align="right">0.140 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p10</td>
+  <td>Worker  p8</td>
   <td align="right">4,500</td>
   <td align="right">+2 steps</td>
   <td align="right">0.431 s</td>
@@ -2516,7 +2512,7 @@ making use of <code>RETURNING</code> will give us the generated <code>id</code> 
   <td align="right">0.290 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p10</td>
+  <td>Worker  p8</td>
   <td align="right">4,750</td>
   <td align="right"></td>
   <td align="right">❌ 0.768 s</td>
@@ -2528,18 +2524,18 @@ making use of <code>RETURNING</code> will give us the generated <code>id</code> 
 </tbody>
 </table>
 
-<p>Compared to <code>p9</code>, the Overload Test gives us:</p>
+<p>Compared to <code>p7</code>, the Overload Test gives us:</p>
 
 <ul>
-<li><strong>Classic: 132 req/s (+0.0%)</strong>, from 132</li>
-<li><strong>Worker: 529 req/s (+13.5%)</strong>, from 466</li>
+<li><strong>Classic: 122 req/s (+1.2%)</strong>, from 120</li>
+<li><strong>Worker: 470 req/s (+9.4%)</strong>, from 429</li>
 </ul>
 
 <p>We managed to shrink the SQL queries for <code>POST /posts/{id}/like</code> from 6 to 1 (or 2 for 404),
 which makes its PHP time drop from 10.5% to 4.2%,
 and for <code>POST /posts</code> from 4 to 1, dropping from 1.0% ro 0.8%:</p>
 
-<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p9
+<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p7
 ├── HttpKernel::handle                                           60.6%   -2.1
 │   ├── GET /feed: PostController::feed                          18.4%   +1.1
 │   ├── GET /posts/{id}: PostController::show                     9.7%   +0.9
@@ -2552,11 +2548,11 @@ and for <code>POST /posts</code> from 4 to 1, dropping from 1.0% ro 0.8%:</p>
     └── everything else                                          28.6%   +1.5
 </code></pre>
 
-<h3 id="no-orm">No ORM (p11)</h3>
+<h3 id="no-orm">No ORM (p9)</h3>
 
 <p>But I'm surprised Classic Mode didn't get any gains, let's profile it:</p>
 
-<pre><code>All PHP wall-clock samples (classic, 8,000 users, no CPU limit)   100.0%   vs p9
+<pre><code>All PHP wall-clock samples (classic, 8,000 users, no CPU limit)   100.0%   vs p7
 ├── HttpKernel::handle                                             47.0%    -3.0
 │   ├── GET /feed: PostController::feed                            13.7%    -0.1
 │   ├── GET /posts/{id}: PostController::show                      11.2%    +0.3
@@ -2568,7 +2564,7 @@ and for <code>POST /posts</code> from 4 to 1, dropping from 1.0% ro 0.8%:</p>
 
 <p><code>POST /posts/{id}/like</code> did get some boost, but not as much, let's zoom on it:</p>
 
-<pre><code>Wall-clock time per like (classic, 8,000 users, no CPU limit)         p9        p10
+<pre><code>Wall-clock time per like (classic, 8,000 users, no CPU limit)         p7         p8
 POST /posts/{id}/like: PostController::like                       0.54 ms   0.29 ms
 ├── SQLite (PDO execute, fetch)                                   0.22 ms   0.17 ms
 ├── ORM (find(), findOneBy(), flush(), ...)                       0.30 ms   0.00 ms
@@ -2632,7 +2628,7 @@ rm src/Repository/UserRepository.php
         profiling_collect_backtrace: '%kernel.debug%'
 </code></pre>
 
-<h3 id="results-p11">p11 results</h3>
+<h3 id="results-p9">p9 results</h3>
 
 <p>This gives Classic Mode its well deserve gain:</p>
 
@@ -2641,7 +2637,7 @@ rm src/Repository/UserRepository.php
 <tr>
   <th></th>
   <th align="right">Users</th>
-  <th align="right"><a href="#results-p10">vs p10</a></th>
+  <th align="right"><a href="#results-p8">vs p8</a></th>
   <th align="right">p95 &lt; 0.5 s</th>
   <th align="right">p99 &lt; 1 s</th>
   <th align="right">Errors</th>
@@ -2651,7 +2647,7 @@ rm src/Repository/UserRepository.php
 </thead>
 <tbody>
 <tr>
-  <td>Classic p11</td>
+  <td>Classic p9</td>
   <td align="right">1,500</td>
   <td align="right">+2 steps</td>
   <td align="right">0.274 s</td>
@@ -2661,7 +2657,7 @@ rm src/Repository/UserRepository.php
   <td align="right">0.142 GiB</td>
 </tr>
 <tr>
-  <td>Classic p11</td>
+  <td>Classic p9</td>
   <td align="right">1,750</td>
   <td align="right"></td>
   <td align="right">❌ 0.999 s</td>
@@ -2671,7 +2667,7 @@ rm src/Repository/UserRepository.php
   <td align="right">0.158 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p11</td>
+  <td>Worker  p9</td>
   <td align="right">4,500</td>
   <td align="right">same</td>
   <td align="right">0.449 s</td>
@@ -2681,7 +2677,7 @@ rm src/Repository/UserRepository.php
   <td align="right">0.289 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p11</td>
+  <td>Worker  p9</td>
   <td align="right">4,750</td>
   <td align="right"></td>
   <td align="right">❌ 1.610 s</td>
@@ -2693,17 +2689,17 @@ rm src/Repository/UserRepository.php
 </tbody>
 </table>
 
-<p>Compared to <code>p10</code>, the Overload Test gives us:</p>
+<p>Compared to <code>p8</code>, the Overload Test gives us:</p>
 
 <ul>
-<li><strong>Classic: 177 req/s (+34.6%)</strong>, from 132</li>
-<li><strong>Worker: 539 req/s (+2.0%)</strong>, from 529</li>
+<li><strong>Classic: 156 req/s (+28.8%)</strong>, from 122</li>
+<li><strong>Worker: 482 req/s (+2.7%)</strong>, from 470</li>
 </ul>
 
 <p>We get even small potato gains in Worker Mode,
 because DoctrineBundle was resetting the Entity Manager after every request.</p>
 
-<h2 id="extract-till-you-drop">Extract Till You Drop (p12-p14)</h2>
+<h2 id="extract-till-you-drop">Extract Till You Drop (p10-p12)</h2>
 
 <blockquote>
   <p>It is a mistake to think you can solve any major problems just with potatoes.</p>
@@ -2712,7 +2708,7 @@ because DoctrineBundle was resetting the Entity Manager after every request.</p>
 <p>We're at a point where a third of the time is spent in our endpoints,
 another third in the framework, and a last third in Symfony Runtime's worker loop.</p>
 
-<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p10
+<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p8
 ├── HttpKernel::handle                                           63.8%   +3.2
 │   ├── GET /feed: PostController::feed                          18.8%   +0.4
 │   ├── GET /posts/{id}: PostController::show                    10.8%   +1.1
@@ -2728,9 +2724,9 @@ another third in the framework, and a last third in Symfony Runtime's worker loo
 <p>I'll be frank there are no big gains left to make, just a few percent here and there,
 so let's go after them, one potato at a time.</p>
 
-<h3 id="no-serializer-no-validator">No Serializer, No Validator (p12)</h3>
+<h3 id="no-serializer-no-validator">No Serializer, No Validator (p10)</h3>
 
-<p>Since JsonStreamer took over our responses (<code>p7</code>), the Serializer has only one job left:
+<p>Since JsonStreamer took over our responses (<code>p5</code>), the Serializer has only one job left:
 turning <code>POST /posts</code>'s body into <code>CreatePostPayload</code>,
 with the Validator checking that payload's constraints (see <a href="#vo-and-validation">VO and Validation</a>).</p>
 
@@ -2799,7 +2795,7 @@ We can do their job by hand instead:</p>
 rm config/packages/validator.yaml
 </code></pre>
 
-<h3 id="results-p12">p12 results</h3>
+<h3 id="results-p10">p10 results</h3>
 
 <p>A small potato for Classic Mode, and a slightly bigger one for Worker Mode:</p>
 
@@ -2808,7 +2804,7 @@ rm config/packages/validator.yaml
 <tr>
   <th></th>
   <th align="right">Users</th>
-  <th align="right"><a href="#results-p11">vs p11</a></th>
+  <th align="right"><a href="#results-p9">vs p9</a></th>
   <th align="right">p95 &lt; 0.5 s</th>
   <th align="right">p99 &lt; 1 s</th>
   <th align="right">Errors</th>
@@ -2818,7 +2814,7 @@ rm config/packages/validator.yaml
 </thead>
 <tbody>
 <tr>
-  <td>Classic p12</td>
+  <td>Classic p10</td>
   <td align="right">1,500</td>
   <td align="right">same</td>
   <td align="right">0.174 s</td>
@@ -2828,7 +2824,7 @@ rm config/packages/validator.yaml
   <td align="right">0.132 GiB</td>
 </tr>
 <tr>
-  <td>Classic p12</td>
+  <td>Classic p10</td>
   <td align="right">1,750</td>
   <td align="right"></td>
   <td align="right">❌ 0.509 s</td>
@@ -2838,7 +2834,7 @@ rm config/packages/validator.yaml
   <td align="right">0.144 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p12</td>
+  <td>Worker  p10</td>
   <td align="right">4,500</td>
   <td align="right">same</td>
   <td align="right">0.264 s</td>
@@ -2848,7 +2844,7 @@ rm config/packages/validator.yaml
   <td align="right">0.272 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p12</td>
+  <td>Worker  p10</td>
   <td align="right">4,750</td>
   <td align="right"></td>
   <td align="right">0.429 s</td>
@@ -2860,16 +2856,16 @@ rm config/packages/validator.yaml
 </tbody>
 </table>
 
-<p>Compared to <code>p11</code>, the Overload Test gives us:</p>
+<p>Compared to <code>p9</code>, the Overload Test gives us:</p>
 
 <ul>
-<li><strong>Classic: 183 req/s (+3.3%)</strong>, from 177</li>
-<li><strong>Worker: 590 req/s (+9.4%)</strong>, from 539</li>
+<li><strong>Classic: 162 req/s (+3.2%)</strong>, from 156</li>
+<li><strong>Worker: 513 req/s (+6.4%)</strong>, from 482</li>
 </ul>
 
-<p>Profiling <code>p12</code> in worker mode:</p>
+<p>Profiling <code>p10</code> in worker mode:</p>
 
-<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p11
+<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p9
 ├── HttpKernel::handle                                           65.1%   +1.3
 │   ├── GET /feed: PostController::feed                          20.7%   +1.9
 │   ├── GET /posts/{id}: PostController::show                    11.9%   +1.1
@@ -2887,7 +2883,7 @@ rm config/packages/validator.yaml
 and suprisingly we have a LocaleAwareListener (1.4%) that we didn't know existed,
 which now disapears with the removal of the Validator.</p>
 
-<h3 id="reused-prepared-statements">Reused Prepared Statements (p13)</h3>
+<h3 id="reused-prepared-statements">Reused Prepared Statements (p11)</h3>
 
 <p>One of the three (five, sir!) five tricks mentioned by the video is "reused prepared statements",
 which turns out isn't done by PDO or DBAL:</p>
@@ -2977,7 +2973,7 @@ $pool[$showSql] = $show;
   but this is necessary for the challenge to comply with the "no caching data" rule.</p>
 </blockquote>
 
-<h3 id="results-p13">p13 results</h3>
+<h3 id="results-p11">p11 results</h3>
 
 <p>This only gives small potatoes to Worker Mode, because the middleware survives between requests there:</p>
 
@@ -2986,7 +2982,7 @@ $pool[$showSql] = $show;
 <tr>
   <th></th>
   <th align="right">Users</th>
-  <th align="right"><a href="#results-p12">vs p12</a></th>
+  <th align="right"><a href="#results-p10">vs p10</a></th>
   <th align="right">p95 &lt; 0.5 s</th>
   <th align="right">p99 &lt; 1 s</th>
   <th align="right">Errors</th>
@@ -2996,7 +2992,7 @@ $pool[$showSql] = $show;
 </thead>
 <tbody>
 <tr>
-  <td>Classic p13</td>
+  <td>Classic p11</td>
   <td align="right">1,500</td>
   <td align="right">same</td>
   <td align="right">0.192 s</td>
@@ -3006,7 +3002,7 @@ $pool[$showSql] = $show;
   <td align="right">0.132 GiB</td>
 </tr>
 <tr>
-  <td>Classic p13</td>
+  <td>Classic p11</td>
   <td align="right">1,750</td>
   <td align="right"></td>
   <td align="right">❌ 0.721 s</td>
@@ -3016,7 +3012,7 @@ $pool[$showSql] = $show;
   <td align="right">0.145 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p13</td>
+  <td>Worker  p11</td>
   <td align="right">5,250</td>
   <td align="right">+3 steps</td>
   <td align="right">0.433 s</td>
@@ -3026,7 +3022,7 @@ $pool[$showSql] = $show;
   <td align="right">0.312 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p13</td>
+  <td>Worker  p11</td>
   <td align="right">5,500</td>
   <td align="right"></td>
   <td align="right">❌ 0.548 s</td>
@@ -3038,16 +3034,16 @@ $pool[$showSql] = $show;
 </tbody>
 </table>
 
-<p>Compared to <code>p12</code>, the Overload Test gives us:</p>
+<p>Compared to <code>p10</code>, the Overload Test gives us:</p>
 
 <ul>
-<li><strong>Classic: 180 req/s (-1.5%)</strong>, from 183</li>
-<li><strong>Worker: 612 req/s (+3.7%)</strong>, from 590</li>
+<li><strong>Classic: 153 req/s (-5.3%)</strong>, from 162</li>
+<li><strong>Worker: 569 req/s (+10.9%)</strong>, from 513</li>
 </ul>
 
-<p>Profiling <code>p13</code> in worker mode:</p>
+<p>Profiling <code>p11</code> in worker mode:</p>
 
-<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p12
+<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p10
 ├── HttpKernel::handle                                           62.6%   -2.5
 │   ├── GET /feed: PostController::feed                          19.5%   -1.2
 │   │   ├── Connection::prepare                                   0.1%   -4.0
@@ -3069,7 +3065,7 @@ $pool[$showSql] = $show;
 <p>This is a drop from 8.9% to 0.2% for <code>Connection::prepare</code>,
 with our wrapper only adding 0.9%.</p>
 
-<h3 id="sqlite-writes-the-json">SQLite Writes the JSON (p14)</h3>
+<h3 id="sqlite-writes-the-json">SQLite Writes the JSON (p12)</h3>
 
 <p>Yet another of the three (FIVE SIR!!) five tricks from the video is having SQLite write the JSON,
 instead of getting an array out of it and transform it into JSON.</p>
@@ -3139,7 +3135,7 @@ but that's also something I've used at work (except we were using PostgreSQL, no
   It wouldn't make sense for the write endpoints, as their data don't come from the database anyway.</p>
 </blockquote>
 
-<h3 id="results-p14">p14 results</h3>
+<h3 id="results-p12">p12 results</h3>
 
 <p>This is tiny potato:</p>
 
@@ -3148,7 +3144,7 @@ but that's also something I've used at work (except we were using PostgreSQL, no
 <tr>
   <th></th>
   <th align="right">Users</th>
-  <th align="right"><a href="#results-p13">vs p13</a></th>
+  <th align="right"><a href="#results-p11">vs p11</a></th>
   <th align="right">p95 &lt; 0.5 s</th>
   <th align="right">p99 &lt; 1 s</th>
   <th align="right">Errors</th>
@@ -3158,7 +3154,7 @@ but that's also something I've used at work (except we were using PostgreSQL, no
 </thead>
 <tbody>
 <tr>
-  <td>Classic p14</td>
+  <td>Classic p12</td>
   <td align="right">1,500</td>
   <td align="right">same</td>
   <td align="right">0.237 s</td>
@@ -3168,7 +3164,7 @@ but that's also something I've used at work (except we were using PostgreSQL, no
   <td align="right">0.133 GiB</td>
 </tr>
 <tr>
-  <td>Classic p14</td>
+  <td>Classic p12</td>
   <td align="right">1,750</td>
   <td align="right"></td>
   <td align="right">❌ 0.948 s</td>
@@ -3178,7 +3174,7 @@ but that's also something I've used at work (except we were using PostgreSQL, no
   <td align="right">0.160 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p14</td>
+  <td>Worker  p12</td>
   <td align="right">5,250</td>
   <td align="right">same</td>
   <td align="right">0.316 s</td>
@@ -3188,7 +3184,7 @@ but that's also something I've used at work (except we were using PostgreSQL, no
   <td align="right">0.303 GiB</td>
 </tr>
 <tr>
-  <td>Worker  p14</td>
+  <td>Worker  p12</td>
   <td align="right">5,500</td>
   <td align="right"></td>
   <td align="right">❌ 0.539 s</td>
@@ -3200,16 +3196,16 @@ but that's also something I've used at work (except we were using PostgreSQL, no
 </tbody>
 </table>
 
-<p>Compared to <code>p13</code>, the Overload Test gives us:</p>
+<p>Compared to <code>p11</code>, the Overload Test gives us:</p>
 
 <ul>
-<li><strong>Classic: 184 req/s (+2.1%)</strong>, from 180</li>
-<li><strong>Worker: 633 req/s (+3.4%)</strong>, from 612</li>
+<li><strong>Classic: 160 req/s (+4.9%)</strong>, from 153</li>
+<li><strong>Worker: 592 req/s (+4.0%)</strong>, from 569</li>
 </ul>
 
-<p>Profiling <code>p14</code> in worker mode:</p>
+<p>Profiling <code>p12</code> in worker mode:</p>
 
-<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p13
+<pre><code>All PHP samples (worker mode, 750 users)                        100.0%  vs p11
 ├── HttpKernel::handle                                           59.8%   -2.8
 │   ├── GET /feed: PostController::feed                          15.9%   -3.6
 │   │   ├── SQL (DBAL, SQLite, now with the JSON)                13.3%   +4.2
@@ -3251,126 +3247,142 @@ but then just like Sticky the stick insect who got stuck on a sticky bun many of
 <tbody>
 <tr>
   <td>a</td>
-  <td>Firewall on <code>POST /posts</code> only (p4)</td>
-  <td align="right">162 req/s, -0.5%</td>
-  <td align="right">50 req/s, +1.1%</td>
+  <td>Every request to Symfony (Caddy <code>rewrite</code>, p13)</td>
+  <td align="right">after p3: +1.3%, at the end: +6.4%</td>
+  <td align="right">after p3: +1.1%, at the end: +3.1%</td>
   <td>✅</td>
 </tr>
 <tr>
   <td>b</td>
-  <td>Every request to Symfony (Caddy <code>rewrite</code>, p5)</td>
-  <td align="right">164 req/s, +1.3%</td>
-  <td align="right">51 req/s, +1.1%</td>
+  <td>Firewall on <code>POST /posts</code> only (p14)</td>
+  <td align="right">after p3: -0.5%, at the end: +2.9%</td>
+  <td align="right">after p3: +1.1%, at the end: +7.3%</td>
   <td>✅</td>
 </tr>
 <tr>
   <td>c</td>
-  <td>Own worker loop instead of Symfony Runtime (p15)</td>
-  <td align="right">664 req/s, +4.9%</td>
-  <td align="right">201 req/s, +9.2%</td>
-  <td>⚠️</td>
+  <td>Own worker loop instead of Symfony Runtime</td>
+  <td align="right">655 req/s, +2.5%</td>
+  <td align="right">191 req/s, +6.0%</td>
+  <td>❌</td>
 </tr>
 <tr>
   <td>d</td>
   <td>No PHP cycle collector (<code>zend.enable_gc=0</code>)</td>
-  <td align="right">709 req/s, +7.2%</td>
+  <td align="right">695 req/s, +8.8%</td>
   <td align="right"></td>
   <td>❌</td>
 </tr>
 <tr>
   <td>e</td>
-  <td>PR 40's Caddyfile</td>
-  <td align="right">686 req/s, +3.7%</td>
+  <td>1 worker (default: 2 per CPU)</td>
+  <td align="right">665 req/s, +4.1%</td>
   <td align="right"></td>
   <td>❌</td>
 </tr>
 <tr>
   <td>f</td>
-  <td>Go's GC at twice the heap growth (<code>GOGC=200</code>)</td>
-  <td align="right">680 req/s, +2.8%</td>
+  <td>Go's soft memory limit at 1,100 MiB (<code>GOMEMLIMIT</code>)</td>
+  <td align="right">662 req/s, +3.6%</td>
   <td align="right"></td>
   <td>❌</td>
 </tr>
 <tr>
   <td>g</td>
-  <td>Never restart the workers</td>
-  <td align="right">680 req/s, +1.2%</td>
+  <td>SQLite <code>cache_size</code> 64 MiB</td>
+  <td align="right">652 req/s, +2.1%</td>
   <td align="right"></td>
   <td>❌</td>
 </tr>
 <tr>
   <td>h</td>
-  <td>No output buffering (<code>output_buffering=0</code>)</td>
-  <td align="right">671 req/s, +1.5%</td>
+  <td>PR 40's Caddyfile</td>
+  <td align="right">651 req/s, +2.0%</td>
   <td align="right"></td>
   <td>❌</td>
 </tr>
 <tr>
   <td>i</td>
-  <td>SQLite <code>cache_size</code> 64 MiB</td>
-  <td align="right">674 req/s, +0.4%</td>
+  <td>Never restart the workers</td>
+  <td align="right">646 req/s, +1.1%</td>
   <td align="right"></td>
   <td>❌</td>
 </tr>
 <tr>
   <td>j</td>
-  <td>Go's soft memory limit at 1,100 MiB (<code>GOMEMLIMIT</code>)</td>
-  <td align="right">663 req/s, +0.2%</td>
+  <td>No cgo pointer checks (<code>GODEBUG=cgocheck=0</code>)</td>
+  <td align="right">642 req/s, +0.5%</td>
   <td align="right"></td>
   <td>❌</td>
 </tr>
 <tr>
   <td>k</td>
-  <td>1 worker (default: 2 per CPU)</td>
-  <td align="right">659 req/s, -0.4%</td>
+  <td>No output buffering (<code>output_buffering=0</code>)</td>
+  <td align="right">642 req/s, +0.5%</td>
   <td align="right"></td>
   <td>❌</td>
 </tr>
 <tr>
   <td>l</td>
-  <td>4 workers</td>
-  <td align="right">658 req/s, -0.4%</td>
+  <td>Go's GC at twice the heap growth (<code>GOGC=200</code>)</td>
+  <td align="right">637 req/s, -0.3%</td>
   <td align="right"></td>
   <td>❌</td>
 </tr>
 <tr>
   <td>m</td>
-  <td>No cgo pointer checks (<code>GODEBUG=cgocheck=0</code>)</td>
-  <td align="right">658 req/s, -0.5%</td>
+  <td>SQLite <code>mmap_size</code> 1 GiB</td>
+  <td align="right">625 req/s, -2.1%</td>
   <td align="right"></td>
   <td>❌</td>
 </tr>
 <tr>
   <td>n</td>
-  <td>8 PHP threads all the time (<code>num_threads 8</code>)</td>
+  <td>4 workers</td>
+  <td align="right">622 req/s, -2.6%</td>
   <td align="right"></td>
-  <td align="right">199 req/s, -0.7%</td>
   <td>❌</td>
 </tr>
 <tr>
   <td>o</td>
-  <td>SQLite <code>mmap_size</code> 1 GiB</td>
-  <td align="right">651 req/s, -3.1%</td>
-  <td align="right"></td>
+  <td><code>max_threads 8</code></td>
+  <td align="right">616 req/s, -3.5%</td>
+  <td align="right">177 req/s, -2.1%</td>
   <td>❌</td>
 </tr>
 <tr>
   <td>p</td>
-  <td><code>max_threads 8</code></td>
-  <td align="right">640 req/s, -3.2%</td>
-  <td align="right">194 req/s, -3.1%</td>
+  <td>8 PHP threads all the time (<code>num_threads 8</code>)</td>
+  <td align="right"></td>
+  <td align="right">176 req/s, -2.5%</td>
   <td>❌</td>
 </tr>
 </tbody>
 </table>
 
+<p>Experiments <code>c</code> to <code>p</code> were measured against <code>p14</code> (639 req/s in Worker Mode, 180 in Classic Mode).</p>
+
 <p>One thing to keep in mind is that the Overload Testing is done in two rounds,
 and then the mean number was used in the article.</p>
 
-<p>But between two rounds, I've found that the numbers could swing between 3% to 5%,
-so most of these experiments were deemed inconclusive if the number is say -3.2%: that's within noise.</p>
+<p>But between two rounds, I've found that the numbers could swing between 3% to 5%
+(even 8% for <code>l</code>: 661 and 612 req/s),
+so most of these experiments were deemed inconclusive if the number is say -3.5%: that's within noise.</p>
 
-<p>I ended up keeping experiments <code>a</code> and <code>b</code>, because they made the configuration clearer.</p>
+<p>I first tried experiments <code>a</code> and <code>b</code> right after <code>p3</code>, where they made no measurable difference,
+so I left them out. Once the app got much leaner, I tried them again at the end, and kept them as <code>p13</code> and <code>p14</code>.</p>
+
+<p>They save the same CPU time per request as before, but requests now cost a lot less (at a quarter of a core):</p>
+
+<ul>
+<li><code>a</code> skips the static file checks: ~25 µs, that's 1.6% of a 1.6 ms request after <code>p3</code>, but 6% of a 0.42 ms one after <code>p12</code></li>
+<li><code>b</code> skips the firewall on reads in Classic Mode: ~100 µs, that's 2% of a 5 ms request after <code>p3</code>, but 7% of a 1.5 ms one after <code>p13</code></li>
+</ul>
+
+<p>The firewall still makes no measurable difference in Worker Mode, where its services survive between requests (~11 µs).</p>
+
+<p>So an optimisation that seems useless early on might just be hiding behind bigger costs:
+once these are gone, it's worth measuring it again.</p>
 
 <p>In experiment <code>c</code> I replaced the Symfony Runtime with a hand written loop,
 and seeing the gain I kept it, and sent my submission with it.</p>
@@ -3381,14 +3393,18 @@ wasn't registered: it's either registered by Symfony Runtime,
 or by <code>FrameworkBundle::boot()</code> <strong>if <code>SymfonyRuntime::class</code> doesn't exist</strong>,
 and in my case the <code>symfony/runtime</code> component was still installed.</p>
 
-<p>Finally experiment <code>d</code> (no PHP cycle collector) is the only one above the noise,
-but only in one round out of two (from p15 661 to 687 and 730 req/s).</p>
+<p>With <code>symfony/runtime</code> removed, so that FrameworkBundle registers the ErrorHandler,
+the hand written loop is within noise (+2.5%, and -2.5% in another session),
+so I went back to the Symfony Runtime.</p>
+
+<p>Finally experiment <code>d</code> (no PHP cycle collector) is the only one clearly above the noise,
+in both rounds (from p14's 637 and 641 to 691 and 699 req/s), with <code>e</code> (1 worker) at its edge.</p>
 
 <p>It's also risky: without the cycle collector leaking cycles grow a worker's memory until it restarts,
-for a gain smaller than a step of 250 users (not that I detected any memory leak in the app).</p>
+for a gain of one or two steps of 250 users (not that I detected any memory leak in the app).</p>
 
-<p>A small note on experiment <code>f</code> (<code>GOGC=200</code>): it was close to show real gain,
-but was using 0.13 GiB more memory, so not sure it would have been worth it long term.</p>
+<p>A small note on experiment <code>l</code> (<code>GOGC=200</code>): it looked close to a real gain in a first session (+2.8%),
+but not when measured again (-0.3%), and it uses 0.2 GiB more memory.</p>
 
 <h3 id="memory-leaks">Memory Leaks</h3>
 
@@ -3457,9 +3473,9 @@ but we'd be straying away from idiomatic Symfony apps too much IMHO.</p>
 <p>I made a first submission which was only missing the following from this article:</p>
 
 <ul>
-<li>p11: no ORM</li>
-<li>p12: no Serializer, no Validator</li>
-<li>p15 (experiment c): custom worker loop</li>
+<li>p9: no ORM</li>
+<li>p10: no Serializer, no Validator</li>
+<li>experiment c: custom worker loop</li>
 </ul>
 
 <p>But when it got scored I was surprised to see it was ranking significantly (in potato terms)
@@ -3545,13 +3561,13 @@ so I'm fine with what I got.</p>
 <tbody>
 <tr>
   <td>Defaults (p0)</td>
-  <td align="right">250 users,  39 req/s</td>
-  <td align="right">1,000 users, 117 req/s</td>
+  <td align="right">250 users,  38 req/s</td>
+  <td align="right">1,000 users, 114 req/s</td>
 </tr>
 <tr>
   <td>Optimised (p14)</td>
-  <td align="right">1,500 users, 184 req/s</td>
-  <td align="right">5,250 users, 633 req/s</td>
+  <td align="right">1,500 users, 178 req/s</td>
+  <td align="right">5,250 users, 648 req/s</td>
 </tr>
 </tbody>
 </table>
